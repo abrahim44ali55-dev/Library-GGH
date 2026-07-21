@@ -6,7 +6,7 @@ local Players = game:GetService("Players")
 local Library = {}
 Library.__index = Library
 
--- 20 ثيم دقيق واحترافي ومتدرج الألوان (كل جزء في الواجهة له لون مخصص وفريد)
+-- 20 ثيم دقيق واحترافي ومتدرج الألوان
 local Themes = {
 	DarkModern = {
 		MainBackground = Color3.fromRGB(15, 15, 18),
@@ -462,7 +462,7 @@ function Library:Create(config)
 	CloseCorner.CornerRadius = UDim.new(0, 6)
 	CloseCorner.Parent = CloseButton
 
-	-- نافذة تأكيد الإغلاق الفخمة
+	-- نافذة تأكيد الإغلاق
 	local function ShowConfirmDialog()
 		if ScreenGui:FindFirstChild("ConfirmOverlay") then return end
 		
@@ -548,7 +548,7 @@ function Library:Create(config)
 
 	CloseButton.MouseButton1Click:Connect(ShowConfirmDialog)
 
-	-- شريط التبويبات الجانبي (Sidebar) بلونه المخصص المتدرج عن الواجهة
+	-- شريط التبويبات الجانبي
 	local Sidebar = Instance.new("ScrollingFrame")
 	Sidebar.Size = UDim2.new(0, 130, 1, -48)
 	Sidebar.Position = UDim2.new(0, 8, 0, 42)
@@ -607,25 +607,32 @@ function Library:Create(config)
 		TCorner.CornerRadius = UDim.new(0, 8)
 		TCorner.Parent = TabButton
 
+		-- استخدام ScrollingFrame محسّن ومنضبط للحجم الثابت لمنع أي أخطاء بالسكرول
 		local TabPage = Instance.new("ScrollingFrame")
 		TabPage.Size = UDim2.new(1, 0, 1, 0)
 		TabPage.BackgroundTransparency = 1
 		TabPage.BorderSizePixel = 0
 		TabPage.Visible = false
 		TabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
-		TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		TabPage.ScrollBarThickness = 3
+		TabPage.ScrollingEnabled = true
 		TabPage.Parent = ContainerHolder
 
 		local PageLayout = Instance.new("UIListLayout")
 		PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		PageLayout.Padding = UDim.new(0, 6)
+		PageLayout.Padding = UDim.new(0, 8)
 		PageLayout.Parent = TabPage
 
 		local PagePadding = Instance.new("UIPadding")
+		PagePadding.PaddingTop = UDim.new(0, 4)
 		PagePadding.PaddingRight = UDim.new(0, 8)
-		PagePadding.PaddingBottom = UDim.new(0, 25)
+		PagePadding.PaddingBottom = UDim.new(0, 35) -- مساحة كافية لتظهر آخر عنصر بالكامل
 		PagePadding.Parent = TabPage
+
+		-- تحديث حجم الـ Canvas بدقة بناءً على العناصر المتاحة لتفادي أي مشاكل في إظهار النهاية
+		PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			TabPage.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 45)
+		end)
 
 		if firstTab then
 			firstTab = false
@@ -663,6 +670,7 @@ function Library:Create(config)
 			local Button = Instance.new("TextButton")
 			Button.Size = UDim2.new(1, 0, 0, 42)
 			Button.BackgroundColor3 = currentTheme.Element
+			Button.AutoButtonColor = false
 			Button.Text = ""
 			Button.Parent = TabPage
 			
@@ -700,6 +708,7 @@ function Library:Create(config)
 			local ToggleFrame = Instance.new("TextButton")
 			ToggleFrame.Size = UDim2.new(1, 0, 0, 42)
 			ToggleFrame.BackgroundColor3 = currentTheme.Element
+			ToggleFrame.AutoButtonColor = false
 			ToggleFrame.Text = ""
 			ToggleFrame.Parent = TabPage
 			
@@ -733,7 +742,7 @@ function Library:Create(config)
 			Switch.Size = UDim2.new(0, 36, 0, 20)
 			Switch.Position = UDim2.new(1, -46, 0.5, -10)
 			Switch.BackgroundColor3 = toggled and currentTheme.Accent or currentTheme.SliderBar
-			Switch.Parent = Switch and ToggleFrame
+			Switch.Parent = ToggleFrame
 			
 			local SCorner = Instance.new("UICorner")
 			SCorner.CornerRadius = UDim.new(1, 0)
@@ -801,7 +810,6 @@ function Library:Create(config)
 			FillCorner.CornerRadius = UDim.new(1, 0)
 			FillCorner.Parent = Fill
 
-			-- تحسين شكل دائرة السلايدر (Knob) لتكون ناعمة ومحاطة بحدود أنيقة
 			local Knob = Instance.new("Frame")
 			Knob.Size = UDim2.new(0, 16, 0, 16)
 			Knob.Position = UDim2.new(1, -8, 0.5, -8)
@@ -828,16 +836,25 @@ function Library:Create(config)
 			Bar.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					draggingSlider = true
+					-- إيقاف السكرول مؤقتاً أثناء تحريك السلايدر لضمان عدم حدوث تقطيع أو تحرك للشاشة
+					TabPage.ScrollingEnabled = false
 					updateValue(input)
 				end
 			end)
 
 			UserInputService.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = false end
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					if draggingSlider then
+						draggingSlider = false
+						TabPage.ScrollingEnabled = true
+					end
+				end
 			end)
 
 			UserInputService.InputChanged:Connect(function(input)
-				if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateValue(input) end
+				if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+					updateValue(input)
+				end
 			end)
 		end
 
@@ -879,6 +896,7 @@ function Library:Create(config)
 			local DropBtn = Instance.new("TextButton")
 			DropBtn.Size = UDim2.new(1, 0, 0, 42)
 			DropBtn.BackgroundTransparency = 1
+			DropBtn.AutoButtonColor = false
 			DropBtn.Text = ""
 			DropBtn.Parent = DropFrame
 
@@ -899,6 +917,7 @@ function Library:Create(config)
 				local OptBtn = Instance.new("TextButton")
 				OptBtn.Size = UDim2.new(1, 0, 0, 30)
 				OptBtn.BackgroundColor3 = currentTheme.TopBar
+				OptBtn.AutoButtonColor = false
 				OptBtn.Text = opt
 				OptBtn.TextColor3 = currentTheme.Text
 				OptBtn.TextSize = 10
