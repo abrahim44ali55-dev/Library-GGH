@@ -46,9 +46,7 @@ function Library:Create(config)
 
 	local currentTheme = Themes.DarkModern
 
-	-- ==========================================
-	-- نظام الإشعارات (منتصف جهة اليسار)
-	-- ==========================================
+	-- نظام الإشعارات
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
 	NotifHolder.Position = UDim2.new(0, 15, 0.5, -200)
@@ -108,9 +106,7 @@ function Library:Create(config)
 		end)
 	end
 
-	-- ==========================================
 	-- الواجهة الرئيسية
-	-- ==========================================
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Size = UDim2.new(0, 500, 0, 320)
 	MainFrame.Position = UDim2.new(0.5, -250, 0.5, -160)
@@ -194,9 +190,7 @@ function Library:Create(config)
 		end
 	end)
 
-	-- ==========================================
-	-- نافذة التأكيد (مستقلة تماماً في ScreenGui بالنص)
-	-- ==========================================
+	-- نافذة التأكيد
 	local ConfirmOverlay = Instance.new("Frame")
 	ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
 	ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -493,5 +487,8 @@ function Library:Create(config)
 		return TabObj
 	end
 
-	return Library
+	WindowObj.Notify = Notify
+	return WindowObj
 end
+
+return Library
