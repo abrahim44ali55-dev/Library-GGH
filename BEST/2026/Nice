@@ -126,6 +126,36 @@ function Library:Create(config)
 	FixCorner.BorderSizePixel = 0
 	FixCorner.Parent = TopBar
 
+	-- نظام تحريك النافذة (Draggable) بسلاسة فائقة
+	local dragging, dragInput, dragStart, startPos
+	TopBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = MainFrame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	TopBar.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			TweenService:Create(MainFrame, TweenInfo.new(0.05, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+				Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			}):Play()
+		end
+	end)
+
 	local TitleLabel = Instance.new("TextLabel")
 	TitleLabel.Size = UDim2.new(1, -110, 1, 0)
 	TitleLabel.Position = UDim2.new(0, 12, 0, 0)
@@ -189,13 +219,16 @@ function Library:Create(config)
 	SidebarLayout.Padding = UDim.new(0, 5)
 	SidebarLayout.Parent = Sidebar
 
+	local SidebarPadding = Instance.new("UIPadding")
+	SidebarPadding.PaddingBottom = UDim.new(0, 12)
+	SidebarPadding.Parent = Sidebar
+
 	local ContainerHolder = Instance.new("Frame")
 	ContainerHolder.Size = UDim2.new(1, -146, 1, -44)
 	ContainerHolder.Position = UDim2.new(0, 142, 0, 40)
 	ContainerHolder.BackgroundTransparency = 1
 	ContainerHolder.Parent = MainFrame
 
-	-- منطق زر التصغير والتكبير
 	local minimized = false
 	MinimizeButton.MouseButton1Click:Connect(function()
 		minimized = not minimized
@@ -222,7 +255,7 @@ function Library:Create(config)
 		TabButton.Parent = Sidebar
 		Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
 
-		-- نظام التمرير القديم (السكرول) للتبويبات
+		-- نظام السكرول المحسن والمضبوط تماماً بحيث يظهر العنصر الأخير كاملاً
 		local TabPage = Instance.new("ScrollingFrame")
 		TabPage.Size = UDim2.new(1, 0, 1, 0)
 		TabPage.BackgroundTransparency = 1
@@ -235,11 +268,12 @@ function Library:Create(config)
 
 		local PageLayout = Instance.new("UIListLayout")
 		PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		PageLayout.Padding = UDim.new(0, 5)
+		PageLayout.Padding = UDim.new(0, 6)
 		PageLayout.Parent = TabPage
 
 		local PagePadding = Instance.new("UIPadding")
 		PagePadding.PaddingRight = UDim.new(0, 8)
+		PagePadding.PaddingBottom = UDim.new(0, 20) -- هامش أخير لكي يظهر العنصر الأخير بالكامل بدون قص
 		PagePadding.Parent = TabPage
 
 		if firstTab then
