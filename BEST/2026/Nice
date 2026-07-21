@@ -6,28 +6,268 @@ local Players = game:GetService("Players")
 local Library = {}
 Library.__index = Library
 
--- نظام الـ 20 ثيم المتنوعة
+-- 20 ثيم دقيق واحترافي ومتدرج الألوان (كل جزء في الواجهة له لون مخصص وفريد)
 local Themes = {
-	DarkModern = { MainBackground = Color3.fromRGB(15, 15, 18), TopBar = Color3.fromRGB(22, 22, 26), Text = Color3.fromRGB(240, 240, 245), SubText = Color3.fromRGB(140, 140, 155), Element = Color3.fromRGB(26, 26, 32), ElementHover = Color3.fromRGB(36, 36, 44), Accent = Color3.fromRGB(0, 162, 255) },
-	CrimsonRed = { MainBackground = Color3.fromRGB(18, 14, 14), TopBar = Color3.fromRGB(26, 20, 20), Text = Color3.fromRGB(245, 240, 240), SubText = Color3.fromRGB(155, 140, 140), Element = Color3.fromRGB(32, 24, 24), ElementHover = Color3.fromRGB(44, 32, 32), Accent = Color3.fromRGB(255, 50, 50) },
-	EmeraldGreen = { MainBackground = Color3.fromRGB(14, 18, 15), TopBar = Color3.fromRGB(20, 26, 22), Text = Color3.fromRGB(240, 245, 241), SubText = Color3.fromRGB(140, 155, 143), Element = Color3.fromRGB(24, 32, 26), ElementHover = Color3.fromRGB(32, 44, 35), Accent = Color3.fromRGB(0, 230, 118) },
-	CyberpunkYellow = { MainBackground = Color3.fromRGB(18, 18, 12), TopBar = Color3.fromRGB(26, 26, 18), Text = Color3.fromRGB(245, 245, 235), SubText = Color3.fromRGB(155, 155, 135), Element = Color3.fromRGB(32, 32, 20), ElementHover = Color3.fromRGB(44, 44, 28), Accent = Color3.fromRGB(255, 214, 0) },
-	RoyalPurple = { MainBackground = Color3.fromRGB(16, 14, 20), TopBar = Color3.fromRGB(23, 20, 28), Text = Color3.fromRGB(242, 240, 245), SubText = Color3.fromRGB(145, 140, 155), Element = Color3.fromRGB(28, 24, 35), ElementHover = Color3.fromRGB(38, 32, 48), Accent = Color3.fromRGB(170, 0, 255) },
-	MidnightBlue = { MainBackground = Color3.fromRGB(12, 15, 20), TopBar = Color3.fromRGB(18, 22, 28), Text = Color3.fromRGB(235, 240, 245), SubText = Color3.fromRGB(135, 145, 155), Element = Color3.fromRGB(20, 26, 35), ElementHover = Color3.fromRGB(28, 36, 48), Accent = Color3.fromRGB(41, 128, 185) },
-	SunsetOrange = { MainBackground = Color3.fromRGB(20, 15, 12), TopBar = Color3.fromRGB(28, 21, 17), Text = Color3.fromRGB(245, 240, 235), SubText = Color3.fromRGB(155, 143, 135), Element = Color3.fromRGB(35, 26, 20), ElementHover = Color3.fromRGB(48, 36, 28), Accent = Color3.fromRGB(230, 126, 34) },
-	NeonPink = { MainBackground = Color3.fromRGB(20, 12, 18), TopBar = Color3.fromRGB(28, 18, 25), Text = Color3.fromRGB(245, 235, 242), SubText = Color3.fromRGB(155, 135, 149), Element = Color3.fromRGB(35, 20, 31), ElementHover = Color3.fromRGB(48, 28, 43), Accent = Color3.fromRGB(255, 0, 128) },
-	ToxicLime = { MainBackground = Color3.fromRGB(14, 18, 12), TopBar = Color3.fromRGB(20, 26, 17), Text = Color3.fromRGB(240, 245, 235), SubText = Color3.fromRGB(140, 155, 135), Element = Color3.fromRGB(24, 32, 20), ElementHover = Color3.fromRGB(32, 44, 28), Accent = Color3.fromRGB(118, 255, 3) },
-	IceTeal = { MainBackground = Color3.fromRGB(12, 18, 18), TopBar = Color3.fromRGB(17, 26, 26), Text = Color3.fromRGB(235, 245, 245), SubText = Color3.fromRGB(135, 155, 155), Element = Color3.fromRGB(20, 32, 32), ElementHover = Color3.fromRGB(28, 44, 44), Accent = Color3.fromRGB(0, 229, 255) },
-	CoffeeBrown = { MainBackground = Color3.fromRGB(18, 15, 13), TopBar = Color3.fromRGB(26, 22, 19), Text = Color3.fromRGB(245, 241, 238), SubText = Color3.fromRGB(155, 145, 140), Element = Color3.fromRGB(32, 27, 24), ElementHover = Color3.fromRGB(44, 38, 34), Accent = Color3.fromRGB(160, 82, 45) },
-	Amethyst = { MainBackground = Color3.fromRGB(15, 12, 18), TopBar = Color3.fromRGB(22, 18, 26), Text = Color3.fromRGB(240, 235, 245), SubText = Color3.fromRGB(140, 135, 155), Element = Color3.fromRGB(26, 21, 32), ElementHover = Color3.fromRGB(36, 30, 44), Accent = Color3.fromRGB(153, 50, 204) },
-	GoldLux = { MainBackground = Color3.fromRGB(18, 17, 12), TopBar = Color3.fromRGB(26, 24, 17), Text = Color3.fromRGB(245, 243, 235), SubText = Color3.fromRGB(155, 150, 135), Element = Color3.fromRGB(32, 30, 20), ElementHover = Color3.fromRGB(44, 42, 28), Accent = Color3.fromRGB(218, 165, 32) },
-	MatrixGreen = { MainBackground = Color3.fromRGB(10, 15, 10), TopBar = Color3.fromRGB(15, 22, 15), Text = Color3.fromRGB(230, 245, 230), SubText = Color3.fromRGB(120, 155, 120), Element = Color3.fromRGB(18, 28, 18), ElementHover = Color3.fromRGB(26, 38, 26), Accent = Color3.fromRGB(0, 255, 65) },
-	RubyRed = { MainBackground = Color3.fromRGB(20, 10, 10), TopBar = Color3.fromRGB(28, 15, 15), Text = Color3.fromRGB(245, 230, 230), SubText = Color3.fromRGB(155, 120, 120), Element = Color3.fromRGB(35, 18, 18), ElementHover = Color3.fromRGB(48, 25, 25), Accent = Color3.fromRGB(220, 20, 60) },
-	SkyBlue = { MainBackground = Color3.fromRGB(12, 16, 20), TopBar = Color3.fromRGB(18, 24, 30), Text = Color3.fromRGB(235, 242, 250), SubText = Color3.fromRGB(135, 148, 160), Element = Color3.fromRGB(20, 28, 36), ElementHover = Color3.fromRGB(28, 39, 50), Accent = Color3.fromRGB(52, 152, 219) },
-	Lavender = { MainBackground = Color3.fromRGB(16, 15, 20), TopBar = Color3.fromRGB(24, 22, 28), Text = Color3.fromRGB(242, 240, 248), SubText = Color3.fromRGB(145, 140, 158), Element = Color3.fromRGB(30, 28, 36), ElementHover = Color3.fromRGB(42, 39, 50), Accent = Color3.fromRGB(142, 68, 173) },
-	Charcoal = { MainBackground = Color3.fromRGB(18, 18, 18), TopBar = Color3.fromRGB(25, 25, 25), Text = Color3.fromRGB(240, 240, 240), SubText = Color3.fromRGB(140, 140, 140), Element = Color3.fromRGB(32, 32, 32), ElementHover = Color3.fromRGB(44, 44, 44), Accent = Color3.fromRGB(127, 140, 141) },
-	SolarFlare = { MainBackground = Color3.fromRGB(20, 14, 10), TopBar = Color3.fromRGB(28, 20, 15), Text = Color3.fromRGB(245, 238, 235), SubText = Color3.fromRGB(155, 140, 135), Element = Color3.fromRGB(35, 25, 18), ElementHover = Color3.fromRGB(48, 35, 25), Accent = Color3.fromRGB(243, 156, 18) },
-	Mint = { MainBackground = Color3.fromRGB(12, 18, 15), TopBar = Color3.fromRGB(17, 26, 22), Text = Color3.fromRGB(235, 245, 240), SubText = Color3.fromRGB(135, 155, 145), Element = Color3.fromRGB(20, 32, 26), ElementHover = Color3.fromRGB(28, 44, 36), Accent = Color3.fromRGB(26, 188, 156) }
+	DarkModern = {
+		MainBackground = Color3.fromRGB(15, 15, 18),
+		TopBar         = Color3.fromRGB(22, 22, 26),
+		Sidebar        = Color3.fromRGB(18, 18, 22),
+		Element        = Color3.fromRGB(26, 26, 32),
+		ElementHover   = Color3.fromRGB(36, 36, 44),
+		Text           = Color3.fromRGB(240, 240, 245),
+		SubText        = Color3.fromRGB(140, 140, 155),
+		Accent         = Color3.fromRGB(0, 162, 255),
+		Stroke         = Color3.fromRGB(45, 45, 55),
+		SliderBar      = Color3.fromRGB(35, 35, 45),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	CrimsonRed = {
+		MainBackground = Color3.fromRGB(18, 14, 14),
+		TopBar         = Color3.fromRGB(26, 20, 20),
+		Sidebar        = Color3.fromRGB(22, 17, 17),
+		Element        = Color3.fromRGB(32, 24, 24),
+		ElementHover   = Color3.fromRGB(44, 32, 32),
+		Text           = Color3.fromRGB(245, 240, 240),
+		SubText        = Color3.fromRGB(155, 140, 140),
+		Accent         = Color3.fromRGB(255, 50, 50),
+		Stroke         = Color3.fromRGB(55, 40, 40),
+		SliderBar      = Color3.fromRGB(42, 30, 30),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	EmeraldGreen = {
+		MainBackground = Color3.fromRGB(14, 18, 15),
+		TopBar         = Color3.fromRGB(20, 26, 22),
+		Sidebar        = Color3.fromRGB(17, 22, 18),
+		Element        = Color3.fromRGB(24, 32, 26),
+		ElementHover   = Color3.fromRGB(32, 44, 35),
+		Text           = Color3.fromRGB(240, 245, 241),
+		SubText        = Color3.fromRGB(140, 155, 143),
+		Accent         = Color3.fromRGB(0, 230, 118),
+		Stroke         = Color3.fromRGB(40, 55, 45),
+		SliderBar      = Color3.fromRGB(30, 42, 34),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	CyberpunkYellow = {
+		MainBackground = Color3.fromRGB(18, 18, 12),
+		TopBar         = Color3.fromRGB(26, 26, 18),
+		Sidebar        = Color3.fromRGB(22, 22, 15),
+		Element        = Color3.fromRGB(32, 32, 20),
+		ElementHover   = Color3.fromRGB(44, 44, 28),
+		Text           = Color3.fromRGB(245, 245, 235),
+		SubText        = Color3.fromRGB(155, 155, 135),
+		Accent         = Color3.fromRGB(255, 214, 0),
+		Stroke         = Color3.fromRGB(55, 55, 38),
+		SliderBar      = Color3.fromRGB(42, 42, 28),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	RoyalPurple = {
+		MainBackground = Color3.fromRGB(16, 14, 20),
+		TopBar         = Color3.fromRGB(23, 20, 28),
+		Sidebar        = Color3.fromRGB(19, 17, 24),
+		Element        = Color3.fromRGB(28, 24, 35),
+		ElementHover   = Color3.fromRGB(38, 32, 48),
+		Text           = Color3.fromRGB(242, 240, 245),
+		SubText        = Color3.fromRGB(145, 140, 155),
+		Accent         = Color3.fromRGB(170, 0, 255),
+		Stroke         = Color3.fromRGB(50, 40, 65),
+		SliderBar      = Color3.fromRGB(38, 32, 48),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	MidnightBlue = {
+		MainBackground = Color3.fromRGB(12, 15, 20),
+		TopBar         = Color3.fromRGB(18, 22, 28),
+		Sidebar        = Color3.fromRGB(15, 18, 24),
+		Element        = Color3.fromRGB(20, 26, 35),
+		ElementHover   = Color3.fromRGB(28, 36, 48),
+		Text           = Color3.fromRGB(235, 240, 245),
+		SubText        = Color3.fromRGB(135, 145, 155),
+		Accent         = Color3.fromRGB(41, 128, 185),
+		Stroke         = Color3.fromRGB(35, 48, 65),
+		SliderBar      = Color3.fromRGB(26, 35, 48),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	SunsetOrange = {
+		MainBackground = Color3.fromRGB(20, 15, 12),
+		TopBar         = Color3.fromRGB(28, 21, 17),
+		Sidebar        = Color3.fromRGB(24, 18, 14),
+		Element        = Color3.fromRGB(35, 26, 20),
+		ElementHover   = Color3.fromRGB(48, 36, 28),
+		Text           = Color3.fromRGB(245, 240, 235),
+		SubText        = Color3.fromRGB(155, 143, 135),
+		Accent         = Color3.fromRGB(230, 126, 34),
+		Stroke         = Color3.fromRGB(60, 42, 30),
+		SliderBar      = Color3.fromRGB(45, 34, 26),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	NeonPink = {
+		MainBackground = Color3.fromRGB(20, 12, 18),
+		TopBar         = Color3.fromRGB(28, 18, 25),
+		Sidebar        = Color3.fromRGB(24, 15, 21),
+		Element        = Color3.fromRGB(35, 20, 31),
+		ElementHover   = Color3.fromRGB(48, 28, 43),
+		Text           = Color3.fromRGB(245, 235, 242),
+		SubText        = Color3.fromRGB(155, 135, 149),
+		Accent         = Color3.fromRGB(255, 0, 128),
+		Stroke         = Color3.fromRGB(60, 30, 52),
+		SliderBar      = Color3.fromRGB(45, 26, 40),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	ToxicLime = {
+		MainBackground = Color3.fromRGB(14, 18, 12),
+		TopBar         = Color3.fromRGB(20, 26, 17),
+		Sidebar        = Color3.fromRGB(17, 22, 14),
+		Element        = Color3.fromRGB(24, 32, 20),
+		ElementHover   = Color3.fromRGB(32, 44, 28),
+		Text           = Color3.fromRGB(240, 245, 235),
+		SubText        = Color3.fromRGB(140, 155, 135),
+		Accent         = Color3.fromRGB(118, 255, 3),
+		Stroke         = Color3.fromRGB(40, 55, 30),
+		SliderBar      = Color3.fromRGB(32, 42, 26),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	IceTeal = {
+		MainBackground = Color3.fromRGB(12, 18, 18),
+		TopBar         = Color3.fromRGB(17, 26, 26),
+		Sidebar        = Color3.fromRGB(14, 22, 22),
+		Element        = Color3.fromRGB(20, 32, 32),
+		ElementHover   = Color3.fromRGB(28, 44, 44),
+		Text           = Color3.fromRGB(235, 245, 245),
+		SubText        = Color3.fromRGB(135, 155, 155),
+		Accent         = Color3.fromRGB(0, 229, 255),
+		Stroke         = Color3.fromRGB(30, 55, 55),
+		SliderBar      = Color3.fromRGB(26, 42, 42),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	CoffeeBrown = {
+		MainBackground = Color3.fromRGB(18, 15, 13),
+		TopBar         = Color3.fromRGB(26, 22, 19),
+		Sidebar        = Color3.fromRGB(22, 18, 16),
+		Element        = Color3.fromRGB(32, 27, 24),
+		ElementHover   = Color3.fromRGB(44, 38, 34),
+		Text           = Color3.fromRGB(245, 241, 238),
+		SubText        = Color3.fromRGB(155, 145, 140),
+		Accent         = Color3.fromRGB(160, 82, 45),
+		Stroke         = Color3.fromRGB(55, 42, 35),
+		SliderBar      = Color3.fromRGB(40, 33, 30),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	Amethyst = {
+		MainBackground = Color3.fromRGB(15, 12, 18),
+		TopBar         = Color3.fromRGB(22, 18, 26),
+		Sidebar        = Color3.fromRGB(18, 15, 22),
+		Element        = Color3.fromRGB(26, 21, 32),
+		ElementHover   = Color3.fromRGB(36, 30, 44),
+		Text           = Color3.fromRGB(240, 235, 245),
+		SubText        = Color3.fromRGB(140, 135, 155),
+		Accent         = Color3.fromRGB(153, 50, 204),
+		Stroke         = Color3.fromRGB(45, 35, 55),
+		SliderBar      = Color3.fromRGB(33, 27, 40),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	GoldLux = {
+		MainBackground = Color3.fromRGB(18, 17, 12),
+		TopBar         = Color3.fromRGB(26, 24, 17),
+		Sidebar        = Color3.fromRGB(22, 20, 14),
+		Element        = Color3.fromRGB(32, 30, 20),
+		ElementHover   = Color3.fromRGB(44, 42, 28),
+		Text           = Color3.fromRGB(245, 243, 235),
+		SubText        = Color3.fromRGB(155, 150, 135),
+		Accent         = Color3.fromRGB(218, 165, 32),
+		Stroke         = Color3.fromRGB(55, 50, 30),
+		SliderBar      = Color3.fromRGB(40, 38, 25),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	MatrixGreen = {
+		MainBackground = Color3.fromRGB(10, 15, 10),
+		TopBar         = Color3.fromRGB(15, 22, 15),
+		Sidebar        = Color3.fromRGB(12, 18, 12),
+		Element        = Color3.fromRGB(18, 28, 18),
+		ElementHover   = Color3.fromRGB(26, 38, 26),
+		Text           = Color3.fromRGB(230, 245, 230),
+		SubText        = Color3.fromRGB(120, 155, 120),
+		Accent         = Color3.fromRGB(0, 255, 65),
+		Stroke         = Color3.fromRGB(25, 48, 25),
+		SliderBar      = Color3.fromRGB(22, 36, 22),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	RubyRed = {
+		MainBackground = Color3.fromRGB(20, 10, 10),
+		TopBar         = Color3.fromRGB(28, 15, 15),
+		Sidebar        = Color3.fromRGB(24, 12, 12),
+		Element        = Color3.fromRGB(35, 18, 18),
+		ElementHover   = Color3.fromRGB(48, 25, 25),
+		Text           = Color3.fromRGB(245, 230, 230),
+		SubText        = Color3.fromRGB(155, 120, 120),
+		Accent         = Color3.fromRGB(220, 20, 60),
+		Stroke         = Color3.fromRGB(60, 30, 30),
+		SliderBar      = Color3.fromRGB(45, 22, 22),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	SkyBlue = {
+		MainBackground = Color3.fromRGB(12, 16, 20),
+		TopBar         = Color3.fromRGB(18, 24, 30),
+		Sidebar        = Color3.fromRGB(15, 20, 25),
+		Element        = Color3.fromRGB(20, 28, 36),
+		ElementHover   = Color3.fromRGB(28, 39, 50),
+		Text           = Color3.fromRGB(235, 242, 250),
+		SubText        = Color3.fromRGB(135, 148, 160),
+		Accent         = Color3.fromRGB(52, 152, 219),
+		Stroke         = Color3.fromRGB(35, 50, 65),
+		SliderBar      = Color3.fromRGB(26, 36, 46),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	Lavender = {
+		MainBackground = Color3.fromRGB(16, 15, 20),
+		TopBar         = Color3.fromRGB(24, 22, 28),
+		Sidebar        = Color3.fromRGB(20, 18, 24),
+		Element        = Color3.fromRGB(30, 28, 36),
+		ElementHover   = Color3.fromRGB(42, 39, 50),
+		Text           = Color3.fromRGB(242, 240, 248),
+		SubText        = Color3.fromRGB(145, 140, 158),
+		Accent         = Color3.fromRGB(142, 68, 173),
+		Stroke         = Color3.fromRGB(50, 45, 65),
+		SliderBar      = Color3.fromRGB(38, 35, 48),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	Charcoal = {
+		MainBackground = Color3.fromRGB(18, 18, 18),
+		TopBar         = Color3.fromRGB(25, 25, 25),
+		Sidebar        = Color3.fromRGB(21, 21, 21),
+		Element        = Color3.fromRGB(32, 32, 32),
+		ElementHover   = Color3.fromRGB(44, 44, 44),
+		Text           = Color3.fromRGB(240, 240, 240),
+		SubText        = Color3.fromRGB(140, 140, 140),
+		Accent         = Color3.fromRGB(127, 140, 141),
+		Stroke         = Color3.fromRGB(50, 50, 50),
+		SliderBar      = Color3.fromRGB(40, 40, 40),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	SolarFlare = {
+		MainBackground = Color3.fromRGB(20, 14, 10),
+		TopBar         = Color3.fromRGB(28, 20, 15),
+		Sidebar        = Color3.fromRGB(24, 17, 12),
+		Element        = Color3.fromRGB(35, 25, 18),
+		ElementHover   = Color3.fromRGB(48, 35, 25),
+		Text           = Color3.fromRGB(245, 238, 235),
+		SubText        = Color3.fromRGB(155, 140, 135),
+		Accent         = Color3.fromRGB(243, 156, 18),
+		Stroke         = Color3.fromRGB(60, 42, 30),
+		SliderBar      = Color3.fromRGB(45, 32, 22),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	},
+	Mint = {
+		MainBackground = Color3.fromRGB(12, 18, 15),
+		TopBar         = Color3.fromRGB(17, 26, 22),
+		Sidebar        = Color3.fromRGB(14, 22, 18),
+		Element        = Color3.fromRGB(20, 32, 26),
+		ElementHover   = Color3.fromRGB(28, 44, 36),
+		Text           = Color3.fromRGB(235, 245, 240),
+		SubText        = Color3.fromRGB(135, 155, 145),
+		Accent         = Color3.fromRGB(26, 188, 156),
+		Stroke         = Color3.fromRGB(30, 55, 45),
+		SliderBar      = Color3.fromRGB(26, 42, 34),
+		Knob           = Color3.fromRGB(255, 255, 255)
+	}
 }
 
 function Library:Create(config)
@@ -70,7 +310,10 @@ function Library:Create(config)
 		NotifBox.Position = UDim2.new(-1.2, 0, 0, 0)
 		NotifBox.ZIndex = 101
 		NotifBox.Parent = NotifHolder
-		Instance.new("UICorner", NotifBox).CornerRadius = UDim.new(0, 8)
+		
+		local Corner = Instance.new("UICorner")
+		Corner.CornerRadius = UDim.new(0, 10)
+		Corner.Parent = NotifBox
 
 		local NTitle = Instance.new("TextLabel")
 		NTitle.Size = UDim2.new(1, -15, 0, 20)
@@ -115,11 +358,13 @@ function Library:Create(config)
 	MainFrame.ClipsDescendants = true
 	MainFrame.Parent = ScreenGui
 
-	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+	local MainCorner = Instance.new("UICorner")
+	MainCorner.CornerRadius = UDim.new(0, 12)
+	MainCorner.Parent = MainFrame
 
 	local UIStroke = Instance.new("UIStroke")
-	UIStroke.Color = Color3.fromRGB(45, 45, 55)
-	UIStroke.Thickness = 1
+	UIStroke.Color = currentTheme.Stroke
+	UIStroke.Thickness = 1.5
 	UIStroke.Parent = MainFrame
 
 	local TopBar = Instance.new("Frame")
@@ -127,7 +372,10 @@ function Library:Create(config)
 	TopBar.BackgroundColor3 = currentTheme.TopBar
 	TopBar.BorderSizePixel = 0
 	TopBar.Parent = MainFrame
-	Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
+
+	local TopBarCorner = Instance.new("UICorner")
+	TopBarCorner.CornerRadius = UDim.new(0, 12)
+	TopBarCorner.Parent = TopBar
 
 	local FixCorner = Instance.new("Frame")
 	FixCorner.Size = UDim2.new(1, 0, 0, 10)
@@ -196,7 +444,10 @@ function Library:Create(config)
 	MinimizeButton.TextSize = 15
 	MinimizeButton.Font = Enum.Font.GothamBold
 	MinimizeButton.Parent = ControlsHolder
-	Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
+	
+	local MinCorner = Instance.new("UICorner")
+	MinCorner.CornerRadius = UDim.new(0, 6)
+	MinCorner.Parent = MinimizeButton
 
 	local CloseButton = Instance.new("TextButton")
 	CloseButton.Size = UDim2.new(0, 24, 0, 24)
@@ -206,9 +457,12 @@ function Library:Create(config)
 	CloseButton.TextSize = 15
 	CloseButton.Font = Enum.Font.GothamBold
 	CloseButton.Parent = ControlsHolder
-	Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
+	
+	local CloseCorner = Instance.new("UICorner")
+	CloseCorner.CornerRadius = UDim.new(0, 6)
+	CloseCorner.Parent = CloseButton
 
-	-- نظام رسالة التأكيد عند الضغط على × (Prompt Dialog)
+	-- نافذة تأكيد الإغلاق الفخمة
 	local function ShowConfirmDialog()
 		if ScreenGui:FindFirstChild("ConfirmOverlay") then return end
 		
@@ -216,7 +470,7 @@ function Library:Create(config)
 		Overlay.Name = "ConfirmOverlay"
 		Overlay.Size = UDim2.new(1, 0, 1, 0)
 		Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		Overlay.BackgroundTransparency = 0.5
+		Overlay.BackgroundTransparency = 0.6
 		Overlay.ZIndex = 200
 		Overlay.Parent = ScreenGui
 
@@ -226,7 +480,15 @@ function Library:Create(config)
 		DialogBox.BackgroundColor3 = currentTheme.TopBar
 		DialogBox.ZIndex = 201
 		DialogBox.Parent = Overlay
-		Instance.new("UICorner", DialogBox).CornerRadius = UDim.new(0, 10)
+		
+		local DCorner = Instance.new("UICorner")
+		DCorner.CornerRadius = UDim.new(0, 12)
+		DCorner.Parent = DialogBox
+
+		local DStroke = Instance.new("UIStroke")
+		DStroke.Color = currentTheme.Stroke
+		DStroke.Thickness = 1.5
+		DStroke.Parent = DialogBox
 
 		local DTitle = Instance.new("TextLabel")
 		DTitle.Size = UDim2.new(1, 0, 0, 35)
@@ -260,7 +522,10 @@ function Library:Create(config)
 		YesBtn.Font = Enum.Font.GothamBold
 		YesBtn.ZIndex = 201
 		YesBtn.Parent = DialogBox
-		Instance.new("UICorner", YesBtn).CornerRadius = UDim.new(0, 6)
+		
+		local YCorner = Instance.new("UICorner")
+		YCorner.CornerRadius = UDim.new(0, 8)
+		YCorner.Parent = YesBtn
 
 		local NoBtn = Instance.new("TextButton")
 		NoBtn.Size = UDim2.new(0, 110, 0, 28)
@@ -272,7 +537,10 @@ function Library:Create(config)
 		NoBtn.Font = Enum.Font.GothamBold
 		NoBtn.ZIndex = 201
 		NoBtn.Parent = DialogBox
-		Instance.new("UICorner", NoBtn).CornerRadius = UDim.new(0, 6)
+		
+		local NCorner = Instance.new("UICorner")
+		NCorner.CornerRadius = UDim.new(0, 8)
+		NCorner.Parent = NoBtn
 
 		YesBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 		NoBtn.MouseButton1Click:Connect(function() Overlay:Destroy() end)
@@ -280,20 +548,32 @@ function Library:Create(config)
 
 	CloseButton.MouseButton1Click:Connect(ShowConfirmDialog)
 
+	-- شريط التبويبات الجانبي (Sidebar) بلونه المخصص المتدرج عن الواجهة
 	local Sidebar = Instance.new("ScrollingFrame")
 	Sidebar.Size = UDim2.new(0, 130, 1, -48)
 	Sidebar.Position = UDim2.new(0, 8, 0, 42)
-	Sidebar.BackgroundTransparency = 1
+	Sidebar.BackgroundColor3 = currentTheme.Sidebar
+	Sidebar.BackgroundTransparency = 0.5
 	Sidebar.BorderSizePixel = 0
 	Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
 	Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	Sidebar.ScrollBarThickness = 2
 	Sidebar.Parent = MainFrame
 
+	local SideCorner = Instance.new("UICorner")
+	SideCorner.CornerRadius = UDim.new(0, 8)
+	SideCorner.Parent = Sidebar
+
 	local SidebarLayout = Instance.new("UIListLayout")
 	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	SidebarLayout.Padding = UDim.new(0, 5)
 	SidebarLayout.Parent = Sidebar
+
+	local SidebarPadding = Instance.new("UIPadding")
+	SidebarPadding.PaddingTop = UDim.new(0, 5)
+	SidebarPadding.PaddingLeft = UDim.new(0, 5)
+	SidebarPadding.PaddingRight = UDim.new(0, 5)
+	SidebarPadding.Parent = Sidebar
 
 	local ContainerHolder = Instance.new("Frame")
 	ContainerHolder.Size = UDim2.new(1, -146, 1, -44)
@@ -315,14 +595,17 @@ function Library:Create(config)
 
 	function WindowObj:AddTab(tabName, tabDesc)
 		local TabButton = Instance.new("TextButton")
-		TabButton.Size = UDim2.new(1, 0, 0, 30)
+		TabButton.Size = UDim2.new(1, 0, 0, 32)
 		TabButton.BackgroundColor3 = currentTheme.Element
 		TabButton.Text = tabName
 		TabButton.TextColor3 = currentTheme.SubText
 		TabButton.TextSize = 11
 		TabButton.Font = Enum.Font.GothamMedium
 		TabButton.Parent = Sidebar
-		Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
+		
+		local TCorner = Instance.new("UICorner")
+		TCorner.CornerRadius = UDim.new(0, 8)
+		TCorner.Parent = TabButton
 
 		local TabPage = Instance.new("ScrollingFrame")
 		TabPage.Size = UDim2.new(1, 0, 1, 0)
@@ -347,7 +630,7 @@ function Library:Create(config)
 		if firstTab then
 			firstTab = false
 			TabPage.Visible = true
-			TabButton.TextColor3 = currentTheme.Text
+			TabButton.TextColor3 = currentTheme.Accent
 			TabButton.BackgroundColor3 = currentTheme.ElementHover
 		end
 
@@ -359,7 +642,7 @@ function Library:Create(config)
 				end
 			end
 			TabPage.Visible = true
-			TweenService:Create(TabButton, TweenInfo.new(0.2), {TextColor3 = currentTheme.Text, BackgroundColor3 = currentTheme.ElementHover}):Play()
+			TweenService:Create(TabButton, TweenInfo.new(0.2), {TextColor3 = currentTheme.Accent, BackgroundColor3 = currentTheme.ElementHover}):Play()
 		end)
 
 		local TabObj = {}
@@ -378,15 +661,18 @@ function Library:Create(config)
 
 		function TabObj:AddButton(name, desc, callback)
 			local Button = Instance.new("TextButton")
-			Button.Size = UDim2.new(1, 0, 0, 40)
+			Button.Size = UDim2.new(1, 0, 0, 42)
 			Button.BackgroundColor3 = currentTheme.Element
 			Button.Text = ""
 			Button.Parent = TabPage
-			Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6)
+			
+			local BCorner = Instance.new("UICorner")
+			BCorner.CornerRadius = UDim.new(0, 8)
+			BCorner.Parent = Button
 
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -15, 0, 18)
-			TitleLbl.Position = UDim2.new(0, 10, 0, 3)
+			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
 			TitleLbl.BackgroundTransparency = 1
 			TitleLbl.Text = name
 			TitleLbl.TextColor3 = currentTheme.Text
@@ -397,7 +683,7 @@ function Library:Create(config)
 
 			local DescLbl = Instance.new("TextLabel")
 			DescLbl.Size = UDim2.new(1, -15, 0, 14)
-			DescLbl.Position = UDim2.new(0, 10, 0, 21)
+			DescLbl.Position = UDim2.new(0, 10, 0, 22)
 			DescLbl.BackgroundTransparency = 1
 			DescLbl.Text = desc
 			DescLbl.TextColor3 = currentTheme.SubText
@@ -416,7 +702,10 @@ function Library:Create(config)
 			ToggleFrame.BackgroundColor3 = currentTheme.Element
 			ToggleFrame.Text = ""
 			ToggleFrame.Parent = TabPage
-			Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
+			
+			local TCorner = Instance.new("UICorner")
+			TCorner.CornerRadius = UDim.new(0, 8)
+			TCorner.Parent = ToggleFrame
 
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -55, 0, 18)
@@ -441,23 +730,29 @@ function Library:Create(config)
 			DescLbl.Parent = ToggleFrame
 
 			local Switch = Instance.new("Frame")
-			Switch.Size = UDim2.new(0, 34, 0, 18)
-			Switch.Position = UDim2.new(1, -44, 0.5, -9)
-			Switch.BackgroundColor3 = toggled and currentTheme.Accent or Color3.fromRGB(50, 50, 60)
-			Switch.Parent = ToggleFrame
-			Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0)
+			Switch.Size = UDim2.new(0, 36, 0, 20)
+			Switch.Position = UDim2.new(1, -46, 0.5, -10)
+			Switch.BackgroundColor3 = toggled and currentTheme.Accent or currentTheme.SliderBar
+			Switch.Parent = Switch and ToggleFrame
+			
+			local SCorner = Instance.new("UICorner")
+			SCorner.CornerRadius = UDim.new(1, 0)
+			SCorner.Parent = Switch
 
 			local Circle = Instance.new("Frame")
-			Circle.Size = UDim2.new(0, 14, 0, 14)
-			Circle.Position = toggled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
-			Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Circle.Size = UDim2.new(0, 16, 0, 16)
+			Circle.Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+			Circle.BackgroundColor3 = currentTheme.Knob
 			Circle.Parent = Switch
-			Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
+			
+			local CCorn = Instance.new("UICorner")
+			CCorn.CornerRadius = UDim.new(1, 0)
+			CCorn.Parent = Circle
 
 			ToggleFrame.MouseButton1Click:Connect(function()
 				toggled = not toggled
-				Switch.BackgroundColor3 = toggled and currentTheme.Accent or Color3.fromRGB(50, 50, 60)
-				Circle.Position = toggled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+				Switch.BackgroundColor3 = toggled and currentTheme.Accent or currentTheme.SliderBar
+				Circle.Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
 				if callback then callback(toggled) end
 			end)
 		end
@@ -470,13 +765,16 @@ function Library:Create(config)
 			SliderFrame.Size = UDim2.new(1, 0, 0, 48)
 			SliderFrame.BackgroundColor3 = currentTheme.Element
 			SliderFrame.Parent = TabPage
-			Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
+			
+			local SFrCorner = Instance.new("UICorner")
+			SFrCorner.CornerRadius = UDim.new(0, 8)
+			SFrCorner.Parent = SliderFrame
 
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -20, 0, 20)
 			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
 			TitleLbl.BackgroundTransparency = 1
-			TitleLbl.Text = name .. " : <font color='#00a2ff'>" .. tostring(value) .. "</font>"
+			TitleLbl.Text = name .. " : <font color='" .. "#00a2ff" .. "'>" .. tostring(value) .. "</font>"
 			TitleLbl.RichText = true
 			TitleLbl.TextColor3 = currentTheme.Text
 			TitleLbl.TextSize = 11
@@ -487,21 +785,43 @@ function Library:Create(config)
 			local Bar = Instance.new("Frame")
 			Bar.Size = UDim2.new(1, -20, 0, 6)
 			Bar.Position = UDim2.new(0, 10, 0, 32)
-			Bar.BackgroundColor3 = currentTheme.TopBar
+			Bar.BackgroundColor3 = currentTheme.SliderBar
 			Bar.Parent = SliderFrame
-			Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+			
+			local BarCorner = Instance.new("UICorner")
+			BarCorner.CornerRadius = UDim.new(1, 0)
+			BarCorner.Parent = Bar
 
 			local Fill = Instance.new("Frame")
 			Fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
 			Fill.BackgroundColor3 = currentTheme.Accent
 			Fill.Parent = Bar
-			Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+			
+			local FillCorner = Instance.new("UICorner")
+			FillCorner.CornerRadius = UDim.new(1, 0)
+			FillCorner.Parent = Fill
+
+			-- تحسين شكل دائرة السلايدر (Knob) لتكون ناعمة ومحاطة بحدود أنيقة
+			local Knob = Instance.new("Frame")
+			Knob.Size = UDim2.new(0, 16, 0, 16)
+			Knob.Position = UDim2.new(1, -8, 0.5, -8)
+			Knob.BackgroundColor3 = currentTheme.Knob
+			Knob.Parent = Fill
+			
+			local KnobCorner = Instance.new("UICorner")
+			KnobCorner.CornerRadius = UDim.new(1, 0)
+			KnobCorner.Parent = Knob
+
+			local KnobStroke = Instance.new("UIStroke")
+			KnobStroke.Color = currentTheme.Accent
+			KnobStroke.Thickness = 2
+			KnobStroke.Parent = Knob
 
 			local function updateValue(input)
 				local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
 				value = math.floor(min + ((max - min) * pos))
 				Fill.Size = UDim2.new(pos, 0, 1, 0)
-				TitleLbl.Text = name .. " : <font color='#00a2ff'>" .. tostring(value) .. "</font>"
+				TitleLbl.Text = name .. " : <font color='" .. "#00a2ff" .. "'>" .. tostring(value) .. "</font>"
 				if callback then callback(value) end
 			end
 
@@ -526,17 +846,20 @@ function Library:Create(config)
 			local dropped = false
 
 			local DropFrame = Instance.new("Frame")
-			DropFrame.Size = UDim2.new(1, 0, 0, 40)
+			DropFrame.Size = UDim2.new(1, 0, 0, 42)
 			DropFrame.BackgroundColor3 = currentTheme.Element
 			DropFrame.ClipsDescendants = true
 			DropFrame.Parent = TabPage
-			Instance.new("UICorner", DropFrame).CornerRadius = UDim.new(0, 6)
+			
+			local DFrCorner = Instance.new("UICorner")
+			DFrCorner.CornerRadius = UDim.new(0, 8)
+			DFrCorner.Parent = DropFrame
 
 			local TitleLbl = Instance.new("TextLabel")
-			TitleLbl.Size = UDim2.new(1, -30, 0, 40)
+			TitleLbl.Size = UDim2.new(1, -30, 0, 42)
 			TitleLbl.Position = UDim2.new(0, 10, 0, 0)
 			TitleLbl.BackgroundTransparency = 1
-			TitleLbl.Text = name .. " : <font color='#00a2ff'>" .. tostring(selected) .. "</font>"
+			TitleLbl.Text = name .. " : <font color='" .. "#00a2ff" .. "'>" .. tostring(selected) .. "</font>"
 			TitleLbl.RichText = true
 			TitleLbl.TextColor3 = currentTheme.Text
 			TitleLbl.TextSize = 11
@@ -545,7 +868,7 @@ function Library:Create(config)
 			TitleLbl.Parent = DropFrame
 
 			local Arrow = Instance.new("TextLabel")
-			Arrow.Size = UDim2.new(0, 20, 0, 40)
+			Arrow.Size = UDim2.new(0, 20, 0, 42)
 			Arrow.Position = UDim2.new(1, -25, 0, 0)
 			Arrow.BackgroundTransparency = 1
 			Arrow.Text = "▼"
@@ -554,14 +877,14 @@ function Library:Create(config)
 			Arrow.Parent = DropFrame
 
 			local DropBtn = Instance.new("TextButton")
-			DropBtn.Size = UDim2.new(1, 0, 0, 40)
+			DropBtn.Size = UDim2.new(1, 0, 0, 42)
 			DropBtn.BackgroundTransparency = 1
 			DropBtn.Text = ""
 			DropBtn.Parent = DropFrame
 
 			local ListHolder = Instance.new("ScrollingFrame")
 			ListHolder.Size = UDim2.new(1, -10, 0, 0)
-			ListHolder.Position = UDim2.new(0, 5, 0, 42)
+			ListHolder.Position = UDim2.new(0, 5, 0, 45)
 			ListHolder.BackgroundTransparency = 1
 			ListHolder.AutomaticCanvasSize = Enum.AutomaticSize.Y
 			ListHolder.ScrollBarThickness = 2
@@ -574,20 +897,23 @@ function Library:Create(config)
 
 			for _, opt in ipairs(options) do
 				local OptBtn = Instance.new("TextButton")
-				OptBtn.Size = UDim2.new(1, 0, 0, 28)
+				OptBtn.Size = UDim2.new(1, 0, 0, 30)
 				OptBtn.BackgroundColor3 = currentTheme.TopBar
 				OptBtn.Text = opt
 				OptBtn.TextColor3 = currentTheme.Text
 				OptBtn.TextSize = 10
 				OptBtn.Font = Enum.Font.GothamMedium
 				OptBtn.Parent = ListHolder
-				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
+				
+				local OCorner = Instance.new("UICorner")
+				OCorner.CornerRadius = UDim.new(0, 6)
+				OCorner.Parent = OptBtn
 
 				OptBtn.MouseButton1Click:Connect(function()
 					selected = opt
-					TitleLbl.Text = name .. " : <font color='#00a2ff'>" .. tostring(selected) .. "</font>"
+					TitleLbl.Text = name .. " : <font color='" .. "#00a2ff" .. "'>" .. tostring(selected) .. "</font>"
 					dropped = false
-					TweenService:Create(DropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 40)}):Play()
+					TweenService:Create(DropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 42)}):Play()
 					Arrow.Text = "▼"
 					if callback then callback(selected) end
 				end)
@@ -595,8 +921,7 @@ function Library:Create(config)
 
 			DropBtn.MouseButton1Click:Connect(function()
 				dropped = not dropped
-				-- حساب ذكي يخلي الدروبداون يسوي سكرول لو فيه عناصر كثيرة
-				local targetHeight = dropped and math.clamp(#options * 32 + 50, 40, 180) or 40
+				local targetHeight = dropped and math.clamp(#options * 33 + 52, 42, 180) or 42
 				TweenService:Create(DropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
 				Arrow.Text = dropped and "▲" or "▼"
 			end)
