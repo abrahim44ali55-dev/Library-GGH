@@ -1,5 +1,5 @@
 -- =====================================================================
--- Advanced Global Script Library System (Dropdown Fix Version)
+-- Advanced Global Script Library System (Fixed Dropdown & Clean UI)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -88,11 +88,13 @@ function Library:Create(config)
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
+	-- حاوي إشعارات برمجية نظيف تماماً لا يظهر أبدًا كصندوق فارغ على الشاشة
 	local ActiveNotifHolder = Instance.new("Frame")
 	ActiveNotifHolder.Size = UDim2.new(0, 260, 1, 0)
 	ActiveNotifHolder.Position = UDim2.new(0, 15, 0, 0)
 	ActiveNotifHolder.BackgroundTransparency = 1
-	ActiveNotifHolder.ZIndex = 400
+	ActiveNotifHolder.Visible = true
+	ActiveNotifHolder.ZIndex = 999
 	ActiveNotifHolder.Parent = ScreenGui
 
 	local NotifLayout = Instance.new("UIListLayout")
@@ -108,7 +110,7 @@ function Library:Create(config)
 		NotifBox.BackgroundColor3 = currentTheme.Top
 		NotifBox.BackgroundTransparency = 0.05
 		NotifBox.Position = UDim2.new(-1.2, 0, 0, 0)
-		NotifBox.ZIndex = 401
+		NotifBox.ZIndex = 1000
 		NotifBox.Parent = ActiveNotifHolder
 		Instance.new("UICorner", NotifBox).CornerRadius = UDim.new(0, 8)
 
@@ -121,7 +123,7 @@ function Library:Create(config)
 		NTitle.TextSize = 12
 		NTitle.Font = Enum.Font.GothamBold
 		NTitle.TextXAlignment = Enum.TextXAlignment.Left
-		NTitle.ZIndex = 401
+		NTitle.ZIndex = 1001
 		NTitle.Parent = NotifBox
 
 		local NDesc = Instance.new("TextLabel")
@@ -133,7 +135,7 @@ function Library:Create(config)
 		NDesc.TextSize = 11
 		NDesc.Font = Enum.Font.Gotham
 		NDesc.TextXAlignment = Enum.TextXAlignment.Left
-		NDesc.ZIndex = 401
+		NDesc.ZIndex = 1001
 		NDesc.Parent = NotifBox
 
 		TweenService:Create(NotifBox, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = UDim2.new(0, 0, 0, 0)}):Play()
@@ -152,6 +154,7 @@ function Library:Create(config)
 	MainFrame.BorderSizePixel = 0
 	MainFrame.ClipsDescendants = false
 	MainFrame.Visible = true
+	MainFrame.ZIndex = 10
 	MainFrame.Parent = ScreenGui
 	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
@@ -165,6 +168,7 @@ function Library:Create(config)
 	TopBar.Size = UDim2.new(1, 0, 0, 38)
 	TopBar.BackgroundColor3 = currentTheme.Top
 	TopBar.BorderSizePixel = 0
+	TopBar.ZIndex = 11
 	TopBar.Parent = MainFrame
 	Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
 
@@ -178,12 +182,14 @@ function Library:Create(config)
 	TitleLabel.TextSize = 11
 	TitleLabel.Font = Enum.Font.GothamBold
 	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TitleLabel.ZIndex = 12
 	TitleLabel.Parent = TopBar
 
 	local ControlsHolder = Instance.new("Frame")
 	ControlsHolder.Size = UDim2.new(0, 60, 1, 0)
 	ControlsHolder.Position = UDim2.new(1, -65, 0, 0)
 	ControlsHolder.BackgroundTransparency = 1
+	ControlsHolder.ZIndex = 12
 	ControlsHolder.Parent = TopBar
 
 	local ControlsLayout = Instance.new("UIListLayout")
@@ -201,6 +207,7 @@ function Library:Create(config)
 	CloseButton.TextColor3 = currentTheme.Text
 	CloseButton.TextSize = 15
 	CloseButton.Font = Enum.Font.GothamBold
+	CloseButton.ZIndex = 13
 	CloseButton.Parent = ControlsHolder
 	Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
@@ -211,6 +218,7 @@ function Library:Create(config)
 	MinimizeButton.TextColor3 = currentTheme.Text
 	MinimizeButton.TextSize = 13
 	MinimizeButton.Font = Enum.Font.GothamBold
+	MinimizeButton.ZIndex = 13
 	MinimizeButton.Parent = ControlsHolder
 	Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
 
@@ -227,14 +235,14 @@ function Library:Create(config)
 	ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	ConfirmOverlay.BackgroundTransparency = 0.5
 	ConfirmOverlay.Visible = false
-	ConfirmOverlay.ZIndex = 250
+	ConfirmOverlay.ZIndex = 500
 	ConfirmOverlay.Parent = ScreenGui
 
 	local ConfirmBox = Instance.new("Frame")
 	ConfirmBox.Size = UDim2.new(0, 260, 0, 110)
 	ConfirmBox.Position = UDim2.new(0.5, -130, 0.5, -55)
 	ConfirmBox.BackgroundColor3 = currentTheme.Top
-	ConfirmBox.ZIndex = 251
+	ConfirmBox.ZIndex = 501
 	ConfirmBox.Parent = ConfirmOverlay
 	Instance.new("UICorner", ConfirmBox).CornerRadius = UDim.new(0, 10)
 
@@ -245,7 +253,7 @@ function Library:Create(config)
 	ConfirmText.TextColor3 = currentTheme.Text
 	ConfirmText.TextSize = 12
 	ConfirmText.Font = Enum.Font.GothamMedium
-	ConfirmText.ZIndex = 251
+	ConfirmText.ZIndex = 501
 	ConfirmText.Parent = ConfirmBox
 
 	local YesButton = Instance.new("TextButton")
@@ -256,7 +264,7 @@ function Library:Create(config)
 	YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	YesButton.TextSize = 11
 	YesButton.Font = Enum.Font.GothamBold
-	YesButton.ZIndex = 251
+	YesButton.ZIndex = 501
 	YesButton.Parent = ConfirmBox
 	Instance.new("UICorner", YesButton).CornerRadius = UDim.new(0, 6)
 
@@ -268,7 +276,7 @@ function Library:Create(config)
 	NoButton.TextColor3 = currentTheme.Text
 	NoButton.TextSize = 11
 	NoButton.Font = Enum.Font.GothamBold
-	NoButton.ZIndex = 251
+	NoButton.ZIndex = 501
 	NoButton.Parent = ConfirmBox
 	Instance.new("UICorner", NoButton).CornerRadius = UDim.new(0, 6)
 
@@ -349,6 +357,7 @@ function Library:Create(config)
 	Sidebar.BorderSizePixel = 0
 	Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.None
 	Sidebar.ScrollBarThickness = 2
+	Sidebar.ZIndex = 15
 	Sidebar.Parent = MainFrame
 
 	local SidebarLayout = Instance.new("UIListLayout")
@@ -366,6 +375,7 @@ function Library:Create(config)
 	ContainerHolder.Size = UDim2.new(1, -150, 1, -44)
 	ContainerHolder.Position = UDim2.new(0, 148, 0, 40)
 	ContainerHolder.BackgroundTransparency = 1
+	ContainerHolder.ZIndex = 15
 	ContainerHolder.Parent = MainFrame
 
 	local WindowObj = {}
@@ -402,6 +412,7 @@ function Library:Create(config)
 		TabButton.TextSize = 11
 		TabButton.Font = Enum.Font.GothamMedium
 		TabButton.TextXAlignment = Enum.TextXAlignment.Center
+		TabButton.ZIndex = 16
 		TabButton.Parent = Sidebar
 		Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
 
@@ -412,6 +423,7 @@ function Library:Create(config)
 		TabPage.Visible = false
 		TabPage.AutomaticCanvasSize = Enum.AutomaticSize.None
 		TabPage.ScrollBarThickness = 3
+		TabPage.ZIndex = 16
 		TabPage.Parent = ContainerHolder
 
 		local PageLayout = Instance.new("UIListLayout")
@@ -451,6 +463,7 @@ function Library:Create(config)
 			local NoteFrame = Instance.new("Frame")
 			NoteFrame.Size = UDim2.new(1, 0, 0, 35)
 			NoteFrame.BackgroundColor3 = currentTheme.Top
+			NoteFrame.ZIndex = 17
 			NoteFrame.Parent = TabPage
 			Instance.new("UICorner", NoteFrame).CornerRadius = UDim.new(0, 6)
 
@@ -463,6 +476,7 @@ function Library:Create(config)
 			NoteLbl.TextSize = 10
 			NoteLbl.Font = Enum.Font.GothamBold
 			NoteLbl.TextXAlignment = Enum.TextXAlignment.Left
+			NoteLbl.ZIndex = 18
 			NoteLbl.Parent = NoteFrame
 		end
 
@@ -486,6 +500,7 @@ function Library:Create(config)
 			Button.BackgroundColor3 = currentTheme.Elem
 			Button.Text = ""
 			Button.AutoButtonColor = false
+			Button.ZIndex = 17
 			Button.Parent = TabPage
 			Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6)
 
@@ -498,6 +513,7 @@ function Library:Create(config)
 			TitleLbl.TextSize = 11
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			TitleLbl.ZIndex = 18
 			TitleLbl.Parent = Button
 
 			local DescLbl = Instance.new("TextLabel")
@@ -509,6 +525,7 @@ function Library:Create(config)
 			DescLbl.TextSize = 9
 			DescLbl.Font = Enum.Font.Gotham
 			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
+			DescLbl.ZIndex = 18
 			DescLbl.Parent = Button
 
 			Button.MouseButton1Click:Connect(function()
@@ -526,6 +543,7 @@ function Library:Create(config)
 			ToggleFrame.BackgroundColor3 = currentTheme.Elem
 			ToggleFrame.Text = ""
 			ToggleFrame.AutoButtonColor = false
+			ToggleFrame.ZIndex = 17
 			ToggleFrame.Parent = TabPage
 			Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
 
@@ -538,6 +556,7 @@ function Library:Create(config)
 			TitleLbl.TextSize = 11
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			TitleLbl.ZIndex = 18
 			TitleLbl.Parent = ToggleFrame
 
 			local DescLbl = Instance.new("TextLabel")
@@ -549,12 +568,14 @@ function Library:Create(config)
 			DescLbl.TextSize = 9
 			DescLbl.Font = Enum.Font.Gotham
 			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
+			DescLbl.ZIndex = 18
 			DescLbl.Parent = ToggleFrame
 
 			local Switch = Instance.new("Frame")
 			Switch.Size = UDim2.new(0, 34, 0, 18)
 			Switch.Position = UDim2.new(1, -44, 0.5, -9)
 			Switch.BackgroundColor3 = toggled and currentTheme.Accent or Color3.fromRGB(50, 50, 60)
+			Switch.ZIndex = 18
 			Switch.Parent = ToggleFrame
 			Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0)
 
@@ -562,6 +583,7 @@ function Library:Create(config)
 			Circle.Size = UDim2.new(0, 14, 0, 14)
 			Circle.Position = toggled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
 			Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Circle.ZIndex = 19
 			Circle.Parent = Switch
 			Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
 
@@ -578,6 +600,7 @@ function Library:Create(config)
 			local SliderFrame = Instance.new("Frame")
 			SliderFrame.Size = UDim2.new(1, 0, 0, 50)
 			SliderFrame.BackgroundColor3 = currentTheme.Elem
+			SliderFrame.ZIndex = 17
 			SliderFrame.Parent = TabPage
 			Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
 
@@ -590,6 +613,7 @@ function Library:Create(config)
 			TitleLbl.TextSize = 11
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			TitleLbl.ZIndex = 18
 			TitleLbl.Parent = SliderFrame
 
 			local ValueLbl = Instance.new("TextLabel")
@@ -601,18 +625,21 @@ function Library:Create(config)
 			ValueLbl.TextSize = 11
 			ValueLbl.Font = Enum.Font.GothamBold
 			ValueLbl.TextXAlignment = Enum.TextXAlignment.Right
+			ValueLbl.ZIndex = 18
 			ValueLbl.Parent = SliderFrame
 
 			local Bar = Instance.new("Frame")
 			Bar.Size = UDim2.new(1, -20, 0, 6)
 			Bar.Position = UDim2.new(0, 10, 0, 32)
 			Bar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+			Bar.ZIndex = 18
 			Bar.Parent = SliderFrame
 			Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
 
 			local Fill = Instance.new("Frame")
 			Fill.Size = UDim2.new((val - min) / (max - min), 0, 1, 0)
 			Fill.BackgroundColor3 = currentTheme.Accent
+			Fill.ZIndex = 19
 			Fill.Parent = Bar
 			Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
 
@@ -620,6 +647,7 @@ function Library:Create(config)
 			Knob.Size = UDim2.new(0, 12, 0, 12)
 			Knob.Position = UDim2.new(1, -6, 0.5, -6)
 			Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Knob.ZIndex = 20
 			Knob.Parent = Fill
 			Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
 
@@ -662,7 +690,7 @@ function Library:Create(config)
 			DropMain.Size = UDim2.new(1, 0, 0, closedHeight)
 			DropMain.BackgroundColor3 = currentTheme.Elem
 			DropMain.ClipsDescendants = true
-			DropMain.ZIndex = 5
+			DropMain.ZIndex = 30
 			DropMain.Parent = TabPage
 			Instance.new("UICorner", DropMain).CornerRadius = UDim.new(0, 6)
 
@@ -670,7 +698,7 @@ function Library:Create(config)
 			DropBtn.Size = UDim2.new(1, 0, 0, headerHeight)
 			DropBtn.BackgroundTransparency = 1
 			DropBtn.Text = ""
-			DropBtn.ZIndex = 6
+			DropBtn.ZIndex = 31
 			DropBtn.Parent = DropMain
 
 			local TitleLbl = Instance.new("TextLabel")
@@ -682,7 +710,7 @@ function Library:Create(config)
 			TitleLbl.TextSize = 11
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-			TitleLbl.ZIndex = 6
+			TitleLbl.ZIndex = 32
 			TitleLbl.Parent = DropBtn
 
 			local DropScroll = Instance.new("ScrollingFrame")
@@ -692,7 +720,7 @@ function Library:Create(config)
 			DropScroll.BorderSizePixel = 0
 			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 			DropScroll.ScrollBarThickness = 3
-			DropScroll.ZIndex = 7
+			DropScroll.ZIndex = 33
 			DropScroll.Parent = DropMain
 
 			local DropListLayout = Instance.new("UIListLayout")
@@ -714,7 +742,7 @@ function Library:Create(config)
 				OptBtn.TextColor3 = currentTheme.Sub
 				OptBtn.TextSize = 10
 				OptBtn.Font = Enum.Font.GothamMedium
-				OptBtn.ZIndex = 8
+				OptBtn.ZIndex = 34
 				OptBtn.Parent = DropScroll
 				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
 
