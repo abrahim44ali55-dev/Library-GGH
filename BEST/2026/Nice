@@ -1,4 +1,6 @@
--- ===================================================================== -- Advanced Global Script Library System (Final Version - Full Scroll Adjustments) -- =====================================================================
+-- =====================================================================
+-- Advanced Global Script Library System (No Key System Version)
+-- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
@@ -7,9 +9,6 @@ local RunService = game:GetService("RunService")
 local Library = {}
 Library.__index = Library
 
--- ========================================== --
--- Comprehensive and Fixed Themes List
--- ========================================== --
 local Themes = {
 	["Dark Modern"] = {
 		Bg = Color3.fromRGB(15, 15, 18),
@@ -65,13 +64,7 @@ local Localizations = {
 	en = {
 		CloseConfirm = "Are you sure you want to close the window?",
 		Confirm = "Confirm",
-		Cancel = "Cancel",
-		KeyPrompt = "Enter activation key or link to get it:",
-		CheckKey = "Verify",
-		CopyLink = "Copy Link",
-		InvalidKey = "Incorrect key or link!",
-		ValidKey = "Script activated successfully!",
-		CopiedLink = "Link copied to clipboard successfully!"
+		Cancel = "Cancel"
 	}
 }
 
@@ -84,32 +77,30 @@ function Library:Create(config)
 	local currentThemeName = config.Theme or "Dark Modern"
 	if not Themes[currentThemeName] then currentThemeName = "Dark Modern" end
 	local currentTheme = Themes[currentThemeName]
-	local keySystemEnabled = config.KeySystem ~= false
-	local correctKey = config.Key or "VIP-2026"
-	
+
 	if CoreGui:FindFirstChild("UniversalScriptHub") then
 		CoreGui["UniversalScriptHub"]:Destroy()
 	end
-	
+
 	local ScreenGui = Instance.new("ScreenGui")
 	ScreenGui.Name = "UniversalScriptHub"
 	ScreenGui.ResetOnSpawn = false
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
-	
+
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
 	NotifHolder.Position = UDim2.new(0, 15, 0.5, -200)
 	NotifHolder.BackgroundTransparency = 1
 	NotifHolder.ZIndex = 400
 	NotifHolder.Parent = ScreenGui
-	
+
 	local NotifLayout = Instance.new("UIListLayout")
 	NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	NotifLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 	NotifLayout.Padding = UDim.new(0, 8)
 	NotifLayout.Parent = NotifHolder
-	
+
 	local function Notify(titleText, descText, duration)
 		duration = duration or 3
 		local NotifBox = Instance.new("Frame")
@@ -120,7 +111,7 @@ function Library:Create(config)
 		NotifBox.ZIndex = 401
 		NotifBox.Parent = NotifHolder
 		Instance.new("UICorner", NotifBox).CornerRadius = UDim.new(0, 8)
-		
+
 		local NTitle = Instance.new("TextLabel")
 		NTitle.Size = UDim2.new(1, -15, 0, 20)
 		NTitle.Position = UDim2.new(0, 12, 0, 6)
@@ -132,7 +123,7 @@ function Library:Create(config)
 		NTitle.TextXAlignment = Enum.TextXAlignment.Left
 		NTitle.ZIndex = 401
 		NTitle.Parent = NotifBox
-		
+
 		local NDesc = Instance.new("TextLabel")
 		NDesc.Size = UDim2.new(1, -15, 0, 20)
 		NDesc.Position = UDim2.new(0, 12, 0, 26)
@@ -144,7 +135,7 @@ function Library:Create(config)
 		NDesc.TextXAlignment = Enum.TextXAlignment.Left
 		NDesc.ZIndex = 401
 		NDesc.Parent = NotifBox
-		
+
 		TweenService:Create(NotifBox, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 		task.spawn(function()
 			task.wait(duration)
@@ -153,30 +144,30 @@ function Library:Create(config)
 			NotifBox:Destroy()
 		end)
 	end
-	
+
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Size = UDim2.new(0, 520, 0, 350)
 	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -175)
 	MainFrame.BackgroundColor3 = currentTheme.Bg
 	MainFrame.BorderSizePixel = 0
 	MainFrame.ClipsDescendants = false
-	MainFrame.Visible = not keySystemEnabled
+	MainFrame.Visible = true
 	MainFrame.Parent = ScreenGui
 	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
-	
+
 	local UIStroke = Instance.new("UIStroke")
 	UIStroke.Thickness = 2.5
 	UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	UIStroke.Color = currentTheme.Accent
 	UIStroke.Parent = MainFrame
-	
+
 	local TopBar = Instance.new("Frame")
 	TopBar.Size = UDim2.new(1, 0, 0, 38)
 	TopBar.BackgroundColor3 = currentTheme.Top
 	TopBar.BorderSizePixel = 0
 	TopBar.Parent = MainFrame
 	Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
-	
+
 	local TitleLabel = Instance.new("TextLabel")
 	TitleLabel.Size = UDim2.new(1, -110, 1, 0)
 	TitleLabel.Position = UDim2.new(0, 12, 0, 0)
@@ -188,13 +179,13 @@ function Library:Create(config)
 	TitleLabel.Font = Enum.Font.GothamBold
 	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	TitleLabel.Parent = TopBar
-	
+
 	local ControlsHolder = Instance.new("Frame")
 	ControlsHolder.Size = UDim2.new(0, 60, 1, 0)
 	ControlsHolder.Position = UDim2.new(1, -65, 0, 0)
 	ControlsHolder.BackgroundTransparency = 1
 	ControlsHolder.Parent = TopBar
-	
+
 	local ControlsLayout = Instance.new("UIListLayout")
 	ControlsLayout.FillDirection = Enum.FillDirection.Horizontal
 	ControlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
@@ -202,7 +193,7 @@ function Library:Create(config)
 	ControlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	ControlsLayout.Padding = UDim.new(0, 5)
 	ControlsLayout.Parent = ControlsHolder
-	
+
 	local CloseButton = Instance.new("TextButton")
 	CloseButton.Size = UDim2.new(0, 24, 0, 24)
 	CloseButton.BackgroundColor3 = currentTheme.Elem
@@ -212,7 +203,7 @@ function Library:Create(config)
 	CloseButton.Font = Enum.Font.GothamBold
 	CloseButton.Parent = ControlsHolder
 	Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
-	
+
 	local MinimizeButton = Instance.new("TextButton")
 	MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
 	MinimizeButton.BackgroundColor3 = currentTheme.Elem
@@ -222,118 +213,15 @@ function Library:Create(config)
 	MinimizeButton.Font = Enum.Font.GothamBold
 	MinimizeButton.Parent = ControlsHolder
 	Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
-	
-	local KeyOverlay
-	if keySystemEnabled then
-		KeyOverlay = Instance.new("Frame")
-		KeyOverlay.Size = UDim2.new(1, 0, 1, 0)
-		KeyOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		KeyOverlay.BackgroundTransparency = 0.6
-		KeyOverlay.ZIndex = 300
-		KeyOverlay.Parent = ScreenGui
-		
-		local KeyBox = Instance.new("Frame")
-		KeyBox.Size = UDim2.new(0, 320, 0, 195)
-		KeyBox.Position = UDim2.new(0.5, -160, 0.5, -97)
-		KeyBox.BackgroundColor3 = currentTheme.Top
-		KeyBox.ZIndex = 301
-		KeyBox.Parent = KeyOverlay
-		Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
-		
-		local KeyTitle = Instance.new("TextLabel")
-		KeyTitle.Size = UDim2.new(1, 0, 0, 40)
-		KeyTitle.BackgroundTransparency = 1
-		KeyTitle.Text = Localizations[currentLang].KeyPrompt
-		KeyTitle.TextColor3 = currentTheme.Text
-		KeyTitle.TextSize = 11
-		KeyTitle.Font = Enum.Font.GothamBold
-		KeyTitle.ZIndex = 301
-		KeyTitle.Parent = KeyBox
-		
-		local KeyInput = Instance.new("TextBox")
-		KeyInput.Size = UDim2.new(1, -40, 0, 35)
-		KeyInput.Position = UDim2.new(0, 20, 0, 45)
-		KeyInput.BackgroundColor3 = currentTheme.Elem
-		KeyInput.Text = ""
-		KeyInput.PlaceholderText = "Enter key or link here..."
-		KeyInput.TextColor3 = currentTheme.Text
-		KeyInput.PlaceholderColor3 = currentTheme.Sub
-		KeyInput.TextSize = 12
-		KeyInput.Font = Enum.Font.Gotham
-		KeyInput.ZIndex = 301
-		KeyInput.Parent = KeyBox
-		Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
-		
-		local VerifyBtn = Instance.new("TextButton")
-		VerifyBtn.Size = UDim2.new(0, 130, 0, 35)
-		VerifyBtn.Position = UDim2.new(0, 20, 0, 90)
-		VerifyBtn.BackgroundColor3 = currentTheme.Accent
-		VerifyBtn.Text = Localizations[currentLang].CheckKey
-		VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		VerifyBtn.TextSize = 12
-		VerifyBtn.Font = Enum.Font.GothamBold
-		VerifyBtn.ZIndex = 301
-		VerifyBtn.Parent = KeyBox
-		Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
-		
-		local CopyBtn = Instance.new("TextButton")
-		CopyBtn.Size = UDim2.new(0, 130, 0, 35)
-		CopyBtn.Position = UDim2.new(1, -150, 0, 90)
-		CopyBtn.BackgroundColor3 = currentTheme.Elem
-		CopyBtn.Text = Localizations[currentLang].CopyLink
-		CopyBtn.TextColor3 = currentTheme.Text
-		CopyBtn.TextSize = 12
-		CopyBtn.Font = Enum.Font.GothamBold
-		CopyBtn.ZIndex = 301
-		CopyBtn.Parent = KeyBox
-		Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 6)
-		
-		local CloseKeyBtn = Instance.new("TextButton")
-		CloseKeyBtn.Size = UDim2.new(1, -40, 0, 30)
-		CloseKeyBtn.Position = UDim2.new(0, 20, 0, 138)
-		CloseKeyBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-		CloseKeyBtn.Text = "Cancel and Skip Script"
-		CloseKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		CloseKeyBtn.TextSize = 11
-		CloseKeyBtn.Font = Enum.Font.GothamBold
-		CloseKeyBtn.ZIndex = 301
-		CloseKeyBtn.Parent = KeyBox
-		Instance.new("UICorner", CloseKeyBtn).CornerRadius = UDim.new(0, 6)
-		
-		VerifyBtn.MouseButton1Click:Connect(function()
-			if KeyInput.Text == correctKey or KeyInput.Text ~= "" then
-				KeyOverlay:Destroy()
-				MainFrame.Visible = true
-				Notify("Success", Localizations[currentLang].ValidKey, 3)
-			else
-				Notify("Error", Localizations[currentLang].InvalidKey, 3)
-			end
-		end)
-		
-		CopyBtn.MouseButton1Click:Connect(function()
-			local textToCopy = KeyInput.Text
-			if textToCopy == "" then textToCopy = correctKey end
-			if setclipboard then
-				setclipboard(textToCopy)
-				Notify("Copied", Localizations[currentLang].CopiedLink, 2.5)
-			else
-				Notify("Notice", "Clipboard is not supported on your device", 2.5)
-			end
-		end)
-		
-		CloseKeyBtn.MouseButton1Click:Connect(function()
-			ScreenGui:Destroy()
-		end)
-	end
-	
-	local uiVisible = not keySystemEnabled
+
+	local uiVisible = true
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if input.KeyCode == toggleKey and not gameProcessed and (not KeyOverlay or KeyOverlay.Parent == nil) then
+		if input.KeyCode == toggleKey and not gameProcessed then
 			uiVisible = not uiVisible
 			MainFrame.Visible = uiVisible
 		end
 	end)
-	
+
 	local ConfirmOverlay = Instance.new("Frame")
 	ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
 	ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -341,7 +229,7 @@ function Library:Create(config)
 	ConfirmOverlay.Visible = false
 	ConfirmOverlay.ZIndex = 250
 	ConfirmOverlay.Parent = ScreenGui
-	
+
 	local ConfirmBox = Instance.new("Frame")
 	ConfirmBox.Size = UDim2.new(0, 260, 0, 110)
 	ConfirmBox.Position = UDim2.new(0.5, -130, 0.5, -55)
@@ -349,7 +237,7 @@ function Library:Create(config)
 	ConfirmBox.ZIndex = 251
 	ConfirmBox.Parent = ConfirmOverlay
 	Instance.new("UICorner", ConfirmBox).CornerRadius = UDim.new(0, 10)
-	
+
 	local ConfirmText = Instance.new("TextLabel")
 	ConfirmText.Size = UDim2.new(1, 0, 0, 50)
 	ConfirmText.BackgroundTransparency = 1
@@ -359,7 +247,7 @@ function Library:Create(config)
 	ConfirmText.Font = Enum.Font.GothamMedium
 	ConfirmText.ZIndex = 251
 	ConfirmText.Parent = ConfirmBox
-	
+
 	local YesButton = Instance.new("TextButton")
 	YesButton.Size = UDim2.new(0, 110, 0, 30)
 	YesButton.Position = UDim2.new(0, 10, 1, -38)
@@ -371,7 +259,7 @@ function Library:Create(config)
 	YesButton.ZIndex = 251
 	YesButton.Parent = ConfirmBox
 	Instance.new("UICorner", YesButton).CornerRadius = UDim.new(0, 6)
-	
+
 	local NoButton = Instance.new("TextButton")
 	NoButton.Size = UDim2.new(0, 110, 0, 30)
 	NoButton.Position = UDim2.new(1, -120, 1, -38)
@@ -383,11 +271,11 @@ function Library:Create(config)
 	NoButton.ZIndex = 251
 	NoButton.Parent = ConfirmBox
 	Instance.new("UICorner", NoButton).CornerRadius = UDim.new(0, 6)
-	
+
 	CloseButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
 	NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
 	YesButton.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-	
+
 	local dragging, dragInput, dragStart, startPos
 	TopBar.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -397,18 +285,18 @@ function Library:Create(config)
 			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
 		end
 	end)
-	
+
 	TopBar.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
 	end)
-	
+
 	UserInputService.InputChanged:Connect(function(input)
 		if input == dragInput and dragging then
 			local delta = input.Position - dragStart
 			MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
 	end)
-	
+
 	local ResizeButton = Instance.new("TextButton")
 	ResizeButton.Size = UDim2.new(0, 16, 0, 16)
 	ResizeButton.Position = UDim2.new(1, -16, 1, -16)
@@ -418,7 +306,7 @@ function Library:Create(config)
 	ResizeButton.TextSize = 10
 	ResizeButton.ZIndex = 20
 	ResizeButton.Parent = MainFrame
-	
+
 	local resizing = false
 	local resizeStart, startSize
 	ResizeButton.InputBegan:Connect(function(input)
@@ -429,14 +317,14 @@ function Library:Create(config)
 			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then resizing = false end end)
 		end
 	end)
-	
+
 	UserInputService.InputChanged:Connect(function(input)
 		if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 			local delta = input.Position - resizeStart
 			MainFrame.Size = UDim2.new(0, math.clamp(startSize.X + delta.X, 450, 750), 0, math.clamp(startSize.Y + delta.Y, 300, 550))
 		end
 	end)
-	
+
 	local minimized = false
 	local Sidebar, ContainerHolder
 	MinimizeButton.MouseButton1Click:Connect(function()
@@ -453,7 +341,7 @@ function Library:Create(config)
 			if ContainerHolder then ContainerHolder.Visible = true end
 		end
 	end)
-	
+
 	Sidebar = Instance.new("ScrollingFrame")
 	Sidebar.Size = UDim2.new(0, 135, 1, -48)
 	Sidebar.Position = UDim2.new(0, 8, 0, 42)
@@ -462,27 +350,27 @@ function Library:Create(config)
 	Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.None
 	Sidebar.ScrollBarThickness = 2
 	Sidebar.Parent = MainFrame
-	
+
 	local SidebarLayout = Instance.new("UIListLayout")
 	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	SidebarLayout.Padding = UDim.new(0, 5)
 	SidebarLayout.Parent = Sidebar
-	
+
 	SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		local contentHeight = SidebarLayout.AbsoluteContentSize.Y
 		local visibleHeight = Sidebar.AbsoluteSize.Y
 		Sidebar.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight + 35, visibleHeight))
 	end)
-	
+
 	ContainerHolder = Instance.new("Frame")
 	ContainerHolder.Size = UDim2.new(1, -150, 1, -44)
 	ContainerHolder.Position = UDim2.new(0, 148, 0, 40)
 	ContainerHolder.BackgroundTransparency = 1
 	ContainerHolder.Parent = MainFrame
-	
+
 	local WindowObj = {}
 	local firstTab = true
-	
+
 	function WindowObj:SetTheme(themeName)
 		if Themes[themeName] then
 			currentThemeName = themeName
@@ -504,7 +392,7 @@ function Library:Create(config)
 			Notify("Themes", "Theme changed to: " .. themeName, 2)
 		end
 	end
-	
+
 	function WindowObj:AddTab(tabName, tabDesc)
 		local TabButton = Instance.new("TextButton")
 		TabButton.Size = UDim2.new(1, 0, 0, 30)
@@ -516,7 +404,7 @@ function Library:Create(config)
 		TabButton.TextXAlignment = Enum.TextXAlignment.Center
 		TabButton.Parent = Sidebar
 		Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
-		
+
 		local TabPage = Instance.new("ScrollingFrame")
 		TabPage.Size = UDim2.new(1, 0, 1, 0)
 		TabPage.BackgroundTransparency = 1
@@ -525,30 +413,30 @@ function Library:Create(config)
 		TabPage.AutomaticCanvasSize = Enum.AutomaticSize.None
 		TabPage.ScrollBarThickness = 3
 		TabPage.Parent = ContainerHolder
-		
+
 		local PageLayout = Instance.new("UIListLayout")
 		PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		PageLayout.Padding = UDim.new(0, 6)
 		PageLayout.Parent = TabPage
-		
+
 		local PagePadding = Instance.new("UIPadding")
 		PagePadding.PaddingRight = UDim.new(0, 8)
 		PagePadding.PaddingBottom = UDim.new(0, 15)
 		PagePadding.Parent = TabPage
-		
+
 		PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			local contentHeight = PageLayout.AbsoluteContentSize.Y
 			local visibleHeight = TabPage.AbsoluteSize.Y
 			TabPage.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight + 50, visibleHeight))
 		end)
-		
+
 		if firstTab then
 			firstTab = false
 			TabPage.Visible = true
 			TabButton.TextColor3 = currentTheme.Text
 			TabButton.BackgroundColor3 = currentTheme.Top
 		end
-		
+
 		TabButton.MouseButton1Click:Connect(function()
 			for _, page in ipairs(ContainerHolder:GetChildren()) do if page:IsA("ScrollingFrame") then page.Visible = false end end
 			for _, btn in ipairs(Sidebar:GetChildren()) do
@@ -557,7 +445,7 @@ function Library:Create(config)
 			TabPage.Visible = true
 			TweenService:Create(TabButton, TweenInfo.new(0.2), {TextColor3 = currentTheme.Text, BackgroundColor3 = currentTheme.Top}):Play()
 		end)
-		
+
 		local TabObj = {}
 		function TabObj:AddDeveloperNote(noteText)
 			local NoteFrame = Instance.new("Frame")
@@ -565,7 +453,7 @@ function Library:Create(config)
 			NoteFrame.BackgroundColor3 = currentTheme.Top
 			NoteFrame.Parent = TabPage
 			Instance.new("UICorner", NoteFrame).CornerRadius = UDim.new(0, 6)
-			
+
 			local NoteLbl = Instance.new("TextLabel")
 			NoteLbl.Size = UDim2.new(1, -15, 1, 0)
 			NoteLbl.Position = UDim2.new(0, 10, 0, 0)
@@ -577,7 +465,7 @@ function Library:Create(config)
 			NoteLbl.TextXAlignment = Enum.TextXAlignment.Left
 			NoteLbl.Parent = NoteFrame
 		end
-		
+
 		function TabObj:AddButton(name, desc, showNotify, notifyMsg, callback)
 			local notifyEnabled = false
 			local customMsg = nil
@@ -592,7 +480,7 @@ function Library:Create(config)
 					customMsg = notifyMsg
 				end
 			end
-			
+
 			local Button = Instance.new("TextButton")
 			Button.Size = UDim2.new(1, 0, 0, 42)
 			Button.BackgroundColor3 = currentTheme.Elem
@@ -600,7 +488,7 @@ function Library:Create(config)
 			Button.AutoButtonColor = false
 			Button.Parent = TabPage
 			Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6)
-			
+
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -15, 0, 18)
 			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
@@ -611,7 +499,7 @@ function Library:Create(config)
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 			TitleLbl.Parent = Button
-			
+
 			local DescLbl = Instance.new("TextLabel")
 			DescLbl.Size = UDim2.new(1, -15, 0, 14)
 			DescLbl.Position = UDim2.new(0, 10, 0, 22)
@@ -622,7 +510,7 @@ function Library:Create(config)
 			DescLbl.Font = Enum.Font.Gotham
 			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
 			DescLbl.Parent = Button
-			
+
 			Button.MouseButton1Click:Connect(function()
 				if notifyEnabled then
 					Notify("Executed", customMsg or ("Command executed: " .. name), 2.5)
@@ -630,7 +518,7 @@ function Library:Create(config)
 				if cb then cb() end
 			end)
 		end
-		
+
 		function TabObj:AddToggle(name, desc, defaultState, callback)
 			local toggled = defaultState or false
 			local ToggleFrame = Instance.new("TextButton")
@@ -640,7 +528,7 @@ function Library:Create(config)
 			ToggleFrame.AutoButtonColor = false
 			ToggleFrame.Parent = TabPage
 			Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
-			
+
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -55, 0, 18)
 			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
@@ -651,7 +539,7 @@ function Library:Create(config)
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 			TitleLbl.Parent = ToggleFrame
-			
+
 			local DescLbl = Instance.new("TextLabel")
 			DescLbl.Size = UDim2.new(1, -55, 0, 14)
 			DescLbl.Position = UDim2.new(0, 10, 0, 22)
@@ -662,21 +550,21 @@ function Library:Create(config)
 			DescLbl.Font = Enum.Font.Gotham
 			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
 			DescLbl.Parent = ToggleFrame
-			
+
 			local Switch = Instance.new("Frame")
 			Switch.Size = UDim2.new(0, 34, 0, 18)
 			Switch.Position = UDim2.new(1, -44, 0.5, -9)
 			Switch.BackgroundColor3 = toggled and currentTheme.Accent or Color3.fromRGB(50, 50, 60)
 			Switch.Parent = ToggleFrame
 			Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0)
-			
+
 			local Circle = Instance.new("Frame")
 			Circle.Size = UDim2.new(0, 14, 0, 14)
 			Circle.Position = toggled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
 			Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			Circle.Parent = Switch
 			Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
-			
+
 			ToggleFrame.MouseButton1Click:Connect(function()
 				toggled = not toggled
 				TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = toggled and currentTheme.Accent or Color3.fromRGB(50, 50, 60)}):Play()
@@ -684,7 +572,7 @@ function Library:Create(config)
 				if callback then callback(toggled) end
 			end)
 		end
-		
+
 		function TabObj:AddSlider(name, min, max, default, callback)
 			local val = default or min
 			local SliderFrame = Instance.new("Frame")
@@ -692,7 +580,7 @@ function Library:Create(config)
 			SliderFrame.BackgroundColor3 = currentTheme.Elem
 			SliderFrame.Parent = TabPage
 			Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
-			
+
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -15, 0, 18)
 			TitleLbl.Position = UDim2.new(0, 10, 0, 5)
@@ -703,7 +591,7 @@ function Library:Create(config)
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 			TitleLbl.Parent = SliderFrame
-			
+
 			local ValueLbl = Instance.new("TextLabel")
 			ValueLbl.Size = UDim2.new(0, 50, 0, 18)
 			ValueLbl.Position = UDim2.new(1, -60, 0, 5)
@@ -714,40 +602,40 @@ function Library:Create(config)
 			ValueLbl.Font = Enum.Font.GothamBold
 			ValueLbl.TextXAlignment = Enum.TextXAlignment.Right
 			ValueLbl.Parent = SliderFrame
-			
+
 			local Bar = Instance.new("Frame")
 			Bar.Size = UDim2.new(1, -20, 0, 6)
 			Bar.Position = UDim2.new(0, 10, 0, 32)
 			Bar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 			Bar.Parent = SliderFrame
 			Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
-			
+
 			local Fill = Instance.new("Frame")
 			Fill.Size = UDim2.new((val - min) / (max - min), 0, 1, 0)
 			Fill.BackgroundColor3 = currentTheme.Accent
 			Fill.Parent = Bar
 			Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
-			
+
 			local Knob = Instance.new("Frame")
 			Knob.Size = UDim2.new(0, 12, 0, 12)
 			Knob.Position = UDim2.new(1, -6, 0.5, -6)
 			Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			Knob.Parent = Fill
 			Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
-			
+
 			local draggingSlider = false
 			Bar.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					draggingSlider = true
 				end
 			end)
-			
+
 			UserInputService.InputEnded:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					draggingSlider = false
 				end
 			end)
-			
+
 			UserInputService.InputChanged:Connect(function(input)
 				if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 					local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
@@ -758,31 +646,31 @@ function Library:Create(config)
 				end
 			end)
 		end
-		
+
 		function TabObj:AddDropdown(name, list, callback)
 			local isOpen = false
 			local maxVisibleItems = 4
 			local itemHeight = 28
 			local paddingHeight = 4
 			local headerHeight = 42
-			
+
 			local calculatedListHeight = math.min(#list, maxVisibleItems) * (itemHeight + paddingHeight)
 			local closedHeight = headerHeight
 			local openedHeight = headerHeight + calculatedListHeight + 12
-			
+
 			local DropMain = Instance.new("Frame")
 			DropMain.Size = UDim2.new(1, 0, 0, closedHeight)
 			DropMain.BackgroundColor3 = currentTheme.Elem
 			DropMain.ClipsDescendants = true
 			DropMain.Parent = TabPage
 			Instance.new("UICorner", DropMain).CornerRadius = UDim.new(0, 6)
-			
+
 			local DropBtn = Instance.new("TextButton")
 			DropBtn.Size = UDim2.new(1, 0, 0, headerHeight)
 			DropBtn.BackgroundTransparency = 1
 			DropBtn.Text = ""
 			DropBtn.Parent = DropMain
-			
+
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -30, 0, headerHeight)
 			TitleLbl.Position = UDim2.new(0, 10, 0, 0)
@@ -793,7 +681,7 @@ function Library:Create(config)
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 			TitleLbl.Parent = DropBtn
-			
+
 			local DropScroll = Instance.new("ScrollingFrame")
 			DropScroll.Size = UDim2.new(1, -20, 0, calculatedListHeight)
 			DropScroll.Position = UDim2.new(0, 10, 0, headerHeight + 4)
@@ -802,18 +690,18 @@ function Library:Create(config)
 			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 			DropScroll.ScrollBarThickness = 3
 			DropScroll.Parent = DropMain
-			
+
 			local DropListLayout = Instance.new("UIListLayout")
 			DropListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 			DropListLayout.Padding = UDim.new(0, paddingHeight)
 			DropListLayout.Parent = DropScroll
-			
+
 			DropListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 				local contentHeight = DropListLayout.AbsoluteContentSize.Y
 				local visibleHeight = DropScroll.AbsoluteSize.Y
 				DropScroll.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight + 15, visibleHeight))
 			end)
-			
+
 			for _, option in ipairs(list) do
 				local OptBtn = Instance.new("TextButton")
 				OptBtn.Size = UDim2.new(1, -4, 0, itemHeight)
@@ -824,7 +712,7 @@ function Library:Create(config)
 				OptBtn.Font = Enum.Font.GothamMedium
 				OptBtn.Parent = DropScroll
 				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
-				
+
 				OptBtn.MouseButton1Click:Connect(function()
 					TitleLbl.Text = name .. " : " .. option
 					isOpen = false
@@ -832,17 +720,17 @@ function Library:Create(config)
 					if callback then callback(option) end
 				end)
 			end
-			
+
 			DropBtn.MouseButton1Click:Connect(function()
 				isOpen = not isOpen
 				local targetHeight = isOpen and openedHeight or closedHeight
 				TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
 			end)
 		end
-		
+
 		return TabObj
 	end
-	
+
 	WindowObj.Notify = Notify
 	return WindowObj
 end
