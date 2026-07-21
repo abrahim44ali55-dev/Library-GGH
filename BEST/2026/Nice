@@ -1,5 +1,5 @@
 -- =====================================================================
--- نظام مكتبة السكربتات العالمي المتطور (النسخة الكاملة والمحدثة - مع نظام مفاتيح اختياري وزر نسخ الرابط)
+-- نظام مكتبة السكربتات العالمي المتطور (النسخة النهائية - مع ضبط السكرول)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -88,7 +88,6 @@ function Library:Create(config)
 	if not Themes[currentThemeName] then currentThemeName = "Dark Modern" end
 	local currentTheme = Themes[currentThemeName]
 
-	-- إعدادات نظام المفاتيح (افتراضياً مفعل إذا لم يتم تحديده)
 	local keySystemEnabled = config.KeySystem ~= false
 	local correctKey = config.Key or "VIP-2026"
 
@@ -102,9 +101,6 @@ function Library:Create(config)
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-	-- ==========================================
-	-- نظام الإشعارات العالمي
-	-- ==========================================
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
 	NotifHolder.Position = UDim2.new(0, 15, 0.5, -200)
@@ -162,16 +158,12 @@ function Library:Create(config)
 		end)
 	end
 
-	-- ==========================================
-	-- الواجهة الرئيسية
-	-- ==========================================
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Size = UDim2.new(0, 520, 0, 350)
 	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -175)
 	MainFrame.BackgroundColor3 = currentTheme.Bg
 	MainFrame.BorderSizePixel = 0
 	MainFrame.ClipsDescendants = false
-	-- إذا كان نظام المفاتيح مغلقاً، تظهر الواجهة مباشرة
 	MainFrame.Visible = not keySystemEnabled
 	MainFrame.Parent = ScreenGui
 
@@ -236,9 +228,6 @@ function Library:Create(config)
 	MinimizeButton.Parent = ControlsHolder
 	Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
 
-	-- ==========================================
-	-- نظام المفاتيح (Key System - مشروط)
-	-- ==========================================
 	local KeyOverlay
 	if keySystemEnabled then
 		KeyOverlay = Instance.new("Frame")
@@ -280,7 +269,6 @@ function Library:Create(config)
 		KeyInput.Parent = KeyBox
 		Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
 
-		-- زر التحقق
 		local VerifyBtn = Instance.new("TextButton")
 		VerifyBtn.Size = UDim2.new(0, 130, 0, 35)
 		VerifyBtn.Position = UDim2.new(0, 20, 0, 90)
@@ -293,7 +281,6 @@ function Library:Create(config)
 		VerifyBtn.Parent = KeyBox
 		Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
 
-		-- زر نسخ الرابط الجديد
 		local CopyBtn = Instance.new("TextButton")
 		CopyBtn.Size = UDim2.new(0, 130, 0, 35)
 		CopyBtn.Position = UDim2.new(1, -150, 0, 90)
@@ -306,7 +293,6 @@ function Library:Create(config)
 		CopyBtn.Parent = KeyBox
 		Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 6)
 
-		-- زر إغلاق نافذة المفتاح
 		local CloseKeyBtn = Instance.new("TextButton")
 		CloseKeyBtn.Size = UDim2.new(1, -40, 0, 30)
 		CloseKeyBtn.Position = UDim2.new(0, 20, 0, 138)
@@ -331,10 +317,7 @@ function Library:Create(config)
 
 		CopyBtn.MouseButton1Click:Connect(function()
 			local textToCopy = KeyInput.Text
-			if textToCopy == "" then
-				textToCopy = correctKey -- إذا لم يكتب شيئاً ينسخ المفتاح الافتراضي أو الرابط
-			end
-			
+			if textToCopy == "" then textToCopy = correctKey end
 			if setclipboard then
 				setclipboard(textToCopy)
 				Notify("تم النسخ", Localizations[currentLang].CopiedLink, 2.5)
@@ -548,6 +531,16 @@ function Library:Create(config)
 		PagePadding.PaddingRight = UDim.new(0, 8)
 		PagePadding.PaddingBottom = UDim.new(0, 15)
 		PagePadding.Parent = TabPage
+
+		-- ==========================================
+		-- ضبط مسافة التمرير (الـ Scroll) لمنع التجاوز الزائد
+		-- ==========================================
+		PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			local contentHeight = PageLayout.AbsoluteContentSize.Y
+			local visibleHeight = TabPage.AbsoluteSize.Y
+			-- إضافة مساحة عنصر واحد فقط كحد أقصى (تجاوز بمقدار زر/تاب واحد تقريباً)
+			TabPage.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight + 50, visibleHeight))
+		end)
 
 		if firstTab then
 			firstTab = false
