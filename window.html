@@ -1,1 +1,55 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Window Setup - Documentation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <aside>
+        <div class="logo">⚡ UI Documentation</div>
+        <div class="nav-section">
+            <div class="nav-title">التوجيه الأساسي</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Loadstring (رابط الاستدعاء)</a></li>
+                <li><a href="window.html" class="active">Window Setup (إنشاء النافذة)</a></li>
+                <li><a href="elements.html">UI Elements (عناصر الواجهة)</a></li>
+                <li><a href="guide.html">Full Guide (الشرح والسكربت الشامل)</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <main>
+        <h1>Window Setup</h1>
+        <p>Configure and create the main graphical interface window with custom parameters.</p>
+        
+        <div class="code-box-wrapper">
+            <div class="code-header">
+                <button class="copy-icon-btn" onclick="copyCode(this)">
+                    📋 <span>نسخ</span>
+                </button>
+            </div>
+            <pre>local Window = Library:CreateWindow({
+    Title = "Script Title",
+    Theme = "Dark",
+    ToggleKey = Enum.KeyCode.RightControl
+})</pre>
+        </div>
+    </main>
+
+    <script>
+        function copyCode(btn) {
+            const pre = btn.closest('.code-box-wrapper').querySelector('pre');
+            navigator.clipboard.writeText(pre.innerText).then(() => {
+                btn.innerHTML = '✅ <span>تم النسخ</span>';
+                setTimeout(() => {
+                    btn.innerHTML = '📋 <span>نسخ</span>';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
