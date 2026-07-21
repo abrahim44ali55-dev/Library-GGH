@@ -1,5 +1,5 @@
 -- =====================================================================
--- نظام مكتبة السكربتات العالمي المتطور (النسخة النهائية - مع ضبط السكرول)
+-- نظام مكتبة السكربتات العالمي المتطور (النسخة النهائية - ضبط السكرول بالكامل)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -461,7 +461,7 @@ function Library:Create(config)
 	Sidebar.Position = UDim2.new(0, 8, 0, 42)
 	Sidebar.BackgroundTransparency = 1
 	Sidebar.BorderSizePixel = 0
-	Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.None
 	Sidebar.ScrollBarThickness = 2
 	Sidebar.Parent = MainFrame
 
@@ -469,6 +469,15 @@ function Library:Create(config)
 	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	SidebarLayout.Padding = UDim.new(0, 5)
 	SidebarLayout.Parent = Sidebar
+
+	-- ==========================================
+	-- ضبط مسافة التمرير (الـ Scroll) لجانب الـ Tabs لمنع التجاوز الزائد
+	-- ==========================================
+	SidebarLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		local contentHeight = SidebarLayout.AbsoluteContentSize.Y
+		local visibleHeight = Sidebar.AbsoluteSize.Y
+		Sidebar.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight + 35, visibleHeight))
+	end)
 
 	ContainerHolder = Instance.new("Frame")
 	ContainerHolder.Size = UDim2.new(1, -150, 1, -44)
@@ -518,7 +527,7 @@ function Library:Create(config)
 		TabPage.BackgroundTransparency = 1
 		TabPage.BorderSizePixel = 0
 		TabPage.Visible = false
-		TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		TabPage.AutomaticCanvasSize = Enum.AutomaticSize.None
 		TabPage.ScrollBarThickness = 3
 		TabPage.Parent = ContainerHolder
 
@@ -533,12 +542,11 @@ function Library:Create(config)
 		PagePadding.Parent = TabPage
 
 		-- ==========================================
-		-- ضبط مسافة التمرير (الـ Scroll) لمنع التجاوز الزائد
+		-- ضبط مسافة التمرير (الـ Scroll) لصفحة العناصر لمنع التجاوز الزائد
 		-- ==========================================
 		PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 			local contentHeight = PageLayout.AbsoluteContentSize.Y
 			local visibleHeight = TabPage.AbsoluteSize.Y
-			-- إضافة مساحة عنصر واحد فقط كحد أقصى (تجاوز بمقدار زر/تاب واحد تقريباً)
 			TabPage.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight + 50, visibleHeight))
 		end)
 
@@ -799,8 +807,7 @@ function Library:Create(config)
 			DropScroll.Position = UDim2.new(0, 10, 0, headerHeight + 4)
 			DropScroll.BackgroundTransparency = 1
 			DropScroll.BorderSizePixel = 0
-			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			DropScroll.CanvasSize = UDim2.new(0, 0, 0, (#list * (itemHeight + paddingHeight)) + 4)
+			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 			DropScroll.ScrollBarThickness = 3
 			DropScroll.Parent = DropMain
 
@@ -808,6 +815,15 @@ function Library:Create(config)
 			DropListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 			DropListLayout.Padding = UDim.new(0, paddingHeight)
 			DropListLayout.Parent = DropScroll
+
+			-- ==========================================
+			-- ضبط مسافة التمرير (الـ Scroll) لعناصر القائمة المنسدلة لمنع التجاوز الزائد
+			-- ==========================================
+			DropListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				local contentHeight = DropListLayout.AbsoluteContentSize.Y
+				local visibleHeight = DropScroll.AbsoluteSize.Y
+				DropScroll.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight + 15, visibleHeight))
+			end)
 
 			for _, option in ipairs(list) do
 				local OptBtn = Instance.new("TextButton")
