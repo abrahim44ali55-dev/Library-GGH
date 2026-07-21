@@ -36,7 +36,7 @@ function Library:Create(config)
 
 	local currentTheme = Themes.DarkModern
 
-	-- نظام الإشعارات
+	-- نظام الإشعارات والتأكيد
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
 	NotifHolder.Position = UDim2.new(0, 15, 0.5, -200)
@@ -144,6 +144,26 @@ function Library:Create(config)
 	ControlsHolder.BackgroundTransparency = 1
 	ControlsHolder.Parent = TopBar
 
+	local ControlsLayout = Instance.new("UIListLayout")
+	ControlsLayout.FillDirection = Enum.FillDirection.Horizontal
+	ControlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	ControlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	ControlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	ControlsLayout.Padding = UDim.new(0, 5)
+	ControlsLayout.Parent = ControlsHolder
+
+	-- زر التصغير والتكبير (-)
+	local MinimizeButton = Instance.new("TextButton")
+	MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
+	MinimizeButton.BackgroundColor3 = currentTheme.Element
+	MinimizeButton.Text = "-"
+	MinimizeButton.TextColor3 = currentTheme.Text
+	MinimizeButton.TextSize = 15
+	MinimizeButton.Font = Enum.Font.GothamBold
+	MinimizeButton.Parent = ControlsHolder
+	Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
+
+	-- زر الإغلاق (×)
 	local CloseButton = Instance.new("TextButton")
 	CloseButton.Size = UDim2.new(0, 24, 0, 24)
 	CloseButton.BackgroundColor3 = currentTheme.Element
@@ -153,8 +173,6 @@ function Library:Create(config)
 	CloseButton.Font = Enum.Font.GothamBold
 	CloseButton.Parent = ControlsHolder
 	Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
-
-	CloseButton.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
 	local Sidebar = Instance.new("ScrollingFrame")
 	Sidebar.Size = UDim2.new(0, 130, 1, -48)
@@ -177,6 +195,18 @@ function Library:Create(config)
 	ContainerHolder.BackgroundTransparency = 1
 	ContainerHolder.Parent = MainFrame
 
+	-- منطق زر التصغير والتكبير
+	local minimized = false
+	MinimizeButton.MouseButton1Click:Connect(function()
+		minimized = not minimized
+		MinimizeButton.Text = minimized and "+" or "-"
+		Sidebar.Visible = not minimized
+		ContainerHolder.Visible = not minimized
+		TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = minimized and UDim2.new(0, 530, 0, 38) or UDim2.new(0, 530, 0, 360)}):Play()
+	end)
+
+	CloseButton.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
 	local WindowObj = {}
 	local firstTab = true
 
@@ -192,6 +222,7 @@ function Library:Create(config)
 		TabButton.Parent = Sidebar
 		Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
 
+		-- نظام التمرير القديم (السكرول) للتبويبات
 		local TabPage = Instance.new("ScrollingFrame")
 		TabPage.Size = UDim2.new(1, 0, 1, 0)
 		TabPage.BackgroundTransparency = 1
