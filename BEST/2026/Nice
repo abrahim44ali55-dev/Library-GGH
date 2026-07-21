@@ -99,8 +99,8 @@ function Library:Create(config)
 
 	-- الواجهة الرئيسية
 	local MainFrame = Instance.new("Frame")
-	MainFrame.Size = UDim2.new(0, 520, 0, 350)
-	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -175)
+	MainFrame.Size = UDim2.new(0, 530, 0, 360)
+	MainFrame.Position = UDim2.new(0.5, -265, 0.5, -180)
 	MainFrame.BackgroundColor3 = currentTheme.MainBackground
 	MainFrame.BorderSizePixel = 0
 	MainFrame.ClipsDescendants = true
@@ -195,7 +195,7 @@ function Library:Create(config)
 			if ContainerHolder then ContainerHolder.Visible = false end
 		else
 			MinimizeButton.Text = "-"
-			TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 350)}):Play()
+			TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 360)}):Play()
 			if Sidebar then Sidebar.Visible = true end
 			if ContainerHolder then ContainerHolder.Visible = true end
 		end
@@ -300,7 +300,20 @@ function Library:Create(config)
 
 		local TabObj = {}
 
-		-- 1. زر عادي (Button)
+		-- 1. العنوان النصي (Label)
+		function TabObj:AddLabel(text)
+			local Label = Instance.new("TextLabel")
+			Label.Size = UDim2.new(1, 0, 0, 25)
+			Label.BackgroundTransparency = 1
+			Label.Text = text
+			Label.TextColor3 = currentTheme.SubText
+			Label.TextSize = 11
+			Label.Font = Enum.Font.GothamBold
+			Label.TextXAlignment = Enum.TextXAlignment.Left
+			Label.Parent = TabPage
+		end
+
+		-- 2. زر عادي (Button)
 		function TabObj:AddButton(name, desc, callback)
 			local Button = Instance.new("TextButton")
 			Button.Size = UDim2.new(1, 0, 0, 40)
@@ -335,7 +348,7 @@ function Library:Create(config)
 			Button.MouseButton1Click:Connect(function() if callback then callback() end end)
 		end
 
-		-- 2. زر تشغيل (Toggle)
+		-- 3. زر تشغيل (Toggle)
 		function TabObj:AddToggle(name, desc, defaultState, callback)
 			local toggled = defaultState or false
 			local ToggleFrame = Instance.new("TextButton")
@@ -390,7 +403,79 @@ function Library:Create(config)
 			end)
 		end
 
-		-- 3. قائمة منسدلة (Dropdown)
+		-- 4. شريط التمرير السحب (Slider)
+		function TabObj:AddSlider(name, min, max, default, callback)
+			local value = default or min
+			local draggingSlider = false
+
+			local SliderFrame = Instance.new("Frame")
+			SliderFrame.Size = UDim2.new(1, 0, 0, 48)
+			SliderFrame.BackgroundColor3 = currentTheme.Element
+			SliderFrame.Parent = TabPage
+			Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
+
+			local TitleLbl = Instance.new("TextLabel")
+			TitleLbl.Size = UDim2.new(1, -20, 0, 20)
+			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
+			TitleLbl.BackgroundTransparency = 1
+			TitleLbl.Text = name .. " : <font color='#00a2ff'>" .. tostring(value) .. "</font>"
+			TitleLbl.RichText = true
+			TitleLbl.TextColor3 = currentTheme.Text
+			TitleLbl.TextSize = 11
+			TitleLbl.Font = Enum.Font.GothamBold
+			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			TitleLbl.Parent = SliderFrame
+
+			local Bar = Instance.new("Frame")
+			Bar.Size = UDim2.new(1, -20, 0, 6)
+			Bar.Position = UDim2.new(0, 10, 0, 32)
+			Bar.BackgroundColor3 = currentTheme.TopBar
+			Bar.Parent = SliderFrame
+			Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+
+			local Fill = Instance.new("Frame")
+			Fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+			Fill.BackgroundColor3 = currentTheme.Accent
+			Fill.Parent = Bar
+			Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+
+			local Knob = Instance.new("TextButton")
+			Knob.Size = UDim2.new(0, 12, 0, 12)
+			Knob.Position = UDim2.new(1, -6, 0.5, -6)
+			Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Knob.Text = ""
+			Knob.Parent = Fill
+			Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+
+			local function updateValue(input)
+				local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+				value = math.floor(min + ((max - min) * pos))
+				Fill.Size = UDim2.new(pos, 0, 1, 0)
+				TitleLbl.Text = name .. " : <font color='#00a2ff'>" .. tostring(value) .. "</font>"
+				if callback then callback(value) end
+			end
+
+			Bar.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					draggingSlider = true
+					updateValue(input)
+				end
+			end)
+
+			UserInputService.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					draggingSlider = false
+				end
+			end)
+
+			UserInputService.InputChanged:Connect(function(input)
+				if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+					updateValue(input)
+				end
+			end)
+		end
+
+		-- 5. قائمة منسدلة (Dropdown)
 		function TabObj:AddDropdown(name, options, defaultOption, callback)
 			local selected = defaultOption or options[1]
 			local dropped = false
@@ -471,7 +556,7 @@ function Library:Create(config)
 			end)
 		end
 
-		-- 4. صندوق إدخال نص (TextBox)
+		-- 6. صندوق إدخال نص (TextBox)
 		function TabObj:AddTextBox(name, placeholder, callback)
 			local BoxFrame = Instance.new("Frame")
 			BoxFrame.Size = UDim2.new(1, 0, 0, 42)
@@ -508,7 +593,7 @@ function Library:Create(config)
 			end)
 		end
 
-		-- 5. تخصيص زر الاختصار (Keybind)
+		-- 7. تخصيص زر الاختصار (Keybind)
 		function TabObj:AddKeybind(name, defaultKey, callback)
 			local key = defaultKey or Enum.KeyCode.F
 			local binding = false
