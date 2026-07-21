@@ -23,9 +23,8 @@ body {
     flex-direction: row;
 }
 
-/* Sidebar WindUI Style */
 aside {
-    width: 280px;
+    width: 285px;
     background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -82,7 +81,6 @@ aside {
     color: var(--accent-color);
 }
 
-/* Main Content Area */
 main {
     flex: 1;
     padding: 40px;
@@ -101,7 +99,7 @@ p {
     color: var(--text-sub);
     font-size: 14px;
     line-height: 1.6;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 h2 {
@@ -114,7 +112,14 @@ h2 {
     padding-bottom: 8px;
 }
 
-/* Code Box WindUI Style */
+h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
 .code-box-wrapper {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -161,6 +166,18 @@ pre {
     font-size: 13px;
     color: #38bdf8;
     line-height: 1.5;
+}
+
+ul.feature-list {
+    margin-bottom: 20px;
+    padding-left: 20px;
+    color: var(--text-sub);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+ul.feature-list li {
+    margin-bottom: 6px;
 }
 
 @media (max-width: 768px) {
