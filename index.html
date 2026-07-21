@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UI Documentation & Guide</title>
+    <title>Ultimate UI Documentation & Library Guide</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,14 +13,14 @@
         <div class="nav-section">
             <div class="nav-title">Getting Started</div>
             <ul class="nav-links">
-                <li><a href="index.html" class="active">Documentation Overview</a></li>
+                <li><a href="index.html" class="active">Complete Docs & All Elements</a></li>
             </ul>
         </div>
     </aside>
 
     <main>
-        <h1>UI Framework Documentation</h1>
-        <p>Comprehensive English documentation, UI elements reference, themes, and full production-ready templates for developers and AI assistants.</p>
+        <h1>Ultimate UI Framework Documentation</h1>
+        <p>Comprehensive English documentation covering every single element, built-in themes, configurations, and multiple production-ready script examples for developers and AI assistants.</p>
 
         <!-- 1. Loadstring Initialization -->
         <h2>1. Loadstring Initialization</h2>
@@ -32,19 +32,19 @@
 
         <!-- 2. Window Setup -->
         <h2>2. Window Setup</h2>
-        <p>Initialize the main graphical interface window.</p>
+        <p>Initialize the main graphical interface window with core properties.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>local Window = Library:CreateWindow({
-    Title = "UI Library",
+    Title = "Advanced UI Hub",
     Theme = "Dark",
     ToggleKey = Enum.KeyCode.RightControl
 })</pre>
         </div>
 
         <!-- 3. Themes & Customization -->
-        <h2>3. Themes & Configurations</h2>
-        <p>Switch between available visual styles and color themes for your interface layout.</p>
+        <h2>3. Themes & Visual Configurations</h2>
+        <p>Switch between available visual styles and color themes for your interface layout dynamically.</p>
         
         <p><strong>Dark Theme Setup:</strong></p>
         <div class="code-box-wrapper">
@@ -58,40 +58,58 @@
             <pre>Library:SetTheme("Light")</pre>
         </div>
 
-        <!-- 4. UI Elements Reference -->
-        <h2>4. Core UI Elements</h2>
-        <p>Standard base syntax for creating individual components.</p>
+        <p><strong>Midnight Blue Theme Setup:</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>Library:SetTheme("Midnight")</pre>
+        </div>
+
+        <p><strong>Custom Accent Color Configuration:</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>Library:SetAccent(Color3.fromRGB(88, 166, 255))</pre>
+        </div>
+
+        <!-- 4. Complete UI Elements Reference -->
+        <h2>4. Complete Core UI Elements (Original Syntax)</h2>
+        <p>Standard base syntax for creating individual components without complex logic.</p>
         
-        <p><strong>Tab:</strong></p>
+        <p><strong>Tab Creation:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>local Tab = Window:CreateTab("Tab Name")</pre>
         </div>
 
-        <p><strong>Button:</strong></p>
+        <p><strong>Section Creation:</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Section = Tab:CreateSection("Section Name")</pre>
+        </div>
+
+        <p><strong>Button Element:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Tab:CreateButton({
     Name = "Button Name",
     Callback = function()
-        -- Code here
+        -- Code execution here
     end
 })</pre>
         </div>
 
-        <p><strong>Toggle:</strong></p>
+        <p><strong>Toggle Element:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Tab:CreateToggle({
     Name = "Toggle Name",
     Default = false,
     Callback = function(State)
-        -- Code here
+        -- State returns true or false
     end
 })</pre>
         </div>
 
-        <p><strong>Slider:</strong></p>
+        <p><strong>Slider Element:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Tab:CreateSlider({
@@ -100,34 +118,58 @@
     Max = 100,
     Default = 50,
     Callback = function(Value)
-        -- Code here
+        -- Value returns number
     end
 })</pre>
         </div>
 
-        <!-- 5. Full Implementation Examples -->
-        <h2>5. Practical Examples & Full Scripts</h2>
-        <p>Ready-to-use practical script implementations with live logic (such as WalkSpeed adjustment) to copy and send directly to developers or AI.</p>
-        
+        <p><strong>Dropdown Element:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>-- Practical Example: Complete Script with WalkSpeed Slider
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
+            <pre>Tab:CreateDropdown({
+    Name = "Dropdown Name",
+    Options = {"Option 1", "Option 2", "Option 3"},
+    Default = "Option 1",
+    Callback = function(Selected)
+        -- Selected option string
+    end
+})</pre>
+        </div>
+
+        <p><strong>Textbox Element:</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>Tab:CreateTextbox({
+    Name = "Textbox Name",
+    PlaceholderText = "Type here...",
+    Callback = function(Text)
+        -- Text string input
+    end
+})</pre>
+        </div>
+
+        <p><strong>Label Element:</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Label = Tab:CreateLabel("Information Text Here")</pre>
+        </div>
+
+        <!-- 5. Advanced Examples & Full Scripts -->
+        <h2>5. Practical Examples & Full Scripts (Lots of Examples)</h2>
+        <p>Ready-to-use practical script implementations with live logic to copy and send directly to developers or AI.</p>
+        
+        <p><strong>Example 1: Complete Script with WalkSpeed & JumpPower</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
 
 local Window = Library:CreateWindow({
-    Title = "Advanced Script Example",
+    Title = "Player Mods Example",
     Theme = "Dark",
     ToggleKey = Enum.KeyCode.RightControl
 })
 
-local Tab = Window:CreateTab("Main")
-
-Tab:CreateButton({
-    Name = "Print Notification",
-    Callback = function()
-        print("Button executed successfully!")
-    end
-})
+local Tab = Window:CreateTab("Character")
 
 Tab:CreateSlider({
     Name = "WalkSpeed",
@@ -136,6 +178,82 @@ Tab:CreateSlider({
     Default = 16,
     Callback = function(Value)
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end
+})
+
+Tab:CreateSlider({
+    Name = "JumpPower",
+    Min = 50,
+    Max = 300,
+    Default = 50,
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+    end
+})</pre>
+        </div>
+
+        <p><strong>Example 2: Complete Script with Teleports & Notifications</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
+
+local Window = Library:CreateWindow({
+    Title = "Teleport Hub",
+    Theme = "Midnight",
+    ToggleKey = Enum.KeyCode.RightShift
+})
+
+local Tab = Window:CreateTab("Teleports")
+
+Tab:CreateButton({
+    Name = "Teleport to Spawn",
+    Callback = function()
+        local char = game.Players.LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
+        end
+    end
+})
+
+Tab:CreateDropdown({
+    Name = "Select Map Location",
+    Options = {"Baseplate", "Arena", "Shop"},
+    Default = "Baseplate",
+    Callback = function(Option)
+        print("Selected location: " .. Option)
+    end
+})</pre>
+        </div>
+
+        <p><strong>Example 3: Complete Script with Infinite Jump Toggle</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
+
+local Window = Library:CreateWindow({
+    Title = "Utility Hub",
+    Theme = "Dark",
+    ToggleKey = Enum.KeyCode.Insert
+})
+
+local Tab = Window:CreateTab("Misc")
+
+Tab:CreateToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(State)
+        _G.InfJump = State
+        game:GetService("UserInputService").JumpRequest:Connect(function()
+            if _G.InfJump then
+                local char = game.Players.LocalPlayer.Character
+                if char then
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        hum:ChangeState("Jumping")
+                    end
+                end
+            end
+        end)
     end
 })</pre>
         </div>
