@@ -1,5 +1,5 @@
 -- =====================================================================
--- مكتبة واجهة المستخدم الاحترافية المتكاملة (Library Core)
+-- نظام مكتبة السكربتات العالمي المتطور (النسخة الكاملة والمحدثة - ثابتة الثيمات)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -10,46 +10,57 @@ local RunService = game:GetService("RunService")
 local Library = {}
 Library.__index = Library
 
+-- ==========================================
+-- قائمة الثيمات الشاملة والثابتة
+-- ==========================================
 local Themes = {
-	["Animated RGB"] = { 
-		Bg = Color3.fromRGB(15, 15, 20), Top = Color3.fromRGB(22, 22, 28), Elem = Color3.fromRGB(28, 28, 36), 
-		Text = Color3.fromRGB(240, 240, 255), Sub = Color3.fromRGB(140, 140, 160), Accent = Color3.fromRGB(0, 170, 255), Animated = true 
-	},
-	["Neon Cyberpunk"] = { 
-		Bg = Color3.fromRGB(10, 8, 15), Top = Color3.fromRGB(16, 12, 24), Elem = Color3.fromRGB(22, 18, 35), 
-		Text = Color3.fromRGB(0, 255, 204), Sub = Color3.fromRGB(120, 140, 170), Accent = Color3.fromRGB(255, 0, 128), Animated = true 
-	},
-	["Galaxy Purple"] = { 
-		Bg = Color3.fromRGB(18, 10, 25), Top = Color3.fromRGB(26, 15, 38), Elem = Color3.fromRGB(36, 22, 52), 
-		Text = Color3.fromRGB(245, 230, 255), Sub = Color3.fromRGB(150, 120, 170), Accent = Color3.fromRGB(180, 50, 255), Animated = true 
-	},
-	["Matrix Code"] = { 
-		Bg = Color3.fromRGB(8, 15, 10), Top = Color3.fromRGB(12, 24, 16), Elem = Color3.fromRGB(18, 35, 24), 
-		Text = Color3.fromRGB(220, 255, 220), Sub = Color3.fromRGB(110, 160, 120), Accent = Color3.fromRGB(0, 255, 65), Animated = true 
-	},
-	["Sunset Horizon"] = { 
-		Bg = Color3.fromRGB(22, 12, 10), Top = Color3.fromRGB(35, 18, 15), Elem = Color3.fromRGB(50, 26, 20), 
-		Text = Color3.fromRGB(255, 235, 215), Sub = Color3.fromRGB(180, 130, 110), Accent = Color3.fromRGB(255, 110, 0), Animated = true 
-	},
 	["Dark Modern"] = { 
-		Bg = Color3.fromRGB(15, 15, 18), Top = Color3.fromRGB(22, 22, 26), Elem = Color3.fromRGB(26, 26, 32), 
-		Text = Color3.fromRGB(240, 240, 245), Sub = Color3.fromRGB(140, 140, 155), Accent = Color3.fromRGB(0, 162, 255), Animated = false 
+		Bg = Color3.fromRGB(15, 15, 18), 
+		Top = Color3.fromRGB(22, 22, 26), 
+		Elem = Color3.fromRGB(26, 26, 32), 
+		Text = Color3.fromRGB(240, 240, 245), 
+		Sub = Color3.fromRGB(140, 140, 155), 
+		Accent = Color3.fromRGB(0, 162, 255) 
+	},
+	["Neon Cyber"] = { 
+		Bg = Color3.fromRGB(10, 10, 15), 
+		Top = Color3.fromRGB(18, 18, 28), 
+		Elem = Color3.fromRGB(25, 25, 40), 
+		Text = Color3.fromRGB(0, 255, 204), 
+		Sub = Color3.fromRGB(100, 120, 150), 
+		Accent = Color3.fromRGB(255, 0, 85) 
 	},
 	["Crimson Red"] = { 
-		Bg = Color3.fromRGB(18, 12, 12), Top = Color3.fromRGB(28, 18, 18), Elem = Color3.fromRGB(38, 22, 22), 
-		Text = Color3.fromRGB(255, 220, 220), Sub = Color3.fromRGB(160, 120, 120), Accent = Color3.fromRGB(255, 50, 50), Animated = false 
+		Bg = Color3.fromRGB(18, 12, 12), 
+		Top = Color3.fromRGB(28, 18, 18), 
+		Elem = Color3.fromRGB(38, 22, 22), 
+		Text = Color3.fromRGB(255, 220, 220), 
+		Sub = Color3.fromRGB(160, 120, 120), 
+		Accent = Color3.fromRGB(255, 50, 50) 
 	},
 	["Emerald Green"] = { 
-		Bg = Color3.fromRGB(12, 18, 14), Top = Color3.fromRGB(18, 28, 20), Elem = Color3.fromRGB(22, 38, 26), 
-		Text = Color3.fromRGB(220, 255, 230), Sub = Color3.fromRGB(120, 160, 130), Accent = Color3.fromRGB(40, 210, 120), Animated = false 
+		Bg = Color3.fromRGB(12, 18, 14), 
+		Top = Color3.fromRGB(18, 28, 20), 
+		Elem = Color3.fromRGB(22, 38, 26), 
+		Text = Color3.fromRGB(220, 255, 230), 
+		Sub = Color3.fromRGB(120, 160, 130), 
+		Accent = Color3.fromRGB(40, 210, 120) 
 	},
-	["Royal Gold"] = { 
-		Bg = Color3.fromRGB(18, 16, 10), Top = Color3.fromRGB(28, 25, 15), Elem = Color3.fromRGB(38, 34, 20), 
-		Text = Color3.fromRGB(255, 245, 210), Sub = Color3.fromRGB(170, 160, 120), Accent = Color3.fromRGB(255, 200, 0), Animated = false 
+	["Purple Dream"] = { 
+		Bg = Color3.fromRGB(16, 12, 22), 
+		Top = Color3.fromRGB(24, 18, 32), 
+		Elem = Color3.fromRGB(32, 24, 44), 
+		Text = Color3.fromRGB(240, 220, 255), 
+		Sub = Color3.fromRGB(140, 120, 160), 
+		Accent = Color3.fromRGB(170, 70, 255) 
 	},
-	["Ice Blue"] = { 
-		Bg = Color3.fromRGB(10, 15, 20), Top = Color3.fromRGB(15, 24, 32), Elem = Color3.fromRGB(20, 34, 45), 
-		Text = Color3.fromRGB(220, 240, 255), Sub = Color3.fromRGB(120, 150, 170), Accent = Color3.fromRGB(0, 190, 255), Animated = false 
+	["Sunset Orange"] = { 
+		Bg = Color3.fromRGB(20, 14, 12), 
+		Top = Color3.fromRGB(30, 20, 16), 
+		Elem = Color3.fromRGB(40, 26, 20), 
+		Text = Color3.fromRGB(255, 230, 210), 
+		Sub = Color3.fromRGB(170, 130, 110), 
+		Accent = Color3.fromRGB(255, 120, 30) 
 	}
 }
 
@@ -60,8 +71,6 @@ local Localizations = {
 		Cancel = "إلغاء",
 		KeyPrompt = "أدخل مفتاح التفعيل للتابع:",
 		CheckKey = "تحقق",
-		GetKey = "نسخ رابط المفتاح",
-		KeyCopied = "تم نسخ رابط المفتاح إلى الحافظة!",
 		InvalidKey = "المفتاح غير صحيح!",
 		ValidKey = "تم تفعيل السكربت بنجاح!"
 	}
@@ -73,11 +82,9 @@ function Library:Create(config)
 	local description = config.Description or "نظام متطور وشامل"
 	local toggleKey = Enum.KeyCode.RightShift
 	local currentLang = "ar"
-	local currentThemeName = config.Theme or "Animated RGB"
-	local currentTheme = Themes[currentThemeName] or Themes["Animated RGB"]
-	
-	local useKeySystem = config.KeySystem ~= false
-	local keyLink = config.KeyLink or ""
+	local currentThemeName = config.Theme or "Dark Modern"
+	if not Themes[currentThemeName] then currentThemeName = "Dark Modern" end
+	local currentTheme = Themes[currentThemeName]
 
 	if CoreGui:FindFirstChild("UniversalScriptHub") then
 		CoreGui["UniversalScriptHub"]:Destroy()
@@ -89,6 +96,63 @@ function Library:Create(config)
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
+	-- ==========================================
+	-- نظام المفاتيح (Key System)
+	-- ==========================================
+	local KeyOverlay = Instance.new("Frame")
+	KeyOverlay.Size = UDim2.new(1, 0, 1, 0)
+	KeyOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	KeyOverlay.BackgroundTransparency = 0.6
+	KeyOverlay.ZIndex = 300
+	KeyOverlay.Parent = ScreenGui
+
+	local KeyBox = Instance.new("Frame")
+	KeyBox.Size = UDim2.new(0, 320, 0, 160)
+	KeyBox.Position = UDim2.new(0.5, -160, 0.5, -80)
+	KeyBox.BackgroundColor3 = currentTheme.Top
+	KeyBox.ZIndex = 301
+	KeyBox.Parent = KeyOverlay
+	Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
+
+	local KeyTitle = Instance.new("TextLabel")
+	KeyTitle.Size = UDim2.new(1, 0, 0, 40)
+	KeyTitle.BackgroundTransparency = 1
+	KeyTitle.Text = Localizations[currentLang].KeyPrompt
+	KeyTitle.TextColor3 = currentTheme.Text
+	KeyTitle.TextSize = 12
+	KeyTitle.Font = Enum.Font.GothamBold
+	KeyTitle.ZIndex = 301
+	KeyTitle.Parent = KeyBox
+
+	local KeyInput = Instance.new("TextBox")
+	KeyInput.Size = UDim2.new(1, -40, 0, 35)
+	KeyInput.Position = UDim2.new(0, 20, 0, 50)
+	KeyInput.BackgroundColor3 = currentTheme.Elem
+	KeyInput.Text = ""
+	KeyInput.PlaceholderText = "أدخل المفتاح هنا..."
+	KeyInput.TextColor3 = currentTheme.Text
+	KeyInput.PlaceholderColor3 = currentTheme.Sub
+	KeyInput.TextSize = 12
+	KeyInput.Font = Enum.Font.Gotham
+	KeyInput.ZIndex = 301
+	KeyInput.Parent = KeyBox
+	Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
+
+	local VerifyBtn = Instance.new("TextButton")
+	VerifyBtn.Size = UDim2.new(1, -40, 0, 35)
+	VerifyBtn.Position = UDim2.new(0, 20, 0, 105)
+	VerifyBtn.BackgroundColor3 = currentTheme.Accent
+	VerifyBtn.Text = Localizations[currentLang].CheckKey
+	VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	VerifyBtn.TextSize = 12
+	VerifyBtn.Font = Enum.Font.GothamBold
+	VerifyBtn.ZIndex = 301
+	VerifyBtn.Parent = KeyBox
+	Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
+
+	-- ==========================================
+	-- نظام الإشعارات العالمي
+	-- ==========================================
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
 	NotifHolder.Position = UDim2.new(0, 15, 0.5, -200)
@@ -146,13 +210,16 @@ function Library:Create(config)
 		end)
 	end
 
+	-- ==========================================
+	-- الواجهة الرئيسية
+	-- ==========================================
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Size = UDim2.new(0, 520, 0, 350)
 	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -175)
 	MainFrame.BackgroundColor3 = currentTheme.Bg
 	MainFrame.BorderSizePixel = 0
 	MainFrame.ClipsDescendants = false
-	MainFrame.Visible = not useKeySystem
+	MainFrame.Visible = false
 	MainFrame.Parent = ScreenGui
 
 	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
@@ -162,115 +229,6 @@ function Library:Create(config)
 	UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	UIStroke.Color = currentTheme.Accent
 	UIStroke.Parent = MainFrame
-
-	local UIGradient = Instance.new("UIGradient")
-	UIGradient.Enabled = currentTheme.Animated
-	UIGradient.Parent = UIStroke
-
-	local animConnection
-	local function updateAnimationState()
-		if animConnection then animConnection:Disconnect() animConnection = nil end
-		if currentTheme.Animated then
-			UIGradient.Enabled = true
-			animConnection = RunService.RenderStepped:Connect(function(deltaTime)
-				UIGradient.Rotation = (UIGradient.Rotation + (deltaTime * 120)) % 360
-				local hue = (tick() * 0.3) % 1
-				UIGradient.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, 0.9, 1)),
-					ColorSequenceKeypoint.new(0.5, Color3.fromHSV((hue + 0.33) % 1, 0.9, 1)),
-					ColorSequenceKeypoint.new(1, Color3.fromHSV((hue + 0.66) % 1, 0.9, 1))
-				})
-			end)
-		else
-			UIGradient.Enabled = false
-			UIStroke.Color = currentTheme.Accent
-		end
-	end
-	updateAnimationState()
-
-	local KeyOverlay
-	if useKeySystem then
-		KeyOverlay = Instance.new("Frame")
-		KeyOverlay.Size = UDim2.new(1, 0, 1, 0)
-		KeyOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		KeyOverlay.BackgroundTransparency = 0.6
-		KeyOverlay.ZIndex = 300
-		KeyOverlay.Parent = ScreenGui
-
-		local hasLink = string.len(keyLink) > 0
-		local KeyBox = Instance.new("Frame")
-		KeyBox.Size = UDim2.new(0, 320, 0, hasLink and 185 or 150)
-		KeyBox.Position = UDim2.new(0.5, -160, 0.5, hasLink and -92 or -75)
-		KeyBox.BackgroundColor3 = currentTheme.Top
-		KeyBox.ZIndex = 301
-		KeyBox.Parent = KeyOverlay
-		Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
-
-		local KeyTitle = Instance.new("TextLabel")
-		KeyTitle.Size = UDim2.new(1, 0, 0, 35)
-		KeyTitle.BackgroundTransparency = 1
-		KeyTitle.Text = Localizations[currentLang].KeyPrompt
-		KeyTitle.TextColor3 = currentTheme.Text
-		KeyTitle.TextSize = 12
-		KeyTitle.Font = Enum.Font.GothamBold
-		KeyTitle.ZIndex = 301
-		KeyTitle.Parent = KeyBox
-
-		local KeyInput = Instance.new("TextBox")
-		KeyInput.Size = UDim2.new(1, -40, 0, 32)
-		KeyInput.Position = UDim2.new(0, 20, 0, 42)
-		KeyInput.BackgroundColor3 = currentTheme.Elem
-		KeyInput.Text = ""
-		KeyInput.PlaceholderText = "أدخل المفتاح هنا..."
-		KeyInput.TextColor3 = currentTheme.Text
-		KeyInput.PlaceholderColor3 = currentTheme.Sub
-		KeyInput.TextSize = 12
-		KeyInput.Font = Enum.Font.Gotham
-		KeyInput.ZIndex = 301
-		KeyInput.Parent = KeyBox
-		Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
-
-		local VerifyBtn = Instance.new("TextButton")
-		VerifyBtn.Size = UDim2.new(1, -40, 0, 32)
-		VerifyBtn.Position = UDim2.new(0, 20, 0, 82)
-		VerifyBtn.BackgroundColor3 = currentTheme.Accent
-		VerifyBtn.Text = Localizations[currentLang].CheckKey
-		VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		VerifyBtn.TextSize = 12
-		VerifyBtn.Font = Enum.Font.GothamBold
-		VerifyBtn.ZIndex = 301
-		VerifyBtn.Parent = KeyBox
-		Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
-
-		if hasLink then
-			local GetKeyBtn = Instance.new("TextButton")
-			GetKeyBtn.Size = UDim2.new(1, -40, 0, 30)
-			GetKeyBtn.Position = UDim2.new(0, 20, 0, 122)
-			GetKeyBtn.BackgroundColor3 = currentTheme.Elem
-			GetKeyBtn.Text = Localizations[currentLang].GetKey
-			GetKeyBtn.TextColor3 = currentTheme.Sub
-			GetKeyBtn.TextSize = 11
-			GetKeyBtn.Font = Enum.Font.GothamMedium
-			GetKeyBtn.ZIndex = 301
-			GetKeyBtn.Parent = KeyBox
-			Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
-
-			GetKeyBtn.MouseButton1Click:Connect(function()
-				pcall(function() setclipboard(keyLink) end)
-				Notify("الحصول على المفتاح", Localizations[currentLang].KeyCopied, 2.5)
-			end)
-		end
-
-		VerifyBtn.MouseButton1Click:Connect(function()
-			if KeyInput.Text == "VIP-2026" or KeyInput.Text ~= "" then
-				KeyOverlay:Destroy()
-				MainFrame.Visible = true
-				Notify("نجاح", Localizations[currentLang].ValidKey, 3)
-			else
-				Notify("خطأ", Localizations[currentLang].InvalidKey, 3)
-			end
-		end)
-	end
 
 	local TopBar = Instance.new("Frame")
 	TopBar.Size = UDim2.new(1, 0, 0, 38)
@@ -325,9 +283,19 @@ function Library:Create(config)
 	MinimizeButton.Parent = ControlsHolder
 	Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
 
-	local uiVisible = not useKeySystem
+	VerifyBtn.MouseButton1Click:Connect(function()
+		if KeyInput.Text == "VIP-2026" or KeyInput.Text ~= "" then
+			KeyOverlay:Destroy()
+			MainFrame.Visible = true
+			Notify("نجاح", Localizations[currentLang].ValidKey, 3)
+		else
+			Notify("خطأ", Localizations[currentLang].InvalidKey, 3)
+		end
+	end)
+
+	local uiVisible = false
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if input.KeyCode == toggleKey and not gameProcessed and (not useKeySystem or KeyOverlay.Parent == nil) then
+		if input.KeyCode == toggleKey and not gameProcessed and KeyOverlay.Parent == nil then
 			uiVisible = not uiVisible
 			MainFrame.Visible = uiVisible
 		end
@@ -473,58 +441,24 @@ function Library:Create(config)
 	local WindowObj = {}
 	local firstTab = true
 
-	local function updateAllElementsColors()
-		MainFrame.BackgroundColor3 = currentTheme.Bg
-		TopBar.BackgroundColor3 = currentTheme.Top
-		TitleLabel.TextColor3 = currentTheme.Text
-		ConfirmBox.BackgroundColor3 = currentTheme.Top
-		ConfirmText.TextColor3 = currentTheme.Text
-		NoButton.BackgroundColor3 = currentTheme.Elem
-		NoButton.TextColor3 = currentTheme.Text
-		ResizeButton.TextColor3 = currentTheme.Sub
-		CloseButton.BackgroundColor3 = currentTheme.Elem
-		CloseButton.TextColor3 = currentTheme.Text
-		MinimizeButton.BackgroundColor3 = currentTheme.Elem
-		MinimizeButton.TextColor3 = currentTheme.Text
-
-		for _, btn in ipairs(Sidebar:GetChildren()) do
-			if btn:IsA("TextButton") then
-				local isSelected = (btn.BackgroundColor3 == currentTheme.Top or btn.TextColor3 == currentTheme.Text)
-				btn.BackgroundColor3 = isSelected and currentTheme.Top or currentTheme.Elem
-				btn.TextColor3 = isSelected and currentTheme.Text or currentTheme.Sub
-			end
-		end
-
-		for _, page in ipairs(ContainerHolder:GetChildren()) do
-			if page:IsA("ScrollingFrame") then
-				for _, item in ipairs(page:GetChildren()) do
-					if item:IsA("Frame") or item:IsA("TextButton") then
-						if item.Name ~= "Switch" and item.Name ~= "Circle" and item.Name ~= "Fill" then
-							if item.BackgroundColor3 ~= Color3.fromRGB(45, 45, 55) and item.BackgroundColor3 ~= Color3.fromRGB(50, 50, 60) then
-								item.BackgroundColor3 = currentTheme.Elem
-							end
-							for _, subChild in ipairs(item:GetDescendants()) do
-								if subChild:IsA("TextLabel") then
-									if subChild.TextColor3 ~= currentTheme.Accent and subChild.TextColor3 ~= Color3.fromRGB(255, 255, 255) then
-										subChild.TextColor3 = currentTheme.Text
-									end
-								elseif subChild:IsA("Frame") and subChild.Size.X.Offset == 34 then
-									subChild.BackgroundColor3 = currentTheme.Accent
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
 	function WindowObj:SetTheme(themeName)
 		if Themes[themeName] then
 			currentThemeName = themeName
 			currentTheme = Themes[themeName]
-			updateAnimationState()
-			updateAllElementsColors()
+			MainFrame.BackgroundColor3 = currentTheme.Bg
+			TopBar.BackgroundColor3 = currentTheme.Top
+			UIStroke.Color = currentTheme.Accent
+			TitleLabel.TextColor3 = currentTheme.Text
+			CloseButton.BackgroundColor3 = currentTheme.Elem
+			CloseButton.TextColor3 = currentTheme.Text
+			MinimizeButton.BackgroundColor3 = currentTheme.Elem
+			MinimizeButton.TextColor3 = currentTheme.Text
+			ConfirmBox.BackgroundColor3 = currentTheme.Top
+			ConfirmText.TextColor3 = currentTheme.Text
+			NoButton.BackgroundColor3 = currentTheme.Elem
+			NoButton.TextColor3 = currentTheme.Text
+			ResizeButton.TextColor3 = currentTheme.Sub
+			
 			Notify("الثيمات", "تم تغيير الثيم إلى: " .. themeName, 2)
 		end
 	end
