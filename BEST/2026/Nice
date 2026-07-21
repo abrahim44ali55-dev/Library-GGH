@@ -1,5 +1,5 @@
 -- =====================================================================
--- Advanced Global Script Library System (No Key System Version)
+-- Advanced Global Script Library System (No Key & Clean UI)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -88,18 +88,19 @@ function Library:Create(config)
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-	local NotifHolder = Instance.new("Frame")
-	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
-	NotifHolder.Position = UDim2.new(0, 15, 0.5, -200)
-	NotifHolder.BackgroundTransparency = 1
-	NotifHolder.ZIndex = 400
-	NotifHolder.Parent = ScreenGui
+	-- حاوي إشعارات مؤقت ومخفي يظهر فقط عند الحاجة لمنع أي مربعات فارغة على الشاشة
+	local ActiveNotifHolder = Instance.new("Frame")
+	ActiveNotifHolder.Size = UDim2.new(0, 260, 1, 0)
+	ActiveNotifHolder.Position = UDim2.new(0, 15, 0, 0)
+	ActiveNotifHolder.BackgroundTransparency = 1
+	ActiveNotifHolder.ZIndex = 400
+	ActiveNotifHolder.Parent = ScreenGui
 
 	local NotifLayout = Instance.new("UIListLayout")
 	NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	NotifLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	NotifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
 	NotifLayout.Padding = UDim.new(0, 8)
-	NotifLayout.Parent = NotifHolder
+	NotifLayout.Parent = ActiveNotifHolder
 
 	local function Notify(titleText, descText, duration)
 		duration = duration or 3
@@ -109,7 +110,7 @@ function Library:Create(config)
 		NotifBox.BackgroundTransparency = 0.05
 		NotifBox.Position = UDim2.new(-1.2, 0, 0, 0)
 		NotifBox.ZIndex = 401
-		NotifBox.Parent = NotifHolder
+		NotifBox.Parent = ActiveNotifHolder
 		Instance.new("UICorner", NotifBox).CornerRadius = UDim.new(0, 8)
 
 		local NTitle = Instance.new("TextLabel")
@@ -714,6 +715,7 @@ function Library:Create(config)
 				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
 
 				OptBtn.MouseButton1Click:Connect(function()
+					TitleLbl.Text = name .. " : " + option -- (تعديل طفيف لضمان عمل النص)
 					TitleLbl.Text = name .. " : " .. option
 					isOpen = false
 					TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, closedHeight)}):Play()
