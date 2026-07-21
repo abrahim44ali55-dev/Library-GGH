@@ -23,7 +23,6 @@ body {
     flex-direction: row;
 }
 
-/* Sidebar Styling */
 aside {
     width: 280px;
     background-color: var(--sidebar-bg);
@@ -77,7 +76,6 @@ aside {
     color: var(--accent-color);
 }
 
-/* Main Content Styling */
 main {
     flex: 1;
     padding: 40px;
@@ -107,7 +105,6 @@ h2 {
     padding-bottom: 6px;
 }
 
-/* Code Box */
 .code-box-wrapper {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -155,7 +152,6 @@ pre {
     line-height: 1.5;
 }
 
-/* Responsive Design for Mobile Devices */
 @media (max-width: 768px) {
     body {
         flex-direction: column;
@@ -170,4 +166,3 @@ pre {
         padding: 20px;
     }
 }
-
