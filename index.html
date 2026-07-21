@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loadstring - Documentation</title>
+    <title>UI Documentation & Guide</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,27 +11,121 @@
     <aside>
         <div class="logo">⚡ UI Documentation</div>
         <div class="nav-section">
-            <div class="nav-title">التوجيه الأساسي</div>
+            <div class="nav-title">Getting Started</div>
             <ul class="nav-links">
-                <li><a href="index.html" class="active">Loadstring (رابط الاستدعاء)</a></li>
-                <li><a href="window.html">Window Setup (إنشاء النافذة)</a></li>
-                <li><a href="elements.html">UI Elements (عناصر الواجهة)</a></li>
-                <li><a href="guide.html">Full Guide (الشرح والسكربت الشامل)</a></li>
+                <li><a href="index.html" class="active">Complete Documentation</a></li>
             </ul>
         </div>
     </aside>
 
     <main>
-        <h1>Loadstring</h1>
-        <p>Load and initialize the UI library using loadstring.</p>
-        
+        <h1>UI Framework Documentation</h1>
+        <p>Comprehensive English documentation, UI elements reference, and full production-ready templates designed for developers and AI assistants.</p>
+
+        <h2>1. Loadstring Initialization</h2>
+        <p>Fetch and initialize the UI library securely in your script execution environment.</p>
         <div class="code-box-wrapper">
-            <div class="code-header">
-                <button class="copy-icon-btn" onclick="copyCode(this)">
-                    📋 <span>نسخ</span>
-                </button>
-            </div>
-            <pre>local Library = loadstring(game:HttpGet("رابط_السكربت_الخاص_بك_هنا"))()</pre>
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/your-repo/main/library.lua"))()</pre>
+        </div>
+
+        <h2>2. Window Setup</h2>
+        <p>Configure the main graphical window properties including title, theme settings, and visibility toggle keybind.</p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Window = Library:CreateWindow({
+    Title = "Advanced UI Framework",
+    Theme = "Dark",
+    ToggleKey = Enum.KeyCode.RightControl
+})</pre>
+        </div>
+
+        <h2>3. UI Elements & Components</h2>
+        <p>Standard interactive elements supported by the library framework with individual code snippets.</p>
+
+        <!-- Tab Component -->
+        <p><strong>Tab Creation:</strong> Organizes the window into structured categories.</p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Tab = Window:CreateTab("Main Features")</pre>
+        </div>
+
+        <!-- Button Component -->
+        <p><strong>Button Element:</strong> Executes an instant trigger function callback when clicked.</p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>Tab:CreateButton({
+    Name = "Execute Action",
+    Callback = function()
+        print("Button Clicked!")
+    end
+})</pre>
+        </div>
+
+        <!-- Toggle Component -->
+        <p><strong>Toggle Element:</strong> A boolean switch state (true/false) ideal for looping background scripts.</p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>Tab:CreateToggle({
+    Name = "Auto Farm",
+    Default = false,
+    Callback = function(State)
+        print("Toggle State: " .. tostring(State))
+    end
+})</pre>
+        </div>
+
+        <!-- Slider Component -->
+        <p><strong>Slider Element:</strong> Allows precise adjustments of numerical attributes.</p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>Tab:CreateSlider({
+    Name = "WalkSpeed",
+    Min = 16,
+    Max = 200,
+    Default = 16,
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end
+})</pre>
+        </div>
+
+        <h2>4. Full Implementation Guide</h2>
+        <p>A complete production-ready script template combining everything, ready to copy and send to developers or AI.</p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>-- Load Library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/your-repo/main/library.lua"))()
+
+-- Create Window
+local Window = Library:CreateWindow({
+    Title = "Complete Script Example",
+    Theme = "Dark",
+    ToggleKey = Enum.KeyCode.RightControl
+})
+
+-- Create Tab & Elements
+local MainTab = Window:CreateTab("General")
+
+MainTab:CreateButton({
+    Name = "Print Success",
+    Callback = function()
+        print("Script executed successfully!")
+    end
+})
+
+MainTab:CreateToggle({
+    Name = "Infinite Jump",
+    Default = false,
+    Callback = function(State)
+        _G.InfJump = State
+        game:GetService("UserInputService").JumpRequest:Connect(function()
+            if _G.InfJump then
+                game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+            end
+        end)
+    end
+})</pre>
         </div>
     </main>
 
@@ -39,13 +133,10 @@
         function copyCode(btn) {
             const pre = btn.closest('.code-box-wrapper').querySelector('pre');
             navigator.clipboard.writeText(pre.innerText).then(() => {
-                btn.innerHTML = '✅ <span>تم النسخ</span>';
-                setTimeout(() => {
-                    btn.innerHTML = '📋 <span>نسخ</span>';
-                }, 2000);
+                btn.innerText = '✅ Copied';
+                setTimeout(() => { btn.innerText = '📋 Copy'; }, 2000);
             });
         }
     </script>
 </body>
 </html>
-
