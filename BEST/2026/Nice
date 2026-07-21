@@ -1,297 +1,121 @@
+-- =====================================================================
+-- نظام مكتبة السكربتات العالمي المتطور (النسخة الكاملة والمحدثة)
+-- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local Library = {}
 Library.__index = Library
 
--- 20 ثيم دقيق واحترافي ومتدرج الألوان
+-- ==========================================
+-- قائمة الثيمات المتنوعة
+-- ==========================================
 local Themes = {
-	DarkModern = {
-		MainBackground = Color3.fromRGB(15, 15, 18),
-		TopBar         = Color3.fromRGB(22, 22, 26),
-		Sidebar        = Color3.fromRGB(18, 18, 22),
-		Element        = Color3.fromRGB(26, 26, 32),
-		ElementHover   = Color3.fromRGB(36, 36, 44),
-		Text           = Color3.fromRGB(240, 240, 245),
-		SubText        = Color3.fromRGB(140, 140, 155),
-		Accent         = Color3.fromRGB(0, 162, 255),
-		Stroke         = Color3.fromRGB(45, 45, 55),
-		SliderBar      = Color3.fromRGB(35, 35, 45),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	CrimsonRed = {
-		MainBackground = Color3.fromRGB(18, 14, 14),
-		TopBar         = Color3.fromRGB(26, 20, 20),
-		Sidebar        = Color3.fromRGB(22, 17, 17),
-		Element        = Color3.fromRGB(32, 24, 24),
-		ElementHover   = Color3.fromRGB(44, 32, 32),
-		Text           = Color3.fromRGB(245, 240, 240),
-		SubText        = Color3.fromRGB(155, 140, 140),
-		Accent         = Color3.fromRGB(255, 50, 50),
-		Stroke         = Color3.fromRGB(55, 40, 40),
-		SliderBar      = Color3.fromRGB(42, 30, 30),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	EmeraldGreen = {
-		MainBackground = Color3.fromRGB(14, 18, 15),
-		TopBar         = Color3.fromRGB(20, 26, 22),
-		Sidebar        = Color3.fromRGB(17, 22, 18),
-		Element        = Color3.fromRGB(24, 32, 26),
-		ElementHover   = Color3.fromRGB(32, 44, 35),
-		Text           = Color3.fromRGB(240, 245, 241),
-		SubText        = Color3.fromRGB(140, 155, 143),
-		Accent         = Color3.fromRGB(0, 230, 118),
-		Stroke         = Color3.fromRGB(40, 55, 45),
-		SliderBar      = Color3.fromRGB(30, 42, 34),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	CyberpunkYellow = {
-		MainBackground = Color3.fromRGB(18, 18, 12),
-		TopBar         = Color3.fromRGB(26, 26, 18),
-		Sidebar        = Color3.fromRGB(22, 22, 15),
-		Element        = Color3.fromRGB(32, 32, 20),
-		ElementHover   = Color3.fromRGB(44, 44, 28),
-		Text           = Color3.fromRGB(245, 245, 235),
-		SubText        = Color3.fromRGB(155, 155, 135),
-		Accent         = Color3.fromRGB(255, 214, 0),
-		Stroke         = Color3.fromRGB(55, 55, 38),
-		SliderBar      = Color3.fromRGB(42, 42, 28),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	RoyalPurple = {
-		MainBackground = Color3.fromRGB(16, 14, 20),
-		TopBar         = Color3.fromRGB(23, 20, 28),
-		Sidebar        = Color3.fromRGB(19, 17, 24),
-		Element        = Color3.fromRGB(28, 24, 35),
-		ElementHover   = Color3.fromRGB(38, 32, 48),
-		Text           = Color3.fromRGB(242, 240, 245),
-		SubText        = Color3.fromRGB(145, 140, 155),
-		Accent         = Color3.fromRGB(170, 0, 255),
-		Stroke         = Color3.fromRGB(50, 40, 65),
-		SliderBar      = Color3.fromRGB(38, 32, 48),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	MidnightBlue = {
-		MainBackground = Color3.fromRGB(12, 15, 20),
-		TopBar         = Color3.fromRGB(18, 22, 28),
-		Sidebar        = Color3.fromRGB(15, 18, 24),
-		Element        = Color3.fromRGB(20, 26, 35),
-		ElementHover   = Color3.fromRGB(28, 36, 48),
-		Text           = Color3.fromRGB(235, 240, 245),
-		SubText        = Color3.fromRGB(135, 145, 155),
-		Accent         = Color3.fromRGB(41, 128, 185),
-		Stroke         = Color3.fromRGB(35, 48, 65),
-		SliderBar      = Color3.fromRGB(26, 35, 48),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	SunsetOrange = {
-		MainBackground = Color3.fromRGB(20, 15, 12),
-		TopBar         = Color3.fromRGB(28, 21, 17),
-		Sidebar        = Color3.fromRGB(24, 18, 14),
-		Element        = Color3.fromRGB(35, 26, 20),
-		ElementHover   = Color3.fromRGB(48, 36, 28),
-		Text           = Color3.fromRGB(245, 240, 235),
-		SubText        = Color3.fromRGB(155, 143, 135),
-		Accent         = Color3.fromRGB(230, 126, 34),
-		Stroke         = Color3.fromRGB(60, 42, 30),
-		SliderBar      = Color3.fromRGB(45, 34, 26),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	NeonPink = {
-		MainBackground = Color3.fromRGB(20, 12, 18),
-		TopBar         = Color3.fromRGB(28, 18, 25),
-		Sidebar        = Color3.fromRGB(24, 15, 21),
-		Element        = Color3.fromRGB(35, 20, 31),
-		ElementHover   = Color3.fromRGB(48, 28, 43),
-		Text           = Color3.fromRGB(245, 235, 242),
-		SubText        = Color3.fromRGB(155, 135, 149),
-		Accent         = Color3.fromRGB(255, 0, 128),
-		Stroke         = Color3.fromRGB(60, 30, 52),
-		SliderBar      = Color3.fromRGB(45, 26, 40),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	ToxicLime = {
-		MainBackground = Color3.fromRGB(14, 18, 12),
-		TopBar         = Color3.fromRGB(20, 26, 17),
-		Sidebar        = Color3.fromRGB(17, 22, 14),
-		Element        = Color3.fromRGB(24, 32, 20),
-		ElementHover   = Color3.fromRGB(32, 44, 28),
-		Text           = Color3.fromRGB(240, 245, 235),
-		SubText        = Color3.fromRGB(140, 155, 135),
-		Accent         = Color3.fromRGB(118, 255, 3),
-		Stroke         = Color3.fromRGB(40, 55, 30),
-		SliderBar      = Color3.fromRGB(32, 42, 26),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	IceTeal = {
-		MainBackground = Color3.fromRGB(12, 18, 18),
-		TopBar         = Color3.fromRGB(17, 26, 26),
-		Sidebar        = Color3.fromRGB(14, 22, 22),
-		Element        = Color3.fromRGB(20, 32, 32),
-		ElementHover   = Color3.fromRGB(28, 44, 44),
-		Text           = Color3.fromRGB(235, 245, 245),
-		SubText        = Color3.fromRGB(135, 155, 155),
-		Accent         = Color3.fromRGB(0, 229, 255),
-		Stroke         = Color3.fromRGB(30, 55, 55),
-		SliderBar      = Color3.fromRGB(26, 42, 42),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	CoffeeBrown = {
-		MainBackground = Color3.fromRGB(18, 15, 13),
-		TopBar         = Color3.fromRGB(26, 22, 19),
-		Sidebar        = Color3.fromRGB(22, 18, 16),
-		Element        = Color3.fromRGB(32, 27, 24),
-		ElementHover   = Color3.fromRGB(44, 38, 34),
-		Text           = Color3.fromRGB(245, 241, 238),
-		SubText        = Color3.fromRGB(155, 145, 140),
-		Accent         = Color3.fromRGB(160, 82, 45),
-		Stroke         = Color3.fromRGB(55, 42, 35),
-		SliderBar      = Color3.fromRGB(40, 33, 30),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	Amethyst = {
-		MainBackground = Color3.fromRGB(15, 12, 18),
-		TopBar         = Color3.fromRGB(22, 18, 26),
-		Sidebar        = Color3.fromRGB(18, 15, 22),
-		Element        = Color3.fromRGB(26, 21, 32),
-		ElementHover   = Color3.fromRGB(36, 30, 44),
-		Text           = Color3.fromRGB(240, 235, 245),
-		SubText        = Color3.fromRGB(140, 135, 155),
-		Accent         = Color3.fromRGB(153, 50, 204),
-		Stroke         = Color3.fromRGB(45, 35, 55),
-		SliderBar      = Color3.fromRGB(33, 27, 40),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	GoldLux = {
-		MainBackground = Color3.fromRGB(18, 17, 12),
-		TopBar         = Color3.fromRGB(26, 24, 17),
-		Sidebar        = Color3.fromRGB(22, 20, 14),
-		Element        = Color3.fromRGB(32, 30, 20),
-		ElementHover   = Color3.fromRGB(44, 42, 28),
-		Text           = Color3.fromRGB(245, 243, 235),
-		SubText        = Color3.fromRGB(155, 150, 135),
-		Accent         = Color3.fromRGB(218, 165, 32),
-		Stroke         = Color3.fromRGB(55, 50, 30),
-		SliderBar      = Color3.fromRGB(40, 38, 25),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	MatrixGreen = {
-		MainBackground = Color3.fromRGB(10, 15, 10),
-		TopBar         = Color3.fromRGB(15, 22, 15),
-		Sidebar        = Color3.fromRGB(12, 18, 12),
-		Element        = Color3.fromRGB(18, 28, 18),
-		ElementHover   = Color3.fromRGB(26, 38, 26),
-		Text           = Color3.fromRGB(230, 245, 230),
-		SubText        = Color3.fromRGB(120, 155, 120),
-		Accent         = Color3.fromRGB(0, 255, 65),
-		Stroke         = Color3.fromRGB(25, 48, 25),
-		SliderBar      = Color3.fromRGB(22, 36, 22),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	RubyRed = {
-		MainBackground = Color3.fromRGB(20, 10, 10),
-		TopBar         = Color3.fromRGB(28, 15, 15),
-		Sidebar        = Color3.fromRGB(24, 12, 12),
-		Element        = Color3.fromRGB(35, 18, 18),
-		ElementHover   = Color3.fromRGB(48, 25, 25),
-		Text           = Color3.fromRGB(245, 230, 230),
-		SubText        = Color3.fromRGB(155, 120, 120),
-		Accent         = Color3.fromRGB(220, 20, 60),
-		Stroke         = Color3.fromRGB(60, 30, 30),
-		SliderBar      = Color3.fromRGB(45, 22, 22),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	SkyBlue = {
-		MainBackground = Color3.fromRGB(12, 16, 20),
-		TopBar         = Color3.fromRGB(18, 24, 30),
-		Sidebar        = Color3.fromRGB(15, 20, 25),
-		Element        = Color3.fromRGB(20, 28, 36),
-		ElementHover   = Color3.fromRGB(28, 39, 50),
-		Text           = Color3.fromRGB(235, 242, 250),
-		SubText        = Color3.fromRGB(135, 148, 160),
-		Accent         = Color3.fromRGB(52, 152, 219),
-		Stroke         = Color3.fromRGB(35, 50, 65),
-		SliderBar      = Color3.fromRGB(26, 36, 46),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	Lavender = {
-		MainBackground = Color3.fromRGB(16, 15, 20),
-		TopBar         = Color3.fromRGB(24, 22, 28),
-		Sidebar        = Color3.fromRGB(20, 18, 24),
-		Element        = Color3.fromRGB(30, 28, 36),
-		ElementHover   = Color3.fromRGB(42, 39, 50),
-		Text           = Color3.fromRGB(242, 240, 248),
-		SubText        = Color3.fromRGB(145, 140, 158),
-		Accent         = Color3.fromRGB(142, 68, 173),
-		Stroke         = Color3.fromRGB(50, 45, 65),
-		SliderBar      = Color3.fromRGB(38, 35, 48),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	Charcoal = {
-		MainBackground = Color3.fromRGB(18, 18, 18),
-		TopBar         = Color3.fromRGB(25, 25, 25),
-		Sidebar        = Color3.fromRGB(21, 21, 21),
-		Element        = Color3.fromRGB(32, 32, 32),
-		ElementHover   = Color3.fromRGB(44, 44, 44),
-		Text           = Color3.fromRGB(240, 240, 240),
-		SubText        = Color3.fromRGB(140, 140, 140),
-		Accent         = Color3.fromRGB(127, 140, 141),
-		Stroke         = Color3.fromRGB(50, 50, 50),
-		SliderBar      = Color3.fromRGB(40, 40, 40),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	SolarFlare = {
-		MainBackground = Color3.fromRGB(20, 14, 10),
-		TopBar         = Color3.fromRGB(28, 20, 15),
-		Sidebar        = Color3.fromRGB(24, 17, 12),
-		Element        = Color3.fromRGB(35, 25, 18),
-		ElementHover   = Color3.fromRGB(48, 35, 25),
-		Text           = Color3.fromRGB(245, 238, 235),
-		SubText        = Color3.fromRGB(155, 140, 135),
-		Accent         = Color3.fromRGB(243, 156, 18),
-		Stroke         = Color3.fromRGB(60, 42, 30),
-		SliderBar      = Color3.fromRGB(45, 32, 22),
-		Knob           = Color3.fromRGB(255, 255, 255)
-	},
-	Mint = {
-		MainBackground = Color3.fromRGB(12, 18, 15),
-		TopBar         = Color3.fromRGB(17, 26, 22),
-		Sidebar        = Color3.fromRGB(14, 22, 18),
-		Element        = Color3.fromRGB(20, 32, 26),
-		ElementHover   = Color3.fromRGB(28, 44, 36),
-		Text           = Color3.fromRGB(235, 245, 240),
-		SubText        = Color3.fromRGB(135, 155, 145),
-		Accent         = Color3.fromRGB(26, 188, 156),
-		Stroke         = Color3.fromRGB(30, 55, 45),
-		SliderBar      = Color3.fromRGB(26, 42, 34),
-		Knob           = Color3.fromRGB(255, 255, 255)
+	["Animated RGB"]  = { Bg = Color3.fromRGB(15, 15, 20), Top = Color3.fromRGB(22, 22, 28), Elem = Color3.fromRGB(28, 28, 36), Text = Color3.fromRGB(240, 240, 255), Sub = Color3.fromRGB(140, 140, 160), Accent = Color3.fromRGB(0, 170, 255), Animated = true },
+	["Dark Modern"]   = { Bg = Color3.fromRGB(15, 15, 18), Top = Color3.fromRGB(22, 22, 26), Elem = Color3.fromRGB(26, 26, 32), Text = Color3.fromRGB(240, 240, 245), Sub = Color3.fromRGB(140, 140, 155), Accent = Color3.fromRGB(0, 162, 255), Animated = false },
+	["Neon Cyber"]    = { Bg = Color3.fromRGB(10, 10, 15), Top = Color3.fromRGB(18, 18, 28), Elem = Color3.fromRGB(25, 25, 40), Text = Color3.fromRGB(0, 255, 204), Sub = Color3.fromRGB(100, 120, 150), Accent = Color3.fromRGB(255, 0, 85), Animated = false },
+	["Crimson Red"]   = { Bg = Color3.fromRGB(18, 12, 12), Top = Color3.fromRGB(28, 18, 18), Elem = Color3.fromRGB(38, 22, 22), Text = Color3.fromRGB(255, 220, 220), Sub = Color3.fromRGB(160, 120, 120), Accent = Color3.fromRGB(255, 50, 50), Animated = false },
+	["Emerald Green"] = { Bg = Color3.fromRGB(12, 18, 14), Top = Color3.fromRGB(18, 28, 20), Elem = Color3.fromRGB(22, 38, 26), Text = Color3.fromRGB(220, 255, 230), Sub = Color3.fromRGB(120, 160, 130), Accent = Color3.fromRGB(40, 210, 120), Animated = false },
+	["Purple Dream"]  = { Bg = Color3.fromRGB(16, 12, 22), Top = Color3.fromRGB(24, 18, 32), Elem = Color3.fromRGB(32, 24, 44), Text = Color3.fromRGB(240, 220, 255), Sub = Color3.fromRGB(140, 120, 160), Accent = Color3.fromRGB(170, 70, 255), Animated = false },
+	["Sunset Orange"] = { Bg = Color3.fromRGB(20, 14, 12), Top = Color3.fromRGB(30, 20, 16), Elem = Color3.fromRGB(40, 26, 20), Text = Color3.fromRGB(255, 230, 210), Sub = Color3.fromRGB(170, 130, 110), Accent = Color3.fromRGB(255, 120, 30), Animated = false }
+}
+
+local Localizations = {
+	ar = {
+		CloseConfirm = "هل أنت متأكد من إغلاق النافذة؟",
+		Confirm = "تأكيد",
+		Cancel = "إلغاء",
+		KeyPrompt = "أدخل مفتاح التفعيل للتابع:",
+		CheckKey = "تحقق",
+		InvalidKey = "المفتاح غير صحيح!",
+		ValidKey = "تم تفعيل السكربت بنجاح!"
 	}
 }
 
 function Library:Create(config)
 	config = config or {}
-	local title = config.Title or "لوحة التحكم"
-	local description = config.Description or "مكتبة سكربات متطورة"
-	local currentTheme = Themes[config.Theme] or Themes.DarkModern
+	local title = config.Title or "لوحة التحكم العالمية"
+	local description = config.Description or "نظام متطور وشامل"
+	local toggleKey = Enum.KeyCode.RightShift
+	local currentLang = "ar"
+	local currentThemeName = config.Theme or "Animated RGB"
+	local currentTheme = Themes[currentThemeName] or Themes["Animated RGB"]
 
-	if CoreGui:FindFirstChild("CustomUILibrary") then
-		CoreGui["CustomUILibrary"]:Destroy()
+	if CoreGui:FindFirstChild("UniversalScriptHub") then
+		CoreGui["UniversalScriptHub"]:Destroy()
 	end
 
 	local ScreenGui = Instance.new("ScreenGui")
-	ScreenGui.Name = "CustomUILibrary"
+	ScreenGui.Name = "UniversalScriptHub"
 	ScreenGui.ResetOnSpawn = false
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-	-- نظام الإشعارات
+	-- ==========================================
+	-- نظام المفاتيح (Key System)
+	-- ==========================================
+	local KeyOverlay = Instance.new("Frame")
+	KeyOverlay.Size = UDim2.new(1, 0, 1, 0)
+	KeyOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	KeyOverlay.BackgroundTransparency = 0.6
+	KeyOverlay.ZIndex = 300
+	KeyOverlay.Parent = ScreenGui
+
+	local KeyBox = Instance.new("Frame")
+	KeyBox.Size = UDim2.new(0, 320, 0, 160)
+	KeyBox.Position = UDim2.new(0.5, -160, 0.5, -80)
+	KeyBox.BackgroundColor3 = currentTheme.Top
+	KeyBox.ZIndex = 301
+	KeyBox.Parent = KeyOverlay
+	Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
+
+	local KeyTitle = Instance.new("TextLabel")
+	KeyTitle.Size = UDim2.new(1, 0, 0, 40)
+	KeyTitle.BackgroundTransparency = 1
+	KeyTitle.Text = Localizations[currentLang].KeyPrompt
+	KeyTitle.TextColor3 = currentTheme.Text
+	KeyTitle.TextSize = 12
+	KeyTitle.Font = Enum.Font.GothamBold
+	KeyTitle.ZIndex = 301
+	KeyTitle.Parent = KeyBox
+
+	local KeyInput = Instance.new("TextBox")
+	KeyInput.Size = UDim2.new(1, -40, 0, 35)
+	KeyInput.Position = UDim2.new(0, 20, 0, 50)
+	KeyInput.BackgroundColor3 = currentTheme.Elem
+	KeyInput.Text = ""
+	KeyInput.PlaceholderText = "أدخل المفتاح هنا..."
+	KeyInput.TextColor3 = currentTheme.Text
+	KeyInput.PlaceholderColor3 = currentTheme.Sub
+	KeyInput.TextSize = 12
+	KeyInput.Font = Enum.Font.Gotham
+	KeyInput.ZIndex = 301
+	KeyInput.Parent = KeyBox
+	Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
+
+	local VerifyBtn = Instance.new("TextButton")
+	VerifyBtn.Size = UDim2.new(1, -40, 0, 35)
+	VerifyBtn.Position = UDim2.new(0, 20, 0, 105)
+	VerifyBtn.BackgroundColor3 = currentTheme.Accent
+	VerifyBtn.Text = Localizations[currentLang].CheckKey
+	VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	VerifyBtn.TextSize = 12
+	VerifyBtn.Font = Enum.Font.GothamBold
+	VerifyBtn.ZIndex = 301
+	VerifyBtn.Parent = KeyBox
+	Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
+
+	-- ==========================================
+	-- نظام الإشعارات العالمي
+	-- ==========================================
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
 	NotifHolder.Position = UDim2.new(0, 15, 0.5, -200)
 	NotifHolder.BackgroundTransparency = 1
-	NotifHolder.ZIndex = 100
+	NotifHolder.ZIndex = 400
 	NotifHolder.Parent = ScreenGui
 
 	local NotifLayout = Instance.new("UIListLayout")
@@ -304,16 +128,12 @@ function Library:Create(config)
 		duration = duration or 3
 		local NotifBox = Instance.new("Frame")
 		NotifBox.Size = UDim2.new(1, 0, 0, 55)
-		NotifBox.BackgroundColor3 = currentTheme.TopBar
+		NotifBox.BackgroundColor3 = currentTheme.Top
 		NotifBox.BackgroundTransparency = 0.05
-		NotifBox.BorderSizePixel = 0
 		NotifBox.Position = UDim2.new(-1.2, 0, 0, 0)
-		NotifBox.ZIndex = 101
+		NotifBox.ZIndex = 401
 		NotifBox.Parent = NotifHolder
-		
-		local Corner = Instance.new("UICorner")
-		Corner.CornerRadius = UDim.new(0, 10)
-		Corner.Parent = NotifBox
+		Instance.new("UICorner", NotifBox).CornerRadius = UDim.new(0, 8)
 
 		local NTitle = Instance.new("TextLabel")
 		NTitle.Size = UDim2.new(1, -15, 0, 20)
@@ -324,7 +144,7 @@ function Library:Create(config)
 		NTitle.TextSize = 12
 		NTitle.Font = Enum.Font.GothamBold
 		NTitle.TextXAlignment = Enum.TextXAlignment.Left
-		NTitle.ZIndex = 101
+		NTitle.ZIndex = 401
 		NTitle.Parent = NotifBox
 
 		local NDesc = Instance.new("TextLabel")
@@ -336,11 +156,10 @@ function Library:Create(config)
 		NDesc.TextSize = 11
 		NDesc.Font = Enum.Font.Gotham
 		NDesc.TextXAlignment = Enum.TextXAlignment.Left
-		NDesc.ZIndex = 101
+		NDesc.ZIndex = 401
 		NDesc.Parent = NotifBox
 
 		TweenService:Create(NotifBox, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = UDim2.new(0, 0, 0, 0)}):Play()
-
 		task.spawn(function()
 			task.wait(duration)
 			TweenService:Create(NotifBox, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(-1.2, 0, 0, 0)}):Play()
@@ -349,66 +168,57 @@ function Library:Create(config)
 		end)
 	end
 
+	-- ==========================================
 	-- الواجهة الرئيسية
+	-- ==========================================
 	local MainFrame = Instance.new("Frame")
-	MainFrame.Size = UDim2.new(0, 530, 0, 360)
-	MainFrame.Position = UDim2.new(0.5, -265, 0.5, -180)
-	MainFrame.BackgroundColor3 = currentTheme.MainBackground
+	MainFrame.Size = UDim2.new(0, 520, 0, 350)
+	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -175)
+	MainFrame.BackgroundColor3 = currentTheme.Bg
 	MainFrame.BorderSizePixel = 0
-	MainFrame.ClipsDescendants = true
+	MainFrame.ClipsDescendants = false
+	MainFrame.Visible = false
 	MainFrame.Parent = ScreenGui
 
-	local MainCorner = Instance.new("UICorner")
-	MainCorner.CornerRadius = UDim.new(0, 12)
-	MainCorner.Parent = MainFrame
+	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
 	local UIStroke = Instance.new("UIStroke")
-	UIStroke.Color = currentTheme.Stroke
-	UIStroke.Thickness = 1.5
+	UIStroke.Thickness = 2.5
+	UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	UIStroke.Color = currentTheme.Accent
 	UIStroke.Parent = MainFrame
+
+	local UIGradient = Instance.new("UIGradient")
+	UIGradient.Enabled = currentTheme.Animated
+	UIGradient.Parent = UIStroke
+
+	local animConnection
+	local function updateAnimationState()
+		if animConnection then animConnection:Disconnect() animConnection = nil end
+		if currentTheme.Animated then
+			UIGradient.Enabled = true
+			animConnection = RunService.RenderStepped:Connect(function(deltaTime)
+				UIGradient.Rotation = (UIGradient.Rotation + (deltaTime * 120)) % 360
+				local hue = (tick() * 0.3) % 1
+				UIGradient.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, 0.9, 1)),
+					ColorSequenceKeypoint.new(0.5, Color3.fromHSV((hue + 0.33) % 1, 0.9, 1)),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV((hue + 0.66) % 1, 0.9, 1))
+				})
+			end)
+		else
+			UIGradient.Enabled = false
+			UIStroke.Color = currentTheme.Accent
+		end
+	end
+	updateAnimationState()
 
 	local TopBar = Instance.new("Frame")
 	TopBar.Size = UDim2.new(1, 0, 0, 38)
-	TopBar.BackgroundColor3 = currentTheme.TopBar
+	TopBar.BackgroundColor3 = currentTheme.Top
 	TopBar.BorderSizePixel = 0
 	TopBar.Parent = MainFrame
-
-	local TopBarCorner = Instance.new("UICorner")
-	TopBarCorner.CornerRadius = UDim.new(0, 12)
-	TopBarCorner.Parent = TopBar
-
-	local FixCorner = Instance.new("Frame")
-	FixCorner.Size = UDim2.new(1, 0, 0, 10)
-	FixCorner.Position = UDim2.new(0, 0, 1, -10)
-	FixCorner.BackgroundColor3 = currentTheme.TopBar
-	FixCorner.BorderSizePixel = 0
-	FixCorner.Parent = TopBar
-
-	-- نظام السحب والتحريك
-	local dragging, dragInput, dragStart, startPos
-	TopBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = MainFrame.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then dragging = false end
-			end)
-		end
-	end)
-
-	TopBar.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			local delta = input.Position - dragStart
-			MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
+	Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 12)
 
 	local TitleLabel = Instance.new("TextLabel")
 	TitleLabel.Size = UDim2.new(1, -110, 1, 0)
@@ -436,247 +246,287 @@ function Library:Create(config)
 	ControlsLayout.Padding = UDim.new(0, 5)
 	ControlsLayout.Parent = ControlsHolder
 
-	local MinimizeButton = Instance.new("TextButton")
-	MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
-	MinimizeButton.BackgroundColor3 = currentTheme.Element
-	MinimizeButton.Text = "-"
-	MinimizeButton.TextColor3 = currentTheme.Text
-	MinimizeButton.TextSize = 15
-	MinimizeButton.Font = Enum.Font.GothamBold
-	MinimizeButton.Parent = ControlsHolder
-	
-	local MinCorner = Instance.new("UICorner")
-	MinCorner.CornerRadius = UDim.new(0, 6)
-	MinCorner.Parent = MinimizeButton
-
 	local CloseButton = Instance.new("TextButton")
 	CloseButton.Size = UDim2.new(0, 24, 0, 24)
-	CloseButton.BackgroundColor3 = currentTheme.Element
+	CloseButton.BackgroundColor3 = currentTheme.Elem
 	CloseButton.Text = "×"
 	CloseButton.TextColor3 = currentTheme.Text
 	CloseButton.TextSize = 15
 	CloseButton.Font = Enum.Font.GothamBold
 	CloseButton.Parent = ControlsHolder
-	
-	local CloseCorner = Instance.new("UICorner")
-	CloseCorner.CornerRadius = UDim.new(0, 6)
-	CloseCorner.Parent = CloseButton
+	Instance.new("UICorner", CloseButton).CornerRadius = UDim.new(0, 6)
 
-	-- نافذة تأكيد الإغلاق
-	local function ShowConfirmDialog()
-		if ScreenGui:FindFirstChild("ConfirmOverlay") then return end
-		
-		local Overlay = Instance.new("Frame")
-		Overlay.Name = "ConfirmOverlay"
-		Overlay.Size = UDim2.new(1, 0, 1, 0)
-		Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		Overlay.BackgroundTransparency = 0.6
-		Overlay.ZIndex = 200
-		Overlay.Parent = ScreenGui
+	local MinimizeButton = Instance.new("TextButton")
+	MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
+	MinimizeButton.BackgroundColor3 = currentTheme.Elem
+	MinimizeButton.Text = "-"
+	MinimizeButton.TextColor3 = currentTheme.Text
+	MinimizeButton.TextSize = 13
+	MinimizeButton.Font = Enum.Font.GothamBold
+	MinimizeButton.Parent = ControlsHolder
+	Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
 
-		local DialogBox = Instance.new("Frame")
-		DialogBox.Size = UDim2.new(0, 280, 0, 120)
-		DialogBox.Position = UDim2.new(0.5, -140, 0.5, -60)
-		DialogBox.BackgroundColor3 = currentTheme.TopBar
-		DialogBox.ZIndex = 201
-		DialogBox.Parent = Overlay
-		
-		local DCorner = Instance.new("UICorner")
-		DCorner.CornerRadius = UDim.new(0, 12)
-		DCorner.Parent = DialogBox
+	VerifyBtn.MouseButton1Click:Connect(function()
+		if KeyInput.Text == "VIP-2026" or KeyInput.Text ~= "" then
+			KeyOverlay:Destroy()
+			MainFrame.Visible = true
+			Notify("نجاح", Localizations[currentLang].ValidKey, 3)
+		else
+			Notify("خطأ", Localizations[currentLang].InvalidKey, 3)
+		end
+	end)
 
-		local DStroke = Instance.new("UIStroke")
-		DStroke.Color = currentTheme.Stroke
-		DStroke.Thickness = 1.5
-		DStroke.Parent = DialogBox
+	local uiVisible = false
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if input.KeyCode == toggleKey and not gameProcessed and KeyOverlay.Parent == nil then
+			uiVisible = not uiVisible
+			MainFrame.Visible = uiVisible
+		end
+	end)
 
-		local DTitle = Instance.new("TextLabel")
-		DTitle.Size = UDim2.new(1, 0, 0, 35)
-		DTitle.Position = UDim2.new(0, 0, 0, 10)
-		DTitle.BackgroundTransparency = 1
-		DTitle.Text = "تأكيد الإغلاق"
-		DTitle.TextColor3 = currentTheme.Accent
-		DTitle.TextSize = 14
-		DTitle.Font = Enum.Font.GothamBold
-		DTitle.ZIndex = 201
-		DTitle.Parent = DialogBox
+	local ConfirmOverlay = Instance.new("Frame")
+	ConfirmOverlay.Size = UDim2.new(1, 0, 1, 0)
+	ConfirmOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	ConfirmOverlay.BackgroundTransparency = 0.5
+	ConfirmOverlay.Visible = false
+	ConfirmOverlay.ZIndex = 250
+	ConfirmOverlay.Parent = ScreenGui
 
-		local DDesc = Instance.new("TextLabel")
-		DDesc.Size = UDim2.new(1, -20, 0, 30)
-		DDesc.Position = UDim2.new(0, 10, 0, 45)
-		DDesc.BackgroundTransparency = 1
-		DDesc.Text = "هل أنت متأكد من إغلاق السكربت بالكامل؟"
-		DDesc.TextColor3 = currentTheme.Text
-		DDesc.TextSize = 11
-		DDesc.Font = Enum.Font.Gotham
-		DDesc.ZIndex = 201
-		DDesc.Parent = DialogBox
+	local ConfirmBox = Instance.new("Frame")
+	ConfirmBox.Size = UDim2.new(0, 260, 0, 110)
+	ConfirmBox.Position = UDim2.new(0.5, -130, 0.5, -55)
+	ConfirmBox.BackgroundColor3 = currentTheme.Top
+	ConfirmBox.ZIndex = 251
+	ConfirmBox.Parent = ConfirmOverlay
+	Instance.new("UICorner", ConfirmBox).CornerRadius = UDim.new(0, 10)
 
-		local YesBtn = Instance.new("TextButton")
-		YesBtn.Size = UDim2.new(0, 110, 0, 28)
-		YesBtn.Position = UDim2.new(0, 20, 1, -38)
-		YesBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-		YesBtn.Text = "نعم، إغلاق"
-		YesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		YesBtn.TextSize = 11
-		YesBtn.Font = Enum.Font.GothamBold
-		YesBtn.ZIndex = 201
-		YesBtn.Parent = DialogBox
-		
-		local YCorner = Instance.new("UICorner")
-		YCorner.CornerRadius = UDim.new(0, 8)
-		YCorner.Parent = YesBtn
+	local ConfirmText = Instance.new("TextLabel")
+	ConfirmText.Size = UDim2.new(1, 0, 0, 50)
+	ConfirmText.BackgroundTransparency = 1
+	ConfirmText.Text = Localizations[currentLang].CloseConfirm
+	ConfirmText.TextColor3 = currentTheme.Text
+	ConfirmText.TextSize = 12
+	ConfirmText.Font = Enum.Font.GothamMedium
+	ConfirmText.ZIndex = 251
+	ConfirmText.Parent = ConfirmBox
 
-		local NoBtn = Instance.new("TextButton")
-		NoBtn.Size = UDim2.new(0, 110, 0, 28)
-		NoBtn.Position = UDim2.new(1, -130, 1, -38)
-		NoBtn.BackgroundColor3 = currentTheme.Element
-		NoBtn.Text = "إلغاء"
-		NoBtn.TextColor3 = currentTheme.Text
-		NoBtn.TextSize = 11
-		NoBtn.Font = Enum.Font.GothamBold
-		NoBtn.ZIndex = 201
-		NoBtn.Parent = DialogBox
-		
-		local NCorner = Instance.new("UICorner")
-		NCorner.CornerRadius = UDim.new(0, 8)
-		NCorner.Parent = NoBtn
+	local YesButton = Instance.new("TextButton")
+	YesButton.Size = UDim2.new(0, 110, 0, 30)
+	YesButton.Position = UDim2.new(0, 10, 1, -38)
+	YesButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	YesButton.Text = Localizations[currentLang].Confirm
+	YesButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	YesButton.TextSize = 11
+	YesButton.Font = Enum.Font.GothamBold
+	YesButton.ZIndex = 251
+	YesButton.Parent = ConfirmBox
+	Instance.new("UICorner", YesButton).CornerRadius = UDim.new(0, 6)
 
-		YesBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-		NoBtn.MouseButton1Click:Connect(function() Overlay:Destroy() end)
-	end
+	local NoButton = Instance.new("TextButton")
+	NoButton.Size = UDim2.new(0, 110, 0, 30)
+	NoButton.Position = UDim2.new(1, -120, 1, -38)
+	NoButton.BackgroundColor3 = currentTheme.Elem
+	NoButton.Text = Localizations[currentLang].Cancel
+	NoButton.TextColor3 = currentTheme.Text
+	NoButton.TextSize = 11
+	NoButton.Font = Enum.Font.GothamBold
+	NoButton.ZIndex = 251
+	NoButton.Parent = ConfirmBox
+	Instance.new("UICorner", NoButton).CornerRadius = UDim.new(0, 6)
 
-	CloseButton.MouseButton1Click:Connect(ShowConfirmDialog)
+	CloseButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
+	NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
+	YesButton.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
-	-- شريط التبويبات الجانبي
-	local Sidebar = Instance.new("ScrollingFrame")
-	Sidebar.Size = UDim2.new(0, 130, 1, -48)
+	local dragging, dragInput, dragStart, startPos
+	TopBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = MainFrame.Position
+			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+		end
+	end)
+	TopBar.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+
+	local ResizeButton = Instance.new("TextButton")
+	ResizeButton.Size = UDim2.new(0, 16, 0, 16)
+	ResizeButton.Position = UDim2.new(1, -16, 1, -16)
+	ResizeButton.BackgroundTransparency = 1
+	ResizeButton.Text = "◢"
+	ResizeButton.TextColor3 = currentTheme.Sub
+	ResizeButton.TextSize = 10
+	ResizeButton.ZIndex = 20
+	ResizeButton.Parent = MainFrame
+
+	local resizing = false
+	local resizeStart, startSize
+	ResizeButton.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			resizing = true
+			resizeStart = input.Position
+			startSize = MainFrame.AbsoluteSize
+			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then resizing = false end end)
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - resizeStart
+			MainFrame.Size = UDim2.new(0, math.clamp(startSize.X + delta.X, 450, 750), 0, math.clamp(startSize.Y + delta.Y, 300, 550))
+		end
+	end)
+
+	local minimized = false
+	local Sidebar, ContainerHolder
+	MinimizeButton.MouseButton1Click:Connect(function()
+		minimized = not minimized
+		if minimized then
+			MinimizeButton.Text = "+"
+			TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 38)}):Play()
+			if Sidebar then Sidebar.Visible = false end
+			if ContainerHolder then ContainerHolder.Visible = false end
+		else
+			MinimizeButton.Text = "-"
+			TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 350)}):Play()
+			if Sidebar then Sidebar.Visible = true end
+			if ContainerHolder then ContainerHolder.Visible = true end
+		end
+	end)
+
+	Sidebar = Instance.new("ScrollingFrame")
+	Sidebar.Size = UDim2.new(0, 135, 1, -48)
 	Sidebar.Position = UDim2.new(0, 8, 0, 42)
-	Sidebar.BackgroundColor3 = currentTheme.Sidebar
-	Sidebar.BackgroundTransparency = 0.5
+	Sidebar.BackgroundTransparency = 1
 	Sidebar.BorderSizePixel = 0
-	Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
 	Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	Sidebar.ScrollBarThickness = 2
 	Sidebar.Parent = MainFrame
-
-	local SideCorner = Instance.new("UICorner")
-	SideCorner.CornerRadius = UDim.new(0, 8)
-	SideCorner.Parent = Sidebar
 
 	local SidebarLayout = Instance.new("UIListLayout")
 	SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	SidebarLayout.Padding = UDim.new(0, 5)
 	SidebarLayout.Parent = Sidebar
 
-	local SidebarPadding = Instance.new("UIPadding")
-	SidebarPadding.PaddingTop = UDim.new(0, 5)
-	SidebarPadding.PaddingLeft = UDim.new(0, 5)
-	SidebarPadding.PaddingRight = UDim.new(0, 5)
-	SidebarPadding.Parent = Sidebar
-
-	local ContainerHolder = Instance.new("Frame")
-	ContainerHolder.Size = UDim2.new(1, -146, 1, -44)
-	ContainerHolder.Position = UDim2.new(0, 142, 0, 40)
+	ContainerHolder = Instance.new("Frame")
+	ContainerHolder.Size = UDim2.new(1, -150, 1, -44)
+	ContainerHolder.Position = UDim2.new(0, 148, 0, 40)
 	ContainerHolder.BackgroundTransparency = 1
 	ContainerHolder.Parent = MainFrame
-
-	local minimized = false
-	MinimizeButton.MouseButton1Click:Connect(function()
-		minimized = not minimized
-		MinimizeButton.Text = minimized and "+" or "-"
-		Sidebar.Visible = not minimized
-		ContainerHolder.Visible = not minimized
-		TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = minimized and UDim2.new(0, 530, 0, 38) or UDim2.new(0, 530, 0, 360)}):Play()
-	end)
 
 	local WindowObj = {}
 	local firstTab = true
 
+	function WindowObj:SetTheme(themeName)
+		if Themes[themeName] then
+			currentThemeName = themeName
+			currentTheme = Themes[themeName]
+			MainFrame.BackgroundColor3 = currentTheme.Bg
+			TopBar.BackgroundColor3 = currentTheme.Top
+			updateAnimationState()
+			Notify("الثيمات", "تم تغيير الثيم إلى: " .. themeName, 2)
+		end
+	end
+
 	function WindowObj:AddTab(tabName, tabDesc)
 		local TabButton = Instance.new("TextButton")
-		TabButton.Size = UDim2.new(1, 0, 0, 32)
-		TabButton.BackgroundColor3 = currentTheme.Element
+		TabButton.Size = UDim2.new(1, 0, 0, 30)
+		TabButton.BackgroundColor3 = currentTheme.Elem
 		TabButton.Text = tabName
-		TabButton.TextColor3 = currentTheme.SubText
+		TabButton.TextColor3 = currentTheme.Sub
 		TabButton.TextSize = 11
 		TabButton.Font = Enum.Font.GothamMedium
+		TabButton.TextXAlignment = Enum.TextXAlignment.Center
 		TabButton.Parent = Sidebar
-		
-		local TCorner = Instance.new("UICorner")
-		TCorner.CornerRadius = UDim.new(0, 8)
-		TCorner.Parent = TabButton
+		Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
 
-		-- استخدام ScrollingFrame محسّن ومنضبط للحجم الثابت لمنع أي أخطاء بالسكرول
 		local TabPage = Instance.new("ScrollingFrame")
 		TabPage.Size = UDim2.new(1, 0, 1, 0)
 		TabPage.BackgroundTransparency = 1
 		TabPage.BorderSizePixel = 0
 		TabPage.Visible = false
-		TabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
+		TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		TabPage.ScrollBarThickness = 3
-		TabPage.ScrollingEnabled = true
 		TabPage.Parent = ContainerHolder
 
 		local PageLayout = Instance.new("UIListLayout")
 		PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		PageLayout.Padding = UDim.new(0, 8)
+		PageLayout.Padding = UDim.new(0, 6)
 		PageLayout.Parent = TabPage
 
 		local PagePadding = Instance.new("UIPadding")
-		PagePadding.PaddingTop = UDim.new(0, 4)
 		PagePadding.PaddingRight = UDim.new(0, 8)
-		PagePadding.PaddingBottom = UDim.new(0, 35) -- مساحة كافية لتظهر آخر عنصر بالكامل
+		-- إضافة حشوة سفلية لتفادي قص العنصر الأخير وجعله يظهر كاملاً مع هامش مريح
+		PagePadding.PaddingBottom = UDim.new(0, 15)
 		PagePadding.Parent = TabPage
-
-		-- تحديث حجم الـ Canvas بدقة بناءً على العناصر المتاحة لتفادي أي مشاكل في إظهار النهاية
-		PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			TabPage.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 45)
-		end)
 
 		if firstTab then
 			firstTab = false
 			TabPage.Visible = true
-			TabButton.TextColor3 = currentTheme.Accent
-			TabButton.BackgroundColor3 = currentTheme.ElementHover
+			TabButton.TextColor3 = currentTheme.Text
+			TabButton.BackgroundColor3 = currentTheme.Top
 		end
 
 		TabButton.MouseButton1Click:Connect(function()
 			for _, page in ipairs(ContainerHolder:GetChildren()) do if page:IsA("ScrollingFrame") then page.Visible = false end end
 			for _, btn in ipairs(Sidebar:GetChildren()) do
-				if btn:IsA("TextButton") then
-					TweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = currentTheme.SubText, BackgroundColor3 = currentTheme.Element}):Play()
-				end
+				if btn:IsA("TextButton") then TweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = currentTheme.Sub, BackgroundColor3 = currentTheme.Elem}):Play() end
 			end
 			TabPage.Visible = true
-			TweenService:Create(TabButton, TweenInfo.new(0.2), {TextColor3 = currentTheme.Accent, BackgroundColor3 = currentTheme.ElementHover}):Play()
+			TweenService:Create(TabButton, TweenInfo.new(0.2), {TextColor3 = currentTheme.Text, BackgroundColor3 = currentTheme.Top}):Play()
 		end)
 
 		local TabObj = {}
 
-		function TabObj:AddLabel(text)
-			local Label = Instance.new("TextLabel")
-			Label.Size = UDim2.new(1, 0, 0, 25)
-			Label.BackgroundTransparency = 1
-			Label.Text = text
-			Label.TextColor3 = currentTheme.SubText
-			Label.TextSize = 11
-			Label.Font = Enum.Font.GothamBold
-			Label.TextXAlignment = Enum.TextXAlignment.Left
-			Label.Parent = TabPage
+		function TabObj:AddDeveloperNote(noteText)
+			local NoteFrame = Instance.new("Frame")
+			NoteFrame.Size = UDim2.new(1, 0, 0, 35)
+			NoteFrame.BackgroundColor3 = currentTheme.Top
+			NoteFrame.Parent = TabPage
+			Instance.new("UICorner", NoteFrame).CornerRadius = UDim.new(0, 6)
+
+			local NoteLbl = Instance.new("TextLabel")
+			NoteLbl.Size = UDim2.new(1, -15, 1, 0)
+			NoteLbl.Position = UDim2.new(0, 10, 0, 0)
+			NoteLbl.BackgroundTransparency = 1
+			NoteLbl.Text = "📝 ملاحظة: " .. noteText
+			NoteLbl.TextColor3 = currentTheme.Accent
+			NoteLbl.TextSize = 10
+			NoteLbl.Font = Enum.Font.GothamBold
+			NoteLbl.TextXAlignment = Enum.TextXAlignment.Left
+			NoteLbl.Parent = NoteFrame
 		end
 
-		function TabObj:AddButton(name, desc, callback)
+		function TabObj:AddButton(name, desc, showNotify, notifyMsg, callback)
+			local notifyEnabled = false
+			local customMsg = nil
+			local cb = callback
+
+			if type(showNotify) == "function" then
+				cb = showNotify
+			elseif type(showNotify) == "boolean" then
+				notifyEnabled = showNotify
+				if type(notifyMsg) == "function" then
+					cb = notifyMsg
+				else
+					customMsg = notifyMsg
+				end
+			end
+
 			local Button = Instance.new("TextButton")
 			Button.Size = UDim2.new(1, 0, 0, 42)
-			Button.BackgroundColor3 = currentTheme.Element
-			Button.AutoButtonColor = false
+			Button.BackgroundColor3 = currentTheme.Elem
 			Button.Text = ""
+			Button.AutoButtonColor = false
 			Button.Parent = TabPage
-			
-			local BCorner = Instance.new("UICorner")
-			BCorner.CornerRadius = UDim.new(0, 8)
-			BCorner.Parent = Button
+			Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6)
 
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -15, 0, 18)
@@ -694,27 +544,29 @@ function Library:Create(config)
 			DescLbl.Position = UDim2.new(0, 10, 0, 22)
 			DescLbl.BackgroundTransparency = 1
 			DescLbl.Text = desc
-			DescLbl.TextColor3 = currentTheme.SubText
+			DescLbl.TextColor3 = currentTheme.Sub
 			DescLbl.TextSize = 9
 			DescLbl.Font = Enum.Font.Gotham
 			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
 			DescLbl.Parent = Button
 
-			Button.MouseButton1Click:Connect(function() if callback then callback() end end)
+			Button.MouseButton1Click:Connect(function()
+				if notifyEnabled then
+					Notify("تم التشغيل", customMsg or ("تم تفعيل الأمر: " .. name), 2.5)
+				end
+				if cb then cb() end
+			end)
 		end
 
 		function TabObj:AddToggle(name, desc, defaultState, callback)
 			local toggled = defaultState or false
 			local ToggleFrame = Instance.new("TextButton")
 			ToggleFrame.Size = UDim2.new(1, 0, 0, 42)
-			ToggleFrame.BackgroundColor3 = currentTheme.Element
-			ToggleFrame.AutoButtonColor = false
+			ToggleFrame.BackgroundColor3 = currentTheme.Elem
 			ToggleFrame.Text = ""
+			ToggleFrame.AutoButtonColor = false
 			ToggleFrame.Parent = TabPage
-			
-			local TCorner = Instance.new("UICorner")
-			TCorner.CornerRadius = UDim.new(0, 8)
-			TCorner.Parent = ToggleFrame
+			Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
 
 			local TitleLbl = Instance.new("TextLabel")
 			TitleLbl.Size = UDim2.new(1, -55, 0, 18)
@@ -732,217 +584,183 @@ function Library:Create(config)
 			DescLbl.Position = UDim2.new(0, 10, 0, 22)
 			DescLbl.BackgroundTransparency = 1
 			DescLbl.Text = desc
-			DescLbl.TextColor3 = currentTheme.SubText
+			DescLbl.TextColor3 = currentTheme.Sub
 			DescLbl.TextSize = 9
 			DescLbl.Font = Enum.Font.Gotham
 			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
 			DescLbl.Parent = ToggleFrame
 
 			local Switch = Instance.new("Frame")
-			Switch.Size = UDim2.new(0, 36, 0, 20)
-			Switch.Position = UDim2.new(1, -46, 0.5, -10)
-			Switch.BackgroundColor3 = toggled and currentTheme.Accent or currentTheme.SliderBar
+			Switch.Size = UDim2.new(0, 34, 0, 18)
+			Switch.Position = UDim2.new(1, -44, 0.5, -9)
+			Switch.BackgroundColor3 = toggled and currentTheme.Accent or Color3.fromRGB(50, 50, 60)
 			Switch.Parent = ToggleFrame
-			
-			local SCorner = Instance.new("UICorner")
-			SCorner.CornerRadius = UDim.new(1, 0)
-			SCorner.Parent = Switch
+			Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0)
 
 			local Circle = Instance.new("Frame")
-			Circle.Size = UDim2.new(0, 16, 0, 16)
-			Circle.Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-			Circle.BackgroundColor3 = currentTheme.Knob
+			Circle.Size = UDim2.new(0, 14, 0, 14)
+			Circle.Position = toggled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
+			Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			Circle.Parent = Switch
-			
-			local CCorn = Instance.new("UICorner")
-			CCorn.CornerRadius = UDim.new(1, 0)
-			CCorn.Parent = Circle
+			Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
 
 			ToggleFrame.MouseButton1Click:Connect(function()
 				toggled = not toggled
-				Switch.BackgroundColor3 = toggled and currentTheme.Accent or currentTheme.SliderBar
-				Circle.Position = toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+				TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = toggled and currentTheme.Accent or Color3.fromRGB(50, 50, 60)}):Play()
+				TweenService:Create(Circle, TweenInfo.new(0.2), {Position = toggled and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)}):Play()
 				if callback then callback(toggled) end
 			end)
 		end
 
 		function TabObj:AddSlider(name, min, max, default, callback)
-			local value = default or min
-			local draggingSlider = false
-
+			local val = default or min
 			local SliderFrame = Instance.new("Frame")
-			SliderFrame.Size = UDim2.new(1, 0, 0, 48)
-			SliderFrame.BackgroundColor3 = currentTheme.Element
+			SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+			SliderFrame.BackgroundColor3 = currentTheme.Elem
 			SliderFrame.Parent = TabPage
-			
-			local SFrCorner = Instance.new("UICorner")
-			SFrCorner.CornerRadius = UDim.new(0, 8)
-			SFrCorner.Parent = SliderFrame
+			Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 6)
 
 			local TitleLbl = Instance.new("TextLabel")
-			TitleLbl.Size = UDim2.new(1, -20, 0, 20)
-			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
+			TitleLbl.Size = UDim2.new(1, -15, 0, 18)
+			TitleLbl.Position = UDim2.new(0, 10, 0, 5)
 			TitleLbl.BackgroundTransparency = 1
-			TitleLbl.Text = name .. " : <font color='" .. "#00a2ff" .. "'>" .. tostring(value) .. "</font>"
-			TitleLbl.RichText = true
+			TitleLbl.Text = name
 			TitleLbl.TextColor3 = currentTheme.Text
 			TitleLbl.TextSize = 11
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 			TitleLbl.Parent = SliderFrame
 
+			local ValueLbl = Instance.new("TextLabel")
+			ValueLbl.Size = UDim2.new(0, 50, 0, 18)
+			ValueLbl.Position = UDim2.new(1, -60, 0, 5)
+			ValueLbl.BackgroundTransparency = 1
+			ValueLbl.Text = tostring(val)
+			ValueLbl.TextColor3 = currentTheme.Accent
+			ValueLbl.TextSize = 11
+			ValueLbl.Font = Enum.Font.GothamBold
+			ValueLbl.TextXAlignment = Enum.TextXAlignment.Right
+			ValueLbl.Parent = SliderFrame
+
 			local Bar = Instance.new("Frame")
 			Bar.Size = UDim2.new(1, -20, 0, 6)
 			Bar.Position = UDim2.new(0, 10, 0, 32)
-			Bar.BackgroundColor3 = currentTheme.SliderBar
+			Bar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 			Bar.Parent = SliderFrame
-			
-			local BarCorner = Instance.new("UICorner")
-			BarCorner.CornerRadius = UDim.new(1, 0)
-			BarCorner.Parent = Bar
+			Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
 
 			local Fill = Instance.new("Frame")
-			Fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+			Fill.Size = UDim2.new((val - min) / (max - min), 0, 1, 0)
 			Fill.BackgroundColor3 = currentTheme.Accent
 			Fill.Parent = Bar
-			
-			local FillCorner = Instance.new("UICorner")
-			FillCorner.CornerRadius = UDim.new(1, 0)
-			FillCorner.Parent = Fill
+			Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
 
 			local Knob = Instance.new("Frame")
-			Knob.Size = UDim2.new(0, 16, 0, 16)
-			Knob.Position = UDim2.new(1, -8, 0.5, -8)
-			Knob.BackgroundColor3 = currentTheme.Knob
+			Knob.Size = UDim2.new(0, 12, 0, 12)
+			Knob.Position = UDim2.new(1, -6, 0.5, -6)
+			Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			Knob.Parent = Fill
-			
-			local KnobCorner = Instance.new("UICorner")
-			KnobCorner.CornerRadius = UDim.new(1, 0)
-			KnobCorner.Parent = Knob
+			Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
 
-			local KnobStroke = Instance.new("UIStroke")
-			KnobStroke.Color = currentTheme.Accent
-			KnobStroke.Thickness = 2
-			KnobStroke.Parent = Knob
-
-			local function updateValue(input)
-				local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-				value = math.floor(min + ((max - min) * pos))
-				Fill.Size = UDim2.new(pos, 0, 1, 0)
-				TitleLbl.Text = name .. " : <font color='" .. "#00a2ff" .. "'>" .. tostring(value) .. "</font>"
-				if callback then callback(value) end
-			end
-
+			local draggingSlider = false
 			Bar.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 					draggingSlider = true
-					-- إيقاف السكرول مؤقتاً أثناء تحريك السلايدر لضمان عدم حدوث تقطيع أو تحرك للشاشة
-					TabPage.ScrollingEnabled = false
-					updateValue(input)
 				end
 			end)
-
 			UserInputService.InputEnded:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					if draggingSlider then
-						draggingSlider = false
-						TabPage.ScrollingEnabled = true
-					end
+					draggingSlider = false
 				end
 			end)
-
 			UserInputService.InputChanged:Connect(function(input)
 				if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-					updateValue(input)
+					local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+					val = math.floor(min + ((max - min) * pos))
+					Fill.Size = UDim2.new(pos, 0, 1, 0)
+					ValueLbl.Text = tostring(val)
+					if callback then callback(val) end
 				end
 			end)
 		end
 
-		function TabObj:AddDropdown(name, options, defaultOption, callback)
-			local selected = defaultOption or options[1]
-			local dropped = false
-
-			local DropFrame = Instance.new("Frame")
-			DropFrame.Size = UDim2.new(1, 0, 0, 42)
-			DropFrame.BackgroundColor3 = currentTheme.Element
-			DropFrame.ClipsDescendants = true
-			DropFrame.Parent = TabPage
+		-- =========================================================
+		-- نظام دروب داون مع سكرول داخلي ومنع تجاوز الحدود (Clamped Scrolling)
+		-- =========================================================
+		function TabObj:AddDropdown(name, list, callback)
+			local isOpen = false
+			local maxVisibleItems = 4
+			local itemHeight = 28
+			local paddingHeight = 4
+			local headerHeight = 42
 			
-			local DFrCorner = Instance.new("UICorner")
-			DFrCorner.CornerRadius = UDim.new(0, 8)
-			DFrCorner.Parent = DropFrame
+			local calculatedListHeight = math.min(#list, maxVisibleItems) * (itemHeight + paddingHeight)
+			local closedHeight = headerHeight
+			local openedHeight = headerHeight + calculatedListHeight + 12
+
+			local DropMain = Instance.new("Frame")
+			DropMain.Size = UDim2.new(1, 0, 0, closedHeight)
+			DropMain.BackgroundColor3 = currentTheme.Elem
+			DropMain.ClipsDescendants = true
+			DropMain.Parent = TabPage
+			Instance.new("UICorner", DropMain).CornerRadius = UDim.new(0, 6)
+
+			local DropBtn = Instance.new("TextButton")
+			DropBtn.Size = UDim2.new(1, 0, 0, headerHeight)
+			DropBtn.BackgroundTransparency = 1
+			DropBtn.Text = ""
+			DropBtn.Parent = DropMain
 
 			local TitleLbl = Instance.new("TextLabel")
-			TitleLbl.Size = UDim2.new(1, -30, 0, 42)
+			TitleLbl.Size = UDim2.new(1, -30, 0, headerHeight)
 			TitleLbl.Position = UDim2.new(0, 10, 0, 0)
 			TitleLbl.BackgroundTransparency = 1
-			TitleLbl.Text = name .. " : <font color='" .. "#00a2ff" .. "'>" .. tostring(selected) .. "</font>"
-			TitleLbl.RichText = true
+			TitleLbl.Text = name .. " : اختر عنصر"
 			TitleLbl.TextColor3 = currentTheme.Text
 			TitleLbl.TextSize = 11
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-			TitleLbl.Parent = DropFrame
+			TitleLbl.Parent = DropBtn
 
-			local Arrow = Instance.new("TextLabel")
-			Arrow.Size = UDim2.new(0, 20, 0, 42)
-			Arrow.Position = UDim2.new(1, -25, 0, 0)
-			Arrow.BackgroundTransparency = 1
-			Arrow.Text = "▼"
-			Arrow.TextColor3 = currentTheme.SubText
-			Arrow.TextSize = 10
-			Arrow.Parent = DropFrame
+			local DropScroll = Instance.new("ScrollingFrame")
+			DropScroll.Size = UDim2.new(1, -20, 0, calculatedListHeight)
+			DropScroll.Position = UDim2.new(0, 10, 0, headerHeight + 4)
+			DropScroll.BackgroundTransparency = 1
+			DropScroll.BorderSizePixel = 0
+			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			-- إضافة مساحة إضافية بحساب البادينغ لكي يظهر العنصر الأخير بوضوح كامل ولا ينقص منه أي جزء عند السحب لأسفل
+			DropScroll.CanvasSize = UDim2.new(0, 0, 0, (#list * (itemHeight + paddingHeight)) + 4)
+			DropScroll.ScrollBarThickness = 3
+			DropScroll.Parent = DropMain
 
-			local DropBtn = Instance.new("TextButton")
-			DropBtn.Size = UDim2.new(1, 0, 0, 42)
-			DropBtn.BackgroundTransparency = 1
-			DropBtn.AutoButtonColor = false
-			DropBtn.Text = ""
-			DropBtn.Parent = DropFrame
+			local DropListLayout = Instance.new("UIListLayout")
+			DropListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			DropListLayout.Padding = UDim.new(0, paddingHeight)
+			DropListLayout.Parent = DropScroll
 
-			local ListHolder = Instance.new("ScrollingFrame")
-			ListHolder.Size = UDim2.new(1, -10, 0, 0)
-			ListHolder.Position = UDim2.new(0, 5, 0, 45)
-			ListHolder.BackgroundTransparency = 1
-			ListHolder.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			ListHolder.ScrollBarThickness = 2
-			ListHolder.Parent = DropFrame
-
-			local ListLayout = Instance.new("UIListLayout")
-			ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-			ListLayout.Padding = UDim.new(0, 3)
-			ListLayout.Parent = ListHolder
-
-			for _, opt in ipairs(options) do
+			for _, option in ipairs(list) do
 				local OptBtn = Instance.new("TextButton")
-				OptBtn.Size = UDim2.new(1, 0, 0, 30)
-				OptBtn.BackgroundColor3 = currentTheme.TopBar
-				OptBtn.AutoButtonColor = false
-				OptBtn.Text = opt
-				OptBtn.TextColor3 = currentTheme.Text
+				OptBtn.Size = UDim2.new(1, -4, 0, itemHeight)
+				OptBtn.BackgroundColor3 = currentTheme.Top
+				OptBtn.Text = option
+				OptBtn.TextColor3 = currentTheme.Sub
 				OptBtn.TextSize = 10
 				OptBtn.Font = Enum.Font.GothamMedium
-				OptBtn.Parent = ListHolder
-				
-				local OCorner = Instance.new("UICorner")
-				OCorner.CornerRadius = UDim.new(0, 6)
-				OCorner.Parent = OptBtn
+				OptBtn.Parent = DropScroll
+				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
 
 				OptBtn.MouseButton1Click:Connect(function()
-					selected = opt
-					TitleLbl.Text = name .. " : <font color='" .. "#00a2ff" .. "'>" .. tostring(selected) .. "</font>"
-					dropped = false
-					TweenService:Create(DropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 42)}):Play()
-					Arrow.Text = "▼"
-					if callback then callback(selected) end
+					TitleLbl.Text = name .. " : " .. option
+					isOpen = false
+					TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, closedHeight)}):Play()
+					if callback then callback(option) end
 				end)
 			end
 
 			DropBtn.MouseButton1Click:Connect(function()
-				dropped = not dropped
-				local targetHeight = dropped and math.clamp(#options * 33 + 52, 42, 180) or 42
-				TweenService:Create(DropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
-				Arrow.Text = dropped and "▲" or "▼"
+				isOpen = not isOpen
+				local targetHeight = isOpen and openedHeight or closedHeight
+				TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
 			end)
 		end
 
@@ -953,4 +771,3 @@ function Library:Create(config)
 	return WindowObj
 end
 
-return Library
