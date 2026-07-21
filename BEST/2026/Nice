@@ -1,5 +1,5 @@
 -- =====================================================================
--- Advanced Global Script Library System (No Key & Clean UI)
+-- Advanced Global Script Library System (Dropdown Fix Version)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -88,7 +88,6 @@ function Library:Create(config)
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-	-- حاوي إشعارات مؤقت ومخفي يظهر فقط عند الحاجة لمنع أي مربعات فارغة على الشاشة
 	local ActiveNotifHolder = Instance.new("Frame")
 	ActiveNotifHolder.Size = UDim2.new(0, 260, 1, 0)
 	ActiveNotifHolder.Position = UDim2.new(0, 15, 0, 0)
@@ -663,6 +662,7 @@ function Library:Create(config)
 			DropMain.Size = UDim2.new(1, 0, 0, closedHeight)
 			DropMain.BackgroundColor3 = currentTheme.Elem
 			DropMain.ClipsDescendants = true
+			DropMain.ZIndex = 5
 			DropMain.Parent = TabPage
 			Instance.new("UICorner", DropMain).CornerRadius = UDim.new(0, 6)
 
@@ -670,6 +670,7 @@ function Library:Create(config)
 			DropBtn.Size = UDim2.new(1, 0, 0, headerHeight)
 			DropBtn.BackgroundTransparency = 1
 			DropBtn.Text = ""
+			DropBtn.ZIndex = 6
 			DropBtn.Parent = DropMain
 
 			local TitleLbl = Instance.new("TextLabel")
@@ -681,6 +682,7 @@ function Library:Create(config)
 			TitleLbl.TextSize = 11
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			TitleLbl.ZIndex = 6
 			TitleLbl.Parent = DropBtn
 
 			local DropScroll = Instance.new("ScrollingFrame")
@@ -690,6 +692,7 @@ function Library:Create(config)
 			DropScroll.BorderSizePixel = 0
 			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 			DropScroll.ScrollBarThickness = 3
+			DropScroll.ZIndex = 7
 			DropScroll.Parent = DropMain
 
 			local DropListLayout = Instance.new("UIListLayout")
@@ -711,11 +714,11 @@ function Library:Create(config)
 				OptBtn.TextColor3 = currentTheme.Sub
 				OptBtn.TextSize = 10
 				OptBtn.Font = Enum.Font.GothamMedium
+				OptBtn.ZIndex = 8
 				OptBtn.Parent = DropScroll
 				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
 
 				OptBtn.MouseButton1Click:Connect(function()
-					TitleLbl.Text = name .. " : " + option -- (تعديل طفيف لضمان عمل النص)
 					TitleLbl.Text = name .. " : " .. option
 					isOpen = false
 					TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, closedHeight)}):Play()
