@@ -463,7 +463,6 @@ function Library:Create(config)
 
 		local PagePadding = Instance.new("UIPadding")
 		PagePadding.PaddingRight = UDim.new(0, 8)
-		-- إضافة حشوة سفلية لتفادي قص العنصر الأخير وجعله يظهر كاملاً مع هامش مريح
 		PagePadding.PaddingBottom = UDim.new(0, 15)
 		PagePadding.Parent = TabPage
 
@@ -684,9 +683,6 @@ function Library:Create(config)
 			end)
 		end
 
-		-- =========================================================
-		-- نظام دروب داون مع سكرول داخلي ومنع تجاوز الحدود (Clamped Scrolling)
-		-- =========================================================
 		function TabObj:AddDropdown(name, list, callback)
 			local isOpen = false
 			local maxVisibleItems = 4
@@ -728,7 +724,6 @@ function Library:Create(config)
 			DropScroll.BackgroundTransparency = 1
 			DropScroll.BorderSizePixel = 0
 			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-			-- إضافة مساحة إضافية بحساب البادينغ لكي يظهر العنصر الأخير بوضوح كامل ولا ينقص منه أي جزء عند السحب لأسفل
 			DropScroll.CanvasSize = UDim2.new(0, 0, 0, (#list * (itemHeight + paddingHeight)) + 4)
 			DropScroll.ScrollBarThickness = 3
 			DropScroll.Parent = DropMain
@@ -771,3 +766,4 @@ function Library:Create(config)
 	return WindowObj
 end
 
+return Library
