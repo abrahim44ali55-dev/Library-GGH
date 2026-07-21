@@ -1,5 +1,5 @@
 -- =====================================================================
--- نظام مكتبة السكربتات العالمي المتطور (النسخة الكاملة والمحدثة - ثابتة الثيمات)
+-- نظام مكتبة السكربتات العالمي المتطور (النسخة الكاملة والمحدثة - مع نظام مفاتيح اختياري وزر نسخ الرابط)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -69,10 +69,12 @@ local Localizations = {
 		CloseConfirm = "هل أنت متأكد من إغلاق النافذة؟",
 		Confirm = "تأكيد",
 		Cancel = "إلغاء",
-		KeyPrompt = "أدخل مفتاح التفعيل للتابع:",
+		KeyPrompt = "أدخل مفتاح التفعيل أو رابط الحصول عليه:",
 		CheckKey = "تحقق",
-		InvalidKey = "المفتاح غير صحيح!",
-		ValidKey = "تم تفعيل السكربت بنجاح!"
+		CopyLink = "نسخ الرابط",
+		InvalidKey = "المفتاح أو الرابط غير صحيح!",
+		ValidKey = "تم تفعيل السكربت بنجاح!",
+		CopiedLink = "تم نسخ الرابط إلى الحافظة بنجاح!"
 	}
 }
 
@@ -86,6 +88,10 @@ function Library:Create(config)
 	if not Themes[currentThemeName] then currentThemeName = "Dark Modern" end
 	local currentTheme = Themes[currentThemeName]
 
+	-- إعدادات نظام المفاتيح (افتراضياً مفعل إذا لم يتم تحديده)
+	local keySystemEnabled = config.KeySystem ~= false
+	local correctKey = config.Key or "VIP-2026"
+
 	if CoreGui:FindFirstChild("UniversalScriptHub") then
 		CoreGui["UniversalScriptHub"]:Destroy()
 	end
@@ -95,60 +101,6 @@ function Library:Create(config)
 	ScreenGui.ResetOnSpawn = false
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
-
-	-- ==========================================
-	-- نظام المفاتيح (Key System)
-	-- ==========================================
-	local KeyOverlay = Instance.new("Frame")
-	KeyOverlay.Size = UDim2.new(1, 0, 1, 0)
-	KeyOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	KeyOverlay.BackgroundTransparency = 0.6
-	KeyOverlay.ZIndex = 300
-	KeyOverlay.Parent = ScreenGui
-
-	local KeyBox = Instance.new("Frame")
-	KeyBox.Size = UDim2.new(0, 320, 0, 160)
-	KeyBox.Position = UDim2.new(0.5, -160, 0.5, -80)
-	KeyBox.BackgroundColor3 = currentTheme.Top
-	KeyBox.ZIndex = 301
-	KeyBox.Parent = KeyOverlay
-	Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
-
-	local KeyTitle = Instance.new("TextLabel")
-	KeyTitle.Size = UDim2.new(1, 0, 0, 40)
-	KeyTitle.BackgroundTransparency = 1
-	KeyTitle.Text = Localizations[currentLang].KeyPrompt
-	KeyTitle.TextColor3 = currentTheme.Text
-	KeyTitle.TextSize = 12
-	KeyTitle.Font = Enum.Font.GothamBold
-	KeyTitle.ZIndex = 301
-	KeyTitle.Parent = KeyBox
-
-	local KeyInput = Instance.new("TextBox")
-	KeyInput.Size = UDim2.new(1, -40, 0, 35)
-	KeyInput.Position = UDim2.new(0, 20, 0, 50)
-	KeyInput.BackgroundColor3 = currentTheme.Elem
-	KeyInput.Text = ""
-	KeyInput.PlaceholderText = "أدخل المفتاح هنا..."
-	KeyInput.TextColor3 = currentTheme.Text
-	KeyInput.PlaceholderColor3 = currentTheme.Sub
-	KeyInput.TextSize = 12
-	KeyInput.Font = Enum.Font.Gotham
-	KeyInput.ZIndex = 301
-	KeyInput.Parent = KeyBox
-	Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
-
-	local VerifyBtn = Instance.new("TextButton")
-	VerifyBtn.Size = UDim2.new(1, -40, 0, 35)
-	VerifyBtn.Position = UDim2.new(0, 20, 0, 105)
-	VerifyBtn.BackgroundColor3 = currentTheme.Accent
-	VerifyBtn.Text = Localizations[currentLang].CheckKey
-	VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	VerifyBtn.TextSize = 12
-	VerifyBtn.Font = Enum.Font.GothamBold
-	VerifyBtn.ZIndex = 301
-	VerifyBtn.Parent = KeyBox
-	Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
 
 	-- ==========================================
 	-- نظام الإشعارات العالمي
@@ -219,7 +171,8 @@ function Library:Create(config)
 	MainFrame.BackgroundColor3 = currentTheme.Bg
 	MainFrame.BorderSizePixel = 0
 	MainFrame.ClipsDescendants = false
-	MainFrame.Visible = false
+	-- إذا كان نظام المفاتيح مغلقاً، تظهر الواجهة مباشرة
+	MainFrame.Visible = not keySystemEnabled
 	MainFrame.Parent = ScreenGui
 
 	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
@@ -283,19 +236,121 @@ function Library:Create(config)
 	MinimizeButton.Parent = ControlsHolder
 	Instance.new("UICorner", MinimizeButton).CornerRadius = UDim.new(0, 6)
 
-	VerifyBtn.MouseButton1Click:Connect(function()
-		if KeyInput.Text == "VIP-2026" or KeyInput.Text ~= "" then
-			KeyOverlay:Destroy()
-			MainFrame.Visible = true
-			Notify("نجاح", Localizations[currentLang].ValidKey, 3)
-		else
-			Notify("خطأ", Localizations[currentLang].InvalidKey, 3)
-		end
-	end)
+	-- ==========================================
+	-- نظام المفاتيح (Key System - مشروط)
+	-- ==========================================
+	local KeyOverlay
+	if keySystemEnabled then
+		KeyOverlay = Instance.new("Frame")
+		KeyOverlay.Size = UDim2.new(1, 0, 1, 0)
+		KeyOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		KeyOverlay.BackgroundTransparency = 0.6
+		KeyOverlay.ZIndex = 300
+		KeyOverlay.Parent = ScreenGui
 
-	local uiVisible = false
+		local KeyBox = Instance.new("Frame")
+		KeyBox.Size = UDim2.new(0, 320, 0, 195)
+		KeyBox.Position = UDim2.new(0.5, -160, 0.5, -97)
+		KeyBox.BackgroundColor3 = currentTheme.Top
+		KeyBox.ZIndex = 301
+		KeyBox.Parent = KeyOverlay
+		Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
+
+		local KeyTitle = Instance.new("TextLabel")
+		KeyTitle.Size = UDim2.new(1, 0, 0, 40)
+		KeyTitle.BackgroundTransparency = 1
+		KeyTitle.Text = Localizations[currentLang].KeyPrompt
+		KeyTitle.TextColor3 = currentTheme.Text
+		KeyTitle.TextSize = 11
+		KeyTitle.Font = Enum.Font.GothamBold
+		KeyTitle.ZIndex = 301
+		KeyTitle.Parent = KeyBox
+
+		local KeyInput = Instance.new("TextBox")
+		KeyInput.Size = UDim2.new(1, -40, 0, 35)
+		KeyInput.Position = UDim2.new(0, 20, 0, 45)
+		KeyInput.BackgroundColor3 = currentTheme.Elem
+		KeyInput.Text = ""
+		KeyInput.PlaceholderText = "أدخل المفتاح أو الرابط هنا..."
+		KeyInput.TextColor3 = currentTheme.Text
+		KeyInput.PlaceholderColor3 = currentTheme.Sub
+		KeyInput.TextSize = 12
+		KeyInput.Font = Enum.Font.Gotham
+		KeyInput.ZIndex = 301
+		KeyInput.Parent = KeyBox
+		Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
+
+		-- زر التحقق
+		local VerifyBtn = Instance.new("TextButton")
+		VerifyBtn.Size = UDim2.new(0, 130, 0, 35)
+		VerifyBtn.Position = UDim2.new(0, 20, 0, 90)
+		VerifyBtn.BackgroundColor3 = currentTheme.Accent
+		VerifyBtn.Text = Localizations[currentLang].CheckKey
+		VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		VerifyBtn.TextSize = 12
+		VerifyBtn.Font = Enum.Font.GothamBold
+		VerifyBtn.ZIndex = 301
+		VerifyBtn.Parent = KeyBox
+		Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
+
+		-- زر نسخ الرابط الجديد
+		local CopyBtn = Instance.new("TextButton")
+		CopyBtn.Size = UDim2.new(0, 130, 0, 35)
+		CopyBtn.Position = UDim2.new(1, -150, 0, 90)
+		CopyBtn.BackgroundColor3 = currentTheme.Elem
+		CopyBtn.Text = Localizations[currentLang].CopyLink
+		CopyBtn.TextColor3 = currentTheme.Text
+		CopyBtn.TextSize = 12
+		CopyBtn.Font = Enum.Font.GothamBold
+		CopyBtn.ZIndex = 301
+		CopyBtn.Parent = KeyBox
+		Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 6)
+
+		-- زر إغلاق نافذة المفتاح
+		local CloseKeyBtn = Instance.new("TextButton")
+		CloseKeyBtn.Size = UDim2.new(1, -40, 0, 30)
+		CloseKeyBtn.Position = UDim2.new(0, 20, 0, 138)
+		CloseKeyBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+		CloseKeyBtn.Text = "إلغاء وتخطي السكربت"
+		CloseKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		CloseKeyBtn.TextSize = 11
+		CloseKeyBtn.Font = Enum.Font.GothamBold
+		CloseKeyBtn.ZIndex = 301
+		CloseKeyBtn.Parent = KeyBox
+		Instance.new("UICorner", CloseKeyBtn).CornerRadius = UDim.new(0, 6)
+
+		VerifyBtn.MouseButton1Click:Connect(function()
+			if KeyInput.Text == correctKey or KeyInput.Text ~= "" then
+				KeyOverlay:Destroy()
+				MainFrame.Visible = true
+				Notify("نجاح", Localizations[currentLang].ValidKey, 3)
+			else
+				Notify("خطأ", Localizations[currentLang].InvalidKey, 3)
+			end
+		end)
+
+		CopyBtn.MouseButton1Click:Connect(function()
+			local textToCopy = KeyInput.Text
+			if textToCopy == "" then
+				textToCopy = correctKey -- إذا لم يكتب شيئاً ينسخ المفتاح الافتراضي أو الرابط
+			end
+			
+			if setclipboard then
+				setclipboard(textToCopy)
+				Notify("تم النسخ", Localizations[currentLang].CopiedLink, 2.5)
+			else
+				Notify("تنبيه", "متاحة الحافظة غير مدعومة في جهازك", 2.5)
+			end
+		end)
+
+		CloseKeyBtn.MouseButton1Click:Connect(function()
+			ScreenGui:Destroy()
+		end)
+	end
+
+	local uiVisible = not keySystemEnabled
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if input.KeyCode == toggleKey and not gameProcessed and KeyOverlay.Parent == nil then
+		if input.KeyCode == toggleKey and not gameProcessed and (not KeyOverlay or KeyOverlay.Parent == nil) then
 			uiVisible = not uiVisible
 			MainFrame.Visible = uiVisible
 		end
