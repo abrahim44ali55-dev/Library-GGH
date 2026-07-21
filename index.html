@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,125 +7,200 @@
     <title>Universal Script Hub Library Documentation</title>
     <style>
         :root {
-            --bg-color: #0f0f12;
-            --top-color: #16161a;
-            --elem-color: #1a1a20;
-            --text-color: #f0f0f5;
-            --sub-text: #8c8c9e;
-            --accent-color: #00a2ff;
+            --bg-color: #0d1117;
+            --sidebar-bg: #161b22;
+            --card-bg: #1f242c;
+            --border-color: #30363d;
+            --accent-color: #38bdf8;
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+
+        * {
+            box-sizing: border-box;
             margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
             display: flex;
             min-height: 100vh;
+            flex-direction: row;
         }
+
         aside {
-            width: 260px;
-            background-color: var(--top-color);
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            width: 290px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            padding: 24px 16px;
+            flex-shrink: 0;
         }
+
         .logo {
-            padding: 20px;
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--accent-color);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 24px;
+            padding-left: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
         .nav-section {
-            padding: 15px;
+            margin-bottom: 20px;
         }
+
         .nav-title {
             font-size: 11px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+            padding-left: 8px;
             text-transform: uppercase;
-            color: var(--sub-text);
-            margin-bottom: 10px;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
+
         .nav-links {
             list-style: none;
-            padding: 0;
-            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
+
         .nav-links li a {
-            display: block;
-            padding: 10px 12px;
-            color: var(--text-color);
+            color: var(--text-sub);
             text-decoration: none;
+            padding: 8px 12px;
             border-radius: 6px;
+            display: block;
             font-size: 13px;
-            transition: background 0.2s;
+            font-weight: 500;
+            transition: 0.15s;
         }
-        .nav-links li a.active, .nav-links li a:hover {
-            background-color: var(--elem-color);
+
+        .nav-links li a:hover, .nav-links li a.active {
+            background-color: rgba(56, 189, 248, 0.1);
             color: var(--accent-color);
         }
+
         main {
             flex: 1;
             padding: 40px;
             overflow-y: auto;
-            max-width: 900px;
+            max-width: 950px;
         }
-        h1, h2, h3 {
-            color: var(--text-color);
+
+        h1 {
+            font-size: 30px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--text-main);
         }
-        h1 { font-size: 26px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
-        h2 { font-size: 20px; margin-top: 40px; color: var(--accent-color); }
-        h3 { font-size: 15px; margin-top: 25px; }
-        p, li {
-            color: #d0d0d8;
+
+        p {
+            color: var(--text-sub);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 35px;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .code-box-wrapper {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 6px 12px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .copy-icon-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            border-radius: 5px;
+            padding: 4px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .copy-icon-btn:hover {
+            background-color: rgba(56, 189, 248, 0.1);
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            color: #38bdf8;
+            line-height: 1.5;
+        }
+
+        ul.feature-list {
+            margin-bottom: 20px;
+            padding-left: 20px;
+            color: var(--text-sub);
             font-size: 14px;
             line-height: 1.6;
         }
-        .code-box-wrapper {
-            background-color: var(--top-color);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            margin: 15px 0 25px 0;
-            overflow: hidden;
+
+        ul.feature-list li {
+            margin-bottom: 6px;
         }
-        .code-header {
-            background-color: var(--elem-color);
-            padding: 8px 12px;
-            display: flex;
-            justify-content: flex-end;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .copy-icon-btn {
-            background: var(--top-color);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-color);
-            padding: 4px 10px;
-            font-size: 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .copy-icon-btn:hover {
-            background-color: var(--accent-color);
-            color: #fff;
-            border-color: var(--accent-color);
-        }
-        pre {
-            margin: 0;
-            padding: 15px;
-            overflow-x: auto;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
-            color: #79c0ff;
-        }
-        .feature-list {
-            background: var(--elem-color);
-            padding: 15px 15px 15px 30px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-        .feature-list li {
-            margin-bottom: 8px;
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            aside {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 16px;
+            }
+            main {
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -133,39 +209,40 @@
     <aside>
         <div class="logo">⚡ Script Hub Library</div>
         <div class="nav-section">
-            <div class="nav-title">Documentation Guide</div>
+            <div class="nav-title">Documentation</div>
             <ul class="nav-links">
-                <li><a href="#" class="active">Complete Detailed Overview</a></li>
+                <li><a href="#" class="active">Complete API Guide</a></li>
             </ul>
         </div>
     </aside>
 
     <main>
         <h1>Universal Script Hub Library Documentation</h1>
-        <p>Welcome to the exhaustive, comprehensive, and in-depth documentation for our advanced and fully optimized Lua script hub library. This documentation covers every single structural module, built-in dynamic theme, interactive UI element, key authentication system, and real-world production example to help developers and AI assistants implement our framework seamlessly.</p>
+        <p>Welcome to the exhaustive, fully detailed, and definitive documentation for our custom high-performance Luau script hub framework. This guide details every internal module, built-in dynamic theme, native UI component method, and key authentication mechanism specifically built for our library architecture.</p>
 
         <!-- 1. Initialization -->
         <h2>1. Library Loadstring Initialization</h2>
-        <p>To integrate and execute our library within any environment, you must initialize it securely using the official raw GitHub loadstring URL provided below.</p>
+        <p>To load and execute our library within any Roblox script environment, you must use the official raw GitHub loadstring URL provided below. This fetches the core user interface classes, window dragging logic, custom scrollbar handlers, and TweenService animation managers.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()</pre>
         </div>
 
         <!-- 2. Window Configuration -->
-        <h2>2. Window Creation & Configuration</h2>
-        <p>The core window acts as the container canvas for all tabs, elements, notifications, and interactive widgets.</p>
+        <h2>2. Window Creation & Configuration (`Library:Create`)</h2>
+        <p>The core window acts as the primary canvas container for all tabs, elements, floating notifications, and key modals. You configure its properties by passing a configuration table.</p>
         <ul class="feature-list">
-            <li><strong>Title:</strong> Defines the primary name displayed on the top bar header.</li>
-            <li><strong>Description:</strong> Provides secondary context or version info separated by a vertical divider.</li>
-            <li><strong>Theme:</strong> Sets the initial color palette (supports multiple built-in schemes).</li>
-            <li><strong>KeySystem:</strong> Enables or disables the built-in security key verification modal overlay.</li>
+            <li><strong>Title:</strong> Defines the main name string shown on the top bar header.</li>
+            <li><strong>Description:</strong> Adds secondary context or versioning separated by a stylized divider line.</li>
+            <li><strong>Theme:</strong> Sets the initial active theme palette (defaults to "Dark Modern").</li>
+            <li><strong>KeySystem:</strong> A boolean value (true/false) determining whether the script requires key authorization before displaying the main GUI.</li>
+            <li><strong>Key:</strong> The correct target string that validates the user input inside the key overlay system.</li>
         </ul>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>local Window = Library:Create({
-    Title = "Advanced Control Panel",
-    Description = "Universal High-Performance System",
+    Title = "Global Control Panel",
+    Description = "Advanced & Comprehensive System",
     Theme = "Dark Modern",
     KeySystem = true,
     Key = "VIP-2026"
@@ -173,116 +250,78 @@
         </div>
 
         <!-- 3. Built-in Themes -->
-        <h2>3. Built-in Dynamic Themes Reference</h2>
-        <p>Our library features a robust multi-theme architecture allowing users or developers to switch color schemes dynamically at runtime using <code>Window:SetTheme("ThemeName")</code>.</p>
+        <h2>3. Built-in Dynamic Themes (`Window:SetTheme`)</h2>
+        <p>Our library features a versatile multi-theme architecture. You can switch visual color schemes dynamically during runtime using <code>Window:SetTheme("ThemeName")</code>. Here are all 6 fully supported built-in themes:</p>
         
         <h3>3.1. Dark Modern</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>Window:SetTheme("Dark Modern")</pre>
-        </div>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>Window:SetTheme("Dark Modern")</pre></div>
 
         <h3>3.2. Neon Cyber</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>Window:SetTheme("Neon Cyber")</pre>
-        </div>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>Window:SetTheme("Neon Cyber")</pre></div>
 
         <h3>3.3. Crimson Red</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>Window:SetTheme("Crimson Red")</pre>
-        </div>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>Window:SetTheme("Crimson Red")</pre></div>
 
         <h3>3.4. Emerald Green</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>Window:SetTheme("Emerald Green")</pre>
-        </div>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>Window:SetTheme("Emerald Green")</pre></div>
 
         <h3>3.5. Purple Dream</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>Window:SetTheme("Purple Dream")</pre>
-        </div>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>Window:SetTheme("Purple Dream")</pre></div>
 
         <h3>3.6. Sunset Orange</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>Window:SetTheme("Sunset Orange")</pre>
-        </div>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>Window:SetTheme("Sunset Orange")</pre></div>
 
         <!-- 4. UI Elements -->
-        <h2>4. Complete UI Elements & Components</h2>
-        <p>Use the exact native functions below inside your tabs to guarantee error-free execution:</p>
+        <h2>4. Core UI Elements & Native Methods</h2>
+        <p>After creating your window, you use specific native methods attached to tabs to build out interactive controls. Always use these exact method names:</p>
 
-        <h3>4.1. Adding Tabs</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>local MainTab = Window:AddTab("Main Features", "General gameplay adjustments")</pre>
-        </div>
+        <h3>4.1. Tab Creation (`Window:AddTab`)</h3>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>local MainTab = Window:AddTab("Main Features", "General gameplay adjustments")</pre></div>
 
-        <h3>4.2. Action Buttons</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:AddButton("Execute Action", "Description for button", true, "Custom notification text", function()
-    print("Button clicked!")
-end)</pre>
-        </div>
+        <h3>4.2. Action Buttons (`Tab:AddButton`)</h3>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>MainTab:AddButton("Execute Action", "Description text", true, "Custom notification popup", function()
+    print("Button clicked successfully!")
+end)</pre></div>
 
-        <h3>4.3. Toggle Switches</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:AddToggle("Auto Farm", "Enables automatic background farming", false, function(state)
-    print("Toggle state: " .. tostring(state))
-end)</pre>
-        </div>
+        <h3>4.3. Toggle Switches (`Tab:AddToggle`)</h3>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>MainTab:AddToggle("Auto Farm Mode", "Enables background looping tasks", false, function(state)
+    print("Toggle state changed to: " .. tostring(state))
+end)</pre></div>
 
-        <h3>4.4. Sliders</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:AddSlider("WalkSpeed", 16, 300, 16, function(value)
+        <h3>4.4. Sliders (`Tab:AddSlider`)</h3>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>MainTab:AddSlider("WalkSpeed", 16, 300, 16, function(value)
     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
-end)</pre>
-        </div>
+end)</pre></div>
 
-        <h3>4.5. Dropdowns</h3>
+        <h3>4.5. Dropdowns (`Tab:AddDropdown`)</h3>
+        <div class="code-box-wrapper"><div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div><pre>MainTab:AddDropdown("Select Location", {"Spawn Point", "Arena", "Safe Zone"}, function(selectedOption)
+    print("Selected choice: " .. selectedOption)
+end)</pre></div>
+
+        <!-- 5. AI Prompt Section -->
+        <h2>5. Standard AI & Developer Prompt</h2>
+        <p>Copy this strict prompt block when providing your library rules to any future AI or developer:</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:AddDropdown("Select Destination", {"Spawn Point", "Arena Zone", "Safe Zone"}, function(selectedOption)
-    print("Chosen location: " .. selectedOption)
-end)</pre>
-        </div>
+            <pre>You are an expert Roblox Luau script developer. You must use our exact custom UI library API framework and never invent non-existent functions.
 
-        <!-- 5. Advanced Examples -->
-        <h2>5. Practical Production Examples & Full Scripts</h2>
+API Reference:
+1. Loadstring:
+   local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
 
-        <h3>Example: Complete Player Enhancement Hub</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
+2. Window Creation:
+   local Window = Library:Create({ Title = "Title", Description = "Desc", Theme = "Dark Modern", KeySystem = true, Key = "VIP-2026" })
 
-local Window = Library:Create({
-    Title = "Player Modification Hub",
-    Description = "v2.5 Professional Edition",
-    Theme = "Neon Cyber",
-    KeySystem = false
-})
+3. Methods:
+   - Window:SetTheme("ThemeName") -- Themes: "Dark Modern", "Neon Cyber", "Crimson Red", "Emerald Green", "Purple Dream", "Sunset Orange"
+   - Window:AddTab("TabName", "TabDesc")
 
-local PlayerTab = Window:AddTab("Player", "Character modifications")
-
-PlayerTab:AddSlider("WalkSpeed Modifier", 16, 250, 16, function(v)
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
-end)
-
-PlayerTab:AddToggle("Infinite Jump Utility", "Allows jumping infinitely in the air", false, function(state)
-    _G.InfJump = state
-    game:GetService("UserInputService").JumpRequest:Connect(function()
-        if _G.InfJump then
-            game.Players.LocalPlayer.Character.Humanoid:ChangeState("Jumping")
-        end
-    end)
-end)</pre>
+4. Element Methods (Attached to Tabs):
+   - Tab:AddDeveloperNote("Note Text")
+   - Tab:AddButton("Name", "Desc", showNotify(bool), notifyMsg(string), callback(func))
+   - Tab:AddToggle("Name", "Desc", defaultState(bool), callback(function(state) ... end))
+   - Tab:AddSlider("Name", min, max, defaultVal, callback(function(value) ... end))
+   - Tab:AddDropdown("Name", { "Opt1", "Opt2" }, callback(function(selected) ... end))</pre>
         </div>
     </main>
 
@@ -297,3 +336,5 @@ end)</pre>
     </script>
 </body>
 </html>
+
+```
