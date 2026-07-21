@@ -144,14 +144,6 @@ function Library:Create(config)
 	ControlsHolder.BackgroundTransparency = 1
 	ControlsHolder.Parent = TopBar
 
-	local ControlsLayout = Instance.new("UIListLayout")
-	ControlsLayout.FillDirection = Enum.FillDirection.Horizontal
-	ControlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-	ControlsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	ControlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	ControlsLayout.Padding = UDim.new(0, 5)
-	ControlsLayout.Parent = ControlsHolder
-
 	local CloseButton = Instance.new("TextButton")
 	CloseButton.Size = UDim2.new(0, 24, 0, 24)
 	CloseButton.BackgroundColor3 = currentTheme.Element
@@ -506,14 +498,12 @@ function Library:Create(config)
 			TitleLbl.Text = name
 			TitleLbl.TextColor3 = currentTheme.Text
 			TitleLbl.TextSize = 11
-			TitleLinkText = Enum.Font.GothamBold
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 			TitleLbl.Parent = BoxFrame
 
 			local TextBox = Instance.new("TextBox")
 			TextBox.Size = UDim2.new(0, 160, 0, 28)
- خامسة = UDim2.new(1, -170, 0.5, -14)
 			TextBox.Position = UDim2.new(1, -170, 0.5, -14)
 			TextBox.BackgroundColor3 = currentTheme.TopBar
 			TextBox.Text = ""
