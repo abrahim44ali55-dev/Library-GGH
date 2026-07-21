@@ -13,117 +13,129 @@
         <div class="nav-section">
             <div class="nav-title">Getting Started</div>
             <ul class="nav-links">
-                <li><a href="index.html" class="active">Complete Documentation</a></li>
+                <li><a href="index.html" class="active">Documentation Overview</a></li>
             </ul>
         </div>
     </aside>
 
     <main>
         <h1>UI Framework Documentation</h1>
-        <p>Comprehensive English documentation, UI elements reference, and full production-ready templates designed for developers and AI assistants.</p>
+        <p>Comprehensive English documentation, UI elements reference, themes, and full production-ready templates for developers and AI assistants.</p>
 
+        <!-- 1. Loadstring Initialization -->
         <h2>1. Loadstring Initialization</h2>
-        <p>Fetch and initialize the UI library securely in your script execution environment.</p>
+        <p>Fetch and initialize the UI library securely using your repository raw link.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/your-repo/main/library.lua"))()</pre>
+            <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()</pre>
         </div>
 
+        <!-- 2. Window Setup -->
         <h2>2. Window Setup</h2>
-        <p>Configure the main graphical window properties including title, theme settings, and visibility toggle keybind.</p>
+        <p>Initialize the main graphical interface window.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>local Window = Library:CreateWindow({
-    Title = "Advanced UI Framework",
+    Title = "UI Library",
     Theme = "Dark",
     ToggleKey = Enum.KeyCode.RightControl
 })</pre>
         </div>
 
-        <h2>3. UI Elements & Components</h2>
-        <p>Standard interactive elements supported by the library framework with individual code snippets.</p>
-
-        <!-- Tab Component -->
-        <p><strong>Tab Creation:</strong> Organizes the window into structured categories.</p>
+        <!-- 3. Themes & Customization -->
+        <h2>3. Themes & Configurations</h2>
+        <p>Switch between available visual styles and color themes for your interface layout.</p>
+        
+        <p><strong>Dark Theme Setup:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>local Tab = Window:CreateTab("Main Features")</pre>
+            <pre>Library:SetTheme("Dark")</pre>
         </div>
 
-        <!-- Button Component -->
-        <p><strong>Button Element:</strong> Executes an instant trigger function callback when clicked.</p>
+        <p><strong>Light Theme Setup:</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>Library:SetTheme("Light")</pre>
+        </div>
+
+        <!-- 4. UI Elements Reference -->
+        <h2>4. Core UI Elements</h2>
+        <p>Standard base syntax for creating individual components.</p>
+        
+        <p><strong>Tab:</strong></p>
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>local Tab = Window:CreateTab("Tab Name")</pre>
+        </div>
+
+        <p><strong>Button:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Tab:CreateButton({
-    Name = "Execute Action",
+    Name = "Button Name",
     Callback = function()
-        print("Button Clicked!")
+        -- Code here
     end
 })</pre>
         </div>
 
-        <!-- Toggle Component -->
-        <p><strong>Toggle Element:</strong> A boolean switch state (true/false) ideal for looping background scripts.</p>
+        <p><strong>Toggle:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Tab:CreateToggle({
-    Name = "Auto Farm",
+    Name = "Toggle Name",
     Default = false,
     Callback = function(State)
-        print("Toggle State: " .. tostring(State))
+        -- Code here
     end
 })</pre>
         </div>
 
-        <!-- Slider Component -->
-        <p><strong>Slider Element:</strong> Allows precise adjustments of numerical attributes.</p>
+        <p><strong>Slider:</strong></p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Tab:CreateSlider({
+    Name = "Slider Name",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Callback = function(Value)
+        -- Code here
+    end
+})</pre>
+        </div>
+
+        <!-- 5. Full Implementation Examples -->
+        <h2>5. Practical Examples & Full Scripts</h2>
+        <p>Ready-to-use practical script implementations with live logic (such as WalkSpeed adjustment) to copy and send directly to developers or AI.</p>
+        
+        <div class="code-box-wrapper">
+            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
+            <pre>-- Practical Example: Complete Script with WalkSpeed Slider
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
+
+local Window = Library:CreateWindow({
+    Title = "Advanced Script Example",
+    Theme = "Dark",
+    ToggleKey = Enum.KeyCode.RightControl
+})
+
+local Tab = Window:CreateTab("Main")
+
+Tab:CreateButton({
+    Name = "Print Notification",
+    Callback = function()
+        print("Button executed successfully!")
+    end
+})
+
+Tab:CreateSlider({
     Name = "WalkSpeed",
     Min = 16,
     Max = 200,
     Default = 16,
     Callback = function(Value)
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end
-})</pre>
-        </div>
-
-        <h2>4. Full Implementation Guide</h2>
-        <p>A complete production-ready script template combining everything, ready to copy and send to developers or AI.</p>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>-- Load Library
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/your-repo/main/library.lua"))()
-
--- Create Window
-local Window = Library:CreateWindow({
-    Title = "Complete Script Example",
-    Theme = "Dark",
-    ToggleKey = Enum.KeyCode.RightControl
-})
-
--- Create Tab & Elements
-local MainTab = Window:CreateTab("General")
-
-MainTab:CreateButton({
-    Name = "Print Success",
-    Callback = function()
-        print("Script executed successfully!")
-    end
-})
-
-MainTab:CreateToggle({
-    Name = "Infinite Jump",
-    Default = false,
-    Callback = function(State)
-        _G.InfJump = State
-        game:GetService("UserInputService").JumpRequest:Connect(function()
-            if _G.InfJump then
-                game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-            end
-        end)
     end
 })</pre>
         </div>
