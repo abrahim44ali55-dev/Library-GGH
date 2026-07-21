@@ -126,13 +126,14 @@ function Library:Create(config)
 	FixCorner.BorderSizePixel = 0
 	FixCorner.Parent = TopBar
 
-	-- نظام تحريك النافذة (Draggable) بسلاسة فائقة
+	-- إصلاح تام لنظام السحب والتحريك (Draggable) للكمبيوتر والجوال
 	local dragging, dragInput, dragStart, startPos
 	TopBar.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
 			startPos = MainFrame.Position
+			
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
@@ -150,9 +151,12 @@ function Library:Create(config)
 	UserInputService.InputChanged:Connect(function(input)
 		if input == dragInput and dragging then
 			local delta = input.Position - dragStart
-			TweenService:Create(MainFrame, TweenInfo.new(0.05, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-				Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			}):Play()
+			MainFrame.Position = UDim2.new(
+				startPos.X.Scale, 
+				startPos.X.Offset + delta.X, 
+				startPos.Y.Scale, 
+				startPos.Y.Offset + delta.Y
+			)
 		end
 	end)
 
@@ -255,7 +259,7 @@ function Library:Create(config)
 		TabButton.Parent = Sidebar
 		Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
 
-		-- نظام السكرول المحسن والمضبوط تماماً بحيث يظهر العنصر الأخير كاملاً
+		-- نظام السكرول المحسن بحيث يظهر العنصر الأخير بالكامل بدون أي قص
 		local TabPage = Instance.new("ScrollingFrame")
 		TabPage.Size = UDim2.new(1, 0, 1, 0)
 		TabPage.BackgroundTransparency = 1
@@ -273,7 +277,7 @@ function Library:Create(config)
 
 		local PagePadding = Instance.new("UIPadding")
 		PagePadding.PaddingRight = UDim.new(0, 8)
-		PagePadding.PaddingBottom = UDim.new(0, 20) -- هامش أخير لكي يظهر العنصر الأخير بالكامل بدون قص
+		PagePadding.PaddingBottom = UDim.new(0, 25) -- هامش أخير لضمان ظهور آخر عنصر بالكامل
 		PagePadding.Parent = TabPage
 
 		if firstTab then
