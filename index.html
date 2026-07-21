@@ -4,7 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Universal Script Hub Library Documentation</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg-color: #0f0f12;
+            --top-color: #16161a;
+            --elem-color: #1a1a20;
+            --text-color: #f0f0f5;
+            --sub-text: #8c8c9e;
+            --accent-color: #00a2ff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+        aside {
+            width: 260px;
+            background-color: var(--top-color);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        .logo {
+            padding: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--accent-color);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nav-section {
+            padding: 15px;
+        }
+        .nav-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--sub-text);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .nav-links li a {
+            display: block;
+            padding: 10px 12px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .nav-links li a.active, .nav-links li a:hover {
+            background-color: var(--elem-color);
+            color: var(--accent-color);
+        }
+        main {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            max-width: 900px;
+        }
+        h1, h2, h3 {
+            color: var(--text-color);
+        }
+        h1 { font-size: 26px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+        h2 { font-size: 20px; margin-top: 40px; color: var(--accent-color); }
+        h3 { font-size: 15px; margin-top: 25px; }
+        p, li {
+            color: #d0d0d8;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .code-box-wrapper {
+            background-color: var(--top-color);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            margin: 15px 0 25px 0;
+            overflow: hidden;
+        }
+        .code-header {
+            background-color: var(--elem-color);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: flex-end;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .copy-icon-btn {
+            background: var(--top-color);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .copy-icon-btn:hover {
+            background-color: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+        pre {
+            margin: 0;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            color: #79c0ff;
+        }
+        .feature-list {
+            background: var(--elem-color);
+            padding: 15px 15px 15px 30px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .feature-list li {
+            margin-bottom: 8px;
+        }
+    </style>
 </head>
 <body>
 
@@ -13,7 +135,7 @@
         <div class="nav-section">
             <div class="nav-title">Documentation Guide</div>
             <ul class="nav-links">
-                <li><a href="index.html" class="active">Complete Detailed Overview</a></li>
+                <li><a href="#" class="active">Complete Detailed Overview</a></li>
             </ul>
         </div>
     </aside>
@@ -24,7 +146,7 @@
 
         <!-- 1. Initialization -->
         <h2>1. Library Loadstring Initialization</h2>
-        <p>To integrate and execute our library within any environment, you must initialize it securely using the official raw GitHub loadstring URL provided below. This ensures all underlying UI components, TweenService animations, and core layout functions are loaded dynamically.</p>
+        <p>To integrate and execute our library within any environment, you must initialize it securely using the official raw GitHub loadstring URL provided below.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()</pre>
@@ -32,7 +154,7 @@
 
         <!-- 2. Window Configuration -->
         <h2>2. Window Creation & Configuration</h2>
-        <p>The core window acts as the container canvas for all tabs, elements, notifications, and interactive widgets. You can configure title strings, description text headers, default themes, and toggle keybinds upon creation.</p>
+        <p>The core window acts as the container canvas for all tabs, elements, notifications, and interactive widgets.</p>
         <ul class="feature-list">
             <li><strong>Title:</strong> Defines the primary name displayed on the top bar header.</li>
             <li><strong>Description:</strong> Provides secondary context or version info separated by a vertical divider.</li>
@@ -52,45 +174,39 @@
 
         <!-- 3. Built-in Themes -->
         <h2>3. Built-in Dynamic Themes Reference</h2>
-        <p>Our library features a robust multi-theme architecture allowing users or developers to switch color schemes dynamically at runtime using <code>Window:SetTheme("ThemeName")</code>. Here is every fully supported built-in theme with its specific aesthetic design:</p>
+        <p>Our library features a robust multi-theme architecture allowing users or developers to switch color schemes dynamically at runtime using <code>Window:SetTheme("ThemeName")</code>.</p>
         
         <h3>3.1. Dark Modern</h3>
-        <p>The default sleek dark professional palette optimized for long usage hours with smooth blue accents.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Window:SetTheme("Dark Modern")</pre>
         </div>
 
         <h3>3.2. Neon Cyber</h3>
-        <p>A futuristic high-contrast cyberpunk scheme featuring dark backgrounds paired with vibrant cyan text and intense pink/magenta accent highlights.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Window:SetTheme("Neon Cyber")</pre>
         </div>
 
         <h3>3.3. Crimson Red</h3>
-        <p>A bold, aggressive red-tinted theme designed for intense combat modules and utility script hubs.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Window:SetTheme("Crimson Red")</pre>
         </div>
 
         <h3>3.4. Emerald Green</h3>
-        <p>A calm nature-inspired green theme focusing on high legibility and refreshing contrast levels.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Window:SetTheme("Emerald Green")</pre>
         </div>
 
         <h3>3.5. Purple Dream</h3>
-        <p>An artistic dark-violet palette featuring rich purple accents and soft readable secondary text hues.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Window:SetTheme("Purple Dream")</pre>
         </div>
 
         <h3>3.6. Sunset Orange</h3>
-        <p>A warm vibrant theme mixing deep brown-orange backgrounds with glowing sunset orange accents.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>Window:SetTheme("Sunset Orange")</pre>
@@ -98,87 +214,50 @@
 
         <!-- 4. UI Elements -->
         <h2>4. Complete UI Elements & Components</h2>
-        <p>Once your window and tabs are generated, you can populate them with various interactive components. Below is the exhaustive reference syntax for every element supported by our framework:</p>
+        <p>Use the exact native functions below inside your tabs to guarantee error-free execution:</p>
 
         <h3>4.1. Adding Tabs</h3>
-        <p>Tabs organize your options into categorized vertical scrolling pages accessible via the sidebar navigation panel.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>local MainTab = Window:AddTab("Main Features", "General gameplay adjustments")</pre>
         </div>
 
         <h3>4.2. Action Buttons</h3>
-        <p>Buttons execute an instant callback function when clicked by the user. Ideal for executing standalone triggers or instant script functions.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:CreateButton({
-    Name = "Execute Instant Action",
-    Callback = function()
-        print("Button was successfully clicked!")
-    end
-})</pre>
+            <pre>MainTab:AddButton("Execute Action", "Description for button", true, "Custom notification text", function()
+    print("Button clicked!")
+end)</pre>
         </div>
 
         <h3>4.3. Toggle Switches</h3>
-        <p>Toggles provide a boolean state switch (True/False) that is widely used for loops, automatic farming routines, or persistent background tasks.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:CreateToggle({
-    Name = "Auto Farm Mode",
-    Default = false,
-    Callback = function(State)
-        print("Toggle current state: " .. tostring(State))
-    end
-})</pre>
+            <pre>MainTab:AddToggle("Auto Farm", "Enables automatic background farming", false, function(state)
+    print("Toggle state: " .. tostring(state))
+end)</pre>
         </div>
 
         <h3>4.4. Sliders</h3>
-        <p>Sliders allow users to configure precise numerical values within a defined minimum and maximum range (e.g., controlling WalkSpeed or JumpPower).</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:CreateSlider({
-    Name = "Character WalkSpeed",
-    Min = 16,
-    Max = 300,
-    Default = 16,
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end
-})</pre>
+            <pre>MainTab:AddSlider("WalkSpeed", 16, 300, 16, function(value)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+end)</pre>
         </div>
 
         <h3>4.5. Dropdowns</h3>
-        <p>Dropdown menus allow selection from a predefined list of string options, perfect for picking targets, locations, or configurations.</p>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:CreateDropdown({
-    Name = "Select Teleport Destination",
-    Options = {"Spawn Point", "Arena Zone", "Safe Zone"},
-    Default = "Spawn Point",
-    Callback = function(SelectedOption)
-        print("Chosen location: " .. SelectedOption)
-    end
-})</pre>
-        </div>
-
-        <h3>4.6. Textboxes</h3>
-        <p>Textboxes let users input custom text strings dynamically for chat automation, naming utilities, or custom command execution.</p>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>MainTab:CreateTextbox({
-    Name = "Custom Input Field",
-    PlaceholderText = "Type command or message here...",
-    Callback = function(TextValue)
-        print("User typed: " .. TextValue)
-    end
-})</pre>
+            <pre>MainTab:AddDropdown("Select Destination", {"Spawn Point", "Arena Zone", "Safe Zone"}, function(selectedOption)
+    print("Chosen location: " .. selectedOption)
+end)</pre>
         </div>
 
         <!-- 5. Advanced Examples -->
         <h2>5. Practical Production Examples & Full Scripts</h2>
-        <p>Here are comprehensive, ready-to-copy production scripts combining multiple elements, themes, and robust background logic to send directly to developers or AI systems.</p>
 
-        <h3>Example 1: Complete Player Enhancement Hub</h3>
+        <h3>Example: Complete Player Enhancement Hub</h3>
         <div class="code-box-wrapper">
             <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
             <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
@@ -192,77 +271,18 @@ local Window = Library:Create({
 
 local PlayerTab = Window:AddTab("Player", "Character modifications")
 
-PlayerTab:CreateSlider({
-    Name = "WalkSpeed Modifier",
-    Min = 16,
-    Max = 250,
-    Default = 16,
-    Callback = function(v)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
-    end
-})
+PlayerTab:AddSlider("WalkSpeed Modifier", 16, 250, 16, function(v)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+end)
 
-PlayerTab:CreateSlider({
-    Name = "JumpPower Modifier",
-    Min = 50,
-    Max = 400,
-    Default = 50,
-    Callback = function(v)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
-    end
-})
-
-PlayerTab:CreateToggle({
-    Name = "Infinite Jump Utility",
-    Default = false,
-    Callback = function(state)
-        _G.InfJump = state
-        game:GetService("UserInputService").JumpRequest:Connect(function()
-            if _G.InfJump then
-                game.Players.LocalPlayer.Character.Humanoid:ChangeState("Jumping")
-            end
-        end)
-    end
-})</pre>
-        </div>
-
-        <h3>Example 2: Teleportation & Utility Control Hub</h3>
-        <div class="code-box-wrapper">
-            <div class="code-header"><button class="copy-icon-btn" onclick="copyCode(this)">📋 Copy</button></div>
-            <pre>local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
-
-local Window = Library:Create({
-    Title = "World Teleport Utility",
-    Description = "Fast Navigation System",
-    Theme = "Emerald Green",
-    KeySystem = true,
-    Key = "VIP-2026"
-})
-
-local WorldTab = Window:AddTab("Navigation", "Map teleportation")
-
-WorldTab:CreateDropdown({
-    Name = "Select Zone",
-    Options = {"Baseplate Center", "High Tower", "Secret Cave"},
-    Default = "Baseplate Center",
-    Callback = function(loc)
-        local char = game.Players.LocalPlayer.Character
-        if loc == "Baseplate Center" then
-            char.HumanoidRootPart.CFrame = CFrame.new(0, 10, 0)
-        elseif loc == "High Tower" then
-            char.HumanoidRootPart.CFrame = CFrame.new(100, 150, 100)
-        elseif loc == "Secret Cave" then
-            char.HumanoidRootPart.CFrame = CFrame.new(-200, 5, -200)
+PlayerTab:AddToggle("Infinite Jump Utility", "Allows jumping infinitely in the air", false, function(state)
+    _G.InfJump = state
+    game:GetService("UserInputService").JumpRequest:Connect(function()
+        if _G.InfJump then
+            game.Players.LocalPlayer.Character.Humanoid:ChangeState("Jumping")
         end
-    end
-})
-
-WorldTab:CreateButton({
-    Name = "Reset Character Position",
-    Callback = function()
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0)
-    end
-})</pre>
+    end)
+end)</pre>
         </div>
     </main>
 
