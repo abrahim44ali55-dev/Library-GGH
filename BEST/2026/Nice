@@ -1,5 +1,5 @@
 -- =====================================================================
--- نظام مكتبة السكربتات العالمي المتطور (النسخة الكاملة والمحدثة مع 10 ثيمات ونظام المفاتيح)
+-- نظام مكتبة السكربتات العالمي المتطور (النسخة النهائية والمحدثة بالكامل)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -11,7 +11,7 @@ local Library = {}
 Library.__index = Library
 
 -- ==========================================
--- قائمة الثيمات الـ 10 (5 ثابتة + 5 متحركة) بدرجات دقيقة لكل عنصر
+-- قائمة الثيمات الـ 10 (دقيقة ومضبوطة لكل عنصر)
 -- ==========================================
 local Themes = {
 	-- الثيمات المتحركة (5 ثيمات)
@@ -66,7 +66,8 @@ local Localizations = {
 		Cancel = "إلغاء",
 		KeyPrompt = "أدخل مفتاح التفعيل للتابع:",
 		CheckKey = "تحقق",
-		GetKey = "الحصول على المفتاح",
+		GetKey = "نسخ رابط المفتاح",
+		KeyCopied = "تم نسخ رابط المفتاح إلى الحافظة!",
 		InvalidKey = "المفتاح غير صحيح!",
 		ValidKey = "تم تفعيل السكربت بنجاح!"
 	}
@@ -81,7 +82,6 @@ function Library:Create(config)
 	local currentThemeName = config.Theme or "Animated RGB"
 	local currentTheme = Themes[currentThemeName] or Themes["Animated RGB"]
 	
-	-- خيارات نظام المفاتيح الجديدة (افتراضياً مفعلة ويمكن تعطيلها بـ KeySystem = false)
 	local useKeySystem = config.KeySystem ~= false
 	local keyLink = config.KeyLink or ""
 
@@ -96,136 +96,7 @@ function Library:Create(config)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
 	-- ==========================================
-	-- الواجهة الرئيسية
-	-- ==========================================
-	local MainFrame = Instance.new("Frame")
-	MainFrame.Size = UDim2.new(0, 520, 0, 350)
-	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -175)
-	MainFrame.BackgroundColor3 = currentTheme.Bg
-	MainFrame.BorderSizePixel = 0
-	MainFrame.ClipsDescendants = false
-	MainFrame.Visible = not useKeySystem -- إذا كان النظام معطلاً تظهر الواجهة مباشرة
-	MainFrame.Parent = ScreenGui
-
-	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
-
-	local UIStroke = Instance.new("UIStroke")
-	UIStroke.Thickness = 2.5
-	UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	UIStroke.Color = currentTheme.Accent
-	UIStroke.Parent = MainFrame
-
-	local UIGradient = Instance.new("UIGradient")
-	UIGradient.Enabled = currentTheme.Animated
-	UIGradient.Parent = UIStroke
-
-	local animConnection
-	local function updateAnimationState()
-		if animConnection then animConnection:Disconnect() animConnection = nil end
-		if currentTheme.Animated then
-			UIGradient.Enabled = true
-			animConnection = RunService.RenderStepped:Connect(function(deltaTime)
-				UIGradient.Rotation = (UIGradient.Rotation + (deltaTime * 120)) % 360
-				local hue = (tick() * 0.3) % 1
-				UIGradient.Color = ColorSequence.new({
-					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, 0.9, 1)),
-					ColorSequenceKeypoint.new(0.5, Color3.fromHSV((hue + 0.33) % 1, 0.9, 1)),
-					ColorSequenceKeypoint.new(1, Color3.fromHSV((hue + 0.66) % 1, 0.9, 1))
-				})
-			end)
-		else
-			UIGradient.Enabled = false
-			UIStroke.Color = currentTheme.Accent
-		end
-	end
-	updateAnimationState()
-
-	-- ==========================================
-	-- نظام المفاتيح (Key System) - يعمل فقط إذا كان مفعلاً
-	-- ==========================================
-	local KeyOverlay
-	if useKeySystem then
-		KeyOverlay = Instance.new("Frame")
-		KeyOverlay.Size = UDim2.new(1, 0, 1, 0)
-		KeyOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		KeyOverlay.BackgroundTransparency = 0.6
-		KeyOverlay.ZIndex = 300
-		KeyOverlay.Parent = ScreenGui
-
-		local KeyBox = Instance.new("Frame")
-		KeyBox.Size = UDim2.new(0, 320, 0, string.len(keyLink) > 0 and 195 or 160)
-		KeyBox.Position = UDim2.new(0.5, -160, 0.5, -80)
-		KeyBox.BackgroundColor3 = currentTheme.Top
-		KeyBox.ZIndex = 301
-		KeyBox.Parent = KeyOverlay
-		Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
-
-		local KeyTitle = Instance.new("TextLabel")
-		KeyTitle.Size = UDim2.new(1, 0, 0, 40)
-		KeyTitle.BackgroundTransparency = 1
-		KeyTitle.Text = Localizations[currentLang].KeyPrompt
-		KeyTitle.TextColor3 = currentTheme.Text
-		KeyTitle.TextSize = 12
-		KeyTitle.Font = Enum.Font.GothamBold
-		KeyTitle.ZIndex = 301
-		KeyTitle.Parent = KeyBox
-
-		local KeyInput = Instance.new("TextBox")
-		KeyInput.Size = UDim2.new(1, -40, 0, 35)
-		KeyInput.Position = UDim2.new(0, 20, 0, 50)
-		KeyInput.BackgroundColor3 = currentTheme.Elem
-		KeyInput.Text = ""
-		KeyInput.PlaceholderText = "أدخل المفتاح هنا..."
-		KeyInput.TextColor3 = currentTheme.Text
-		KeyInput.PlaceholderColor3 = currentTheme.Sub
-		KeyInput.TextSize = 12
-		KeyInput.Font = Enum.Font.Gotham
-		KeyInput.ZIndex = 301
-		KeyInput.Parent = KeyBox
-		Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
-
-		local VerifyBtn = Instance.new("TextButton")
-		VerifyBtn.Size = UDim2.new(1, -40, 0, 35)
-		VerifyBtn.Position = UDim2.new(0, 20, 0, 95)
-		VerifyBtn.BackgroundColor3 = currentTheme.Accent
-		VerifyBtn.Text = Localizations[currentLang].CheckKey
-		VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		VerifyBtn.TextSize = 12
-		VerifyBtn.Font = Enum.Font.GothamBold
-		VerifyBtn.ZIndex = 301
-		VerifyBtn.Parent = KeyBox
-		Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
-
-		if string.len(keyLink) > 0 then
-			local GetKeyBtn = Instance.new("TextButton")
-			GetKeyBtn.Size = UDim2.new(1, -40, 0, 30)
-			GetKeyBtn.Position = UDim2.new(0, 20, 0, 138)
-			GetKeyBtn.BackgroundColor3 = currentTheme.Elem
-			GetKeyBtn.Text = Localizations[currentLang].GetKey
-			GetKeyBtn.TextColor3 = currentTheme.Sub
-			GetKeyBtn.TextSize = 11
-			GetKeyBtn.Font = Enum.Font.GothamMedium
-			GetKeyBtn.ZIndex = 301
-			GetKeyBtn.Parent = KeyBox
-			Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
-
-			GetKeyBtn.MouseButton1Click:Connect(function()
-				pcall(function() setclipboard(keyLink) end)
-				-- سيتم طباعة الرابط أو نسخه
-			end)
-		end
-
-		VerifyBtn.MouseButton1Click:Connect(function()
-			if KeyInput.Text == "VIP-2026" or KeyInput.Text ~= "" then
-				KeyOverlay:Destroy()
-				MainFrame.Visible = true
-				-- سيتم استدعاء الإشعار لاحقاً بعد تعريفه
-			end
-		end)
-	end
-
-	-- ==========================================
-	-- نظام الإشعارات العالمي
+	-- نظام الإشعارات العالمي (يُعرف أولاً ليتم استخدامه)
 	-- ==========================================
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
@@ -281,6 +152,138 @@ function Library:Create(config)
 			TweenService:Create(NotifBox, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(-1.2, 0, 0, 0)}):Play()
 			task.wait(0.3)
 			NotifBox:Destroy()
+		end)
+	end
+
+	-- ==========================================
+	-- الواجهة الرئيسية
+	-- ==========================================
+	local MainFrame = Instance.new("Frame")
+	MainFrame.Size = UDim2.new(0, 520, 0, 350)
+	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -175)
+	MainFrame.BackgroundColor3 = currentTheme.Bg
+	MainFrame.BorderSizePixel = 0
+	MainFrame.ClipsDescendants = false
+	MainFrame.Visible = not useKeySystem
+	MainFrame.Parent = ScreenGui
+
+	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+
+	local UIStroke = Instance.new("UIStroke")
+	UIStroke.Thickness = 2.5
+	UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	UIStroke.Color = currentTheme.Accent
+	UIStroke.Parent = MainFrame
+
+	local UIGradient = Instance.new("UIGradient")
+	UIGradient.Enabled = currentTheme.Animated
+	UIGradient.Parent = UIStroke
+
+	local animConnection
+	local function updateAnimationState()
+		if animConnection then animConnection:Disconnect() animConnection = nil end
+		if currentTheme.Animated then
+			UIGradient.Enabled = true
+			animConnection = RunService.RenderStepped:Connect(function(deltaTime)
+				UIGradient.Rotation = (UIGradient.Rotation + (deltaTime * 120)) % 360
+				local hue = (tick() * 0.3) % 1
+				UIGradient.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromHSV(hue, 0.9, 1)),
+					ColorSequenceKeypoint.new(0.5, Color3.fromHSV((hue + 0.33) % 1, 0.9, 1)),
+					ColorSequenceKeypoint.new(1, Color3.fromHSV((hue + 0.66) % 1, 0.9, 1))
+				})
+			end)
+		else
+			UIGradient.Enabled = false
+			UIStroke.Color = currentTheme.Accent
+		end
+	end
+	updateAnimationState()
+
+	-- ==========================================
+	-- نظام المفاتيح (مع زر نسخ الرابط المرئي)
+	-- ==========================================
+	local KeyOverlay
+	if useKeySystem then
+		KeyOverlay = Instance.new("Frame")
+		KeyOverlay.Size = UDim2.new(1, 0, 1, 0)
+		KeyOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		KeyOverlay.BackgroundTransparency = 0.6
+		KeyOverlay.ZIndex = 300
+		KeyOverlay.Parent = ScreenGui
+
+		local hasLink = string.len(keyLink) > 0
+		local KeyBox = Instance.new("Frame")
+		KeyBox.Size = UDim2.new(0, 320, 0, hasLink and 185 or 150)
+		KeyBox.Position = UDim2.new(0.5, -160, 0.5, hasLink and -92 or -75)
+		KeyBox.BackgroundColor3 = currentTheme.Top
+		KeyBox.ZIndex = 301
+		KeyBox.Parent = KeyOverlay
+		Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 10)
+
+		local KeyTitle = Instance.new("TextLabel")
+		KeyTitle.Size = UDim2.new(1, 0, 0, 35)
+		KeyTitle.BackgroundTransparency = 1
+		KeyTitle.Text = Localizations[currentLang].KeyPrompt
+		KeyTitle.TextColor3 = currentTheme.Text
+		KeyTitle.TextSize = 12
+		KeyTitle.Font = Enum.Font.GothamBold
+		KeyTitle.ZIndex = 301
+		KeyTitle.Parent = KeyBox
+
+		local KeyInput = Instance.new("TextBox")
+		KeyInput.Size = UDim2.new(1, -40, 0, 32)
+		KeyInput.Position = UDim2.new(0, 20, 0, 42)
+		KeyInput.BackgroundColor3 = currentTheme.Elem
+		KeyInput.Text = ""
+		KeyInput.PlaceholderText = "أدخل المفتاح هنا..."
+		KeyInput.TextColor3 = currentTheme.Text
+		KeyInput.PlaceholderColor3 = currentTheme.Sub
+		KeyInput.TextSize = 12
+		KeyInput.Font = Enum.Font.Gotham
+		KeyInput.ZIndex = 301
+		KeyInput.Parent = KeyBox
+		Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
+
+		local VerifyBtn = Instance.new("TextButton")
+		VerifyBtn.Size = UDim2.new(1, -40, 0, 32)
+		VerifyBtn.Position = UDim2.new(0, 20, 0, 82)
+		VerifyBtn.BackgroundColor3 = currentTheme.Accent
+		VerifyBtn.Text = Localizations[currentLang].CheckKey
+		VerifyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		VerifyBtn.TextSize = 12
+		VerifyBtn.Font = Enum.Font.GothamBold
+		VerifyBtn.ZIndex = 301
+		VerifyBtn.Parent = KeyBox
+		Instance.new("UICorner", VerifyBtn).CornerRadius = UDim.new(0, 6)
+
+		if hasLink then
+			local GetKeyBtn = Instance.new("TextButton")
+			GetKeyBtn.Size = UDim2.new(1, -40, 0, 30)
+			GetKeyBtn.Position = UDim2.new(0, 20, 0, 122)
+			GetKeyBtn.BackgroundColor3 = currentTheme.Elem
+			GetKeyBtn.Text = Localizations[currentLang].GetKey
+			GetKeyBtn.TextColor3 = currentTheme.Sub
+			GetKeyBtn.TextSize = 11
+			GetKeyBtn.Font = Enum.Font.GothamMedium
+			GetKeyBtn.ZIndex = 301
+			GetKeyBtn.Parent = KeyBox
+			Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 6)
+
+			GetKeyBtn.MouseButton1Click:Connect(function()
+				pcall(function() setclipboard(keyLink) end)
+				Notify("الحصول على المفتاح", Localizations[currentLang].KeyCopied, 2.5)
+			end)
+		end
+
+		VerifyBtn.MouseButton1Click:Connect(function()
+			if KeyInput.Text == "VIP-2026" or KeyInput.Text ~= "" then
+				KeyOverlay:Destroy()
+				MainFrame.Visible = true
+				Notify("نجاح", Localizations[currentLang].ValidKey, 3)
+			else
+				Notify("خطأ", Localizations[currentLang].InvalidKey, 3)
+			end
 		end)
 	end
 
@@ -485,14 +488,61 @@ function Library:Create(config)
 	local WindowObj = {}
 	local firstTab = true
 
+	-- دالة لتحديث ألوان كافة عناصر الواجهة الحالية فور تغيير الثيم
+	local function updateAllElementsColors()
+		MainFrame.BackgroundColor3 = currentTheme.Bg
+		TopBar.BackgroundColor3 = currentTheme.Top
+		TitleLabel.TextColor3 = currentTheme.Text
+		ConfirmBox.BackgroundColor3 = currentTheme.Top
+		ConfirmText.TextColor3 = currentTheme.Text
+		NoButton.BackgroundColor3 = currentTheme.Elem
+		NoButton.TextColor3 = currentTheme.Text
+		ResizeButton.TextColor3 = currentTheme.Sub
+		CloseButton.BackgroundColor3 = currentTheme.Elem
+		CloseButton.TextColor3 = currentTheme.Text
+		MinimizeButton.BackgroundColor3 = currentTheme.Elem
+		MinimizeButton.TextColor3 = currentTheme.Text
+
+		-- تحديث الأزرار والتبويبات والقوائم داخل السايدبار والحاويات
+		for _, btn in ipairs(Sidebar:GetChildren()) do
+			if btn:IsA("TextButton") then
+				local isSelected = (btn.BackgroundColor3 == currentTheme.Top or btn.TextColor3 == currentTheme.Text)
+				btn.BackgroundColor3 = isSelected and currentTheme.Top or currentTheme.Elem
+				btn.TextColor3 = isSelected and currentTheme.Text or currentTheme.Sub
+			end
+		end
+
+		for _, page in ipairs(ContainerHolder:GetChildren()) do
+			if page:IsA("ScrollingFrame") then
+				for _, item in ipairs(page:GetChildren()) do
+					if item:IsA("Frame") or item:IsA("TextButton") then
+						if item.Name ~= "Switch" and item.Name ~= "Circle" and item.Name ~= "Fill" then
+							-- تحديث خلفيات العناصر الفرعية
+							if item.BackgroundColor3 ~= Color3.fromRGB(45, 45, 55) and item.BackgroundColor3 ~= Color3.fromRGB(50, 50, 60) then
+								item.BackgroundColor3 = currentTheme.Elem
+							end
+							for _, subChild in ipairs(item:GetDescendants()) do
+								if subChild:IsA("TextLabel") then
+									if subChild.TextColor3 ~= currentTheme.Accent and subChild.TextColor3 ~= Color3.fromRGB(255, 255, 255) then
+										subChild.TextColor3 = currentTheme.Text
+									end
+								elseif subChild:IsA("Frame") and subChild.Size.X.Offset == 34 then -- Toggle Switch
+									subChild.BackgroundColor3 = currentTheme.Accent
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
 	function WindowObj:SetTheme(themeName)
 		if Themes[themeName] then
 			currentThemeName = themeName
 			currentTheme = Themes[themeName]
-			MainFrame.BackgroundColor3 = currentTheme.Bg
-			TopBar.BackgroundColor3 = currentTheme.Top
-			TitleLabel.TextColor3 = currentTheme.Text
 			updateAnimationState()
+			updateAllElementsColors()
 			Notify("الثيمات", "تم تغيير الثيم إلى: " .. themeName, 2)
 		end
 	end
@@ -807,9 +857,8 @@ function Library:Create(config)
 				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
 
 				OptBtn.MouseButton1Click:Connect(function()
-					TitleLbl.Text = name .. " : " + option
-					isOpen = false
 					TitleLbl.Text = name .. " : " .. option
+					isOpen = false
 					TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, closedHeight)}):Play()
 					if callback then callback(option) end
 				end)
