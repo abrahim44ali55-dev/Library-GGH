@@ -1,5 +1,5 @@
 -- =====================================================================
--- نظام مكتبة السكربتات العالمي المتطور (النسخة النهائية والمحدثة بالكامل)
+-- مكتبة واجهة المستخدم الاحترافية المتكاملة (Library Core)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -10,11 +10,7 @@ local RunService = game:GetService("RunService")
 local Library = {}
 Library.__index = Library
 
--- ==========================================
--- قائمة الثيمات الـ 10 (دقيقة ومضبوطة لكل عنصر)
--- ==========================================
 local Themes = {
-	-- الثيمات المتحركة (5 ثيمات)
 	["Animated RGB"] = { 
 		Bg = Color3.fromRGB(15, 15, 20), Top = Color3.fromRGB(22, 22, 28), Elem = Color3.fromRGB(28, 28, 36), 
 		Text = Color3.fromRGB(240, 240, 255), Sub = Color3.fromRGB(140, 140, 160), Accent = Color3.fromRGB(0, 170, 255), Animated = true 
@@ -35,8 +31,6 @@ local Themes = {
 		Bg = Color3.fromRGB(22, 12, 10), Top = Color3.fromRGB(35, 18, 15), Elem = Color3.fromRGB(50, 26, 20), 
 		Text = Color3.fromRGB(255, 235, 215), Sub = Color3.fromRGB(180, 130, 110), Accent = Color3.fromRGB(255, 110, 0), Animated = true 
 	},
-
-	-- الثيمات الثابتة (5 ثيمات)
 	["Dark Modern"] = { 
 		Bg = Color3.fromRGB(15, 15, 18), Top = Color3.fromRGB(22, 22, 26), Elem = Color3.fromRGB(26, 26, 32), 
 		Text = Color3.fromRGB(240, 240, 245), Sub = Color3.fromRGB(140, 140, 155), Accent = Color3.fromRGB(0, 162, 255), Animated = false 
@@ -95,9 +89,6 @@ function Library:Create(config)
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-	-- ==========================================
-	-- نظام الإشعارات العالمي (يُعرف أولاً ليتم استخدامه)
-	-- ==========================================
 	local NotifHolder = Instance.new("Frame")
 	NotifHolder.Size = UDim2.new(0, 260, 0, 400)
 	NotifHolder.Position = UDim2.new(0, 15, 0.5, -200)
@@ -155,9 +146,6 @@ function Library:Create(config)
 		end)
 	end
 
-	-- ==========================================
-	-- الواجهة الرئيسية
-	-- ==========================================
 	local MainFrame = Instance.new("Frame")
 	MainFrame.Size = UDim2.new(0, 520, 0, 350)
 	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -175)
@@ -200,9 +188,6 @@ function Library:Create(config)
 	end
 	updateAnimationState()
 
-	-- ==========================================
-	-- نظام المفاتيح (مع زر نسخ الرابط المرئي)
-	-- ==========================================
 	local KeyOverlay
 	if useKeySystem then
 		KeyOverlay = Instance.new("Frame")
@@ -488,7 +473,6 @@ function Library:Create(config)
 	local WindowObj = {}
 	local firstTab = true
 
-	-- دالة لتحديث ألوان كافة عناصر الواجهة الحالية فور تغيير الثيم
 	local function updateAllElementsColors()
 		MainFrame.BackgroundColor3 = currentTheme.Bg
 		TopBar.BackgroundColor3 = currentTheme.Top
@@ -503,7 +487,6 @@ function Library:Create(config)
 		MinimizeButton.BackgroundColor3 = currentTheme.Elem
 		MinimizeButton.TextColor3 = currentTheme.Text
 
-		-- تحديث الأزرار والتبويبات والقوائم داخل السايدبار والحاويات
 		for _, btn in ipairs(Sidebar:GetChildren()) do
 			if btn:IsA("TextButton") then
 				local isSelected = (btn.BackgroundColor3 == currentTheme.Top or btn.TextColor3 == currentTheme.Text)
@@ -517,7 +500,6 @@ function Library:Create(config)
 				for _, item in ipairs(page:GetChildren()) do
 					if item:IsA("Frame") or item:IsA("TextButton") then
 						if item.Name ~= "Switch" and item.Name ~= "Circle" and item.Name ~= "Fill" then
-							-- تحديث خلفيات العناصر الفرعية
 							if item.BackgroundColor3 ~= Color3.fromRGB(45, 45, 55) and item.BackgroundColor3 ~= Color3.fromRGB(50, 50, 60) then
 								item.BackgroundColor3 = currentTheme.Elem
 							end
@@ -526,7 +508,7 @@ function Library:Create(config)
 									if subChild.TextColor3 ~= currentTheme.Accent and subChild.TextColor3 ~= Color3.fromRGB(255, 255, 255) then
 										subChild.TextColor3 = currentTheme.Text
 									end
-								elseif subChild:IsA("Frame") and subChild.Size.X.Offset == 34 then -- Toggle Switch
+								elseif subChild:IsA("Frame") and subChild.Size.X.Offset == 34 then
 									subChild.BackgroundColor3 = currentTheme.Accent
 								end
 							end
