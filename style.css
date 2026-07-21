@@ -1,18 +1,18 @@
 :root {
-    --bg-color: #0b0f19;
-    --sidebar-bg: #111827;
-    --card-bg: #161b22;
+    --bg-color: #0d1117;
+    --sidebar-bg: #161b22;
+    --card-bg: #1f242c;
     --border-color: #30363d;
-    --accent-color: #58a6ff;
-    --text-main: #f9fafb;
-    --text-sub: #9ca3af;
+    --accent-color: #38bdf8;
+    --text-main: #f1f5f9;
+    --text-sub: #94a3b8;
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
@@ -23,6 +23,7 @@ body {
     flex-direction: row;
 }
 
+/* Sidebar WindUI Style */
 aside {
     width: 280px;
     background-color: var(--sidebar-bg);
@@ -34,11 +35,14 @@ aside {
 }
 
 .logo {
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--text-main);
     margin-bottom: 24px;
     padding-left: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .nav-section {
@@ -52,6 +56,7 @@ aside {
     margin-bottom: 8px;
     padding-left: 8px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .nav-links {
@@ -68,24 +73,27 @@ aside {
     border-radius: 6px;
     display: block;
     font-size: 13px;
+    font-weight: 500;
     transition: 0.15s;
 }
 
 .nav-links li a:hover, .nav-links li a.active {
-    background-color: var(--card-bg);
+    background-color: rgba(56, 189, 248, 0.1);
     color: var(--accent-color);
 }
 
+/* Main Content Area */
 main {
     flex: 1;
     padding: 40px;
     overflow-y: auto;
-    max-width: 900px;
+    max-width: 950px;
 }
 
 h1 {
-    font-size: 28px;
-    margin-bottom: 10px;
+    font-size: 30px;
+    font-weight: 800;
+    margin-bottom: 12px;
     color: var(--text-main);
 }
 
@@ -98,26 +106,29 @@ p {
 
 h2 {
     font-size: 20px;
-    margin-top: 30px;
+    font-weight: 700;
+    margin-top: 35px;
     margin-bottom: 12px;
     color: var(--text-main);
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 6px;
+    padding-bottom: 8px;
 }
 
+/* Code Box WindUI Style */
 .code-box-wrapper {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: 8px;
     margin-bottom: 20px;
     overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .code-header {
     display: flex;
     justify-content: flex-end;
-    padding: 8px 12px;
-    background-color: rgba(255, 255, 255, 0.02);
+    padding: 6px 12px;
+    background-color: rgba(0, 0, 0, 0.2);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -125,7 +136,7 @@ h2 {
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-sub);
-    border-radius: 6px;
+    border-radius: 5px;
     padding: 4px 10px;
     cursor: pointer;
     display: flex;
@@ -136,8 +147,8 @@ h2 {
 }
 
 .copy-icon-btn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: var(--text-main);
+    background-color: rgba(56, 189, 248, 0.1);
+    color: var(--accent-color);
     border-color: var(--accent-color);
 }
 
@@ -146,9 +157,9 @@ pre {
     overflow-x: auto;
     direction: ltr;
     text-align: left;
-    font-family: ui-monospace, monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 13px;
-    color: #79c0ff;
+    color: #38bdf8;
     line-height: 1.5;
 }
 
