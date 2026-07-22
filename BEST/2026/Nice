@@ -1,5 +1,5 @@
 -- =====================================================================
--- Advanced Global Script Library System (Custom Keybind & Clean Dropdown)
+-- Advanced Global Script Library System (Added TextBox & Keybind Elements)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -72,7 +72,7 @@ function Library:Create(config)
 	config = config or {}
 	local title = config.Title or "Global Control Panel"
 	local description = config.Description or "Advanced & Comprehensive System"
-	local toggleKey = config.Keybind or Enum.KeyCode.RightShift -- دعم تحديد زر الاختصار (Keybind)
+	local toggleKey = config.Keybind or Enum.KeyCode.RightShift
 	local currentLang = "en"
 	local currentThemeName = config.Theme or "Dark Modern"
 	if not Themes[currentThemeName] then currentThemeName = "Dark Modern" end
@@ -543,7 +543,6 @@ function Library:Create(config)
 			end)
 		end
 
-		-- إضافة زر تكت بوتون (Ticket Button / Action Button مخصص)
 		function TabObj:AddTicketButton(name, desc, buttonText, callback)
 			local TicketFrame = Instance.new("Frame")
 			TicketFrame.Size = UDim2.new(1, 0, 0, 42)
@@ -590,6 +589,129 @@ function Library:Create(config)
 
 			ActionBtn.MouseButton1Click:Connect(function()
 				if callback then callback() end
+			end)
+		end
+
+		-- إضافة عنصر TextBox (خانة كتابة النصوص والأرقام)
+		function TabObj:AddTextBox(name, desc, placeholder, callback)
+			local BoxFrame = Instance.new("Frame")
+			BoxFrame.Size = UDim2.new(1, 0, 0, 42)
+			BoxFrame.BackgroundColor3 = currentTheme.Elem
+			BoxFrame.ZIndex = 17
+			BoxFrame.Parent = TabPage
+			Instance.new("UICorner", BoxFrame).CornerRadius = UDim.new(0, 6)
+
+			local TitleLbl = Instance.new("TextLabel")
+			TitleLbl.Size = UDim2.new(1, -130, 0, 18)
+			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
+			TitleLbl.BackgroundTransparency = 1
+			TitleLbl.Text = name
+			TitleLbl.TextColor3 = currentTheme.Text
+			TitleLbl.TextSize = 11
+			TitleLbl.Font = Enum.Font.GothamBold
+			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			TitleLbl.ZIndex = 18
+			TitleLbl.Parent = BoxFrame
+
+			local DescLbl = Instance.new("TextLabel")
+			DescLbl.Size = UDim2.new(1, -130, 0, 14)
+			DescLbl.Position = UDim2.new(0, 10, 0, 22)
+			DescLbl.BackgroundTransparency = 1
+			DescLbl.Text = desc
+			DescLbl.TextColor3 = currentTheme.Sub
+			DescLbl.TextSize = 9
+			DescLbl.Font = Enum.Font.Gotham
+			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
+			DescLbl.ZIndex = 18
+			DescLbl.Parent = BoxFrame
+
+			local UserBox = Instance.new("TextBox")
+			UserBox.Size = UDim2.new(0, 110, 0, 26)
+			UserBox.Position = UDim2.new(1, -118, 0.5, -13)
+			UserBox.BackgroundColor3 = currentTheme.Top
+			UserBox.Text = ""
+			UserBox.PlaceholderText = placeholder or "Type here..."
+			UserBox.TextColor3 = currentTheme.Text
+			UserBox.PlaceholderColor3 = currentTheme.Sub
+			UserBox.TextSize = 10
+			UserBox.Font = Enum.Font.GothamMedium
+			UserBox.ZIndex = 19
+			UserBox.Parent = BoxFrame
+			Instance.new("UICorner", UserBox).CornerRadius = UDim.new(0, 4)
+
+			UserBox.FocusLost = function(enterPressed)
+				if callback then callback(UserBox.Text, enterPressed) end
+			end
+		end
+
+		-- إضافة عنصر Keybind (اختصار لوحة المفاتيح المخصص للميزات)
+		function TabObj:AddKeybind(name, desc, defaultKey, callback)
+			local currentKey = defaultKey or Enum.KeyCode.E
+			local listening = false
+
+			local KeyFrame = Instance.new("Frame")
+			KeyFrame.Size = UDim2.new(1, 0, 0, 42)
+			KeyFrame.BackgroundColor3 = currentTheme.Elem
+			KeyFrame.ZIndex = 17
+			KeyFrame.Parent = TabPage
+			Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 6)
+
+			local TitleLbl = Instance.new("TextLabel")
+			TitleLbl.Size = UDim2.new(1, -110, 0, 18)
+			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
+			TitleLbl.BackgroundTransparency = 1
+			TitleLbl.Text = name
+			TitleLbl.TextColor3 = currentTheme.Text
+			TitleLbl.TextSize = 11
+			TitleLbl.Font = Enum.Font.GothamBold
+			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			TitleLbl.ZIndex = 18
+			TitleLbl.Parent = KeyFrame
+
+			local DescLbl = Instance.new("TextLabel")
+			DescLbl.Size = UDim2.new(1, -110, 0, 14)
+			DescLbl.Position = UDim2.new(0, 10, 0, 22)
+			DescLbl.BackgroundTransparency = 1
+			DescLbl.Text = desc
+			DescLbl.TextColor3 = currentTheme.Sub
+			DescLbl.TextSize = 9
+			DescLbl.Font = Enum.Font.Gotham
+			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
+			DescLbl.ZIndex = 18
+			DescLbl.Parent = KeyFrame
+
+			local KeyBtn = Instance.new("TextButton")
+			KeyBtn.Size = UDim2.new(0, 90, 0, 26)
+			KeyBtn.Position = UDim2.new(1, -98, 0.5, -13)
+			KeyBtn.BackgroundColor3 = currentTheme.Top
+			KeyBtn.Text = tostring(currentKey.Name)
+			KeyBtn.TextColor3 = currentTheme.Accent
+			KeyBtn.TextSize = 10
+			KeyBtn.Font = Enum.Font.GothamBold
+			KeyBtn.ZIndex = 19
+			KeyBtn.Parent = KeyFrame
+			Instance.new("UICorner", KeyBtn).CornerRadius = UDim.new(0, 4)
+
+			KeyBtn.MouseButton1Click:Connect(function()
+				if listening then return end
+				listening = true
+				KeyBtn.Text = "..."
+				
+				local connection
+				connection = UserInputService.InputBegan:Connect(function(input, gp)
+					if input.UserInputType == Enum.UserInputType.Keyboard then
+						currentKey = input.KeyCode
+						KeyBtn.Text = tostring(currentKey.Name)
+						listening = false
+						connection:Disconnect()
+					end
+				end)
+			end)
+
+			UserInputService.InputBegan:Connect(function(input, gameProcessed)
+				if not gameProcessed and input.KeyCode == currentKey then
+					if callback then callback(currentKey) end
+				end
 			end)
 		end
 
