@@ -1,20 +1,18 @@
 --[[
-    GGH Library v1.3.3 FINAL MERGED
-    Base: User v1.3.1 with all 10 elements (Section, Paragraph, Button, Toggle, Slider, Input, Dropdown, Colorpicker, Keybind, Code)
-    Fixes:
-    - Header improved UICorner 14 + nicer stroke
-    - Tabs fixed (no black/overlap) + scroll protection
-    - Slider = circle drag left/right + stop on release (user fixed)
-    - Minimize/Maximize working
-    - Close X when minimized = auto open window then show confirm in center
-    - All English
-    - NO DELETIONS - all 10 elements kept
+    GGH Library v1.7.0 FINAL - ADVANCED KEY SYSTEM
+    Base: v1.5.0 FINAL STABLE (Search + Translate + Section + 10 Themes)
+    Added:
+    - Advanced Key System with On/Off
+    - HWID Lock (optional)
+    - Expiration (optional) with custom duration
+    - All settings controllable via Config
 ]]
 
 local GGH = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local LocalizationService = game:GetService("LocalizationService")
 
 local function GetGuiParent()
     local ok, hui = pcall(function() return gethui() end)
@@ -41,22 +39,254 @@ local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
+local Themes = {
+    ["Dark"] = {
+        MainBg = Color3.fromRGB(13,13,16),
+        HeaderBg = Color3.fromRGB(22,22,28),
+        TabListBg = Color3.fromRGB(18,18,22),
+        ElementBg = Color3.fromRGB(26,26,32),
+        ElementBg2 = Color3.fromRGB(32,32,40),
+        Text = Color3.fromRGB(255,255,255),
+        SubText = Color3.fromRGB(150,150,165),
+        SectionText = Color3.fromRGB(115,115,130),
+        ParagraphText = Color3.fromRGB(200,200,210),
+        Accent = Color3.fromRGB(90,70,255),
+        Stroke = Color3.fromRGB(45,45,58),
+        StrokeLight = Color3.fromRGB(60,60,70),
+        CloseBg = Color3.fromRGB(70,32,40),
+        CloseText = Color3.fromRGB(255,95,95),
+    },
+    ["Midnight Blue"] = {
+        MainBg = Color3.fromRGB(10,14,23),
+        HeaderBg = Color3.fromRGB(18,26,46),
+        TabListBg = Color3.fromRGB(14,20,33),
+        ElementBg = Color3.fromRGB(20,30,55),
+        ElementBg2 = Color3.fromRGB(28,42,75),
+        Text = Color3.fromRGB(220,235,255),
+        SubText = Color3.fromRGB(120,150,190),
+        SectionText = Color3.fromRGB(90,120,160),
+        ParagraphText = Color3.fromRGB(180,200,230),
+        Accent = Color3.fromRGB(60,130,255),
+        Stroke = Color3.fromRGB(30,50,90),
+        StrokeLight = Color3.fromRGB(50,80,130),
+        CloseBg = Color3.fromRGB(80,30,40),
+        CloseText = Color3.fromRGB(255,100,120),
+    },
+    ["Crimson Red"] = {
+        MainBg = Color3.fromRGB(18,10,12),
+        HeaderBg = Color3.fromRGB(35,18,22),
+        TabListBg = Color3.fromRGB(24,14,16),
+        ElementBg = Color3.fromRGB(40,22,26),
+        ElementBg2 = Color3.fromRGB(55,30,36),
+        Text = Color3.fromRGB(255,230,235),
+        SubText = Color3.fromRGB(200,140,150),
+        SectionText = Color3.fromRGB(180,100,110),
+        ParagraphText = Color3.fromRGB(240,200,210),
+        Accent = Color3.fromRGB(220,50,70),
+        Stroke = Color3.fromRGB(70,35,40),
+        StrokeLight = Color3.fromRGB(100,50,60),
+        CloseBg = Color3.fromRGB(90,30,35),
+        CloseText = Color3.fromRGB(255,80,80),
+    },
+    ["Forest Green"] = {
+        MainBg = Color3.fromRGB(10,16,12),
+        HeaderBg = Color3.fromRGB(18,30,22),
+        TabListBg = Color3.fromRGB(14,22,16),
+        ElementBg = Color3.fromRGB(22,38,26),
+        ElementBg2 = Color3.fromRGB(32,52,38),
+        Text = Color3.fromRGB(220,255,225),
+        SubText = Color3.fromRGB(130,190,140),
+        SectionText = Color3.fromRGB(100,160,110),
+        ParagraphText = Color3.fromRGB(190,230,200),
+        Accent = Color3.fromRGB(60,200,90),
+        Stroke = Color3.fromRGB(35,70,45),
+        StrokeLight = Color3.fromRGB(55,100,65),
+        CloseBg = Color3.fromRGB(70,40,35),
+        CloseText = Color3.fromRGB(255,120,90),
+    },
+    ["Purple Haze"] = {
+        MainBg = Color3.fromRGB(16,12,20),
+        HeaderBg = Color3.fromRGB(30,22,40),
+        TabListBg = Color3.fromRGB(22,16,30),
+        ElementBg = Color3.fromRGB(38,28,52),
+        ElementBg2 = Color3.fromRGB(52,38,72),
+        Text = Color3.fromRGB(240,230,255),
+        SubText = Color3.fromRGB(170,150,200),
+        SectionText = Color3.fromRGB(140,120,170),
+        ParagraphText = Color3.fromRGB(210,200,235),
+        Accent = Color3.fromRGB(150,80,255),
+        Stroke = Color3.fromRGB(60,45,80),
+        StrokeLight = Color3.fromRGB(90,65,120),
+        CloseBg = Color3.fromRGB(80,35,50),
+        CloseText = Color3.fromRGB(255,100,130),
+    },
+    ["Cyberpunk"] = {
+        MainBg = Color3.fromRGB(8,8,12),
+        HeaderBg = Color3.fromRGB(15,15,25),
+        TabListBg = Color3.fromRGB(12,12,20),
+        ElementBg = Color3.fromRGB(20,20,35),
+        ElementBg2 = Color3.fromRGB(30,30,50),
+        Text = Color3.fromRGB(0,255,255),
+        SubText = Color3.fromRGB(0,200,200),
+        SectionText = Color3.fromRGB(255,0,255),
+        ParagraphText = Color3.fromRGB(180,255,255),
+        Accent = Color3.fromRGB(255,0,128),
+        Stroke = Color3.fromRGB(0,255,255),
+        StrokeLight = Color3.fromRGB(255,0,255),
+        CloseBg = Color3.fromRGB(60,10,40),
+        CloseText = Color3.fromRGB(255,50,150),
+    },
+    ["Ocean"] = {
+        MainBg = Color3.fromRGB(8,18,22),
+        HeaderBg = Color3.fromRGB(12,32,42),
+        TabListBg = Color3.fromRGB(10,24,32),
+        ElementBg = Color3.fromRGB(16,42,58),
+        ElementBg2 = Color3.fromRGB(22,58,78),
+        Text = Color3.fromRGB(200,245,255),
+        SubText = Color3.fromRGB(100,180,210),
+        SectionText = Color3.fromRGB(80,150,180),
+        ParagraphText = Color3.fromRGB(170,220,240),
+        Accent = Color3.fromRGB(0,200,220),
+        Stroke = Color3.fromRGB(20,80,100),
+        StrokeLight = Color3.fromRGB(30,110,140),
+        CloseBg = Color3.fromRGB(80,30,35),
+        CloseText = Color3.fromRGB(255,110,110),
+    },
+    ["Sunset Orange"] = {
+        MainBg = Color3.fromRGB(20,14,10),
+        HeaderBg = Color3.fromRGB(38,26,18),
+        TabListBg = Color3.fromRGB(28,20,14),
+        ElementBg = Color3.fromRGB(48,34,22),
+        ElementBg2 = Color3.fromRGB(66,48,32),
+        Text = Color3.fromRGB(255,240,220),
+        SubText = Color3.fromRGB(220,180,130),
+        SectionText = Color3.fromRGB(200,150,90),
+        ParagraphText = Color3.fromRGB(255,220,180),
+        Accent = Color3.fromRGB(255,140,40),
+        Stroke = Color3.fromRGB(80,55,35),
+        StrokeLight = Color3.fromRGB(120,80,50),
+        CloseBg = Color3.fromRGB(90,35,30),
+        CloseText = Color3.fromRGB(255,100,80),
+    },
+    ["Monochrome"] = {
+        MainBg = Color3.fromRGB(18,18,18),
+        HeaderBg = Color3.fromRGB(30,30,30),
+        TabListBg = Color3.fromRGB(24,24,24),
+        ElementBg = Color3.fromRGB(38,38,38),
+        ElementBg2 = Color3.fromRGB(50,50,50),
+        Text = Color3.fromRGB(255,255,255),
+        SubText = Color3.fromRGB(180,180,180),
+        SectionText = Color3.fromRGB(150,150,150),
+        ParagraphText = Color3.fromRGB(220,220,220),
+        Accent = Color3.fromRGB(255,255,255),
+        Stroke = Color3.fromRGB(60,60,60),
+        StrokeLight = Color3.fromRGB(80,80,80),
+        CloseBg = Color3.fromRGB(60,60,60),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Toxic Green"] = {
+        MainBg = Color3.fromRGB(10,16,10),
+        HeaderBg = Color3.fromRGB(18,30,18),
+        TabListBg = Color3.fromRGB(14,22,14),
+        ElementBg = Color3.fromRGB(22,38,22),
+        ElementBg2 = Color3.fromRGB(32,55,32),
+        Text = Color3.fromRGB(200,255,200),
+        SubText = Color3.fromRGB(120,220,120),
+        SectionText = Color3.fromRGB(90,200,90),
+        ParagraphText = Color3.fromRGB(180,255,180),
+        Accent = Color3.fromRGB(120,255,60),
+        Stroke = Color3.fromRGB(40,80,40),
+        StrokeLight = Color3.fromRGB(60,120,60),
+        CloseBg = Color3.fromRGB(70,40,30),
+        CloseText = Color3.fromRGB(255,130,80),
+    },
+}
+
 function GGH:CreateWindow(Config)
     Config = Config or {}
-    -- KEY SYSTEM (Config.KeySystem = true/false) - no modifications to provided logic, only integration
+    -- ========================================================================
+    -- ADVANCED KEY SYSTEM - All controllable via Config (On/Off as you want)
+    -- ========================================================================
     if Config.KeySystem or Config.KeySystemEnabled then
-        local correct = Config.Key or Config.CorrectKey or "GGH-1234"
-        local keys = type(correct) == "table" and correct or {correct}
+        local Players = game:GetService("Players")
+        local HttpService = game:GetService("HttpService")
+        local Player = Players.LocalPlayer
+        local PlayerGui = Player:WaitForChild("PlayerGui")
+        
+        -- Config Options (all controllable)
+        local correctKeys = Config.Key or Config.CorrectKey or "GGH-1234"
+        if type(correctKeys) ~= "table" then correctKeys = {correctKeys} end
         local getLink = Config.GetKeyLink or Config.KeyLink or "https://linkvertise.com"
         local discLink = Config.DiscordLink or "https://discord.gg"
         local kTitle = Config.Title or "GGH Library"
+        local useHWID = Config.KeyHWID or Config.HWID or Config.HWIDLock or false
+        local useExpire = Config.KeyExpiration or Config.Expiration or Config.KeyExpires or false
+        local duration = Config.KeyDuration or Config.Duration or 86400 -- seconds (24h default)
+        local saveFolder = "GGH_Keys"
+        
+        local function getHWID()
+            local hwid = "UNKNOWN"
+            local ok, res = pcall(function() return gethwid and gethwid() or "" end)
+            if ok and res and res ~= "" then hwid = res
+            else
+                local ok2, res2 = pcall(function() return game:GetService("RbxAnalyticsService"):GetClientId() end)
+                if ok2 and res2 ~= "" then hwid = res2
+                else hwid = tostring(Player.UserId).."-"..tostring(Player.AccountAge)
+                end
+            end
+            return hwid
+        end
+        
+        local function loadSavedKey()
+            if not (isfolder and isfile and readfile) then return nil end
+            if not isfolder(saveFolder) then return nil end
+            local hwid = getHWID()
+            for _, key in ipairs(correctKeys) do
+                local path = saveFolder.."/"..key:gsub("[^%w]", "_")..".json"
+                if isfile(path) then
+                    local ok, content = pcall(function() return readfile(path) end)
+                    if ok and content then
+                        local data = {}
+                        pcall(function() data = HttpService:JSONDecode(content) end)
+                        if useHWID and data.hwid and data.hwid ~= hwid then
+                            -- HWID mismatch
+                        else
+                            if useExpire and data.timestamp then
+                                local elapsed = os.time() - data.timestamp
+                                if elapsed > duration then
+                                    -- expired, delete
+                                    pcall(function() delfile(path) end)
+                                else
+                                    return {valid=true, key=key, remaining=duration - elapsed}
+                                end
+                            else
+                                return {valid=true, key=key}
+                            end
+                        end
+                    end
+                end
+            end
+            return nil
+        end
+        
+        local function saveKey(key)
+            if not (writefile and isfolder) then return end
+            pcall(function()
+                if not isfolder(saveFolder) then makefolder(saveFolder) end
+                local data = {hwid = getHWID(), timestamp = os.time(), key = key}
+                local path = saveFolder.."/"..key:gsub("[^%w]", "_")..".json"
+                writefile(path, HttpService:JSONEncode(data))
+            end)
+        end
+        
+        local saved = loadSavedKey()
         local finished = false
         local success = false
-        do
-            local Players = game:GetService("Players")
-            local TweenService = game:GetService("TweenService")
-            local Player = Players.LocalPlayer
-            local PlayerGui = Player:WaitForChild("PlayerGui")
+        if saved and saved.valid then
+            finished = true
+            success = true
+        else
+            -- Show Key GUI
             local Colors = {
                 Background = Color3.fromRGB(18, 18, 22),
                 Surface = Color3.fromRGB(25, 25, 30),
@@ -84,8 +314,8 @@ function GGH:CreateWindow(Config)
             backdrop.BorderSizePixel = 0
             backdrop.Parent = screenGui
             local container = Instance.new("Frame")
-            container.Size = UDim2.new(0,420,0,480)
-            container.Position = UDim2.new(0.5,-210,0.5,-240)
+            container.Size = UDim2.new(0,420,0,540)
+            container.Position = UDim2.new(0.5,-210,0.5,-270)
             container.BackgroundColor3 = Colors.Background
             container.BorderSizePixel = 0
             container.Parent = screenGui
@@ -133,9 +363,21 @@ function GGH:CreateWindow(Config)
             sub.TextColor3 = Colors.TextSecondary
             sub.TextSize = 14
             sub.Font = Enum.Font.Gotham
+            local infoText = ""
+            if useHWID then infoText = infoText.."HWID Lock: ON  " end
+            if useExpire then infoText = infoText.."Expires: "..math.floor(duration/3600).."h "..math.floor((duration%3600)/60).."m" end
+            if infoText == "" then infoText = "Key System Enabled" end
+            local infoLbl = Instance.new("TextLabel", container)
+            infoLbl.Size = UDim2.new(1,-32,0,20)
+            infoLbl.Position = UDim2.new(0,16,0,148)
+            infoLbl.BackgroundTransparency = 1
+            infoLbl.Text = infoText
+            infoLbl.TextColor3 = Color3.fromRGB(100,180,255)
+            infoLbl.TextSize = 11
+            infoLbl.Font = Enum.Font.Gotham
             local inputCont = Instance.new("Frame", container)
             inputCont.Size = UDim2.new(1,-64,0,52)
-            inputCont.Position = UDim2.new(0,32,0,170)
+            inputCont.Position = UDim2.new(0,32,0,175)
             inputCont.BackgroundColor3 = Colors.Surface
             inputCont.BorderSizePixel = 0
             Instance.new("UICorner", inputCont).CornerRadius = UDim.new(0,12)
@@ -150,9 +392,10 @@ function GGH:CreateWindow(Config)
             textBox.TextSize = 16
             textBox.Font = Enum.Font.Gotham
             textBox.TextXAlignment = Enum.TextXAlignment.Left
+            textBox.ClearTextOnFocus = false
             local status = Instance.new("TextLabel", container)
             status.Size = UDim2.new(1,-32,0,30)
-            status.Position = UDim2.new(0,16,0,230)
+            status.Position = UDim2.new(0,16,0,235)
             status.BackgroundTransparency = 1
             status.Text = ""
             status.TextColor3 = Colors.Error
@@ -161,7 +404,7 @@ function GGH:CreateWindow(Config)
             status.TextWrapped = true
             local verifyBtn = Instance.new("TextButton", container)
             verifyBtn.Size = UDim2.new(1,-64,0,48)
-            verifyBtn.Position = UDim2.new(0,32,0,270)
+            verifyBtn.Position = UDim2.new(0,32,0,275)
             verifyBtn.BackgroundColor3 = Colors.Primary
             verifyBtn.BorderSizePixel = 0
             verifyBtn.Text = "Verify Access Key"
@@ -171,7 +414,7 @@ function GGH:CreateWindow(Config)
             Instance.new("UICorner", verifyBtn).CornerRadius = UDim.new(0,12)
             local btnCont = Instance.new("Frame", container)
             btnCont.Size = UDim2.new(1,-64,0,48)
-            btnCont.Position = UDim2.new(0,32,0,330)
+            btnCont.Position = UDim2.new(0,32,0,335)
             btnCont.BackgroundTransparency = 1
             local getKeyBtn = Instance.new("TextButton", btnCont)
             getKeyBtn.Size = UDim2.new(0.48,0,1,0)
@@ -192,12 +435,49 @@ function GGH:CreateWindow(Config)
             discBtn.TextSize = 14
             discBtn.Font = Enum.Font.GothamMedium
             Instance.new("UICorner", discBtn).CornerRadius = UDim.new(0,10)
-            local function checkKey(k) for _, v in ipairs(keys) do if k==v then return true end end return false end
+            local hwidLbl = Instance.new("TextLabel", container)
+            hwidLbl.Size = UDim2.new(1,-32,0,20)
+            hwidLbl.Position = UDim2.new(0,16,0,395)
+            hwidLbl.BackgroundTransparency = 1
+            hwidLbl.Text = "HWID: "..getHWID():sub(1,32).."... (Click to copy)"
+            hwidLbl.TextColor3 = Colors.TextSecondary
+            hwidLbl.TextSize = 10
+            hwidLbl.Font = Enum.Font.Code
+            hwidLbl.TextWrapped = true
+            local hwidBtn = Instance.new("TextButton", container)
+            hwidBtn.Size = UDim2.new(1,-64,0,30)
+            hwidBtn.Position = UDim2.new(0,32,0,395)
+            hwidBtn.BackgroundTransparency = 1
+            hwidBtn.Text = ""
+            local timerLbl = Instance.new("TextLabel", container)
+            timerLbl.Size = UDim2.new(1,-32,0,20)
+            timerLbl.Position = UDim2.new(0,16,0,420)
+            timerLbl.BackgroundTransparency = 1
+            timerLbl.Text = useExpire and "Key will expire after "..duration.." seconds" or "Key never expires"
+            timerLbl.TextColor3 = Colors.TextSecondary
+            timerLbl.TextSize = 10
+            timerLbl.Font = Enum.Font.Gotham
+            local function checkKey(k) for _, v in ipairs(correctKeys) do if k==v then return true end end return false end
             local function doVerify()
                 local k = textBox.Text
                 if k=="" then status.Text="Please enter an access key" status.TextColor3=Colors.Error return end
                 if checkKey(k) then
+                    if useHWID then
+                        local existingPath = saveFolder.."/"..k:gsub("[^%w]", "_")..".json"
+                        if isfile and isfile(existingPath) then
+                            local ok, content = pcall(function() return readfile(existingPath) end)
+                            if ok and content then
+                                local data = {}
+                                pcall(function() data = HttpService:JSONDecode(content) end)
+                                if data.hwid and data.hwid ~= getHWID() then
+                                    status.Text="HWID Mismatch! Key bound to another device." status.TextColor3=Colors.Error
+                                    return
+                                end
+                            end
+                        end
+                    end
                     status.Text="Key correct! Loading..." status.TextColor3=Colors.Success
+                    saveKey(k)
                     TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size=UDim2.new(0,0,0,0)}):Play()
                     task.wait(0.35)
                     screenGui:Destroy()
@@ -213,15 +493,20 @@ function GGH:CreateWindow(Config)
             textBox.FocusLost:Connect(function(enter) if enter then doVerify() end end)
             getKeyBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(getLink) end status.Text="Get Key link copied!" status.TextColor3=Colors.Success end)
             discBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(discLink) end status.Text="Discord link copied!" status.TextColor3=Colors.Success end)
+            hwidBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(getHWID()) end status.Text="HWID copied!" status.TextColor3=Colors.Success end)
             container.Size=UDim2.new(0,0,0,0)
-            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size=UDim2.new(0,420,0,480)}):Play()
+            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size=UDim2.new(0,420,0,540)}):Play()
             repeat task.wait(0.1) until finished
         end
         if not success then return nil end
     end
+    -- END KEY SYSTEM
+    
     local Title = Config.Title or "GGH Library"
-
-    local SubTitle = Config.SubTitle or "v1.3.3 Final"
+    local SubTitle = Config.SubTitle or "v1.5.0 Search+Translate"
+    local DefaultTheme = Config.Theme or "Dark"
+    if not Themes[DefaultTheme] then DefaultTheme = "Dark" end
+    local CurrentTheme = Themes[DefaultTheme]
 
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "GGH_Library"
@@ -233,105 +518,193 @@ function GGH:CreateWindow(Config)
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 520, 0, 340)
     Main.Position = UDim2.new(0.5, -260, 0.5, -170)
-    Main.BackgroundColor3 = Color3.fromRGB(13,13,16)
+    Main.BackgroundColor3 = CurrentTheme.MainBg
     Main.BorderSizePixel = 0
     Main.Parent = ScreenGui
-    Corner(Main, 14)
-    Stroke(Main, Color3.fromRGB(45,45,58), 1)
+    Corner(Main, 16)
+    local MainStroke = Stroke(Main, CurrentTheme.Stroke, 1)
+    MainStroke.Name = "MainStroke"
 
-    -- Header improved with UICorner pretty
     local Header = Instance.new("Frame", Main)
     Header.Name = "Header"
     Header.Size = UDim2.new(1,0,0,48)
-    Header.BackgroundColor3 = Color3.fromRGB(22,22,28)
+    Header.BackgroundColor3 = CurrentTheme.HeaderBg
     Header.BorderSizePixel = 0
     Header.ZIndex = 3
-    Corner(Header, 14)
+    Corner(Header, 16)
     local HeaderFix = Instance.new("Frame", Header)
+    HeaderFix.Name = "HeaderFix"
     HeaderFix.Size = UDim2.new(1,0,0,16)
     HeaderFix.Position = UDim2.new(0,0,1,-8)
-    HeaderFix.BackgroundColor3 = Color3.fromRGB(22,22,28)
+    HeaderFix.BackgroundColor3 = CurrentTheme.HeaderBg
     HeaderFix.BorderSizePixel = 0
     HeaderFix.ZIndex = 2
 
     local TitleLabel = Instance.new("TextLabel", Header)
     TitleLabel.Text = Title
     TitleLabel.Position = UDim2.new(0,18,0,7)
-    TitleLabel.Size = UDim2.new(0,240,0,18)
+    TitleLabel.Size = UDim2.new(0,180,0,18)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.TextSize = 15
-    TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    TitleLabel.TextColor3 = CurrentTheme.Text
     TitleLabel.ZIndex = 4
+    TitleLabel.AutoLocalize = true
 
     local SubLabel = Instance.new("TextLabel", Header)
     SubLabel.Text = SubTitle
     SubLabel.Position = UDim2.new(0,18,0,26)
-    SubLabel.Size = UDim2.new(0,240,0,12)
+    SubLabel.Size = UDim2.new(0,180,0,12)
     SubLabel.BackgroundTransparency = 1
     SubLabel.TextXAlignment = Enum.TextXAlignment.Left
     SubLabel.Font = Enum.Font.Gotham
     SubLabel.TextSize = 11
-    SubLabel.TextColor3 = Color3.fromRGB(150,150,165)
+    SubLabel.TextColor3 = CurrentTheme.SubText
     SubLabel.ZIndex = 4
+    SubLabel.AutoLocalize = true
 
     local Controls = Instance.new("Frame", Header)
-    Controls.Size = UDim2.new(0,80,0,32)
-    Controls.Position = UDim2.new(1,-88,0.5,-16)
+    Controls.Size = UDim2.new(0,154,0,32)
+    Controls.Position = UDim2.new(1,-162,0.5,-16)
     Controls.BackgroundTransparency = 1
     Controls.ZIndex = 10
 
+    local SearchBtn = Instance.new("TextButton", Controls)
+    SearchBtn.Name = "SearchBtn"
+    SearchBtn.Size = UDim2.new(0,32,0,32)
+    SearchBtn.Position = UDim2.new(0,0,0,0)
+    SearchBtn.BackgroundColor3 = CurrentTheme.ElementBg2
+    SearchBtn.Text = "🔍"
+    SearchBtn.Font = Enum.Font.GothamBold
+    SearchBtn.TextSize = 14
+    SearchBtn.TextColor3 = CurrentTheme.Text
+    SearchBtn.ZIndex = 10
+    Corner(SearchBtn, 9)
+
+    local ThemeBtn = Instance.new("TextButton", Controls)
+    ThemeBtn.Name = "ThemeBtn"
+    ThemeBtn.Size = UDim2.new(0,32,0,32)
+    ThemeBtn.Position = UDim2.new(0,36,0,0)
+    ThemeBtn.BackgroundColor3 = CurrentTheme.ElementBg2
+    ThemeBtn.Text = "⚙"
+    ThemeBtn.Font = Enum.Font.GothamBold
+    ThemeBtn.TextSize = 16
+    ThemeBtn.TextColor3 = CurrentTheme.Text
+    ThemeBtn.ZIndex = 10
+    Corner(ThemeBtn, 9)
+
     local MinBtn = Instance.new("TextButton", Controls)
     MinBtn.Size = UDim2.new(0,32,0,32)
-    MinBtn.Position = UDim2.new(0,0,0,0)
-    MinBtn.BackgroundColor3 = Color3.fromRGB(36,36,44)
+    MinBtn.Position = UDim2.new(0,74,0,0)
+    MinBtn.BackgroundColor3 = CurrentTheme.ElementBg2
     MinBtn.Text = "-"
     MinBtn.Font = Enum.Font.GothamBold
     MinBtn.TextSize = 20
-    MinBtn.TextColor3 = Color3.fromRGB(200,200,210)
+    MinBtn.TextColor3 = CurrentTheme.Text
     MinBtn.ZIndex = 10
     Corner(MinBtn, 9)
 
     local MaxBtn = Instance.new("TextButton", Controls)
     MaxBtn.Size = UDim2.new(0,32,0,32)
-    MaxBtn.Position = UDim2.new(0,0,0,0)
+    MaxBtn.Position = UDim2.new(0,74,0,0)
     MaxBtn.Visible = false
-    MaxBtn.BackgroundColor3 = Color3.fromRGB(36,36,44)
+    MaxBtn.BackgroundColor3 = CurrentTheme.ElementBg2
     MaxBtn.Text = "+"
     MaxBtn.Font = Enum.Font.GothamBold
     MaxBtn.TextSize = 20
-    MaxBtn.TextColor3 = Color3.fromRGB(200,200,210)
+    MaxBtn.TextColor3 = CurrentTheme.Text
     MaxBtn.ZIndex = 10
     Corner(MaxBtn, 9)
 
     local CloseBtn = Instance.new("TextButton", Controls)
     CloseBtn.Size = UDim2.new(0,32,0,32)
-    CloseBtn.Position = UDim2.new(0,42,0,0)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(70,32,40)
+    CloseBtn.Position = UDim2.new(0,112,0,0)
+    CloseBtn.BackgroundColor3 = CurrentTheme.CloseBg
     CloseBtn.Text = "X"
     CloseBtn.Font = Enum.Font.GothamBold
     CloseBtn.TextSize = 13
-    CloseBtn.TextColor3 = Color3.fromRGB(255,95,95)
+    CloseBtn.TextColor3 = CurrentTheme.CloseText
     CloseBtn.ZIndex = 10
     Corner(CloseBtn, 9)
+
+    local SearchBar = Instance.new("Frame", Main)
+    SearchBar.Name = "SearchBar"
+    SearchBar.Size = UDim2.new(1,-16,0,36)
+    SearchBar.Position = UDim2.new(0,8,0,52)
+    SearchBar.BackgroundColor3 = CurrentTheme.ElementBg
+    SearchBar.Visible = false
+    SearchBar.ZIndex = 90
+    Corner(SearchBar, 10)
+    local SBStroke = Stroke(SearchBar, CurrentTheme.Accent, 1)
+    SBStroke.Name = "SearchStroke"
+
+    local SearchBox = Instance.new("TextBox", SearchBar)
+    SearchBox.Size = UDim2.new(1,-50,1,-6)
+    SearchBox.Position = UDim2.new(0,14,0,3)
+    SearchBox.BackgroundTransparency = 1
+    SearchBox.PlaceholderText = "Search toggles, buttons, tabs... (Translate enabled)"
+    SearchBox.Text = ""
+    SearchBox.Font = Enum.Font.Gotham
+    SearchBox.TextSize = 13
+    SearchBox.TextColor3 = CurrentTheme.Text
+    SearchBox.PlaceholderColor3 = CurrentTheme.SubText
+    SearchBox.TextXAlignment = Enum.TextXAlignment.Left
+    SearchBox.ClearTextOnFocus = false
+    SearchBox.ZIndex = 91
+    SearchBox.AutoLocalize = true
+
+    local SearchClose = Instance.new("TextButton", SearchBar)
+    SearchClose.Size = UDim2.new(0,28,0,28)
+    SearchClose.Position = UDim2.new(1,-32,0.5,-14)
+    SearchClose.BackgroundColor3 = CurrentTheme.ElementBg2
+    SearchClose.Text = "X"
+    SearchClose.Font = Enum.Font.GothamBold
+    SearchClose.TextSize = 12
+    SearchClose.TextColor3 = CurrentTheme.Text
+    SearchClose.ZIndex = 91
+    Corner(SearchClose, 7)
+
+    local ThemeDropdown = Instance.new("Frame", Main)
+    ThemeDropdown.Name = "ThemeDropdown"
+    ThemeDropdown.Size = UDim2.new(0,160,0,220)
+    ThemeDropdown.Position = UDim2.new(1,-168,0,52)
+    ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
+    ThemeDropdown.Visible = false
+    ThemeDropdown.ZIndex = 100
+    Corner(ThemeDropdown, 10)
+    Stroke(ThemeDropdown, CurrentTheme.Stroke, 1)
+
+    local ThemeList = Instance.new("ScrollingFrame", ThemeDropdown)
+    ThemeList.Size = UDim2.new(1,-4,1,-4)
+    ThemeList.Position = UDim2.new(0,2,0,2)
+    ThemeList.BackgroundTransparency = 1
+    ThemeList.CanvasSize = UDim2.new(0,0,0,0)
+    ThemeList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    ThemeList.ScrollBarThickness = 2
+    ThemeList.ScrollBarImageColor3 = CurrentTheme.Accent
+    ThemeList.ZIndex = 101
+    local TL = Instance.new("UIListLayout", ThemeList)
+    TL.Padding = UDim.new(0,4)
+    local TLP = Instance.new("UIPadding", ThemeList)
+    TLP.PaddingTop = UDim.new(0,4) TLP.PaddingBottom = UDim.new(0,4) TLP.PaddingLeft = UDim.new(0,4) TLP.PaddingRight = UDim.new(0,4)
 
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,132,1,-58)
     TabList.Position = UDim2.new(0,8,0,52)
-    TabList.BackgroundColor3 = Color3.fromRGB(18,18,22)
+    TabList.BackgroundColor3 = CurrentTheme.TabListBg
     TabList.BorderSizePixel = 0
     TabList.CanvasSize = UDim2.new(0,0,0,0)
     TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
     TabList.ScrollBarThickness = 2
-    TabList.ScrollBarImageColor3 = Color3.fromRGB(90,70,255)
+    TabList.ScrollBarImageColor3 = CurrentTheme.Accent
     Corner(TabList, 10)
     local TLLayout = Instance.new("UIListLayout", TabList)
     TLLayout.Padding = UDim.new(0,6)
     TLLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    local TLP = Instance.new("UIPadding", TabList)
-    TLP.PaddingTop = UDim.new(0,6) TLP.PaddingBottom = UDim.new(0,6) TLP.PaddingLeft = UDim.new(0,6) TLP.PaddingRight = UDim.new(0,6)
+    local TLP2 = Instance.new("UIPadding", TabList)
+    TLP2.PaddingTop = UDim.new(0,6) TLP2.PaddingBottom = UDim.new(0,6) TLP2.PaddingLeft = UDim.new(0,6) TLP2.PaddingRight = UDim.new(0,6)
 
     local Container = Instance.new("Frame", Main)
     Container.Name = "Container"
@@ -339,7 +712,6 @@ function GGH:CreateWindow(Config)
     Container.Position = UDim2.new(0,144,0,52)
     Container.BackgroundTransparency = 1
 
-    -- Confirm Frame parented to ScreenGui for perfect centering even when minimized
     local ConfirmFrame = Instance.new("Frame", ScreenGui)
     ConfirmFrame.Name = "ConfirmOverlay"
     ConfirmFrame.Size = Main.Size
@@ -348,7 +720,7 @@ function GGH:CreateWindow(Config)
     ConfirmFrame.BackgroundTransparency = 0.35
     ConfirmFrame.Visible = false
     ConfirmFrame.ZIndex = 200
-    Corner(ConfirmFrame, 14)
+    Corner(ConfirmFrame, 16)
 
     Main:GetPropertyChangedSignal("Position"):Connect(function()
         ConfirmFrame.Position = Main.Position
@@ -362,10 +734,10 @@ function GGH:CreateWindow(Config)
     local ConfirmBox = Instance.new("Frame", ConfirmFrame)
     ConfirmBox.Size = UDim2.new(0,300,0,160)
     ConfirmBox.Position = UDim2.new(0.5,-150,0.5,-80)
-    ConfirmBox.BackgroundColor3 = Color3.fromRGB(26,26,32)
+    ConfirmBox.BackgroundColor3 = CurrentTheme.ElementBg
     ConfirmBox.ZIndex = 201
     Corner(ConfirmBox, 14)
-    Stroke(ConfirmBox, Color3.fromRGB(60,60,75), 1)
+    Stroke(ConfirmBox, CurrentTheme.Stroke, 1)
 
     local CT = Instance.new("TextLabel", ConfirmBox)
     CT.Text = "Confirm Close"
@@ -374,9 +746,10 @@ function GGH:CreateWindow(Config)
     CT.BackgroundTransparency = 1
     CT.Font = Enum.Font.GothamBold
     CT.TextSize = 16
-    CT.TextColor3 = Color3.fromRGB(255,255,255)
+    CT.TextColor3 = CurrentTheme.Text
     CT.TextXAlignment = Enum.TextXAlignment.Left
     CT.ZIndex = 202
+    CT.AutoLocalize = true
 
     local CT2 = Instance.new("TextLabel", ConfirmBox)
     CT2.Text = "Are you sure you want to close GGH Library?"
@@ -386,33 +759,35 @@ function GGH:CreateWindow(Config)
     CT2.TextWrapped = true
     CT2.Font = Enum.Font.Gotham
     CT2.TextSize = 12
-    CT2.TextColor3 = Color3.fromRGB(180,180,190)
+    CT2.TextColor3 = CurrentTheme.SubText
     CT2.TextXAlignment = Enum.TextXAlignment.Left
     CT2.ZIndex = 202
+    CT2.AutoLocalize = true
 
     local YesBtn = Instance.new("TextButton", ConfirmBox)
     YesBtn.Size = UDim2.new(0,120,0,36)
     YesBtn.Position = UDim2.new(0,20,1,-48)
-    YesBtn.BackgroundColor3 = Color3.fromRGB(90,70,255)
+    YesBtn.BackgroundColor3 = CurrentTheme.Accent
     YesBtn.Text = "Yes, Close"
     YesBtn.Font = Enum.Font.GothamBold
     YesBtn.TextSize = 13
     YesBtn.TextColor3 = Color3.fromRGB(255,255,255)
     YesBtn.ZIndex = 202
+    YesBtn.AutoLocalize = true
     Corner(YesBtn, 9)
 
     local NoBtn = Instance.new("TextButton", ConfirmBox)
     NoBtn.Size = UDim2.new(0,120,0,36)
     NoBtn.Position = UDim2.new(1,-140,1,-48)
-    NoBtn.BackgroundColor3 = Color3.fromRGB(40,40,50)
+    NoBtn.BackgroundColor3 = CurrentTheme.ElementBg2
     NoBtn.Text = "Cancel"
     NoBtn.Font = Enum.Font.GothamBold
     NoBtn.TextSize = 13
-    NoBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    NoBtn.TextColor3 = CurrentTheme.Text
     NoBtn.ZIndex = 202
+    NoBtn.AutoLocalize = true
     Corner(NoBtn, 9)
 
-    -- Draggable
     do
         local dragging = false
         local dragStart, startPos
@@ -447,7 +822,10 @@ function GGH:CreateWindow(Config)
         if not minimized then
             minimized = true
             savedSize = Main.Size
-            Tween(Main, {Size = UDim2.new(0,520,0,48)}, 0.25)
+            HeaderFix.Visible = false
+            ThemeDropdown.Visible = false
+            SearchBar.Visible = false
+            Tween(Main, {Size = UDim2.new(0,520,0,48)}, 0.22)
             TabList.Visible = false
             Container.Visible = false
             MinBtn.Visible = false
@@ -458,9 +836,10 @@ function GGH:CreateWindow(Config)
     MaxBtn.MouseButton1Click:Connect(function()
         if minimized then
             minimized = false
+            HeaderFix.Visible = true
             Tween(Main, {Size = savedSize}, 0.25)
             Tween(ConfirmFrame, {Size = savedSize}, 0.25)
-            task.wait(0.1)
+            task.wait(0.12)
             TabList.Visible = true
             Container.Visible = true
             MaxBtn.Visible = false
@@ -468,10 +847,10 @@ function GGH:CreateWindow(Config)
         end
     end)
 
-    -- X logic: if minimized, open window first then show confirm centered
     CloseBtn.MouseButton1Click:Connect(function()
         if minimized then
             minimized = false
+            HeaderFix.Visible = true
             Tween(Main, {Size = savedSize}, 0.25)
             Tween(ConfirmFrame, {Size = savedSize}, 0.25)
             TabList.Visible = true
@@ -501,21 +880,159 @@ function GGH:CreateWindow(Config)
         ScreenGui:Destroy()
     end)
 
+    local ThemableElements = {}
+    local function RegisterThemable(obj, prop, themeKey)
+        table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey})
+    end
+
+    local function ApplyTheme(themeName)
+        local theme = Themes[themeName]
+        if not theme then return end
+        CurrentTheme = theme
+        Tween(Main, {BackgroundColor3 = theme.MainBg}, 0.25)
+        Tween(Header, {BackgroundColor3 = theme.HeaderBg}, 0.25)
+        Tween(HeaderFix, {BackgroundColor3 = theme.HeaderBg}, 0.25)
+        Tween(TabList, {BackgroundColor3 = theme.TabListBg}, 0.25)
+        TabList.ScrollBarImageColor3 = theme.Accent
+        ThemeList.ScrollBarImageColor3 = theme.Accent
+        MainStroke.Color = theme.Stroke
+        TitleLabel.TextColor3 = theme.Text
+        SubLabel.TextColor3 = theme.SubText
+        SearchBtn.BackgroundColor3 = theme.ElementBg2
+        SearchBtn.TextColor3 = theme.Text
+        ThemeBtn.BackgroundColor3 = theme.ElementBg2
+        ThemeBtn.TextColor3 = theme.Text
+        MinBtn.BackgroundColor3 = theme.ElementBg2
+        MinBtn.TextColor3 = theme.Text
+        MaxBtn.BackgroundColor3 = theme.ElementBg2
+        MaxBtn.TextColor3 = theme.Text
+        CloseBtn.BackgroundColor3 = theme.CloseBg
+        CloseBtn.TextColor3 = theme.CloseText
+        SearchBar.BackgroundColor3 = theme.ElementBg
+        SBStroke.Color = theme.Accent
+        SearchBox.TextColor3 = theme.Text
+        SearchClose.BackgroundColor3 = theme.ElementBg2
+        ThemeDropdown.BackgroundColor3 = theme.ElementBg
+        ConfirmBox.BackgroundColor3 = theme.ElementBg
+        CT.TextColor3 = theme.Text
+        CT2.TextColor3 = theme.SubText
+        YesBtn.BackgroundColor3 = theme.Accent
+        NoBtn.BackgroundColor3 = theme.ElementBg2
+        NoBtn.TextColor3 = theme.Text
+        for _, item in ipairs(ThemableElements) do
+            if item.obj and item.obj.Parent then
+                if item.prop == "BackgroundColor3" then
+                    Tween(item.obj, {BackgroundColor3 = theme[item.key]}, 0.2)
+                elseif item.prop == "TextColor3" then
+                    item.obj.TextColor3 = theme[item.key]
+                elseif item.prop == "Stroke" then
+                    item.obj.Color = theme[item.key]
+                elseif item.prop == "ScrollBar" then
+                    item.obj.ScrollBarImageColor3 = theme.Accent
+                end
+            end
+        end
+    end
+
+    local ThemeOpen = false
+    ThemeBtn.MouseButton1Click:Connect(function()
+        ThemeOpen = not ThemeOpen
+        ThemeDropdown.Visible = ThemeOpen
+        SearchBar.Visible = false
+    end)
+
+    for name, th in pairs(Themes) do
+        local Btn = Instance.new("TextButton", ThemeList)
+        Btn.Size = UDim2.new(1,0,0,28)
+        Btn.BackgroundColor3 = th.ElementBg2
+        Btn.Text = name
+        Btn.Font = Enum.Font.GothamMedium
+        Btn.TextSize = 11
+        Btn.TextColor3 = th.Text
+        Btn.ZIndex = 102
+        Btn.AutoLocalize = true
+        Corner(Btn, 6)
+        local stroke = Stroke(Btn, th.Accent, 1)
+        Btn.MouseButton1Click:Connect(function()
+            ApplyTheme(name)
+            ThemeDropdown.Visible = false
+            ThemeOpen = false
+            SubLabel.Text = "Theme: " .. name
+        end)
+    end
+
     local Window = {}
     local Tabs = {}
     local FirstTab = true
+    local AllSearchElements = {}
+
+    local function AddSearch(frame, title, typ, tabName)
+        table.insert(AllSearchElements, {Frame=frame, Title=title:lower(), Type=typ:lower(), Tab=tabName:lower()})
+    end
+
+    local SearchOpen = false
+    local function ToggleSearch()
+        SearchOpen = not SearchOpen
+        SearchBar.Visible = SearchOpen
+        ThemeDropdown.Visible = false
+        ThemeOpen = false
+        if SearchOpen then
+            SearchBox:CaptureFocus()
+            Tween(TabList, {Position = UDim2.new(0,8,0,92)}, 0.2)
+            Tween(Container, {Position = UDim2.new(0,144,0,92), Size = UDim2.new(1,-152,1,-98)}, 0.2)
+        else
+            SearchBox.Text = ""
+            for _, el in ipairs(AllSearchElements) do
+                if el.Frame and el.Frame.Parent then el.Frame.Visible = true end
+            end
+            for _, t in pairs(Tabs) do
+                if t.Button then t.Button.Visible = true end
+            end
+            Tween(TabList, {Position = UDim2.new(0,8,0,52)}, 0.2)
+            Tween(Container, {Position = UDim2.new(0,144,0,52), Size = UDim2.new(1,-152,1,-58)}, 0.2)
+        end
+    end
+
+    SearchBtn.MouseButton1Click:Connect(ToggleSearch)
+    SearchClose.MouseButton1Click:Connect(ToggleSearch)
+
+    SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        local query = SearchBox.Text:lower()
+        if query == "" then
+            for _, el in ipairs(AllSearchElements) do
+                if el.Frame and el.Frame.Parent then el.Frame.Visible = true end
+            end
+            for _, t in pairs(Tabs) do
+                if t.Button then t.Button.Visible = true end
+            end
+            return
+        end
+        for _, el in ipairs(AllSearchElements) do
+            local match = string.find(el.Title, query, 1, true) or string.find(el.Type, query, 1, true) or string.find(el.Tab, query, 1, true)
+            if el.Frame and el.Frame.Parent then
+                el.Frame.Visible = (match ~= nil)
+            end
+        end
+        for _, t in pairs(Tabs) do
+            if t.Button then
+                local n = t.Button.Text:lower()
+                t.Button.Visible = (string.find(n, query, 1, true) ~= nil)
+            end
+        end
+    end)
 
     function Window:CreateTab(Name)
         local TabButton = Instance.new("TextButton", TabList)
         TabButton.Size = UDim2.new(1,0,0,34)
-        TabButton.BackgroundColor3 = Color3.fromRGB(26,26,32)
+        TabButton.BackgroundColor3 = CurrentTheme.ElementBg
         TabButton.Text = Name
         TabButton.Font = Enum.Font.GothamMedium
         TabButton.TextSize = 12
         TabButton.TextColor3 = Color3.fromRGB(170,170,180)
         TabButton.AutoButtonColor = false
+        TabButton.AutoLocalize = true
         Corner(TabButton, 8)
-
+        RegisterThemable(TabButton, "BackgroundColor3", "ElementBg")
         local TabPage = Instance.new("ScrollingFrame", Container)
         TabPage.Name = Name.."Page"
         TabPage.Size = UDim2.new(1,0,1,0)
@@ -524,68 +1041,80 @@ function GGH:CreateWindow(Config)
         TabPage.CanvasSize = UDim2.new(0,0,0,0)
         TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
         TabPage.ScrollBarThickness = 2
-        TabPage.ScrollBarImageColor3 = Color3.fromRGB(90,70,255)
+        TabPage.ScrollBarImageColor3 = CurrentTheme.Accent
         TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
         TabPage.BorderSizePixel = 0
-
+        RegisterThemable(TabPage, "ScrollBar", "Accent")
         local Layout = Instance.new("UIListLayout", TabPage)
         Layout.Padding = UDim.new(0, 8)
         Layout.SortOrder = Enum.SortOrder.LayoutOrder
-
         local Padding = Instance.new("UIPadding", TabPage)
         Padding.PaddingTop = UDim.new(0,2)
         Padding.PaddingBottom = UDim.new(0,20)
         Padding.PaddingLeft = UDim.new(0,2)
         Padding.PaddingRight = UDim.new(0,4)
-
         local IsScrolling = false
         TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
             IsScrolling = true
             task.delay(0.35, function() IsScrolling = false end)
         end)
-
         TabButton.MouseButton1Click:Connect(function()
             for _, t in pairs(Tabs) do
                 if t.Page then t.Page.Visible = false end
                 if t.Button then
-                    Tween(t.Button, {BackgroundColor3 = Color3.fromRGB(26,26,32)}, 0.15)
+                    Tween(t.Button, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.15)
                     t.Button.TextColor3 = Color3.fromRGB(170,170,180)
                 end
             end
             TabPage.Visible = true
-            Tween(TabButton, {BackgroundColor3 = Color3.fromRGB(90,70,255)}, 0.15)
+            Tween(TabButton, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
             TabButton.TextColor3 = Color3.fromRGB(255,255,255)
         end)
-
         if FirstTab then
             FirstTab = false
             TabPage.Visible = true
-            TabButton.BackgroundColor3 = Color3.fromRGB(90,70,255)
+            TabButton.BackgroundColor3 = CurrentTheme.Accent
             TabButton.TextColor3 = Color3.fromRGB(255,255,255)
         end
-
         table.insert(Tabs, {Button = TabButton, Page = TabPage})
-
         local Elements = {}
-
         function Elements:Section(Cfg)
-            local Sec = Instance.new("TextLabel", TabPage)
-            Sec.Size = UDim2.new(1,-4,0,22)
+            local SecFrame = Instance.new("Frame", TabPage)
+            SecFrame.Size = UDim2.new(1,-4,0,26)
+            SecFrame.BackgroundTransparency = 1
+            AddSearch(SecFrame, Cfg.Title or "Section", "Section", Name)
+            local Dot = Instance.new("Frame", SecFrame)
+            Dot.Size = UDim2.new(0,6,0,6)
+            Dot.Position = UDim2.new(0,2,0.5,-3)
+            Dot.BackgroundColor3 = CurrentTheme.Accent
+            Corner(Dot, 3)
+            RegisterThemable(Dot, "BackgroundColor3", "Accent")
+            local Sec = Instance.new("TextLabel", SecFrame)
+            Sec.Size = UDim2.new(1,-20,1,0)
+            Sec.Position = UDim2.new(0,16,0,0)
             Sec.BackgroundTransparency = 1
             Sec.Text = (Cfg and Cfg.Title or "Section"):upper()
             Sec.Font = Enum.Font.GothamBold
             Sec.TextSize = 11
-            Sec.TextColor3 = Color3.fromRGB(115,115,130)
+            Sec.TextColor3 = CurrentTheme.SectionText
             Sec.TextXAlignment = Enum.TextXAlignment.Left
+            Sec.AutoLocalize = true
+            RegisterThemable(Sec, "TextColor3", "SectionText")
+            local Line = Instance.new("Frame", SecFrame)
+            Line.Size = UDim2.new(1,-16,0,1)
+            Line.Position = UDim2.new(0,16,1,-1)
+            Line.BackgroundColor3 = CurrentTheme.Stroke
+            Line.BackgroundTransparency = 0.5
+            RegisterThemable(Line, "BackgroundColor3", "Stroke")
         end
-
         function Elements:Paragraph(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,60)
             Frame.AutomaticSize = Enum.AutomaticSize.Y
-            Frame.BackgroundColor3 = Color3.fromRGB(18,18,22)
-            Frame.BorderSizePixel = 0
+            Frame.BackgroundColor3 = CurrentTheme.TabListBg
             Corner(Frame, 10)
+            RegisterThemable(Frame, "BackgroundColor3", "TabListBg")
+            AddSearch(Frame, Cfg.Title.." "..(Cfg.Content or ""), "Paragraph", Name)
             local pad = Instance.new("UIPadding", Frame)
             pad.PaddingTop = UDim.new(0,10) pad.PaddingBottom = UDim.new(0,10) pad.PaddingLeft = UDim.new(0,12) pad.PaddingRight = UDim.new(0,12)
             local T = Instance.new("TextLabel", Frame)
@@ -597,36 +1126,42 @@ function GGH:CreateWindow(Config)
             T.TextXAlignment = Enum.TextXAlignment.Left
             T.Font = Enum.Font.Gotham
             T.TextSize = 12
-            T.TextColor3 = Color3.fromRGB(200,200,210)
+            T.TextColor3 = CurrentTheme.ParagraphText
+            T.AutoLocalize = true
+            RegisterThemable(T, "TextColor3", "ParagraphText")
         end
-
         function Elements:Button(Cfg)
             local Btn = Instance.new("TextButton", TabPage)
             Btn.Size = UDim2.new(1,-4,0,34)
-            Btn.BackgroundColor3 = Color3.fromRGB(32,32,40)
+            Btn.BackgroundColor3 = CurrentTheme.ElementBg2
             Btn.Text = Cfg.Title
             Btn.Font = Enum.Font.GothamMedium
             Btn.TextSize = 12
-            Btn.TextColor3 = Color3.fromRGB(230,230,235)
+            Btn.TextColor3 = CurrentTheme.Text
             Btn.AutoButtonColor = false
+            Btn.AutoLocalize = true
             Corner(Btn, 8)
-            Stroke(Btn, Color3.fromRGB(60,60,70), 1)
+            local st = Stroke(Btn, CurrentTheme.StrokeLight, 1)
+            RegisterThemable(Btn, "BackgroundColor3", "ElementBg2")
+            RegisterThemable(Btn, "TextColor3", "Text")
+            RegisterThemable(st, "Stroke", "StrokeLight")
+            AddSearch(Btn, Cfg.Title, "Button", Name)
             Btn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
-                Tween(Btn, {BackgroundColor3 = Color3.fromRGB(45,45,58)}, 0.1)
+                Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.1)
                 task.wait(0.1)
-                Tween(Btn, {BackgroundColor3 = Color3.fromRGB(32,32,40)}, 0.1)
+                Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.1)
                 pcall(Cfg.Callback)
             end)
         end
-
         function Elements:Toggle(Cfg)
             local State = Cfg.Default or false
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,36)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Corner(Frame, 9)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, Cfg.Title, "Toggle", Name)
             local Title = Instance.new("TextLabel", Frame)
             Title.Text = Cfg.Title
             Title.Size = UDim2.new(1,-54,1,0)
@@ -635,18 +1170,18 @@ function GGH:CreateWindow(Config)
             Title.TextXAlignment = Enum.TextXAlignment.Left
             Title.Font = Enum.Font.GothamMedium
             Title.TextSize = 12
-            Title.TextColor3 = Color3.fromRGB(230,230,235)
+            Title.TextColor3 = CurrentTheme.Text
+            Title.AutoLocalize = true
+            RegisterThemable(Title, "TextColor3", "Text")
             local Bg = Instance.new("Frame", Frame)
             Bg.Size = UDim2.new(0,44,0,22)
             Bg.Position = UDim2.new(1,-50,0.5,-11)
-            Bg.BackgroundColor3 = State and Color3.fromRGB(90,70,255) or Color3.fromRGB(45,45,58)
-            Bg.BorderSizePixel = 0
+            Bg.BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2
             Corner(Bg, 11)
             local Circle = Instance.new("Frame", Bg)
             Circle.Size = UDim2.new(0,16,0,16)
             Circle.Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)
             Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
-            Circle.BorderSizePixel = 0
             Corner(Circle, 8)
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,1,0)
@@ -655,12 +1190,11 @@ function GGH:CreateWindow(Config)
             Btn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
                 State = not State
-                Tween(Bg, {BackgroundColor3 = State and Color3.fromRGB(90,70,255) or Color3.fromRGB(45,45,58)}, 0.2)
+                Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
                 pcall(function() Cfg.Callback(State) end)
             end)
         end
-
         function Elements:Slider(Cfg)
             Cfg.Min = Cfg.Min or 0
             Cfg.Max = Cfg.Max or 100
@@ -668,10 +1202,10 @@ function GGH:CreateWindow(Config)
             local Value = math.clamp(Cfg.Default, Cfg.Min, Cfg.Max)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,58)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
-            Frame.ClipsDescendants = false
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Corner(Frame, 9)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, Cfg.Title, "Slider", Name)
             local Label = Instance.new("TextLabel", Frame)
             Label.Size = UDim2.new(1,-16,0,18)
             Label.Position = UDim2.new(0,10,0,6)
@@ -679,40 +1213,35 @@ function GGH:CreateWindow(Config)
             Label.TextXAlignment = Enum.TextXAlignment.Left
             Label.Font = Enum.Font.GothamMedium
             Label.TextSize = 12
-            Label.TextColor3 = Color3.fromRGB(230,230,235)
+            Label.TextColor3 = CurrentTheme.Text
             Label.Text = Cfg.Title.." : "..Value
+            Label.AutoLocalize = true
+            RegisterThemable(Label, "TextColor3", "Text")
             local Bar = Instance.new("Frame", Frame)
-            Bar.Name = "Bar"
             Bar.Size = UDim2.new(1,-20,0,8)
             Bar.Position = UDim2.new(0,10,0,32)
-            Bar.BackgroundColor3 = Color3.fromRGB(40,40,50)
-            Bar.BorderSizePixel = 0
-            Bar.ClipsDescendants = false
+            Bar.BackgroundColor3 = CurrentTheme.ElementBg2
             Corner(Bar, 4)
+            RegisterThemable(Bar, "BackgroundColor3", "ElementBg2")
             local Fill = Instance.new("Frame", Bar)
-            Fill.Name = "Fill"
             Fill.Size = UDim2.new((Value - Cfg.Min) / math.max(1, Cfg.Max - Cfg.Min),0,1,0)
-            Fill.BackgroundColor3 = Color3.fromRGB(90,70,255)
-            Fill.BorderSizePixel = 0
+            Fill.BackgroundColor3 = CurrentTheme.Accent
             Corner(Fill, 4)
+            RegisterThemable(Fill, "BackgroundColor3", "Accent")
             local Circle = Instance.new("Frame", Frame)
-            Circle.Name = "Circle"
             Circle.Size = UDim2.new(0,18,0,18)
             Circle.AnchorPoint = Vector2.new(0.5,0.5)
             Circle.Position = UDim2.new(0, 10 + ((Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min))*200, 0, 36)
             Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
-            Circle.BorderSizePixel = 0
             Circle.ZIndex = 10
             Corner(Circle, 9)
-            local S = Instance.new("UIStroke", Circle)
-            S.Color = Color3.fromRGB(90,70,255)
-            S.Thickness = 2
+            local S = Stroke(Circle, CurrentTheme.Accent, 2)
+            RegisterThemable(S, "Stroke", "Accent")
             local DragArea = Instance.new("TextButton", Bar)
             DragArea.Size = UDim2.new(1,0,2.5,0)
             DragArea.Position = UDim2.new(0,0,0.5,-10)
             DragArea.BackgroundTransparency = 1
             DragArea.Text = ""
-            DragArea.ZIndex = 5
             local dragging = false
             local function UpdateSlider(inputX)
                 local barPos = Bar.AbsolutePosition.X
@@ -754,13 +1283,13 @@ function GGH:CreateWindow(Config)
                 end
             end)
         end
-
         function Elements:Input(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Corner(Frame, 9)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, Cfg.Title, "Input", Name)
             local Box = Instance.new("TextBox", Frame)
             Box.Size = UDim2.new(1,-20,1,-10)
             Box.Position = UDim2.new(0,10,0,5)
@@ -769,27 +1298,32 @@ function GGH:CreateWindow(Config)
             Box.Text = Cfg.Default or ""
             Box.Font = Enum.Font.Gotham
             Box.TextSize = 12
-            Box.TextColor3 = Color3.fromRGB(255,255,255)
+            Box.TextColor3 = CurrentTheme.Text
+            Box.PlaceholderColor3 = CurrentTheme.SubText
             Box.TextXAlignment = Enum.TextXAlignment.Left
             Box.ClearTextOnFocus = false
+            Box.AutoLocalize = true
+            RegisterThemable(Box, "TextColor3", "Text")
             Box.FocusLost:Connect(function() if IsScrolling then return end pcall(Cfg.Callback or function() end, Box.Text) end)
         end
-
         function Elements:Dropdown(Cfg)
             local Selected = Cfg.Default or Cfg.Options[1]
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Frame.ClipsDescendants = true
             Corner(Frame, 9)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, Cfg.Title, "Dropdown", Name)
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,0,38)
             Btn.BackgroundTransparency = 1
             Btn.Text = Cfg.Title.." : "..Selected
             Btn.Font = Enum.Font.GothamMedium
             Btn.TextSize = 12
-            Btn.TextColor3 = Color3.fromRGB(255,255,255)
+            Btn.TextColor3 = CurrentTheme.Text
+            Btn.AutoLocalize = true
+            RegisterThemable(Btn, "TextColor3", "Text")
             local List = Instance.new("Frame", Frame)
             List.Position = UDim2.new(0,0,0,38)
             List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
@@ -804,13 +1338,14 @@ function GGH:CreateWindow(Config)
             for _, opt in ipairs(Cfg.Options) do
                 local O = Instance.new("TextButton", List)
                 O.Size = UDim2.new(1,0,0,28)
-                O.BackgroundColor3 = Color3.fromRGB(35,35,45)
+                O.BackgroundColor3 = CurrentTheme.ElementBg2
                 O.Text = opt
                 O.Font = Enum.Font.Gotham
                 O.TextSize = 11
-                O.TextColor3 = Color3.fromRGB(200,200,200)
-                O.BorderSizePixel = 0
+                O.TextColor3 = CurrentTheme.Text
+                O.AutoLocalize = true
                 Corner(O, 6)
+                RegisterThemable(O, "BackgroundColor3", "ElementBg2")
                 O.MouseButton1Click:Connect(function()
                     Selected = opt
                     Btn.Text = Cfg.Title.." : "..Selected
@@ -820,14 +1355,14 @@ function GGH:CreateWindow(Config)
                 end)
             end
         end
-
         function Elements:Colorpicker(Cfg)
-            local Color = Cfg.Default or Color3.fromRGB(90,70,255)
+            local Color = Cfg.Default or CurrentTheme.Accent
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Corner(Frame, 9)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, Cfg.Title, "Colorpicker", Name)
             local Label = Instance.new("TextLabel", Frame)
             Label.Text = Cfg.Title
             Label.Size = UDim2.new(1,-60,1,0)
@@ -836,12 +1371,13 @@ function GGH:CreateWindow(Config)
             Label.TextXAlignment = Enum.TextXAlignment.Left
             Label.Font = Enum.Font.GothamMedium
             Label.TextSize = 12
-            Label.TextColor3 = Color3.fromRGB(255,255,255)
+            Label.TextColor3 = CurrentTheme.Text
+            Label.AutoLocalize = true
+            RegisterThemable(Label, "TextColor3", "Text")
             local Preview = Instance.new("Frame", Frame)
             Preview.Size = UDim2.new(0,28,0,20)
             Preview.Position = UDim2.new(1,-38,0.5,-10)
             Preview.BackgroundColor3 = Color
-            Preview.BorderSizePixel = 0
             Corner(Preview, 6)
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,1,0)
@@ -854,14 +1390,14 @@ function GGH:CreateWindow(Config)
                 pcall(Cfg.Callback or function() end, newColor)
             end)
         end
-
         function Elements:Keybind(Cfg)
             local Key = Cfg.Default or Enum.KeyCode.F
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Corner(Frame, 9)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, Cfg.Title, "Keybind", Name)
             local Label = Instance.new("TextLabel", Frame)
             Label.Text = Cfg.Title.." : "..Key.Name
             Label.Size = UDim2.new(1,-16,1,0)
@@ -870,7 +1406,9 @@ function GGH:CreateWindow(Config)
             Label.TextXAlignment = Enum.TextXAlignment.Left
             Label.Font = Enum.Font.GothamMedium
             Label.TextSize = 12
-            Label.TextColor3 = Color3.fromRGB(255,255,255)
+            Label.TextColor3 = CurrentTheme.Text
+            Label.AutoLocalize = true
+            RegisterThemable(Label, "TextColor3", "Text")
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
@@ -888,13 +1426,13 @@ function GGH:CreateWindow(Config)
                 end)
             end)
         end
-
         function Elements:Code(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,80)
-            Frame.BackgroundColor3 = Color3.fromRGB(18,18,22)
-            Frame.BorderSizePixel = 0
+            Frame.BackgroundColor3 = CurrentTheme.TabListBg
             Corner(Frame, 10)
+            RegisterThemable(Frame, "BackgroundColor3", "TabListBg")
+            AddSearch(Frame, Cfg.Code or "Code", "Code", Name)
             local CodeLabel = Instance.new("TextLabel", Frame)
             CodeLabel.Size = UDim2.new(1,-16,1,-16)
             CodeLabel.Position = UDim2.new(0,8,0,8)
@@ -902,15 +1440,14 @@ function GGH:CreateWindow(Config)
             CodeLabel.Text = Cfg.Code or "-- code"
             CodeLabel.Font = Enum.Font.Code
             CodeLabel.TextSize = 11
-            CodeLabel.TextColor3 = Color3.fromRGB(180,180,255)
+            CodeLabel.TextColor3 = CurrentTheme.Accent
             CodeLabel.TextXAlignment = Enum.TextXAlignment.Left
             CodeLabel.TextYAlignment = Enum.TextYAlignment.Top
             CodeLabel.TextWrapped = true
+            RegisterThemable(CodeLabel, "TextColor3", "Accent")
         end
-
         return Elements
     end
-
     return Window
 end
 
