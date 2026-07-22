@@ -1,11 +1,8 @@
 --[[
-    GGH Library v1.5.0 FINAL STABLE
-    Base: V1.4.0 THEMES EDITION (exactly as user provided)
-    Added:
-    - Search System: 🔍 button to search toggles/buttons/tabs/any element
-    - Translation System: AutoLocalize = true (Roblox official translation)
-    - Section Improved: dot + line like famous libs (Rayfield/Fluent)
-    - All 10 elements + 10 themes kept, no deletions
+    GGH Library v1.8.0 FINAL - ADD API EDITION
+    Base: v1.7.0 FINAL (Search + Translate + Section + 10 Themes + KeySystem HWID + Expiration)
+    Changed: All elements now use Add("Type", Config) - easier & cleaner
+    Old methods still work for backward compatibility
 ]]
 
 local GGH = {}
@@ -204,18 +201,300 @@ local Themes = {
 
 function GGH:CreateWindow(Config)
     Config = Config or {}
+    if Config.KeySystem or Config.KeySystemEnabled then
+        local Players = game:GetService("Players")
+        local HttpService = game:GetService("HttpService")
+        local Player = Players.LocalPlayer
+        local PlayerGui = Player:WaitForChild("PlayerGui")
+        local correctKeys = Config.Key or Config.CorrectKey or "GGH-1234"
+        if type(correctKeys) ~= "table" then correctKeys = {correctKeys} end
+        local getLink = Config.GetKeyLink or Config.KeyLink or "https://linkvertise.com"
+        local discLink = Config.DiscordLink or "https://discord.gg"
+        local kTitle = Config.Title or "GGH Library"
+        local useHWID = Config.KeyHWID or Config.HWID or Config.HWIDLock or false
+        local useExpire = Config.KeyExpiration or Config.Expiration or Config.KeyExpires or false
+        local duration = Config.KeyDuration or Config.Duration or 86400
+        local saveFolder = "GGH_Keys"
+        local function getHWID()
+            local hwid = "UNKNOWN"
+            local ok, res = pcall(function() return gethwid and gethwid() or "" end)
+            if ok and res and res ~= "" then hwid = res
+            else
+                local ok2, res2 = pcall(function() return game:GetService("RbxAnalyticsService"):GetClientId() end)
+                if ok2 and res2 ~= "" then hwid = res2
+                else hwid = tostring(Player.UserId).."-"..tostring(Player.AccountAge)
+                end
+            end
+            return hwid
+        end
+        local function loadSavedKey()
+            if not (isfolder and isfile and readfile) then return nil end
+            if not isfolder(saveFolder) then return nil end
+            local hwid = getHWID()
+            for _, key in ipairs(correctKeys) do
+                local path = saveFolder.."/"..key:gsub("[^%w]", "_")..".json"
+                if isfile(path) then
+                    local ok, content = pcall(function() return readfile(path) end)
+                    if ok and content then
+                        local data = {}
+                        pcall(function() data = HttpService:JSONDecode(content) end)
+                        if useHWID and data.hwid and data.hwid ~= hwid then
+                        else
+                            if useExpire and data.timestamp then
+                                local elapsed = os.time() - data.timestamp
+                                if elapsed > duration then
+                                    pcall(function() delfile(path) end)
+                                else
+                                    return {valid=true, key=key, remaining=duration - elapsed}
+                                end
+                            else
+                                return {valid=true, key=key}
+                            end
+                        end
+                    end
+                end
+            end
+            return nil
+        end
+        local function saveKey(key)
+            if not (writefile and isfolder) then return end
+            pcall(function()
+                if not isfolder(saveFolder) then makefolder(saveFolder) end
+                local data = {hwid = getHWID(), timestamp = os.time(), key = key}
+                local path = saveFolder.."/"..key:gsub("[^%w]", "_")..".json"
+                writefile(path, HttpService:JSONEncode(data))
+            end)
+        end
+        local saved = loadSavedKey()
+        local finished = false
+        local success = false
+        if saved and saved.valid then
+            finished = true
+            success = true
+        else
+            local Colors = {
+                Background = Color3.fromRGB(18, 18, 22),
+                Surface = Color3.fromRGB(25, 25, 30),
+                Primary = Color3.fromRGB(45, 45, 50),
+                TextPrimary = Color3.fromRGB(220, 220, 225),
+                TextSecondary = Color3.fromRGB(140, 140, 150),
+                Success = Color3.fromRGB(25, 135, 84),
+                Error = Color3.fromRGB(180, 50, 50),
+                Discord = Color3.fromRGB(60, 70, 180),
+                GetKey = Color3.fromRGB(40, 140, 100),
+                Border = Color3.fromRGB(40, 40, 45),
+                NeonWhite = Color3.fromRGB(255, 255, 255),
+                NeonGlow = Color3.fromRGB(240, 248, 255)
+            }
+            local screenGui = Instance.new("ScreenGui")
+            screenGui.Name = "GGH_KeySystem"
+            screenGui.ResetOnSpawn = false
+            screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            screenGui.DisplayOrder = 200
+            screenGui.Parent = PlayerGui
+            local backdrop = Instance.new("Frame")
+            backdrop.Size = UDim2.new(1,0,1,0)
+            backdrop.BackgroundColor3 = Color3.fromRGB(0,0,0)
+            backdrop.BackgroundTransparency = 0.2
+            backdrop.BorderSizePixel = 0
+            backdrop.Parent = screenGui
+            local container = Instance.new("Frame")
+            container.Size = UDim2.new(0,420,0,540)
+            container.Position = UDim2.new(0.5,-210,0.5,-270)
+            container.BackgroundColor3 = Colors.Background
+            container.BorderSizePixel = 0
+            container.Parent = screenGui
+            Instance.new("UICorner", container).CornerRadius = UDim.new(0,20)
+            local border = Instance.new("Frame")
+            border.Size = UDim2.new(1,6,1,6)
+            border.Position = UDim2.new(0,-3,0,-3)
+            border.BackgroundTransparency = 1
+            border.Parent = container
+            Instance.new("UICorner", border).CornerRadius = UDim.new(0,23)
+            local bStroke = Instance.new("UIStroke", border)
+            bStroke.Color = Colors.NeonWhite
+            bStroke.Thickness = 2
+            bStroke.Transparency = 0.3
+            local grad = Instance.new("UIGradient", bStroke)
+            grad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Colors.NeonWhite), ColorSequenceKeypoint.new(0.5, Colors.NeonGlow), ColorSequenceKeypoint.new(1, Colors.NeonWhite)}
+            grad.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0,0.9), NumberSequenceKeypoint.new(0.2,0.1), NumberSequenceKeypoint.new(0.8,0.1), NumberSequenceKeypoint.new(1,0.9)}
+            task.spawn(function() while screenGui.Parent do local tw = TweenService:Create(grad, TweenInfo.new(4, Enum.EasingStyle.Linear), {Rotation = grad.Rotation + 360}) tw:Play() tw.Completed:Wait() end end)
+            local iconCont = Instance.new("Frame", container)
+            iconCont.Size = UDim2.new(0,56,0,56)
+            iconCont.Position = UDim2.new(0.5,-28,0,24)
+            iconCont.BackgroundColor3 = Colors.Primary
+            iconCont.BorderSizePixel = 0
+            Instance.new("UICorner", iconCont).CornerRadius = UDim.new(0,14)
+            local icon = Instance.new("ImageLabel", iconCont)
+            icon.Size = UDim2.new(0.8,0,0.8,0)
+            icon.Position = UDim2.new(0.1,0,0.1,0)
+            icon.BackgroundTransparency = 1
+            icon.Image = "rbxassetid://95233466475324"
+            icon.ImageColor3 = Colors.NeonWhite
+            icon.ScaleType = Enum.ScaleType.Fit
+            local titleLbl = Instance.new("TextLabel", container)
+            titleLbl.Size = UDim2.new(1,-32,0,32)
+            titleLbl.Position = UDim2.new(0,16,0,90)
+            titleLbl.BackgroundTransparency = 1
+            titleLbl.Text = kTitle.." - Key System"
+            titleLbl.TextColor3 = Colors.TextPrimary
+            titleLbl.TextSize = 20
+            titleLbl.Font = Enum.Font.GothamBold
+            local sub = Instance.new("TextLabel", container)
+            sub.Size = UDim2.new(1,-32,0,30)
+            sub.Position = UDim2.new(0,16,0,120)
+            sub.BackgroundTransparency = 1
+            sub.Text = "Enter your access key to continue"
+            sub.TextColor3 = Colors.TextSecondary
+            sub.TextSize = 14
+            sub.Font = Enum.Font.Gotham
+            local infoText = ""
+            if useHWID then infoText = infoText.."HWID Lock: ON  " end
+            if useExpire then infoText = infoText.."Expires: "..math.floor(duration/3600).."h "..math.floor((duration%3600)/60).."m" end
+            if infoText == "" then infoText = "Key System Enabled" end
+            local infoLbl = Instance.new("TextLabel", container)
+            infoLbl.Size = UDim2.new(1,-32,0,20)
+            infoLbl.Position = UDim2.new(0,16,0,148)
+            infoLbl.BackgroundTransparency = 1
+            infoLbl.Text = infoText
+            infoLbl.TextColor3 = Color3.fromRGB(100,180,255)
+            infoLbl.TextSize = 11
+            infoLbl.Font = Enum.Font.Gotham
+            local inputCont = Instance.new("Frame", container)
+            inputCont.Size = UDim2.new(1,-64,0,52)
+            inputCont.Position = UDim2.new(0,32,0,175)
+            inputCont.BackgroundColor3 = Colors.Surface
+            inputCont.BorderSizePixel = 0
+            Instance.new("UICorner", inputCont).CornerRadius = UDim.new(0,12)
+            local textBox = Instance.new("TextBox", inputCont)
+            textBox.Size = UDim2.new(1,-24,1,0)
+            textBox.Position = UDim2.new(0,12,0,0)
+            textBox.BackgroundTransparency = 1
+            textBox.Text = ""
+            textBox.PlaceholderText = "Enter key here"
+            textBox.TextColor3 = Colors.TextPrimary
+            textBox.PlaceholderColor3 = Colors.TextSecondary
+            textBox.TextSize = 16
+            textBox.Font = Enum.Font.Gotham
+            textBox.TextXAlignment = Enum.TextXAlignment.Left
+            textBox.ClearTextOnFocus = false
+            local status = Instance.new("TextLabel", container)
+            status.Size = UDim2.new(1,-32,0,30)
+            status.Position = UDim2.new(0,16,0,235)
+            status.BackgroundTransparency = 1
+            status.Text = ""
+            status.TextColor3 = Colors.Error
+            status.TextSize = 13
+            status.Font = Enum.Font.Gotham
+            status.TextWrapped = true
+            local verifyBtn = Instance.new("TextButton", container)
+            verifyBtn.Size = UDim2.new(1,-64,0,48)
+            verifyBtn.Position = UDim2.new(0,32,0,275)
+            verifyBtn.BackgroundColor3 = Colors.Primary
+            verifyBtn.BorderSizePixel = 0
+            verifyBtn.Text = "Verify Access Key"
+            verifyBtn.TextColor3 = Colors.TextPrimary
+            verifyBtn.TextSize = 16
+            verifyBtn.Font = Enum.Font.GothamMedium
+            Instance.new("UICorner", verifyBtn).CornerRadius = UDim.new(0,12)
+            local btnCont = Instance.new("Frame", container)
+            btnCont.Size = UDim2.new(1,-64,0,48)
+            btnCont.Position = UDim2.new(0,32,0,335)
+            btnCont.BackgroundTransparency = 1
+            local getKeyBtn = Instance.new("TextButton", btnCont)
+            getKeyBtn.Size = UDim2.new(0.48,0,1,0)
+            getKeyBtn.BackgroundColor3 = Colors.GetKey
+            getKeyBtn.BorderSizePixel = 0
+            getKeyBtn.Text = "Get Key"
+            getKeyBtn.TextColor3 = Colors.TextPrimary
+            getKeyBtn.TextSize = 14
+            getKeyBtn.Font = Enum.Font.GothamMedium
+            Instance.new("UICorner", getKeyBtn).CornerRadius = UDim.new(0,10)
+            local discBtn = Instance.new("TextButton", btnCont)
+            discBtn.Size = UDim2.new(0.48,0,1,0)
+            discBtn.Position = UDim2.new(0.52,0,0,0)
+            discBtn.BackgroundColor3 = Colors.Discord
+            discBtn.BorderSizePixel = 0
+            discBtn.Text = "Discord"
+            discBtn.TextColor3 = Colors.TextPrimary
+            discBtn.TextSize = 14
+            discBtn.Font = Enum.Font.GothamMedium
+            Instance.new("UICorner", discBtn).CornerRadius = UDim.new(0,10)
+            local hwidLbl = Instance.new("TextLabel", container)
+            hwidLbl.Size = UDim2.new(1,-32,0,20)
+            hwidLbl.Position = UDim2.new(0,16,0,395)
+            hwidLbl.BackgroundTransparency = 1
+            hwidLbl.Text = "HWID: "..getHWID():sub(1,32).."... (Click to copy)"
+            hwidLbl.TextColor3 = Colors.TextSecondary
+            hwidLbl.TextSize = 10
+            hwidLbl.Font = Enum.Font.Code
+            hwidLbl.TextWrapped = true
+            local hwidBtn = Instance.new("TextButton", container)
+            hwidBtn.Size = UDim2.new(1,-64,0,30)
+            hwidBtn.Position = UDim2.new(0,32,0,395)
+            hwidBtn.BackgroundTransparency = 1
+            hwidBtn.Text = ""
+            local timerLbl = Instance.new("TextLabel", container)
+            timerLbl.Size = UDim2.new(1,-32,0,20)
+            timerLbl.Position = UDim2.new(0,16,0,420)
+            timerLbl.BackgroundTransparency = 1
+            timerLbl.Text = useExpire and "Key will expire after "..duration.." seconds" or "Key never expires"
+            timerLbl.TextColor3 = Colors.TextSecondary
+            timerLbl.TextSize = 10
+            timerLbl.Font = Enum.Font.Gotham
+            local function checkKey(k) for _, v in ipairs(correctKeys) do if k==v then return true end end return false end
+            local function doVerify()
+                local k = textBox.Text
+                if k=="" then status.Text="Please enter an access key" status.TextColor3=Colors.Error return end
+                if checkKey(k) then
+                    if useHWID then
+                        local existingPath = saveFolder.."/"..k:gsub("[^%w]", "_")..".json"
+                        if isfile and isfile(existingPath) then
+                            local ok, content = pcall(function() return readfile(existingPath) end)
+                            if ok and content then
+                                local data = {}
+                                pcall(function() data = HttpService:JSONDecode(content) end)
+                                if data.hwid and data.hwid ~= getHWID() then
+                                    status.Text="HWID Mismatch! Key bound to another device." status.TextColor3=Colors.Error
+                                    return
+                                end
+                            end
+                        end
+                    end
+                    status.Text="Key correct! Loading..." status.TextColor3=Colors.Success
+                    saveKey(k)
+                    TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size=UDim2.new(0,0,0,0)}):Play()
+                    task.wait(0.35)
+                    screenGui:Destroy()
+                    success=true finished=true
+                else
+                    status.Text="Wrong key! Please try again." status.TextColor3=Colors.Error
+                    local orig=container.Position
+                    for i=1,6 do container.Position=orig+UDim2.new(0,(i%2==0 and 6 or -6),0,0) task.wait(0.05) end
+                    container.Position=orig
+                end
+            end
+            verifyBtn.MouseButton1Click:Connect(doVerify)
+            textBox.FocusLost:Connect(function(enter) if enter then doVerify() end end)
+            getKeyBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(getLink) end status.Text="Get Key link copied!" status.TextColor3=Colors.Success end)
+            discBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(discLink) end status.Text="Discord link copied!" status.TextColor3=Colors.Success end)
+            hwidBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(getHWID()) end status.Text="HWID copied!" status.TextColor3=Colors.Success end)
+            container.Size=UDim2.new(0,0,0,0)
+            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size=UDim2.new(0,420,0,540)}):Play()
+            repeat task.wait(0.1) until finished
+        end
+        if not success then return nil end
+    end
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or "v1.8.0 Add API + KeySystem"
+    local SubTitle = Config.SubTitle or "v1.8.0 Add API"
     local DefaultTheme = Config.Theme or "Dark"
     if not Themes[DefaultTheme] then DefaultTheme = "Dark" end
     local CurrentTheme = Themes[DefaultTheme]
-
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "GGH_Library"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
-
     local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 520, 0, 340)
@@ -226,7 +505,6 @@ function GGH:CreateWindow(Config)
     Corner(Main, 16)
     local MainStroke = Stroke(Main, CurrentTheme.Stroke, 1)
     MainStroke.Name = "MainStroke"
-
     local Header = Instance.new("Frame", Main)
     Header.Name = "Header"
     Header.Size = UDim2.new(1,0,0,48)
@@ -241,7 +519,6 @@ function GGH:CreateWindow(Config)
     HeaderFix.BackgroundColor3 = CurrentTheme.HeaderBg
     HeaderFix.BorderSizePixel = 0
     HeaderFix.ZIndex = 2
-
     local TitleLabel = Instance.new("TextLabel", Header)
     TitleLabel.Text = Title
     TitleLabel.Position = UDim2.new(0,18,0,7)
@@ -253,7 +530,6 @@ function GGH:CreateWindow(Config)
     TitleLabel.TextColor3 = CurrentTheme.Text
     TitleLabel.ZIndex = 4
     TitleLabel.AutoLocalize = true
-
     local SubLabel = Instance.new("TextLabel", Header)
     SubLabel.Text = SubTitle
     SubLabel.Position = UDim2.new(0,18,0,26)
@@ -265,14 +541,11 @@ function GGH:CreateWindow(Config)
     SubLabel.TextColor3 = CurrentTheme.SubText
     SubLabel.ZIndex = 4
     SubLabel.AutoLocalize = true
-
-    -- Controls: Search + Theme + Min/Max + Close (4 buttons)
     local Controls = Instance.new("Frame", Header)
     Controls.Size = UDim2.new(0,154,0,32)
     Controls.Position = UDim2.new(1,-162,0.5,-16)
     Controls.BackgroundTransparency = 1
     Controls.ZIndex = 10
-
     local SearchBtn = Instance.new("TextButton", Controls)
     SearchBtn.Name = "SearchBtn"
     SearchBtn.Size = UDim2.new(0,32,0,32)
@@ -284,7 +557,6 @@ function GGH:CreateWindow(Config)
     SearchBtn.TextColor3 = CurrentTheme.Text
     SearchBtn.ZIndex = 10
     Corner(SearchBtn, 9)
-
     local ThemeBtn = Instance.new("TextButton", Controls)
     ThemeBtn.Name = "ThemeBtn"
     ThemeBtn.Size = UDim2.new(0,32,0,32)
@@ -296,7 +568,6 @@ function GGH:CreateWindow(Config)
     ThemeBtn.TextColor3 = CurrentTheme.Text
     ThemeBtn.ZIndex = 10
     Corner(ThemeBtn, 9)
-
     local MinBtn = Instance.new("TextButton", Controls)
     MinBtn.Size = UDim2.new(0,32,0,32)
     MinBtn.Position = UDim2.new(0,74,0,0)
@@ -307,7 +578,6 @@ function GGH:CreateWindow(Config)
     MinBtn.TextColor3 = CurrentTheme.Text
     MinBtn.ZIndex = 10
     Corner(MinBtn, 9)
-
     local MaxBtn = Instance.new("TextButton", Controls)
     MaxBtn.Size = UDim2.new(0,32,0,32)
     MaxBtn.Position = UDim2.new(0,74,0,0)
@@ -319,7 +589,6 @@ function GGH:CreateWindow(Config)
     MaxBtn.TextColor3 = CurrentTheme.Text
     MaxBtn.ZIndex = 10
     Corner(MaxBtn, 9)
-
     local CloseBtn = Instance.new("TextButton", Controls)
     CloseBtn.Size = UDim2.new(0,32,0,32)
     CloseBtn.Position = UDim2.new(0,112,0,0)
@@ -330,8 +599,6 @@ function GGH:CreateWindow(Config)
     CloseBtn.TextColor3 = CurrentTheme.CloseText
     CloseBtn.ZIndex = 10
     Corner(CloseBtn, 9)
-
-    -- Search Bar (Roblox translation supported)
     local SearchBar = Instance.new("Frame", Main)
     SearchBar.Name = "SearchBar"
     SearchBar.Size = UDim2.new(1,-16,0,36)
@@ -342,12 +609,11 @@ function GGH:CreateWindow(Config)
     Corner(SearchBar, 10)
     local SBStroke = Stroke(SearchBar, CurrentTheme.Accent, 1)
     SBStroke.Name = "SearchStroke"
-
     local SearchBox = Instance.new("TextBox", SearchBar)
     SearchBox.Size = UDim2.new(1,-50,1,-6)
     SearchBox.Position = UDim2.new(0,14,0,3)
     SearchBox.BackgroundTransparency = 1
-    SearchBox.PlaceholderText = "Search toggles, buttons, tabs... (Translate enabled)"
+    SearchBox.PlaceholderText = "Search toggles, buttons, tabs..."
     SearchBox.Text = ""
     SearchBox.Font = Enum.Font.Gotham
     SearchBox.TextSize = 13
@@ -357,7 +623,6 @@ function GGH:CreateWindow(Config)
     SearchBox.ClearTextOnFocus = false
     SearchBox.ZIndex = 91
     SearchBox.AutoLocalize = true
-
     local SearchClose = Instance.new("TextButton", SearchBar)
     SearchClose.Size = UDim2.new(0,28,0,28)
     SearchClose.Position = UDim2.new(1,-32,0.5,-14)
@@ -368,8 +633,6 @@ function GGH:CreateWindow(Config)
     SearchClose.TextColor3 = CurrentTheme.Text
     SearchClose.ZIndex = 91
     Corner(SearchClose, 7)
-
-    -- Theme Dropdown
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
     ThemeDropdown.Size = UDim2.new(0,160,0,220)
@@ -379,7 +642,6 @@ function GGH:CreateWindow(Config)
     ThemeDropdown.ZIndex = 100
     Corner(ThemeDropdown, 10)
     Stroke(ThemeDropdown, CurrentTheme.Stroke, 1)
-
     local ThemeList = Instance.new("ScrollingFrame", ThemeDropdown)
     ThemeList.Size = UDim2.new(1,-4,1,-4)
     ThemeList.Position = UDim2.new(0,2,0,2)
@@ -393,7 +655,6 @@ function GGH:CreateWindow(Config)
     TL.Padding = UDim.new(0,4)
     local TLP = Instance.new("UIPadding", ThemeList)
     TLP.PaddingTop = UDim.new(0,4) TLP.PaddingBottom = UDim.new(0,4) TLP.PaddingLeft = UDim.new(0,4) TLP.PaddingRight = UDim.new(0,4)
-
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,132,1,-58)
@@ -410,13 +671,12 @@ function GGH:CreateWindow(Config)
     TLLayout.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP2 = Instance.new("UIPadding", TabList)
     TLP2.PaddingTop = UDim.new(0,6) TLP2.PaddingBottom = UDim.new(0,6) TLP2.PaddingLeft = UDim.new(0,6) TLP2.PaddingRight = UDim.new(0,6)
-
     local Container = Instance.new("Frame", Main)
     Container.Name = "Container"
     Container.Size = UDim2.new(1,-152,1,-58)
     Container.Position = UDim2.new(0,144,0,52)
     Container.BackgroundTransparency = 1
-
+    Container.ClipsDescendants = false
     local ConfirmFrame = Instance.new("Frame", ScreenGui)
     ConfirmFrame.Name = "ConfirmOverlay"
     ConfirmFrame.Size = Main.Size
@@ -426,16 +686,8 @@ function GGH:CreateWindow(Config)
     ConfirmFrame.Visible = false
     ConfirmFrame.ZIndex = 200
     Corner(ConfirmFrame, 16)
-
-    Main:GetPropertyChangedSignal("Position"):Connect(function()
-        ConfirmFrame.Position = Main.Position
-    end)
-    Main:GetPropertyChangedSignal("Size"):Connect(function()
-        if not ConfirmFrame.Visible then
-            ConfirmFrame.Size = Main.Size
-        end
-    end)
-
+    Main:GetPropertyChangedSignal("Position"):Connect(function() ConfirmFrame.Position = Main.Position end)
+    Main:GetPropertyChangedSignal("Size"):Connect(function() if not ConfirmFrame.Visible then ConfirmFrame.Size = Main.Size end end)
     local ConfirmBox = Instance.new("Frame", ConfirmFrame)
     ConfirmBox.Size = UDim2.new(0,300,0,160)
     ConfirmBox.Position = UDim2.new(0.5,-150,0.5,-80)
@@ -443,7 +695,6 @@ function GGH:CreateWindow(Config)
     ConfirmBox.ZIndex = 201
     Corner(ConfirmBox, 14)
     Stroke(ConfirmBox, CurrentTheme.Stroke, 1)
-
     local CT = Instance.new("TextLabel", ConfirmBox)
     CT.Text = "Confirm Close"
     CT.Size = UDim2.new(1,-20,0,24)
@@ -455,7 +706,6 @@ function GGH:CreateWindow(Config)
     CT.TextXAlignment = Enum.TextXAlignment.Left
     CT.ZIndex = 202
     CT.AutoLocalize = true
-
     local CT2 = Instance.new("TextLabel", ConfirmBox)
     CT2.Text = "Are you sure you want to close GGH Library?"
     CT2.Size = UDim2.new(1,-20,0,44)
@@ -468,7 +718,6 @@ function GGH:CreateWindow(Config)
     CT2.TextXAlignment = Enum.TextXAlignment.Left
     CT2.ZIndex = 202
     CT2.AutoLocalize = true
-
     local YesBtn = Instance.new("TextButton", ConfirmBox)
     YesBtn.Size = UDim2.new(0,120,0,36)
     YesBtn.Position = UDim2.new(0,20,1,-48)
@@ -480,7 +729,6 @@ function GGH:CreateWindow(Config)
     YesBtn.ZIndex = 202
     YesBtn.AutoLocalize = true
     Corner(YesBtn, 9)
-
     local NoBtn = Instance.new("TextButton", ConfirmBox)
     NoBtn.Size = UDim2.new(0,120,0,36)
     NoBtn.Position = UDim2.new(1,-140,1,-48)
@@ -492,8 +740,6 @@ function GGH:CreateWindow(Config)
     NoBtn.ZIndex = 202
     NoBtn.AutoLocalize = true
     Corner(NoBtn, 9)
-
-    -- Draggable
     do
         local dragging = false
         local dragStart, startPos
@@ -505,9 +751,7 @@ function GGH:CreateWindow(Config)
                 startPos = Main.Position
             end
         end
-        for _, obj in ipairs(dragObjects) do
-            obj.InputBegan:Connect(StartDrag)
-        end
+        for _, obj in ipairs(dragObjects) do obj.InputBegan:Connect(StartDrag) end
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
@@ -515,15 +759,11 @@ function GGH:CreateWindow(Config)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
         end)
     end
-
     local minimized = false
     local savedSize = Main.Size
-
     MinBtn.MouseButton1Click:Connect(function()
         if not minimized then
             minimized = true
@@ -538,7 +778,6 @@ function GGH:CreateWindow(Config)
             MaxBtn.Visible = true
         end
     end)
-
     MaxBtn.MouseButton1Click:Connect(function()
         if minimized then
             minimized = false
@@ -552,7 +791,6 @@ function GGH:CreateWindow(Config)
             MinBtn.Visible = true
         end
     end)
-
     CloseBtn.MouseButton1Click:Connect(function()
         if minimized then
             minimized = false
@@ -573,25 +811,10 @@ function GGH:CreateWindow(Config)
             ConfirmFrame.Visible = true
         end
     end)
-
-    NoBtn.MouseButton1Click:Connect(function()
-        ConfirmFrame.Visible = false
-        ConfirmFrame.Size = Main.Size
-    end)
-
-    YesBtn.MouseButton1Click:Connect(function()
-        Tween(Main, {Size = UDim2.new(0,520,0,0)}, 0.2)
-        Tween(ConfirmFrame, {Size = UDim2.new(0,520,0,0)}, 0.2)
-        task.wait(0.25)
-        ScreenGui:Destroy()
-    end)
-
-    -- Theme system
+    NoBtn.MouseButton1Click:Connect(function() ConfirmFrame.Visible = false ConfirmFrame.Size = Main.Size end)
+    YesBtn.MouseButton1Click:Connect(function() Tween(Main, {Size = UDim2.new(0,520,0,0)}, 0.2) Tween(ConfirmFrame, {Size = UDim2.new(0,520,0,0)}, 0.2) task.wait(0.25) ScreenGui:Destroy() end)
     local ThemableElements = {}
-    local function RegisterThemable(obj, prop, themeKey)
-        table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey})
-    end
-
+    local function RegisterThemable(obj, prop, themeKey) table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey}) end
     local function ApplyTheme(themeName)
         local theme = Themes[themeName]
         if not theme then return end
@@ -628,26 +851,16 @@ function GGH:CreateWindow(Config)
         NoBtn.TextColor3 = theme.Text
         for _, item in ipairs(ThemableElements) do
             if item.obj and item.obj.Parent then
-                if item.prop == "BackgroundColor3" then
-                    Tween(item.obj, {BackgroundColor3 = theme[item.key]}, 0.2)
-                elseif item.prop == "TextColor3" then
-                    item.obj.TextColor3 = theme[item.key]
-                elseif item.prop == "Stroke" then
-                    item.obj.Color = theme[item.key]
-                elseif item.prop == "ScrollBar" then
-                    item.obj.ScrollBarImageColor3 = theme.Accent
+                if item.prop == "BackgroundColor3" then Tween(item.obj, {BackgroundColor3 = theme[item.key]}, 0.2)
+                elseif item.prop == "TextColor3" then item.obj.TextColor3 = theme[item.key]
+                elseif item.prop == "Stroke" then item.obj.Color = theme[item.key]
+                elseif item.prop == "ScrollBar" then item.obj.ScrollBarImageColor3 = theme.Accent
                 end
             end
         end
     end
-
     local ThemeOpen = false
-    ThemeBtn.MouseButton1Click:Connect(function()
-        ThemeOpen = not ThemeOpen
-        ThemeDropdown.Visible = ThemeOpen
-        SearchBar.Visible = false
-    end)
-
+    ThemeBtn.MouseButton1Click:Connect(function() ThemeOpen = not ThemeOpen ThemeDropdown.Visible = ThemeOpen SearchBar.Visible = false end)
     for name, th in pairs(Themes) do
         local Btn = Instance.new("TextButton", ThemeList)
         Btn.Size = UDim2.new(1,0,0,28)
@@ -659,24 +872,14 @@ function GGH:CreateWindow(Config)
         Btn.ZIndex = 102
         Btn.AutoLocalize = true
         Corner(Btn, 6)
-        local stroke = Stroke(Btn, th.Accent, 1)
-        Btn.MouseButton1Click:Connect(function()
-            ApplyTheme(name)
-            ThemeDropdown.Visible = false
-            ThemeOpen = false
-            SubLabel.Text = "Theme: " .. name
-        end)
+        Stroke(Btn, th.Accent, 1)
+        Btn.MouseButton1Click:Connect(function() ApplyTheme(name) ThemeDropdown.Visible = false ThemeOpen = false SubLabel.Text = "Theme: " .. name end)
     end
-
     local Window = {}
     local Tabs = {}
     local FirstTab = true
     local AllSearchElements = {}
-
-    local function AddSearch(frame, title, typ, tabName)
-        table.insert(AllSearchElements, {Frame=frame, Title=title:lower(), Type=typ:lower(), Tab=tabName:lower()})
-    end
-
+    local function AddSearch(frame, title, typ, tabName) table.insert(AllSearchElements, {Frame=frame, Title=title:lower(), Type=typ:lower(), Tab=tabName:lower()}) end
     local SearchOpen = false
     local function ToggleSearch()
         SearchOpen = not SearchOpen
@@ -689,45 +892,27 @@ function GGH:CreateWindow(Config)
             Tween(Container, {Position = UDim2.new(0,144,0,92), Size = UDim2.new(1,-152,1,-98)}, 0.2)
         else
             SearchBox.Text = ""
-            for _, el in ipairs(AllSearchElements) do
-                if el.Frame and el.Frame.Parent then el.Frame.Visible = true end
-            end
-            for _, t in pairs(Tabs) do
-                if t.Button then t.Button.Visible = true end
-            end
+            for _, el in ipairs(AllSearchElements) do if el.Frame and el.Frame.Parent then el.Frame.Visible = true end end
+            for _, t in pairs(Tabs) do if t.Button then t.Button.Visible = true end end
             Tween(TabList, {Position = UDim2.new(0,8,0,52)}, 0.2)
             Tween(Container, {Position = UDim2.new(0,144,0,52), Size = UDim2.new(1,-152,1,-58)}, 0.2)
         end
     end
-
     SearchBtn.MouseButton1Click:Connect(ToggleSearch)
     SearchClose.MouseButton1Click:Connect(ToggleSearch)
-
     SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local query = SearchBox.Text:lower()
         if query == "" then
-            for _, el in ipairs(AllSearchElements) do
-                if el.Frame and el.Frame.Parent then el.Frame.Visible = true end
-            end
-            for _, t in pairs(Tabs) do
-                if t.Button then t.Button.Visible = true end
-            end
+            for _, el in ipairs(AllSearchElements) do if el.Frame and el.Frame.Parent then el.Frame.Visible = true end end
+            for _, t in pairs(Tabs) do if t.Button then t.Button.Visible = true end end
             return
         end
         for _, el in ipairs(AllSearchElements) do
             local match = string.find(el.Title, query, 1, true) or string.find(el.Type, query, 1, true) or string.find(el.Tab, query, 1, true)
-            if el.Frame and el.Frame.Parent then
-                el.Frame.Visible = (match ~= nil)
-            end
+            if el.Frame and el.Frame.Parent then el.Frame.Visible = (match ~= nil) end
         end
-        for _, t in pairs(Tabs) do
-            if t.Button then
-                local n = t.Button.Text:lower()
-                t.Button.Visible = (string.find(n, query, 1, true) ~= nil)
-            end
-        end
+        for _, t in pairs(Tabs) do if t.Button then local n = t.Button.Text:lower() t.Button.Visible = (string.find(n, query, 1, true) ~= nil) end end
     end)
-
     function Window:CreateTab(Name)
         local TabButton = Instance.new("TextButton", TabList)
         TabButton.Size = UDim2.new(1,0,0,34)
@@ -740,7 +925,6 @@ function GGH:CreateWindow(Config)
         TabButton.AutoLocalize = true
         Corner(TabButton, 8)
         RegisterThemable(TabButton, "BackgroundColor3", "ElementBg")
-
         local TabPage = Instance.new("ScrollingFrame", Container)
         TabPage.Name = Name.."Page"
         TabPage.Size = UDim2.new(1,0,1,0)
@@ -752,49 +936,26 @@ function GGH:CreateWindow(Config)
         TabPage.ScrollBarImageColor3 = CurrentTheme.Accent
         TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
         TabPage.BorderSizePixel = 0
+        TabPage.ClipsDescendants = false
         RegisterThemable(TabPage, "ScrollBar", "Accent")
-
         local Layout = Instance.new("UIListLayout", TabPage)
         Layout.Padding = UDim.new(0, 8)
         Layout.SortOrder = Enum.SortOrder.LayoutOrder
-
         local Padding = Instance.new("UIPadding", TabPage)
-        Padding.PaddingTop = UDim.new(0,2)
-        Padding.PaddingBottom = UDim.new(0,20)
-        Padding.PaddingLeft = UDim.new(0,2)
-        Padding.PaddingRight = UDim.new(0,4)
-
+        Padding.PaddingTop = UDim.new(0,2) Padding.PaddingBottom = UDim.new(0,20) Padding.PaddingLeft = UDim.new(0,2) Padding.PaddingRight = UDim.new(0,4)
         local IsScrolling = false
-        TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-            IsScrolling = true
-            task.delay(0.35, function() IsScrolling = false end)
-        end)
-
+        TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function() IsScrolling = true task.delay(0.35, function() IsScrolling = false end) end)
         TabButton.MouseButton1Click:Connect(function()
-            for _, t in pairs(Tabs) do
-                if t.Page then t.Page.Visible = false end
-                if t.Button then
-                    Tween(t.Button, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.15)
-                    t.Button.TextColor3 = Color3.fromRGB(170,170,180)
-                end
-            end
+            for _, t in pairs(Tabs) do if t.Page then t.Page.Visible = false end if t.Button then Tween(t.Button, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.15) t.Button.TextColor3 = Color3.fromRGB(170,170,180) end end
             TabPage.Visible = true
             Tween(TabButton, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
             TabButton.TextColor3 = Color3.fromRGB(255,255,255)
         end)
-
-        if FirstTab then
-            FirstTab = false
-            TabPage.Visible = true
-            TabButton.BackgroundColor3 = CurrentTheme.Accent
-            TabButton.TextColor3 = Color3.fromRGB(255,255,255)
-        end
-
+        if FirstTab then FirstTab = false TabPage.Visible = true TabButton.BackgroundColor3 = CurrentTheme.Accent TabButton.TextColor3 = Color3.fromRGB(255,255,255) end
         table.insert(Tabs, {Button = TabButton, Page = TabPage})
 
-        local Elements = {}
-
-        function Elements:Section(Cfg)
+        -- Internal create functions (private)
+        local function CreateSection(Cfg)
             local SecFrame = Instance.new("Frame", TabPage)
             SecFrame.Size = UDim2.new(1,-4,0,26)
             SecFrame.BackgroundTransparency = 1
@@ -824,7 +985,7 @@ function GGH:CreateWindow(Config)
             RegisterThemable(Line, "BackgroundColor3", "Stroke")
         end
 
-        function Elements:Paragraph(Cfg)
+        local function CreateParagraph(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,60)
             Frame.AutomaticSize = Enum.AutomaticSize.Y
@@ -848,7 +1009,7 @@ function GGH:CreateWindow(Config)
             RegisterThemable(T, "TextColor3", "ParagraphText")
         end
 
-        function Elements:Button(Cfg)
+        local function CreateButton(Cfg)
             local Btn = Instance.new("TextButton", TabPage)
             Btn.Size = UDim2.new(1,-4,0,34)
             Btn.BackgroundColor3 = CurrentTheme.ElementBg2
@@ -873,7 +1034,7 @@ function GGH:CreateWindow(Config)
             end)
         end
 
-        function Elements:Toggle(Cfg)
+        local function CreateToggle(Cfg)
             local State = Cfg.Default or false
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,36)
@@ -915,7 +1076,7 @@ function GGH:CreateWindow(Config)
             end)
         end
 
-        function Elements:Slider(Cfg)
+        local function CreateSlider(Cfg)
             Cfg.Min = Cfg.Min or 0
             Cfg.Max = Cfg.Max or 100
             Cfg.Default = Cfg.Default or Cfg.Min
@@ -982,29 +1143,20 @@ function GGH:CreateWindow(Config)
                 Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
             end)
             DragArea.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                    UpdateSlider(input.Position.X)
-                end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true UpdateSlider(input.Position.X) end
             end)
             Circle.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true end
             end)
             UserInputService.InputChanged:Connect(function(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    UpdateSlider(input.Position.X)
-                end
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then UpdateSlider(input.Position.X) end
             end)
             UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = false
-                end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
             end)
         end
 
-        function Elements:Input(Cfg)
+        local function CreateInput(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
@@ -1028,7 +1180,7 @@ function GGH:CreateWindow(Config)
             Box.FocusLost:Connect(function() if IsScrolling then return end pcall(Cfg.Callback or function() end, Box.Text) end)
         end
 
-        function Elements:Dropdown(Cfg)
+        local function CreateDropdown(Cfg)
             local Selected = Cfg.Default or Cfg.Options[1]
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
@@ -1078,7 +1230,7 @@ function GGH:CreateWindow(Config)
             end
         end
 
-        function Elements:Colorpicker(Cfg)
+        local function CreateColorpicker(Cfg)
             local Color = Cfg.Default or CurrentTheme.Accent
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
@@ -1114,7 +1266,7 @@ function GGH:CreateWindow(Config)
             end)
         end
 
-        function Elements:Keybind(Cfg)
+        local function CreateKeybind(Cfg)
             local Key = Cfg.Default or Enum.KeyCode.F
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
@@ -1151,7 +1303,7 @@ function GGH:CreateWindow(Config)
             end)
         end
 
-        function Elements:Code(Cfg)
+        local function CreateCode(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,80)
             Frame.BackgroundColor3 = CurrentTheme.TabListBg
@@ -1172,9 +1324,40 @@ function GGH:CreateWindow(Config)
             RegisterThemable(CodeLabel, "TextColor3", "Accent")
         end
 
+        local Elements = {}
+
+        -- NEW UNIFIED ADD API - This is what you asked for
+        function Elements:Add(Type, Cfg)
+            Cfg = Cfg or {}
+            Type = string.lower(tostring(Type))
+            if Type == "section" then CreateSection(Cfg)
+            elseif Type == "paragraph" then CreateParagraph(Cfg)
+            elseif Type == "button" then CreateButton(Cfg)
+            elseif Type == "toggle" then CreateToggle(Cfg)
+            elseif Type == "slider" then CreateSlider(Cfg)
+            elseif Type == "input" then CreateInput(Cfg)
+            elseif Type == "dropdown" then CreateDropdown(Cfg)
+            elseif Type == "colorpicker" or Type == "color" then CreateColorpicker(Cfg)
+            elseif Type == "keybind" or Type == "key" then CreateKeybind(Cfg)
+            elseif Type == "code" then CreateCode(Cfg)
+            else warn("[GGH Library v1.8.0] Unknown Add type: "..tostring(Type))
+            end
+        end
+
+        -- Keep old methods for backward compatibility but they now call Add internally
+        function Elements:Section(Cfg) return self:Add("Section", Cfg) end
+        function Elements:Paragraph(Cfg) return self:Add("Paragraph", Cfg) end
+        function Elements:Button(Cfg) return self:Add("Button", Cfg) end
+        function Elements:Toggle(Cfg) return self:Add("Toggle", Cfg) end
+        function Elements:Slider(Cfg) return self:Add("Slider", Cfg) end
+        function Elements:Input(Cfg) return self:Add("Input", Cfg) end
+        function Elements:Dropdown(Cfg) return self:Add("Dropdown", Cfg) end
+        function Elements:Colorpicker(Cfg) return self:Add("Colorpicker", Cfg) end
+        function Elements:Keybind(Cfg) return self:Add("Keybind", Cfg) end
+        function Elements:Code(Cfg) return self:Add("Code", Cfg) end
+
         return Elements
     end
-
     return Window
 end
 
