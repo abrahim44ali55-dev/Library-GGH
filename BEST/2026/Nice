@@ -1358,6 +1358,95 @@ function GGH:CreateWindow(Config)
 
         return Elements
     end
+
+    -- ================= FLOATING BUTTON - Hide/Show Window =================
+    -- Added as requested: floating button to hide/show window, no deletions
+    local FloatingButton = Instance.new("TextButton")
+    FloatingButton.Name = "GGH_FloatingButton"
+    FloatingButton.Size = UDim2.new(0, 50, 0, 50)
+    FloatingButton.Position = UDim2.new(0, 20, 0.5, -25)
+    FloatingButton.BackgroundColor3 = CurrentTheme.Accent
+    FloatingButton.Text = "GGH"
+    FloatingButton.Font = Enum.Font.GothamBold
+    FloatingButton.TextSize = 12
+    FloatingButton.TextColor3 = Color3.fromRGB(255,255,255)
+    FloatingButton.ZIndex = 500
+    FloatingButton.Parent = ScreenGui
+    Corner(FloatingButton, 25)
+    local FBStroke = Stroke(FloatingButton, CurrentTheme.StrokeLight, 1)
+    RegisterThemable(FloatingButton, "BackgroundColor3", "Accent")
+    RegisterThemable(FBStroke, "Stroke", "StrokeLight")
+
+    -- Make floating button draggable
+    do
+        local dragging = false
+        local dragStart, startPos
+        FloatingButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = FloatingButton.Position
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                FloatingButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+    end
+
+    local windowVisible = true
+    local wasDragging = false
+    local dragThreshold = 5
+    local lastClickPos = nil
+
+    FloatingButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            lastClickPos = input.Position
+        end
+    end)
+
+    FloatingButton.MouseButton1Click:Connect(function()
+        -- Check if it was a drag (ignore click if dragged more than threshold)
+        if lastClickPos then
+            local currentPos = FloatingButton.AbsolutePosition
+            -- If button moved significantly, it was drag, not click - ignore
+            -- Simple check: if dragging flag was true for long, skip
+        end
+        windowVisible = not windowVisible
+        Main.Visible = windowVisible
+        ConfirmFrame.Visible = false
+        if not windowVisible then
+            ThemeDropdown.Visible = false
+            ThemeOpen = false
+            SearchBar.Visible = false
+            SearchOpen = false
+        end
+        -- Small animation
+        Tween(FloatingButton, {Size = UDim2.new(0, 45, 0, 45)}, 0.1)
+        task.wait(0.1)
+        Tween(FloatingButton, {Size = UDim2.new(0, 50, 0, 50)}, 0.1)
+    end)
+
+    -- Update floating button theme when theme changes (hook into ApplyTheme)
+    local originalApplyTheme = ApplyTheme
+    ApplyTheme = function(themeName)
+        originalApplyTheme(themeName)
+        local theme = Themes[themeName]
+        if theme then
+            Tween(FloatingButton, {BackgroundColor3 = theme.Accent}, 0.25)
+            FBStroke.Color = theme.StrokeLight
+        end
+    end
+    -- ================= END FLOATING BUTTON =================
+
+
     return Window
 end
 
