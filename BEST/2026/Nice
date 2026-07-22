@@ -220,24 +220,37 @@ function GGH:CreateWindow(Config)
     NoBtn.ZIndex = 202
     Corner(NoBtn, 8)
 
-    -- Draggable
+    -- Draggable FIXED - Works from Header and Title
     do
-        local dragging, dragStart, startPos
-        Header.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local dragging = false
+        local dragStart, startPos
+        local dragObjects = {Header, TitleLabel, SubLabel, HeaderFix}
+        local function StartDrag(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
                 dragStart = input.Position
                 startPos = Main.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
             end
-        end)
+        end
+        for _, obj in ipairs(dragObjects) do
+            obj.InputBegan:Connect(StartDrag)
+        end
+        Header.InputBegan:Connect(StartDrag)
         UserInputService.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
                 Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
         end)
     end
 
@@ -482,23 +495,23 @@ function GGH:CreateWindow(Config)
             Fill.BorderSizePixel = 0
             Corner(Fill, 4)
 
-            -- Circle added on top of Fill - using your logic
-            local Circle = Instance.new("Frame", Bar)
+            local Circle = Instance.new("Frame", Frame)
             Circle.Name = "Circle"
-            Circle.Size = UDim2.new(0,16,0,16)
+            Circle.Size = UDim2.new(0,18,0,18)
             Circle.AnchorPoint = Vector2.new(0.5,0.5)
-            Circle.Position = UDim2.new((Value - Cfg.Min) / math.max(1, Cfg.Max - Cfg.Min),0,0.5,0)
+            Circle.Position = UDim2.new(0, 10 + ((Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min))* (Bar.AbsoluteSize.X ~= 0 and Bar.AbsoluteSize.X or 200), 0, 36)
             Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
             Circle.BorderSizePixel = 0
             Circle.ZIndex = 10
-            Corner(Circle, 8)
+            Corner(Circle, 9)
             local S = Instance.new("UIStroke", Circle)
             S.Color = Color3.fromRGB(90,70,255)
             S.Thickness = 2
+            S.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
             local DragArea = Instance.new("TextButton", Bar)
-            DragArea.Size = UDim2.new(1,0,1.8,0)
-            DragArea.Position = UDim2.new(0,0,0.5,-9)
+            DragArea.Size = UDim2.new(1,0,2,0)
+            DragArea.Position = UDim2.new(0,0,0.5,-8)
             DragArea.BackgroundTransparency = 1
             DragArea.Text = ""
             DragArea.ZIndex = 5
@@ -506,14 +519,26 @@ function GGH:CreateWindow(Config)
             local dragging = false
 
             local function UpdateSlider(inputX)
-                local rel = math.clamp((inputX - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+                local barPos = Bar.AbsolutePosition.X
+                local barSize = Bar.AbsoluteSize.X
+                if barSize <= 0 then barSize = 200 end
+                local rel = math.clamp((inputX - barPos) / barSize, 0, 1)
                 Value = math.floor(Cfg.Min + (Cfg.Max - Cfg.Min) * rel)
                 Fill.Size = UDim2.new(rel,0,1,0)
-                Circle.Position = UDim2.new(rel,0,0.5,0)
+                Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
                 Label.Text = Cfg.Title.." : "..Value
                 pcall(Cfg.Callback or function() end, Value)
             end
 
+            task.spawn(function()
+                task.wait(0.05)
+                local barSize = Bar.AbsoluteSize.X
+                if barSize <= 0 then barSize = 200 end
+                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
+                Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
+            end)
+
+            -- Press on Bar
             DragArea.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
@@ -521,9 +546,10 @@ function GGH:CreateWindow(Config)
                 end
             end)
 
-            DragArea.InputEnded:Connect(function(input)
+            -- Press on Circle and drag left/right
+            Circle.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = false
+                    dragging = true
                 end
             end)
 
@@ -534,7 +560,7 @@ function GGH:CreateWindow(Config)
             end)
 
             UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = false
                 end
             end)
