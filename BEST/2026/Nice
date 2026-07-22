@@ -1,5 +1,5 @@
 -- =====================================================================
--- Advanced Global Script Library System (Added TextBox & Keybind Elements)
+-- Advanced Global Script Library System (Fixed & Fully Operational)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -362,7 +362,6 @@ function Library:Create(config)
 	Sidebar.Position = UDim2.new(0, 8, 0, 42)
 	Sidebar.BackgroundTransparency = 1
 	Sidebar.BorderSizePixel = 0
-	Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.None
 	Sidebar.ScrollBarThickness = 2
 	Sidebar.ZIndex = 15
 	Sidebar.Parent = MainFrame
@@ -405,7 +404,6 @@ function Library:Create(config)
 			NoButton.BackgroundColor3 = currentTheme.Elem
 			NoButton.TextColor3 = currentTheme.Text
 			ResizeButton.TextColor3 = currentTheme.Sub
-			
 			Notify("Themes", "Theme changed to: " .. themeName, 2)
 		end
 	end
@@ -428,7 +426,6 @@ function Library:Create(config)
 		TabPage.BackgroundTransparency = 1
 		TabPage.BorderSizePixel = 0
 		TabPage.Visible = false
-		TabPage.AutomaticCanvasSize = Enum.AutomaticSize.None
 		TabPage.ScrollBarThickness = 3
 		TabPage.ZIndex = 16
 		TabPage.Parent = ContainerHolder
@@ -638,9 +635,9 @@ function Library:Create(config)
 			UserBox.Parent = BoxFrame
 			Instance.new("UICorner", UserBox).CornerRadius = UDim.new(0, 4)
 
-			UserBox.FocusLost = function(enterPressed)
+			UserBox.FocusLost:Connect(function(enterPressed)
 				if callback then callback(UserBox.Text, enterPressed) end
-			end
+			end)
 		end
 
 		function TabObj:AddKeybind(name, desc, defaultKey, callback)
@@ -866,13 +863,12 @@ function Library:Create(config)
 			local DropMain = Instance.new("Frame")
 			DropMain.Size = UDim2.new(1, 0, 0, closedHeight)
 			DropMain.BackgroundColor3 = currentTheme.Elem
-			DropMain.ClipsDescendants = false
+			DropMain.ClipsDescendants = true
 			DropMain.ZIndex = 30
 			DropMain.Parent = TabPage
 			Instance.new("UICorner", DropMain).CornerRadius = UDim.new(0, 6)
 
 			local DropBtn = Instance.new("TextButton")
-			DropMain.Size = UDim2.new(1, 0, 0, closedHeight)
 			DropBtn.Size = UDim2.new(1, 0, 0, headerHeight)
 			DropBtn.BackgroundTransparency = 1
 			DropBtn.Text = ""
@@ -896,7 +892,6 @@ function Library:Create(config)
 			DropScroll.Position = UDim2.new(0, 10, 0, headerHeight + 4)
 			DropScroll.BackgroundTransparency = 1
 			DropScroll.BorderSizePixel = 0
-			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 			DropScroll.ScrollBarThickness = 3
 			DropScroll.ZIndex = 40
 			DropScroll.Parent = DropMain
@@ -908,8 +903,7 @@ function Library:Create(config)
 
 			DropListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 				local contentHeight = DropListLayout.AbsoluteContentSize.Y
-				local visibleHeight = DropScroll.AbsoluteSize.Y
-				DropScroll.CanvasSize = UDim2.new(0, 0, 0, math.max(contentHeight + 15, visibleHeight))
+				DropScroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
 			end)
 
 			for _, option in ipairs(list) do
@@ -927,5 +921,23 @@ function Library:Create(config)
 				OptBtn.MouseButton1Click:Connect(function()
 					TitleLbl.Text = name .. " : " .. option
 					isOpen = false
-					DropBtn.ZIndex = 35
 					TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, closedHeight)}):Play()
+					if callback then callback(option) end
+				end)
+			end
+
+			DropBtn.MouseButton1Click:Connect(function()
+				isOpen = not isOpen
+				local targetHeight = isOpen and openedHeight or closedHeight
+				TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
+			end)
+		end
+
+		return TabObj
+	end
+
+	WindowObj.Notify = Notify
+	return WindowObj
+end
+
+return Library
