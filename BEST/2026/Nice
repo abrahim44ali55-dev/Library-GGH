@@ -502,6 +502,7 @@ function GGH:CreateWindow(Config)
     Main.BackgroundColor3 = CurrentTheme.MainBg
     Main.BorderSizePixel = 0
     Main.Parent = ScreenGui
+    Main.ClipsDescendants = true -- FIXED: clip overflow when scrolling
     Corner(Main, 16)
     local MainStroke = Stroke(Main, CurrentTheme.Stroke, 1)
     MainStroke.Name = "MainStroke"
@@ -658,6 +659,7 @@ function GGH:CreateWindow(Config)
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,132,1,-58)
+    TabList.ClipsDescendants = true -- FIXED
     TabList.Position = UDim2.new(0,8,0,52)
     TabList.BackgroundColor3 = CurrentTheme.TabListBg
     TabList.BorderSizePixel = 0
@@ -676,7 +678,9 @@ function GGH:CreateWindow(Config)
     Container.Size = UDim2.new(1,-152,1,-58)
     Container.Position = UDim2.new(0,144,0,52)
     Container.BackgroundTransparency = 1
-    Container.ClipsDescendants = false
+    Container.ClipsDescendants = true -- CRITICAL FIX: prevents content going outside when scrolling
+    Container.ZIndex = 1
+    Container.ClipsDescendants = true
     local ConfirmFrame = Instance.new("Frame", ScreenGui)
     ConfirmFrame.Name = "ConfirmOverlay"
     ConfirmFrame.Size = Main.Size
@@ -936,7 +940,7 @@ function GGH:CreateWindow(Config)
         TabPage.ScrollBarImageColor3 = CurrentTheme.Accent
         TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
         TabPage.BorderSizePixel = 0
-        TabPage.ClipsDescendants = false
+        TabPage.ClipsDescendants = true
         RegisterThemable(TabPage, "ScrollBar", "Accent")
         local Layout = Instance.new("UIListLayout", TabPage)
         Layout.Padding = UDim.new(0, 8)
@@ -1440,70 +1444,6 @@ function GGH:CreateWindow(Config)
 
         return Elements
     end
-
-    -- ================= FLOATING BUTTON - Hide/Show Window (ADDED, nothing deleted) =================
-    local FloatingButton = Instance.new("TextButton")
-    FloatingButton.Name = "GGH_FloatingButton"
-    FloatingButton.Size = UDim2.new(0, 50, 0, 50)
-    FloatingButton.Position = UDim2.new(0, 20, 0.5, -25)
-    FloatingButton.BackgroundColor3 = CurrentTheme.Accent
-    FloatingButton.Text = "GGH"
-    FloatingButton.Font = Enum.Font.GothamBold
-    FloatingButton.TextSize = 12
-    FloatingButton.TextColor3 = Color3.fromRGB(255,255,255)
-    FloatingButton.ZIndex = 500
-    FloatingButton.Parent = ScreenGui
-    Corner(FloatingButton, 25)
-    local FBStroke = Stroke(FloatingButton, CurrentTheme.StrokeLight, 1)
-    RegisterThemable(FloatingButton, "BackgroundColor3", "Accent")
-    RegisterThemable(FBStroke, "Stroke", "StrokeLight")
-    do
-        local dragging = false
-        local dragStart, startPos
-        FloatingButton.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = FloatingButton.Position
-            end
-        end)
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                local delta = input.Position - dragStart
-                FloatingButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            end
-        end)
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
-        end)
-    end
-    local windowVisible = true
-    FloatingButton.MouseButton1Click:Connect(function()
-        windowVisible = not windowVisible
-        Main.Visible = windowVisible
-        ConfirmFrame.Visible = false
-        if not windowVisible then
-            ThemeDropdown.Visible = false
-            ThemeOpen = false
-            SearchBar.Visible = false
-            SearchOpen = false
-        end
-        Tween(FloatingButton, {Size = UDim2.new(0, 45, 0, 45)}, 0.1)
-        task.wait(0.1)
-        Tween(FloatingButton, {Size = UDim2.new(0, 50, 0, 50)}, 0.1)
-    end)
-    local originalApplyTheme = ApplyTheme
-    ApplyTheme = function(themeName)
-        originalApplyTheme(themeName)
-        local theme = Themes[themeName]
-        if theme then
-            Tween(FloatingButton, {BackgroundColor3 = theme.Accent}, 0.25)
-            FBStroke.Color = theme.StrokeLight
-        end
-    end
-    -- ================= END FLOATING BUTTON =================
-
-
     return Window
 end
 
