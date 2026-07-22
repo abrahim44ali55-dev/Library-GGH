@@ -1,5 +1,5 @@
 -- =====================================================================
--- Universal Script Library - Full All-In-One Script (All 7 Elements)
+-- Universal Script Library - Full Raw Library (All 7 Elements)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -13,7 +13,6 @@ function Library:Create(config)
 	config = config or {}
 	local title = config.Title or "Global Control Panel"
 	local description = config.Description or "Advanced System"
-	local toggleKey = config.Keybind or Enum.KeyCode.RightShift
 	local currentTheme = {
 		Bg = Color3.fromRGB(15, 15, 18),
 		Top = Color3.fromRGB(22, 22, 26),
@@ -465,35 +464,4 @@ function Library:Create(config)
 	return WindowObj
 end
 
--- ==========================================
--- تشغيل العناصر السبعة بالكامل
--- ==========================================
-local Window = Library:Create({ Title = "All Elements Hub", Description = "Test" })
-
-Window:AddButton("Normal Button", "Clicks successfully", function()
-	print("Button clicked")
-end)
-
-Window:AddTicketButton("Ticket Button", "Redeems code", "Claim", function()
-	Window.Notify("System", "Claimed!", 2)
-end)
-
-Window:AddToggle("Auto Farm", "Enables farming", false, function(state)
-	print("Toggle:", state)
-end)
-
-Window:AddTextBox("WalkSpeed Box", "Type speed...", function(text)
-	print("Text entered:", text)
-end)
-
-Window:AddKeybind("Action Keybind", Enum.KeyCode.E, function(key)
-	Window.Notify("Keybind", "Pressed key: " .. key.Name, 2)
-end)
-
-Window:AddSlider("JumpPower Slider", 50, 300, 50, function(val)
-	print("Slider value:", val)
-end)
-
-Window:AddDropdown("Weapon Dropdown", {"Sword", "Bow", "Shield"}, function(choice)
-	Window.Notify("Dropdown", "Chosen: " .. choice, 2)
-end)
+return Library
