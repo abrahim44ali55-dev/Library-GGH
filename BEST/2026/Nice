@@ -1340,15 +1340,10 @@ function GGH:CreateWindow(Config)
             Label.TextSize = Cfg.TextSize or 13
             Label.TextColor3 = Cfg.Color or Cfg.TextColor or CurrentTheme.Text
             Label.TextXAlignment = Cfg.Alignment and (Cfg.Alignment == "Center" and Enum.TextXAlignment.Center or Cfg.Alignment == "Right" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left) or Enum.TextXAlignment.Left
-            Label.TextYAlignment = Enum.TextYAlignment.Top
             Label.TextWrapped = true
             Label.AutoLocalize = Cfg.AutoLocalize ~= false
             RegisterThemable(Label, "TextColor3", "Text")
-            if Cfg.Color then
-                -- If custom color provided, don't themable
-            end
         end
-
         local function CreateSeparator(Cfg)
             Cfg = Cfg or {}
             local Frame = Instance.new("Frame", TabPage)
@@ -1360,12 +1355,8 @@ function GGH:CreateWindow(Config)
             Line.Position = UDim2.new(0,0,0.5,0)
             Line.BackgroundColor3 = Cfg.Color or CurrentTheme.Stroke
             Line.BackgroundTransparency = Cfg.Transparency or 0.5
-            Line.BorderSizePixel = 0
             Corner(Line, 1)
-            if not Cfg.Color then
-                RegisterThemable(Line, "BackgroundColor3", "Stroke")
-            end
-            -- Optional text in middle
+            if not Cfg.Color then RegisterThemable(Line, "BackgroundColor3", "Stroke") end
             if Cfg.Title and Cfg.Title ~= "" then
                 local Text = Instance.new("TextLabel", Frame)
                 Text.Size = UDim2.new(0,0,1,0)
@@ -1373,48 +1364,28 @@ function GGH:CreateWindow(Config)
                 Text.Position = UDim2.new(0.5,0,0,0)
                 Text.AnchorPoint = Vector2.new(0.5,0)
                 Text.BackgroundColor3 = CurrentTheme.MainBg
-                Text.BorderSizePixel = 0
                 Text.Text = " "..Cfg.Title.." "
                 Text.Font = Enum.Font.Gotham
                 Text.TextSize = 11
                 Text.TextColor3 = CurrentTheme.SubText
-                Text.AutoLocalize = true
                 Corner(Text, 4)
                 RegisterThemable(Text, "BackgroundColor3", "MainBg")
-                RegisterThemable(Text, "TextColor3", "SubText")
-                local Pad = Instance.new("UIPadding", Text)
-                Pad.PaddingLeft = UDim.new(0,8)
-                Pad.PaddingRight = UDim.new(0,8)
             end
         end
-
         local function CreateImage(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             local imgHeight = Cfg.Height or 100
             Frame.Size = UDim2.new(1,-4,0,imgHeight)
             Frame.BackgroundTransparency = 1
-            if Cfg.Rounded then
-                Frame.BackgroundColor3 = CurrentTheme.ElementBg
-                Frame.BackgroundTransparency = 0
-                Corner(Frame, Cfg.CornerRadius or 10)
-                RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
-            end
+            if Cfg.Rounded then Frame.BackgroundColor3 = CurrentTheme.ElementBg Corner(Frame, Cfg.CornerRadius or 10) RegisterThemable(Frame, "BackgroundColor3", "ElementBg") end
             AddSearch(Frame, Cfg.Title or "Image", "Image", Name)
             local Image = Instance.new("ImageLabel", Frame)
             Image.Size = Cfg.Size and UDim2.new(0,Cfg.Size.X,0,Cfg.Size.Y) or UDim2.new(1,0,1,0)
-            if Cfg.Size then
-                Image.Position = UDim2.new(0.5,0,0.5,0)
-                Image.AnchorPoint = Vector2.new(0.5,0.5)
-            end
+            if Cfg.Size then Image.Position = UDim2.new(0.5,0,0.5,0) Image.AnchorPoint = Vector2.new(0.5,0.5) end
             Image.BackgroundTransparency = 1
             Image.Image = Cfg.Image or Cfg.Url or "rbxassetid://0"
-            Image.ImageColor3 = Cfg.ImageColor or Cfg.Color or Color3.fromRGB(255,255,255)
             Image.ScaleType = Cfg.ScaleType or Enum.ScaleType.Fit
-            Image.AutoLocalize = false
-            if Cfg.Rounded then
-                Corner(Image, Cfg.CornerRadius or 10)
-            end
-            -- Optional title below image
+            if Cfg.Rounded then Corner(Image, Cfg.CornerRadius or 10) end
             if Cfg.Title and Cfg.Title ~= "" then
                 Frame.Size = UDim2.new(1,-4,0,imgHeight + 24)
                 local Title = Instance.new("TextLabel", Frame)
@@ -1425,11 +1396,9 @@ function GGH:CreateWindow(Config)
                 Title.Font = Enum.Font.GothamMedium
                 Title.TextSize = 12
                 Title.TextColor3 = CurrentTheme.Text
-                Title.AutoLocalize = true
                 RegisterThemable(Title, "TextColor3", "Text")
             end
         end
-
 
         local Elements = {}
 
@@ -1471,6 +1440,70 @@ function GGH:CreateWindow(Config)
 
         return Elements
     end
+
+    -- ================= FLOATING BUTTON - Hide/Show Window (ADDED, nothing deleted) =================
+    local FloatingButton = Instance.new("TextButton")
+    FloatingButton.Name = "GGH_FloatingButton"
+    FloatingButton.Size = UDim2.new(0, 50, 0, 50)
+    FloatingButton.Position = UDim2.new(0, 20, 0.5, -25)
+    FloatingButton.BackgroundColor3 = CurrentTheme.Accent
+    FloatingButton.Text = "GGH"
+    FloatingButton.Font = Enum.Font.GothamBold
+    FloatingButton.TextSize = 12
+    FloatingButton.TextColor3 = Color3.fromRGB(255,255,255)
+    FloatingButton.ZIndex = 500
+    FloatingButton.Parent = ScreenGui
+    Corner(FloatingButton, 25)
+    local FBStroke = Stroke(FloatingButton, CurrentTheme.StrokeLight, 1)
+    RegisterThemable(FloatingButton, "BackgroundColor3", "Accent")
+    RegisterThemable(FBStroke, "Stroke", "StrokeLight")
+    do
+        local dragging = false
+        local dragStart, startPos
+        FloatingButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = FloatingButton.Position
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                FloatingButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+        end)
+    end
+    local windowVisible = true
+    FloatingButton.MouseButton1Click:Connect(function()
+        windowVisible = not windowVisible
+        Main.Visible = windowVisible
+        ConfirmFrame.Visible = false
+        if not windowVisible then
+            ThemeDropdown.Visible = false
+            ThemeOpen = false
+            SearchBar.Visible = false
+            SearchOpen = false
+        end
+        Tween(FloatingButton, {Size = UDim2.new(0, 45, 0, 45)}, 0.1)
+        task.wait(0.1)
+        Tween(FloatingButton, {Size = UDim2.new(0, 50, 0, 50)}, 0.1)
+    end)
+    local originalApplyTheme = ApplyTheme
+    ApplyTheme = function(themeName)
+        originalApplyTheme(themeName)
+        local theme = Themes[themeName]
+        if theme then
+            Tween(FloatingButton, {BackgroundColor3 = theme.Accent}, 0.25)
+            FBStroke.Color = theme.StrokeLight
+        end
+    end
+    -- ================= END FLOATING BUTTON =================
+
+
     return Window
 end
 
