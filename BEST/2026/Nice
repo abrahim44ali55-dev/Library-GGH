@@ -443,15 +443,20 @@ function GGH:CreateWindow(Config)
             end)
         end
 
-        function Elements:Slider(Cfg)
-            local Value = Cfg.Default or Cfg.Min or 0
+                function Elements:Slider(Cfg)
+            Cfg.Min = Cfg.Min or 0
+            Cfg.Max = Cfg.Max or 100
+            Cfg.Default = Cfg.Default or Cfg.Min
+            local Value = math.clamp(Cfg.Default, Cfg.Min, Cfg.Max)
+            
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,52)
+            Frame.Size = UDim2.new(1,-4,0,58)
             Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
             Frame.BorderSizePixel = 0
+            Frame.ClipsDescendants = false
             Corner(Frame, 9)
+
             local Label = Instance.new("TextLabel", Frame)
-            Label.Text = Cfg.Title.." : "..Value
             Label.Size = UDim2.new(1,-16,0,18)
             Label.Position = UDim2.new(0,10,0,6)
             Label.BackgroundTransparency = 1
@@ -459,130 +464,79 @@ function GGH:CreateWindow(Config)
             Label.Font = Enum.Font.GothamMedium
             Label.TextSize = 12
             Label.TextColor3 = Color3.fromRGB(230,230,235)
+            Label.Text = Cfg.Title.." : "..Value
+
             local Bar = Instance.new("Frame", Frame)
-            Bar.Size = UDim2.new(1,-20,0,6)
+            Bar.Name = "Bar"
+            Bar.Size = UDim2.new(1,-20,0,8)
             Bar.Position = UDim2.new(0,10,0,32)
             Bar.BackgroundColor3 = Color3.fromRGB(40,40,50)
             Bar.BorderSizePixel = 0
-            Corner(Bar, 3)
+            Bar.ClipsDescendants = false
+            Corner(Bar, 4)
+
             local Fill = Instance.new("Frame", Bar)
-            Fill.Size = UDim2.new((Value - Cfg.Min)/(Cfg.Max - Cfg.Min),0,1,0)
+            Fill.Name = "Fill"
+            Fill.Size = UDim2.new((Value - Cfg.Min) / math.max(1, Cfg.Max - Cfg.Min),0,1,0)
             Fill.BackgroundColor3 = Color3.fromRGB(90,70,255)
             Fill.BorderSizePixel = 0
-            Corner(Fill, 3)
-            local Drag = Instance.new("TextButton", Bar)
-            Drag.Size = UDim2.new(1,0,1,0)
-            Drag.BackgroundTransparency = 1
-            Drag.Text = ""
+            Corner(Fill, 4)
+
+            -- Circle added on top of Fill - using your logic
+            local Circle = Instance.new("Frame", Bar)
+            Circle.Name = "Circle"
+            Circle.Size = UDim2.new(0,16,0,16)
+            Circle.AnchorPoint = Vector2.new(0.5,0.5)
+            Circle.Position = UDim2.new((Value - Cfg.Min) / math.max(1, Cfg.Max - Cfg.Min),0,0.5,0)
+            Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            Circle.BorderSizePixel = 0
+            Circle.ZIndex = 10
+            Corner(Circle, 8)
+            local S = Instance.new("UIStroke", Circle)
+            S.Color = Color3.fromRGB(90,70,255)
+            S.Thickness = 2
+
+            local DragArea = Instance.new("TextButton", Bar)
+            DragArea.Size = UDim2.new(1,0,1.8,0)
+            DragArea.Position = UDim2.new(0,0,0.5,-9)
+            DragArea.BackgroundTransparency = 1
+            DragArea.Text = ""
+            DragArea.ZIndex = 5
+
             local dragging = false
-            Drag.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end end)
-            UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-            UserInputService.InputChanged:Connect(function(i)
-                if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-                    local pos = math.clamp((i.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-                    Value = math.floor(Cfg.Min + (Cfg.Max - Cfg.Min) * pos)
-                    Fill.Size = UDim2.new(pos,0,1,0)
-                    Label.Text = Cfg.Title.." : "..Value
-                    pcall(Cfg.Callback or function() end, Value)
+
+            local function UpdateSlider(inputX)
+                local rel = math.clamp((inputX - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+                Value = math.floor(Cfg.Min + (Cfg.Max - Cfg.Min) * rel)
+                Fill.Size = UDim2.new(rel,0,1,0)
+                Circle.Position = UDim2.new(rel,0,0.5,0)
+                Label.Text = Cfg.Title.." : "..Value
+                pcall(Cfg.Callback or function() end, Value)
+            end
+
+            DragArea.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    UpdateSlider(input.Position.X)
                 end
             end)
-        end
 
-        function Elements:Input(Cfg)
-            local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,38)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
-            Corner(Frame, 9)
-            local Box = Instance.new("TextBox", Frame)
-            Box.Size = UDim2.new(1,-20,1,-10)
-            Box.Position = UDim2.new(0,10,0,5)
-            Box.BackgroundTransparency = 1
-            Box.PlaceholderText = Cfg.Placeholder or Cfg.Title
-            Box.Text = Cfg.Default or ""
-            Box.Font = Enum.Font.Gotham
-            Box.TextSize = 12
-            Box.TextColor3 = Color3.fromRGB(255,255,255)
-            Box.TextXAlignment = Enum.TextXAlignment.Left
-            Box.ClearTextOnFocus = false
-            Box.FocusLost:Connect(function() pcall(Cfg.Callback or function() end, Box.Text) end)
-        end
-
-        function Elements:Dropdown(Cfg)
-            local Selected = Cfg.Default or Cfg.Options[1]
-            local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,38)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
-            Frame.ClipsDescendants = true
-            Corner(Frame, 9)
-            local Btn = Instance.new("TextButton", Frame)
-            Btn.Size = UDim2.new(1,0,0,38)
-            Btn.BackgroundTransparency = 1
-            Btn.Text = Cfg.Title.." : "..Selected
-            Btn.Font = Enum.Font.GothamMedium
-            Btn.TextSize = 12
-            Btn.TextColor3 = Color3.fromRGB(255,255,255)
-            local List = Instance.new("Frame", Frame)
-            List.Position = UDim2.new(0,0,0,38)
-            List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
-            List.BackgroundTransparency = 1
-            Instance.new("UIListLayout", List).Padding = UDim.new(0,2)
-            local Open = false
-            Btn.MouseButton1Click:Connect(function()
-                Open = not Open
-                Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
+            DragArea.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
+                end
             end)
-            for _, opt in ipairs(Cfg.Options) do
-                local O = Instance.new("TextButton", List)
-                O.Size = UDim2.new(1,0,0,28)
-                O.BackgroundColor3 = Color3.fromRGB(35,35,45)
-                O.Text = opt
-                O.Font = Enum.Font.Gotham
-                O.TextSize = 11
-                O.TextColor3 = Color3.fromRGB(200,200,200)
-                O.BorderSizePixel = 0
-                Corner(O, 6)
-                O.MouseButton1Click:Connect(function()
-                    Selected = opt
-                    Btn.Text = Cfg.Title.." : "..Selected
-                    Open = false
-                    Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
-                    pcall(Cfg.Callback or function() end, Selected)
-                end)
-            end
-        end
 
-        function Elements:Colorpicker(Cfg)
-            local Color = Cfg.Default or Color3.fromRGB(90,70,255)
-            local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,38)
-            Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Frame.BorderSizePixel = 0
-            Corner(Frame, 9)
-            local Label = Instance.new("TextLabel", Frame)
-            Label.Text = Cfg.Title
-            Label.Size = UDim2.new(1,-60,1,0)
-            Label.Position = UDim2.new(0,10,0,0)
-            Label.BackgroundTransparency = 1
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Font = Enum.Font.GothamMedium
-            Label.TextSize = 12
-            Label.TextColor3 = Color3.fromRGB(255,255,255)
-            local Preview = Instance.new("Frame", Frame)
-            Preview.Size = UDim2.new(0,28,0,20)
-            Preview.Position = UDim2.new(1,-38,0.5,-10)
-            Preview.BackgroundColor3 = Color
-            Preview.BorderSizePixel = 0
-            Corner(Preview, 6)
-            local Btn = Instance.new("TextButton", Frame)
-            Btn.Size = UDim2.new(1,0,1,0)
-            Btn.BackgroundTransparency = 1
-            Btn.Text = ""
-            Btn.MouseButton1Click:Connect(function()
-                local newColor = Color3.fromHSV(math.random(),1,1)
-                Preview.BackgroundColor3 = newColor
-                pcall(Cfg.Callback or function() end, newColor)
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    UpdateSlider(input.Position.X)
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
             end)
         end
 
