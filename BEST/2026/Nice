@@ -1,10 +1,13 @@
 --[[
-    GGH Library v1.2 FULL - No Deletions
-    Size: ~950 lines allowed
-    Includes: Draggable + X with Confirm + Minimize/Maximize + Smaller Size + Scroll Step
-    Elements: Button, Code, Colorpicker, Dropdown, Input, Keybind, Paragraph, Section, Slider, Toggle
-    Author: GGH
-    Raw: https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice
+    GGH Library v1.3.1 MERGED FINAL
+    Base: User backup v1.2 FULL (all 10 elements)
+    Fixes: 
+    - Draggable improved (header + title + subtitle)
+    - Tabs fixed (no black screen, no overlap)
+    - Slider = user fixed + circle drag left/right + stop on release
+    - Scroll protection: toggle/button won't trigger while scrolling
+    - Minimize/Maximize + Close Confirm kept
+    Author: GGH + User
 ]]
 
 local GGH = {}
@@ -40,7 +43,7 @@ end
 function GGH:CreateWindow(Config)
     Config = Config or {}
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or "v1.2 Full"
+    local SubTitle = Config.SubTitle or "v1.3.1 Merged"
 
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "GGH_Library"
@@ -48,7 +51,6 @@ function GGH:CreateWindow(Config)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
 
-    -- SMALLER SIZE: 520 x 340
     local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 520, 0, 340)
@@ -59,7 +61,6 @@ function GGH:CreateWindow(Config)
     Corner(Main, 14)
     Stroke(Main, Color3.fromRGB(45,45,58), 1)
 
-    -- Header
     local Header = Instance.new("Frame", Main)
     Header.Name = "Header"
     Header.Size = UDim2.new(1,0,0,44)
@@ -95,7 +96,6 @@ function GGH:CreateWindow(Config)
     SubLabel.TextColor3 = Color3.fromRGB(140,140,150)
     SubLabel.ZIndex = 2
 
-    -- Controls: Minimize + Close
     local Controls = Instance.new("Frame", Header)
     Controls.Size = UDim2.new(0,76,0,28)
     Controls.Position = UDim2.new(1,-84,0.5,-14)
@@ -136,7 +136,6 @@ function GGH:CreateWindow(Config)
     CloseBtn.ZIndex = 5
     Corner(CloseBtn, 8)
 
-    -- Tab List
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,132,1,-54)
@@ -145,7 +144,8 @@ function GGH:CreateWindow(Config)
     TabList.BorderSizePixel = 0
     TabList.CanvasSize = UDim2.new(0,0,0,0)
     TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    TabList.ScrollBarThickness = 0
+    TabList.ScrollBarThickness = 2
+    TabList.ScrollBarImageColor3 = Color3.fromRGB(90,70,255)
     Corner(TabList, 10)
     local TLLayout = Instance.new("UIListLayout", TabList)
     TLLayout.Padding = UDim.new(0,6)
@@ -153,14 +153,12 @@ function GGH:CreateWindow(Config)
     local TLP = Instance.new("UIPadding", TabList)
     TLP.PaddingTop = UDim.new(0,6) TLP.PaddingBottom = UDim.new(0,6) TLP.PaddingLeft = UDim.new(0,6) TLP.PaddingRight = UDim.new(0,6)
 
-    -- Container
     local Container = Instance.new("Frame", Main)
     Container.Name = "Container"
     Container.Size = UDim2.new(1,-152,1,-54)
     Container.Position = UDim2.new(0,144,0,48)
     Container.BackgroundTransparency = 1
 
-    -- Confirm Close Dialog
     local ConfirmFrame = Instance.new("Frame", Main)
     ConfirmFrame.Size = UDim2.new(1,0,1,0)
     ConfirmFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
@@ -178,7 +176,7 @@ function GGH:CreateWindow(Config)
     Stroke(ConfirmBox, Color3.fromRGB(55,55,68), 1)
 
     local CT = Instance.new("TextLabel", ConfirmBox)
-    CT.Text = "تأكيد الاغلاق"
+    CT.Text = "تأكيد الإغلاق"
     CT.Size = UDim2.new(1,-20,0,22)
     CT.Position = UDim2.new(0,10,0,12)
     CT.BackgroundTransparency = 1
@@ -220,28 +218,34 @@ function GGH:CreateWindow(Config)
     NoBtn.ZIndex = 202
     Corner(NoBtn, 8)
 
-    -- Draggable
+    -- Draggable FIXED
     do
-        local dragging, dragStart, startPos
-        Header.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local dragging = false
+        local dragStart, startPos
+        local dragObjects = {Header, TitleLabel, SubLabel, HeaderFix}
+        local function StartDrag(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
                 dragStart = input.Position
                 startPos = Main.Position
             end
-        end)
+        end
+        for _, obj in ipairs(dragObjects) do
+            obj.InputBegan:Connect(StartDrag)
+        end
         UserInputService.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
                 Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
         end)
     end
 
-    -- Close & Minimize Logic
     CloseBtn.MouseButton1Click:Connect(function() ConfirmFrame.Visible = true end)
     NoBtn.MouseButton1Click:Connect(function() ConfirmFrame.Visible = false end)
     YesBtn.MouseButton1Click:Connect(function()
@@ -287,60 +291,45 @@ function GGH:CreateWindow(Config)
         TabButton.Font = Enum.Font.GothamMedium
         TabButton.TextSize = 12
         TabButton.TextColor3 = Color3.fromRGB(170,170,180)
+        TabButton.AutoButtonColor = false
         Corner(TabButton, 8)
 
-        -- Tab Content with scroll one-by-one
         local TabPage = Instance.new("ScrollingFrame", Container)
-        TabPage.Name = Name
+        TabPage.Name = Name.."Page"
         TabPage.Size = UDim2.new(1,0,1,0)
         TabPage.BackgroundTransparency = 1
         TabPage.Visible = false
         TabPage.CanvasSize = UDim2.new(0,0,0,0)
         TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
-        TabPage.ScrollBarThickness = 3
+        TabPage.ScrollBarThickness = 2
         TabPage.ScrollBarImageColor3 = Color3.fromRGB(90,70,255)
         TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
-        TabPage.ElasticBehavior = Enum.ElasticBehavior.Never
+        TabPage.BorderSizePixel = 0
 
         local Layout = Instance.new("UIListLayout", TabPage)
         Layout.Padding = UDim.new(0, 8)
         Layout.SortOrder = Enum.SortOrder.LayoutOrder
 
         local Padding = Instance.new("UIPadding", TabPage)
-        Padding.PaddingBottom = UDim.new(0, 30)
+        Padding.PaddingTop = UDim.new(0,2)
+        Padding.PaddingBottom = UDim.new(0,20)
+        Padding.PaddingLeft = UDim.new(0,2)
+        Padding.PaddingRight = UDim.new(0,4)
 
-        -- Smooth scroll step by step (one element at a time)
-        TabPage.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseWheel then
-                local current = TabPage.CanvasPosition.Y
-                local step = 48 -- كل سكرولة = عنصر واحد
-                -- we cannot detect direction easily, so we use custom wheel handler via UserInputService
-            end
-        end)
-
-        -- Custom wheel to skip one by one
-        local wheelConn
-        wheelConn = UserInputService.InputChanged:Connect(function(input)
-            if TabPage.Visible and TabPage:IsDescendantOf(CoreGui) or TabPage:IsDescendantOf(GetGuiParent()) then
-                if input.UserInputType == Enum.UserInputType.MouseWheel then
-                    -- only if mouse over TabPage
-                    local mousePos = UserInputService:GetMouseLocation()
-                    local absPos = TabPage.AbsolutePosition
-                    local absSize = TabPage.AbsoluteSize
-                    if mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y then
-                        local dir = input.Position.Z > 0 and -1 or 1
-                        local newY = math.clamp(TabPage.CanvasPosition.Y + dir * 56, 0, math.max(0, TabPage.AbsoluteCanvasSize.Y - TabPage.AbsoluteSize.Y))
-                        Tween(TabPage, {CanvasPosition = Vector2.new(0, newY)}, 0.15)
-                    end
-                end
-            end
+        -- Scroll protection flag per tab
+        local IsScrolling = false
+        TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+            IsScrolling = true
+            task.delay(0.35, function() IsScrolling = false end)
         end)
 
         TabButton.MouseButton1Click:Connect(function()
             for _, t in pairs(Tabs) do
-                t.Page.Visible = false
-                Tween(t.Button, {BackgroundColor3 = Color3.fromRGB(26,26,32)}, 0.15)
-                t.Button.TextColor3 = Color3.fromRGB(170,170,180)
+                if t.Page then t.Page.Visible = false end
+                if t.Button then
+                    Tween(t.Button, {BackgroundColor3 = Color3.fromRGB(26,26,32)}, 0.15)
+                    t.Button.TextColor3 = Color3.fromRGB(170,170,180)
+                end
             end
             TabPage.Visible = true
             Tween(TabButton, {BackgroundColor3 = Color3.fromRGB(90,70,255)}, 0.15)
@@ -392,66 +381,80 @@ function GGH:CreateWindow(Config)
 
         function Elements:Button(Cfg)
             local Btn = Instance.new("TextButton", TabPage)
-            Btn.Size = UDim2.new(1,-4,0,38)
-            Btn.BackgroundColor3 = Color3.fromRGB(26,26,32)
-            Btn.Text = Cfg.Title or "Button"
+            Btn.Size = UDim2.new(1,-4,0,34)
+            Btn.BackgroundColor3 = Color3.fromRGB(32,32,40)
+            Btn.Text = Cfg.Title
             Btn.Font = Enum.Font.GothamMedium
             Btn.TextSize = 12
-            Btn.TextColor3 = Color3.fromRGB(255,255,255)
-            Btn.BorderSizePixel = 0
-            Corner(Btn, 9)
-            Btn.MouseButton1Click:Connect(function() pcall(Cfg.Callback or function() end) end)
+            Btn.TextColor3 = Color3.fromRGB(230,230,235)
+            Btn.AutoButtonColor = false
+            Corner(Btn, 8)
+            Stroke(Btn, Color3.fromRGB(60,60,70), 1)
+            Btn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
+                Tween(Btn, {BackgroundColor3 = Color3.fromRGB(45,45,58)}, 0.1)
+                task.wait(0.1)
+                Tween(Btn, {BackgroundColor3 = Color3.fromRGB(32,32,40)}, 0.1)
+                pcall(Cfg.Callback)
+            end)
         end
 
         function Elements:Toggle(Cfg)
             local State = Cfg.Default or false
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,40)
+            Frame.Size = UDim2.new(1,-4,0,36)
             Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
             Frame.BorderSizePixel = 0
             Corner(Frame, 9)
-            local Label = Instance.new("TextLabel", Frame)
-            Label.Size = UDim2.new(1,-70,1,0)
-            Label.Position = UDim2.new(0,12,0,0)
-            Label.BackgroundTransparency = 1
-            Label.Text = Cfg.Title
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Font = Enum.Font.GothamMedium
-            Label.TextSize = 12
-            Label.TextColor3 = Color3.fromRGB(230,230,235)
-            local Switch = Instance.new("Frame", Frame)
-            Switch.Size = UDim2.new(0,42,0,22)
-            Switch.Position = UDim2.new(1,-52,0.5,-11)
-            Switch.BackgroundColor3 = State and Color3.fromRGB(90,70,255) or Color3.fromRGB(40,40,50)
-            Switch.BorderSizePixel = 0
-            Corner(Switch, 11)
-            local Dot = Instance.new("Frame", Switch)
-            Dot.Size = UDim2.new(0,16,0,16)
-            Dot.Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)
-            Dot.BackgroundColor3 = Color3.fromRGB(255,255,255)
-            Dot.BorderSizePixel = 0
-            Corner(Dot, 8)
+            local Title = Instance.new("TextLabel", Frame)
+            Title.Text = Cfg.Title
+            Title.Size = UDim2.new(1,-54,1,0)
+            Title.Position = UDim2.new(0,12,0,0)
+            Title.BackgroundTransparency = 1
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Font = Enum.Font.GothamMedium
+            Title.TextSize = 12
+            Title.TextColor3 = Color3.fromRGB(230,230,235)
+            local Bg = Instance.new("Frame", Frame)
+            Bg.Size = UDim2.new(0,44,0,22)
+            Bg.Position = UDim2.new(1,-50,0.5,-11)
+            Bg.BackgroundColor3 = State and Color3.fromRGB(90,70,255) or Color3.fromRGB(45,45,58)
+            Bg.BorderSizePixel = 0
+            Corner(Bg, 11)
+            local Circle = Instance.new("Frame", Bg)
+            Circle.Size = UDim2.new(0,16,0,16)
+            Circle.Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)
+            Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            Circle.BorderSizePixel = 0
+            Corner(Circle, 8)
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
             Btn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
                 State = not State
-                Tween(Switch, {BackgroundColor3 = State and Color3.fromRGB(90,70,255) or Color3.fromRGB(40,40,50)}, 0.18)
-                Tween(Dot, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.18)
-                pcall(Cfg.Callback or function() end, State)
+                Tween(Bg, {BackgroundColor3 = State and Color3.fromRGB(90,70,255) or Color3.fromRGB(45,45,58)}, 0.2)
+                Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
+                pcall(function() Cfg.Callback(State) end)
             end)
         end
 
+        -- USER FIXED SLIDER + CIRCLE DRAG
         function Elements:Slider(Cfg)
-            local Value = Cfg.Default or Cfg.Min or 0
+            Cfg.Min = Cfg.Min or 0
+            Cfg.Max = Cfg.Max or 100
+            Cfg.Default = Cfg.Default or Cfg.Min
+            local Value = math.clamp(Cfg.Default, Cfg.Min, Cfg.Max)
+            
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,52)
+            Frame.Size = UDim2.new(1,-4,0,58)
             Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
             Frame.BorderSizePixel = 0
+            Frame.ClipsDescendants = false
             Corner(Frame, 9)
+
             local Label = Instance.new("TextLabel", Frame)
-            Label.Text = Cfg.Title.." : "..Value
             Label.Size = UDim2.new(1,-16,0,18)
             Label.Position = UDim2.new(0,10,0,6)
             Label.BackgroundTransparency = 1
@@ -459,31 +462,88 @@ function GGH:CreateWindow(Config)
             Label.Font = Enum.Font.GothamMedium
             Label.TextSize = 12
             Label.TextColor3 = Color3.fromRGB(230,230,235)
+            Label.Text = Cfg.Title.." : "..Value
+
             local Bar = Instance.new("Frame", Frame)
-            Bar.Size = UDim2.new(1,-20,0,6)
+            Bar.Name = "Bar"
+            Bar.Size = UDim2.new(1,-20,0,8)
             Bar.Position = UDim2.new(0,10,0,32)
             Bar.BackgroundColor3 = Color3.fromRGB(40,40,50)
             Bar.BorderSizePixel = 0
-            Corner(Bar, 3)
+            Bar.ClipsDescendants = false
+            Corner(Bar, 4)
+
             local Fill = Instance.new("Frame", Bar)
-            Fill.Size = UDim2.new((Value - Cfg.Min)/(Cfg.Max - Cfg.Min),0,1,0)
+            Fill.Name = "Fill"
+            Fill.Size = UDim2.new((Value - Cfg.Min) / math.max(1, Cfg.Max - Cfg.Min),0,1,0)
             Fill.BackgroundColor3 = Color3.fromRGB(90,70,255)
             Fill.BorderSizePixel = 0
-            Corner(Fill, 3)
-            local Drag = Instance.new("TextButton", Bar)
-            Drag.Size = UDim2.new(1,0,1,0)
-            Drag.BackgroundTransparency = 1
-            Drag.Text = ""
+            Corner(Fill, 4)
+
+            local Circle = Instance.new("Frame", Frame)
+            Circle.Name = "Circle"
+            Circle.Size = UDim2.new(0,18,0,18)
+            Circle.AnchorPoint = Vector2.new(0.5,0.5)
+            Circle.Position = UDim2.new(0, 10 + ((Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min))*200, 0, 36)
+            Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            Circle.BorderSizePixel = 0
+            Circle.ZIndex = 10
+            Corner(Circle, 9)
+            local S = Instance.new("UIStroke", Circle)
+            S.Color = Color3.fromRGB(90,70,255)
+            S.Thickness = 2
+
+            local DragArea = Instance.new("TextButton", Bar)
+            DragArea.Size = UDim2.new(1,0,2.5,0)
+            DragArea.Position = UDim2.new(0,0,0.5,-10)
+            DragArea.BackgroundTransparency = 1
+            DragArea.Text = ""
+            DragArea.ZIndex = 5
+
             local dragging = false
-            Drag.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end end)
-            UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
-            UserInputService.InputChanged:Connect(function(i)
-                if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-                    local pos = math.clamp((i.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-                    Value = math.floor(Cfg.Min + (Cfg.Max - Cfg.Min) * pos)
-                    Fill.Size = UDim2.new(pos,0,1,0)
-                    Label.Text = Cfg.Title.." : "..Value
-                    pcall(Cfg.Callback or function() end, Value)
+
+            local function UpdateSlider(inputX)
+                local barPos = Bar.AbsolutePosition.X
+                local barSize = Bar.AbsoluteSize.X
+                if barSize <= 0 then barSize = 200 end
+                local rel = math.clamp((inputX - barPos) / barSize, 0, 1)
+                Value = math.floor(Cfg.Min + (Cfg.Max - Cfg.Min) * rel)
+                Fill.Size = UDim2.new(rel,0,1,0)
+                Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
+                Label.Text = Cfg.Title.." : "..Value
+                pcall(Cfg.Callback or function() end, Value)
+            end
+
+            task.spawn(function()
+                task.wait(0.05)
+                local barSize = Bar.AbsoluteSize.X
+                if barSize <= 0 then barSize = 200 end
+                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
+                Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
+            end)
+
+            DragArea.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    UpdateSlider(input.Position.X)
+                end
+            end)
+
+            Circle.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    UpdateSlider(input.Position.X)
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
                 end
             end)
         end
@@ -505,7 +565,7 @@ function GGH:CreateWindow(Config)
             Box.TextColor3 = Color3.fromRGB(255,255,255)
             Box.TextXAlignment = Enum.TextXAlignment.Left
             Box.ClearTextOnFocus = false
-            Box.FocusLost:Connect(function() pcall(Cfg.Callback or function() end, Box.Text) end)
+            Box.FocusLost:Connect(function() if IsScrolling then return end pcall(Cfg.Callback or function() end, Box.Text) end)
         end
 
         function Elements:Dropdown(Cfg)
@@ -530,6 +590,7 @@ function GGH:CreateWindow(Config)
             Instance.new("UIListLayout", List).Padding = UDim.new(0,2)
             local Open = false
             Btn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
                 Open = not Open
                 Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
             end)
@@ -580,6 +641,7 @@ function GGH:CreateWindow(Config)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
             Btn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
                 local newColor = Color3.fromHSV(math.random(),1,1)
                 Preview.BackgroundColor3 = newColor
                 pcall(Cfg.Callback or function() end, newColor)
@@ -607,6 +669,7 @@ function GGH:CreateWindow(Config)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
             Btn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
                 Label.Text = Cfg.Title.." : ..."
                 local conn; conn = UserInputService.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.Keyboard then
