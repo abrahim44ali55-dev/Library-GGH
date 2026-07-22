@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><!-- PLAYABLE_TOUCH_PATCH_V1 --><script>
+(function() {
+  if (window.__playableTouchPatchInstalled) return;
+  window.__playableTouchPatchInstalled = true;
+  var origAdd = EventTarget.prototype.addEventListener;
+  var blockedTypes = { touchstart: 1, touchmove: 1, wheel: 1 };
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (blockedTypes[type]) {
+      if (options === undefined || options === null) {
+        options = { passive: true };
+      } else if (typeof options === 'boolean') {
+        options = { capture: options, passive: true };
+      } else {
+        options = Object.assign({}, options, { passive: true });
+      }
+    }
+    return origAdd.call(this, type, listener, options);
+  };
+})();
+</script><script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GGH Library V1.8.0 - Add API Ultimate Docs</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d0d10;color:#fff;font-family:Inter,Segoe UI,sans-serif;line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:20px}
+.header{background:#16161c;border:1px solid #2d2d3a;border-radius:16px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;position:sticky;top:16px;z-index:100}
+.header h1{font-size:22px;font-weight:800} .header h1 span{color:#5a46ff}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.badge{background:#1a1a20;border:1px solid #2d2d3a;padding:4px 10px;border-radius:20px;font-size:11px;color:#9696a5}
+.badge.accent{border-color:#5a46ff;color:#5a46ff;background:rgba(90,70,255,0.12)}
+.hero{background:linear-gradient(135deg,#16161c,#1a1a20);border:1px solid #2d2d3a;border-radius:16px;padding:32px;margin-bottom:24px}
+.hero h2{font-size:30px;font-weight:800;margin-bottom:10px} .hero h2 span{color:#5a46ff}
+.hero p{color:#9696a5;max-width:700px;font-size:14px}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:20px}
+.feat{background:#0d0d10;border:1px solid #2d2d3a;border-radius:12px;padding:14px}
+.feat b{display:block;font-size:13px;margin-bottom:4px} .feat small{color:#9696a5;font-size:11px}
+.section{background:#16161c;border:1px solid #2d2d3a;border-radius:16px;padding:24px;margin-bottom:24px}
+.section h3{font-size:18px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;background:#5a46ff;border-radius:50%;display:inline-block}
+.desc{color:#9696a5;font-size:13px;margin-bottom:16px}
+.code-block{background:#0d0d10;border:1px solid #2d2d3a;border-radius:10px;position:relative;margin:12px 0;overflow:hidden}
+.code-block pre{padding:16px;overflow-x:auto;font-family:JetBrains Mono,Consolas,monospace;font-size:12px;line-height:1.7;color:#c8c8d2;white-space:pre-wrap;word-break:break-all}
+.copy-btn{position:absolute;top:8px;right:8px;background:#1a1a20;border:1px solid #2d2d3a;color:#fff;padding:6px 12px;border-radius:8px;font-size:11px;cursor:pointer}
+.copy-btn:hover{background:#5a46ff;border-color:#5a46ff}
+.copy-btn.copied{background:#28a745!important}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}.header{flex-direction:column;align-items:flex-start;gap:12px}}
+.elem-card{background:#0d0d10;border:1px solid #2d2d3a;border-radius:12px;padding:16px;margin-bottom:12px}
+.elem-card h4{font-size:14px;margin-bottom:8px;color:#5a46ff}
+.elem-card p{font-size:12px;color:#9696a5;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{border:1px solid #2d2d3a;padding:10px;font-size:12px;text-align:left}
+th{background:#1a1a20;color:#9696a5}
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.theme{border-radius:10px;padding:12px;border:1px solid #2d2d3a;background:#0d0d10}
+.theme .colors{display:flex;gap:4px;margin-top:8px}
+.theme .c{width:16px;height:16px;border-radius:4px;border:1px solid #2d2d3a}
+.ai-box{background:linear-gradient(135deg,#1a1a20,#16161c);border:2px solid #5a46ff;border-radius:16px;padding:24px;margin-top:16px}
+.label{background:#5a46ff;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;display:inline-block;margin-bottom:12px}
+.footer{text-align:center;padding:24px;color:#9696a5;font-size:12px;border-top:1px solid #2d2d3a;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<div><h1>GGH <span>Library</span> V1.8.0</h1><div style="font-size:12px;color:#9696a5">Add API Edition - Search+Translate+KeySystem</div><div class="badges"><span class="badge accent">Add API</span><span class="badge">10 Elements</span><span class="badge">10 Themes</span><span class="badge">HWID</span><span class="badge">Expire</span></div></div>
+<div style="text-align:right"><a href="https://github.com/abrahim44ali55-dev/Library-GGH" target="_blank" style="background:#5a46ff;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;display:inline-block">GitHub Repo</a><div style="margin-top:8px;font-size:11px;color:#9696a5">abrahim44ali55-dev.github.io/Library-GGH</div></div>
+</div>
+
+<div class="hero">
+<h2>GGH Library <span>V1.8.0</span> Add API</h2>
+<p>One function to rule them all - Tab:Add("Type", Config). 10 Elements, 10 Themes, Search 🔍, Translate, Advanced KeySystem with HWID Lock & Expiration control.</p>
+<div class="features">
+<div class="feat"><b>⚡ Add API</b><small>Unified function</small></div>
+<div class="feat"><b>🔑 Key System</b><small>HWID + Expire On/Off</small></div>
+<div class="feat"><b>🎨 10 Themes</b><small>Dark to Toxic Green</small></div>
+<div class="feat"><b>🔍 Search</b><small>Filter anything</small></div>
+</div>
+</div>
+
+<div class="section">
+<h3><span class="dot"></span> Installation - Correct Link</h3>
+<div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>local GGH = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()</pre></div>
+</div>
+
+<div class="section">
+<h3><span class="dot"></span> Add API - New Way</h3>
+<p class="desc">All elements now use Add("Type", Config)</p>
+<div class="grid2">
+<div class="code-block"><div style="padding:8px 16px;font-size:11px;color:#ff5f5f;border-bottom:1px solid #2d2d3a">❌ Old V1.7.0</div><pre>Tab:Button({Title="Btn"})
+Tab:Toggle({Title="Tog"})
+Tab:Slider({Title="S",Min=0,Max=100})</pre></div>
+<div class="code-block"><div style="padding:8px 16px;font-size:11px;color:#28ff8f;border-bottom:1px solid #2d2d3a">✅ New V1.8.0 Add API</div><pre>Tab:Add("Button",{Title="Btn",Callback=function()end})
+Tab:Add("Toggle",{Title="Tog",Default=false,Callback=function(v)end})
+Tab:Add("Slider",{Title="S",Min=0,Max=100,Default=0,Callback=function(v)end})</pre></div>
+</div>
+</div>
+
+<div class="section">
+<h3><span class="dot"></span> Window Config - Full</h3>
+<div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>local Window = GGH:CreateWindow({
+   Title = "GGH Hub",
+   SubTitle = "V1.8.0 Add API",
+   Theme = "Dark",
+   KeySystem = true, -- true/false
+   Key = "GGH-1234", -- or {"KEY1","KEY2"}
+   KeyHWID = false, -- true=lock device
+   KeyExpiration = false, -- true=expires
+   KeyDuration = 86400, -- 3600=1h, 86400=1d, 604800=1w, 2592000=30d
+   GetKeyLink = "https://linkvertise.com/...",
+   DiscordLink = "https://discord.gg/..."
+})
+if not Window then return end
+
+local Main = Window:CreateTab("Main")</pre></div>
+</div>
+
+<div class="section">
+<h3><span class="dot"></span> All 10 Elements - Add API with Copy Buttons</h3>
+
+<div class="elem-card"><h4>1. Section</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Section", {Title = "Auto Farm"})</pre></div></div>
+<div class="elem-card"><h4>2. Paragraph</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Paragraph", {Title = "Info", Content = "V1.8.0 Add API - Search+Translate+KeySystem"})</pre></div></div>
+<div class="elem-card"><h4>3. Button</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Button", {
+    Title = "Teleport to Spawn",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0,10,0)
+    end
+})</pre></div></div>
+<div class="elem-card"><h4>4. Toggle</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Toggle", {
+    Title = "Auto Farm",
+    Default = false,
+    Callback = function(v) getgenv().AutoFarm = v end
+})</pre></div></div>
+<div class="elem-card"><h4>5. Slider</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Slider", {
+    Title = "WalkSpeed",
+    Min = 16, Max = 500, Default = 16,
+    Callback = function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end
+})</pre></div></div>
+<div class="elem-card"><h4>6. Input</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Input", {
+    Title = "Player Name",
+    Placeholder = "Enter username",
+    Callback = function(text) print(text) end
+})</pre></div></div>
+<div class="elem-card"><h4>7. Dropdown</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Dropdown", {
+    Title = "Method",
+    Options = {"Fast","Safe","Legit"},
+    Default = "Fast",
+    Callback = function(v) print(v) end
+})</pre></div></div>
+<div class="elem-card"><h4>8. Colorpicker</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Colorpicker", {
+    Title = "ESP Color",
+    Default = Color3.fromRGB(90,70,255),
+    Callback = function(c) print(c) end
+})</pre></div></div>
+<div class="elem-card"><h4>9. Keybind</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Keybind", {
+    Title = "Fly Key",
+    Default = Enum.KeyCode.F,
+    Callback = function(k) print(k.Name) end
+})</pre></div></div>
+<div class="elem-card"><h4>10. Code</h4><div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>Main:Add("Code", {Code = [[print("GGH V1.8.0 Add API")]]})</pre></div></div>
+</div>
+
+<div class="section">
+<h3><span class="dot"></span> 10 Themes</h3>
+<div class="theme-grid">
+<div class="theme"><b>Dark</b><div class="colors"><div class="c" style="background:#0d0d10"></div><div class="c" style="background:#5a46ff"></div></div></div>
+<div class="theme"><b>Midnight Blue</b><div class="colors"><div class="c" style="background:#0a0e17"></div><div class="c" style="background:#3c82ff"></div></div></div>
+<div class="theme"><b>Crimson Red</b><div class="colors"><div class="c" style="background:#120a0c"></div><div class="c" style="background:#dc3246"></div></div></div>
+<div class="theme"><b>Forest Green</b><div class="colors"><div class="c" style="background:#0a100c"></div><div class="c" style="background:#3cc85a"></div></div></div>
+<div class="theme"><b>Purple Haze</b><div class="colors"><div class="c" style="background:#100c14"></div><div class="c" style="background:#9650ff"></div></div></div>
+<div class="theme"><b>Cyberpunk</b><div class="colors"><div class="c" style="background:#08080c"></div><div class="c" style="background:#ff0080"></div></div></div>
+<div class="theme"><b>Ocean</b><div class="colors"><div class="c" style="background:#081216"></div><div class="c" style="background:#00c8dc"></div></div></div>
+<div class="theme"><b>Sunset Orange</b><div class="colors"><div class="c" style="background:#140e0a"></div><div class="c" style="background:#ff8c28"></div></div></div>
+<div class="theme"><b>Monochrome</b><div class="colors"><div class="c" style="background:#121212"></div><div class="c" style="background:#fff"></div></div></div>
+<div class="theme"><b>Toxic Green</b><div class="colors"><div class="c" style="background:#0a100a"></div><div class="c" style="background:#78ff3c"></div></div></div>
+</div>
+</div>
+
+<div class="section">
+<h3><span class="dot"></span> Full Example - Add API</h3>
+<div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy</button><pre>local GGH = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
+local Window = GGH:CreateWindow({Title="GGH Hub", SubTitle="V1.8.0 Add API", Theme="Dark", KeySystem=false})
+local Main = Window:CreateTab("Main")
+local Player = Window:CreateTab("Player")
+
+Main:Add("Section", {Title="Auto Farm"})
+Main:Add("Toggle", {Title="Auto Farm Level", Default=false, Callback=function(v) getgenv().AutoFarm=v end})
+Main:Add("Dropdown", {Title="Method", Options={"Fast","Safe","Legit"}, Default="Fast", Callback=function(v) print(v) end})
+Main:Add("Slider", {Title="Distance", Min=0, Max=100, Default=20, Callback=function(v) print(v) end})
+Main:Add("Button", {Title="Teleport", Callback=function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame=CFrame.new(0,10,0) end})
+
+Player:Add("Section", {Title="Movement"})
+Player:Add("Slider", {Title="WalkSpeed", Min=16, Max=500, Default=16, Callback=function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed=v end})
+Player:Add("Colorpicker", {Title="ESP Color", Default=Color3.fromRGB(90,70,255), Callback=function(c) print(c) end})</pre></div>
+</div>
+
+<div class="section">
+<div class="ai-box">
+<span class="label">🤖 AI / DEVELOPER PROMPT - Copy for ChatGPT/Muse/Meta AI</span>
+<h3>Prompt that makes any AI understand GGH Library completely</h3>
+<p style="font-size:12px;color:#9696a5;margin:8px 0">انسخ هذا البرومت واعطه لأي ذكاء اصطناعي - راح يولد كود صحيح 100%</p>
+<div class="code-block"><button class="copy-btn" onclick="copy(this)">Copy Full Prompt</button><pre>You are expert in GGH Library V1.8.0 Add API Edition - Roblox UI Library.
+
+=== COMPLETE GUIDE ===
+
+1. LOADING:
+local GGH = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
+
+2. WINDOW:
+local Window = GGH:CreateWindow({
+   Title="Hub Name", SubTitle="V1.8.0", Theme="Dark",
+   KeySystem=false, -- true=requires key
+   Key="GGH-1234", -- or {"KEY1","KEY2"}
+   KeyHWID=false, -- true=lock device
+   KeyExpiration=false, -- true=expires
+   KeyDuration=86400, -- 3600=1h,86400=1d,604800=1w,2592000=30d
+   GetKeyLink="https://...", DiscordLink="https://..."
+})
+if not Window then return end
+
+3. TABS:
+local Main = Window:CreateTab("Main")
+
+4. ADD API - ALL ELEMENTS USE Add("Type", Config):
+- "Section": {Title="string"}
+- "Paragraph": {Title="string", Content="string"}
+- "Button": {Title="string", Callback=function() end}
+- "Toggle": {Title="string", Default=bool, Callback=function(v) end}
+- "Slider": {Title="string", Min=number, Max=number, Default=number, Callback=function(v) end}
+- "Input": {Title="string", Placeholder="string", Callback=function(text) end}
+- "Dropdown": {Title="string", Options={"A","B"}, Default="A", Callback=function(v) end}
+- "Colorpicker": {Title="string", Default=Color3.fromRGB(r,g,b), Callback=function(c) end}
+- "Keybind": {Title="string", Default=Enum.KeyCode.F, Callback=function(k) end}
+- "Code": {Code="string"}
+
+Examples:
+Main:Add("Section", {Title="Farm"})
+Main:Add("Button", {Title="Btn", Callback=function() print("Hi") end})
+Main:Add("Toggle", {Title="ESP", Default=false, Callback=function(v) getgenv().ESP=v end})
+Main:Add("Slider", {Title="Speed", Min=16, Max=500, Default=16, Callback=function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed=v end})
+
+5. RULES - NEVER DO THESE:
+- Use Title NOT Name
+- Use Default NOT CurrentValue/CurrentOption
+- Use Min/Max NOT Range
+- CreateTab only takes Name
+- Type is string like "Button"
+
+6. THEMES: Dark, Midnight Blue, Crimson Red, Forest Green, Purple Haze, Cyberpunk, Ocean, Sunset Orange, Monochrome, Toxic Green
+
+7. FULL EXAMPLE:
+local GGH=loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
+local Window=GGH:CreateWindow({Title="GGH Hub", SubTitle="V1.8.0", Theme="Dark", KeySystem=false})
+local Main=Window:CreateTab("Main")
+Main:Add("Toggle", {Title="Auto Farm", Default=false, Callback=function(v) getgenv().Farm=v end})
+Main:Add("Button", {Title="Teleport", Callback=function() game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame=CFrame.new(0,10,0) end})
+
+Now generate correct GGH V1.8.0 Add API code.
+</pre></div>
+</div>
+</div>
+
+<div class="footer">GGH Library V1.8.0 Add API • <a href="https://github.com/abrahim44ali55-dev/Library-GGH">GitHub</a> • Live: https://abrahim44ali55-dev.github.io/Library-GGH/<br>Raw: https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice</div>
+</div>
+<script>
+function copy(btn){
+  const pre = btn.parentElement.querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const old=btn.innerText; btn.innerText='Copied! ✓'; btn.classList.add('copied');
+    setTimeout(()=>{btn.innerText=old; btn.classList.remove('copied')},2000);
+  });
+}
+</script>
+</body>
+</html>
