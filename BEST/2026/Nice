@@ -1,5 +1,5 @@
 -- =====================================================================
--- Advanced Global Script Library System (Fixed Dropdown Click & Clean UI)
+-- Advanced Global Script Library System (Custom Keybind & Clean Dropdown)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -72,7 +72,7 @@ function Library:Create(config)
 	config = config or {}
 	local title = config.Title or "Global Control Panel"
 	local description = config.Description or "Advanced & Comprehensive System"
-	local toggleKey = Enum.KeyCode.RightShift
+	local toggleKey = config.Keybind or Enum.KeyCode.RightShift -- دعم تحديد زر الاختصار (Keybind)
 	local currentLang = "en"
 	local currentThemeName = config.Theme or "Dark Modern"
 	if not Themes[currentThemeName] then currentThemeName = "Dark Modern" end
@@ -543,6 +543,56 @@ function Library:Create(config)
 			end)
 		end
 
+		-- إضافة زر تكت بوتون (Ticket Button / Action Button مخصص)
+		function TabObj:AddTicketButton(name, desc, buttonText, callback)
+			local TicketFrame = Instance.new("Frame")
+			TicketFrame.Size = UDim2.new(1, 0, 0, 42)
+			TicketFrame.BackgroundColor3 = currentTheme.Elem
+			TicketFrame.ZIndex = 17
+			TicketFrame.Parent = TabPage
+			Instance.new("UICorner", TicketFrame).CornerRadius = UDim.new(0, 6)
+
+			local TitleLbl = Instance.new("TextLabel")
+			TitleLbl.Size = UDim2.new(1, -110, 0, 18)
+			TitleLbl.Position = UDim2.new(0, 10, 0, 4)
+			TitleLbl.BackgroundTransparency = 1
+			TitleLbl.Text = name
+			TitleLbl.TextColor3 = currentTheme.Text
+			TitleLbl.TextSize = 11
+			TitleLbl.Font = Enum.Font.GothamBold
+			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			TitleLbl.ZIndex = 18
+			TitleLbl.Parent = TicketFrame
+
+			local DescLbl = Instance.new("TextLabel")
+			DescLbl.Size = UDim2.new(1, -110, 0, 14)
+			DescLbl.Position = UDim2.new(0, 10, 0, 22)
+			DescLbl.BackgroundTransparency = 1
+			DescLbl.Text = desc
+			DescLbl.TextColor3 = currentTheme.Sub
+			DescLbl.TextSize = 9
+			DescLbl.Font = Enum.Font.Gotham
+			DescLbl.TextXAlignment = Enum.TextXAlignment.Left
+			DescLbl.ZIndex = 18
+			DescLbl.Parent = TicketFrame
+
+			local ActionBtn = Instance.new("TextButton")
+			ActionBtn.Size = UDim2.new(0, 90, 0, 26)
+			ActionBtn.Position = UDim2.new(1, -98, 0.5, -13)
+			ActionBtn.BackgroundColor3 = currentTheme.Accent
+			ActionBtn.Text = buttonText or "Action"
+			ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			ActionBtn.TextSize = 10
+			ActionBtn.Font = Enum.Font.GothamBold
+			ActionBtn.ZIndex = 19
+			ActionBtn.Parent = TicketFrame
+			Instance.new("UICorner", ActionBtn).CornerRadius = UDim.new(0, 4)
+
+			ActionBtn.MouseButton1Click:Connect(function()
+				if callback then callback() end
+			end)
+		end
+
 		function TabObj:AddToggle(name, desc, defaultState, callback)
 			local toggled = defaultState or false
 			local ToggleFrame = Instance.new("TextButton")
@@ -705,7 +755,7 @@ function Library:Create(config)
 			DropBtn.Size = UDim2.new(1, 0, 0, headerHeight)
 			DropBtn.BackgroundTransparency = 1
 			DropBtn.Text = ""
-			DropBtn.ZIndex = 35 -- زر الهيدر أصبح في طبقة منفصلة أعلى العناصر أثناء الإغلاق
+			DropBtn.ZIndex = 35
 			DropBtn.Parent = DropMain
 
 			local TitleLbl = Instance.new("TextLabel")
@@ -766,7 +816,7 @@ function Library:Create(config)
 				isOpen = not isOpen
 				local targetHeight = isOpen and openedHeight or closedHeight
 				if isOpen then
-					DropBtn.ZIndex = 45 -- عند الفتح نخلي الهيدر تحت العناصر عشان نقدر نضغط على العناصر براحة
+					DropBtn.ZIndex = 45
 				else
 					DropBtn.ZIndex = 35
 				end
