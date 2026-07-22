@@ -443,20 +443,23 @@ function GGH:CreateWindow(Config)
             end)
         end
 
-        function Elements:Slider(Cfg)
+                function Elements:Slider(Cfg)
             local Min = Cfg.Min or 0
             local Max = Cfg.Max or 100
             local Value = Cfg.Default or Min
+
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,54)
+            Frame.Name = "Slider_"..Cfg.Title
+            Frame.Size = UDim2.new(1,-4,0,58)
             Frame.BackgroundColor3 = Color3.fromRGB(26,26,32)
             Frame.BorderSizePixel = 0
             Corner(Frame, 9)
 
             local Label = Instance.new("TextLabel", Frame)
-            Label.Text = Cfg.Title.." : "..Value
-            Label.Size = UDim2.new(1,-16,0,18)
-            Label.Position = UDim2.new(0,10,0,6)
+            Label.Name = "Label"
+            Label.Text = Cfg.Title.." : "..tostring(Value)
+            Label.Size = UDim2.new(1,-16,0,20)
+            Label.Position = UDim2.new(0,10,0,4)
             Label.BackgroundTransparency = 1
             Label.TextXAlignment = Enum.TextXAlignment.Left
             Label.Font = Enum.Font.GothamMedium
@@ -465,65 +468,70 @@ function GGH:CreateWindow(Config)
 
             local Bar = Instance.new("Frame", Frame)
             Bar.Name = "Bar"
-            Bar.Size = UDim2.new(1,-20,0,6)
-            Bar.Position = UDim2.new(0,10,0,32)
-            Bar.BackgroundColor3 = Color3.fromRGB(40,40,50)
+            Bar.Size = UDim2.new(1,-24,0,8)
+            Bar.Position = UDim2.new(0,12,0,32)
+            Bar.BackgroundColor3 = Color3.fromRGB(42,42,52)
             Bar.BorderSizePixel = 0
-            Corner(Bar, 3)
+            Corner(Bar, 4)
 
             local Fill = Instance.new("Frame", Bar)
             Fill.Name = "Fill"
-            local initPos = math.clamp((Value - Min)/(Max - Min),0,1)
-            Fill.Size = UDim2.new(initPos,0,1,0)
+            Fill.Size = UDim2.new(math.clamp((Value-Min)/(Max-Min),0,1),0,1,0)
             Fill.BackgroundColor3 = Color3.fromRGB(90,70,255)
             Fill.BorderSizePixel = 0
-            Corner(Fill, 3)
+            Corner(Fill, 4)
 
             local Circle = Instance.new("Frame", Bar)
             Circle.Name = "Circle"
-            Circle.Size = UDim2.new(0,14,0,14)
-            Circle.Position = UDim2.new(initPos, -7, 0.5, -7)
+            Circle.Size = UDim2.new(0,16,0,16)
+            Circle.AnchorPoint = Vector2.new(0.5,0.5)
+            Circle.Position = UDim2.new(math.clamp((Value-Min)/(Max-Min),0,1),0,0.5,0)
             Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
             Circle.BorderSizePixel = 0
-            Circle.ZIndex = 2
-            Corner(Circle, 7)
-            Stroke(Circle, Color3.fromRGB(90,70,255), 2)
+            Circle.ZIndex = 5
+            Corner(Circle, 8)
+            local CircleStroke = Instance.new("UIStroke", Circle)
+            CircleStroke.Color = Color3.fromRGB(90,70,255)
+            CircleStroke.Thickness = 2
 
-            local DragArea = Instance.new("TextButton", Frame)
-            DragArea.Size = UDim2.new(1,0,0,30)
-            DragArea.Position = UDim2.new(0,0,0,24)
-            DragArea.BackgroundTransparency = 1
-            DragArea.Text = ""
-            DragArea.ZIndex = 3
+            local Button = Instance.new("TextButton", Bar)
+            Button.Name = "Button"
+            Button.Size = UDim2.new(1,0,1,0)
+            Button.BackgroundTransparency = 1
+            Button.Text = ""
+            Button.ZIndex = 10
 
             local dragging = false
 
-            local function Update(input)
-                local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-                Value = math.floor(Min + (Max - Min) * pos)
-                if Cfg.Rounding then Value = math.floor(Value / Cfg.Rounding) * Cfg.Rounding end
-                Label.Text = Cfg.Title.." : "..Value
-                Tween(Fill, {Size = UDim2.new(pos,0,1,0)}, 0.08)
-                Tween(Circle, {Position = UDim2.new(pos, -7, 0.5, -7)}, 0.08)
-                pcall(Cfg.Callback or function() end, Value)
+            local function UpdateSlider(input)
+                local barPos = Bar.AbsolutePosition.X
+                local barSize = Bar.AbsoluteSize.X
+                if barSize <= 0 then return end
+                local pos = math.clamp((input.Position.X - barPos) / barSize, 0, 1)
+                local newValue = math.floor(Min + (Max - Min) * pos)
+                Value = newValue
+                Label.Text = Cfg.Title.." : "..tostring(Value)
+                Fill.Size = UDim2.new(pos,0,1,0)
+                Circle.Position = UDim2.new(pos,0,0.5,0)
+                pcall(function() Cfg.Callback(Value) end)
             end
 
-            DragArea.InputBegan:Connect(function(input)
+            Button.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = true
-                    Update(input)
+                    UpdateSlider(input)
                 end
             end)
 
-            Circle.InputBegan:Connect(function(input)
+            Button.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = true
+                    dragging = false
                 end
             end)
 
             UserInputService.InputChanged:Connect(function(input)
                 if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    Update(input)
+                    UpdateSlider(input)
                 end
             end)
 
@@ -532,6 +540,8 @@ function GGH:CreateWindow(Config)
                     dragging = false
                 end
             end)
+        end
+        end)
         end
 
         function Elements:Input(Cfg)
