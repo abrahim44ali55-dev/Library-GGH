@@ -1,5 +1,5 @@
 -- =====================================================================
--- Advanced Global Script Library System (Fixed Dropdown & Clean UI)
+-- Advanced Global Script Library System (Completely Fixed Dropdown & Clean UI)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -81,6 +81,9 @@ function Library:Create(config)
 	if CoreGui:FindFirstChild("UniversalScriptHub") then
 		CoreGui["UniversalScriptHub"]:Destroy()
 	end
+	if CoreGui:FindFirstChild("UniversalScriptHub_Notifications") then
+		CoreGui["UniversalScriptHub_Notifications"]:Destroy()
+	end
 
 	local ScreenGui = Instance.new("ScreenGui")
 	ScreenGui.Name = "UniversalScriptHub"
@@ -88,14 +91,19 @@ function Library:Create(config)
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-	-- حاوي إشعارات برمجية نظيف تماماً لا يظهر أبدًا كصندوق فارغ على الشاشة
+	-- ScreenGui مستقل تماماً خاص بالإشعارات لضمان عدم حدوث أي تداخل مع الواجهة والدروب داون
+	local NotifScreenGui = Instance.new("ScreenGui")
+	NotifScreenGui.Name = "UniversalScriptHub_Notifications"
+	NotifScreenGui.ResetOnSpawn = false
+	pcall(function() NotifScreenGui.Parent = CoreGui end)
+	if not NotifScreenGui.Parent then NotifScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
+
 	local ActiveNotifHolder = Instance.new("Frame")
 	ActiveNotifHolder.Size = UDim2.new(0, 260, 1, 0)
 	ActiveNotifHolder.Position = UDim2.new(0, 15, 0, 0)
 	ActiveNotifHolder.BackgroundTransparency = 1
 	ActiveNotifHolder.Visible = true
-	ActiveNotifHolder.ZIndex = 999
-	ActiveNotifHolder.Parent = ScreenGui
+	ActiveNotifHolder.Parent = NotifScreenGui
 
 	local NotifLayout = Instance.new("UIListLayout")
 	NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -110,7 +118,6 @@ function Library:Create(config)
 		NotifBox.BackgroundColor3 = currentTheme.Top
 		NotifBox.BackgroundTransparency = 0.05
 		NotifBox.Position = UDim2.new(-1.2, 0, 0, 0)
-		NotifBox.ZIndex = 1000
 		NotifBox.Parent = ActiveNotifHolder
 		Instance.new("UICorner", NotifBox).CornerRadius = UDim.new(0, 8)
 
@@ -123,7 +130,6 @@ function Library:Create(config)
 		NTitle.TextSize = 12
 		NTitle.Font = Enum.Font.GothamBold
 		NTitle.TextXAlignment = Enum.TextXAlignment.Left
-		NTitle.ZIndex = 1001
 		NTitle.Parent = NotifBox
 
 		local NDesc = Instance.new("TextLabel")
@@ -135,7 +141,6 @@ function Library:Create(config)
 		NDesc.TextSize = 11
 		NDesc.Font = Enum.Font.Gotham
 		NDesc.TextXAlignment = Enum.TextXAlignment.Left
-		NDesc.ZIndex = 1001
 		NDesc.Parent = NotifBox
 
 		TweenService:Create(NotifBox, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = UDim2.new(0, 0, 0, 0)}):Play()
@@ -282,7 +287,10 @@ function Library:Create(config)
 
 	CloseButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = true end)
 	NoButton.MouseButton1Click:Connect(function() ConfirmOverlay.Visible = false end)
-	YesButton.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+	YesButton.MouseButton1Click:Connect(function() 
+		ScreenGui:Destroy() 
+		NotifScreenGui:Destroy() 
+	end)
 
 	local dragging, dragInput, dragStart, startPos
 	TopBar.InputBegan:Connect(function(input)
@@ -747,7 +755,7 @@ function Library:Create(config)
 				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
 
 				OptBtn.MouseButton1Click:Connect(function()
-					TitleLbl.Text = name .. " : " .. option
+					TitleLbl.Text = name .. " : " + option
 					isOpen = false
 					TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, closedHeight)}):Play()
 					if callback then callback(option) end
