@@ -1,5 +1,5 @@
 -- =====================================================================
--- Advanced Global Script Library System (Completely Fixed Dropdown & Clean UI)
+-- Advanced Global Script Library System (Fixed Dropdown Click & Clean UI)
 -- =====================================================================
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
@@ -91,7 +91,6 @@ function Library:Create(config)
 	pcall(function() ScreenGui.Parent = CoreGui end)
 	if not ScreenGui.Parent then ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
 
-	-- ScreenGui مستقل تماماً خاص بالإشعارات لضمان عدم حدوث أي تداخل مع الواجهة والدروب داون
 	local NotifScreenGui = Instance.new("ScreenGui")
 	NotifScreenGui.Name = "UniversalScriptHub_Notifications"
 	NotifScreenGui.ResetOnSpawn = false
@@ -697,7 +696,7 @@ function Library:Create(config)
 			local DropMain = Instance.new("Frame")
 			DropMain.Size = UDim2.new(1, 0, 0, closedHeight)
 			DropMain.BackgroundColor3 = currentTheme.Elem
-			DropMain.ClipsDescendants = true
+			DropMain.ClipsDescendants = false
 			DropMain.ZIndex = 30
 			DropMain.Parent = TabPage
 			Instance.new("UICorner", DropMain).CornerRadius = UDim.new(0, 6)
@@ -706,7 +705,7 @@ function Library:Create(config)
 			DropBtn.Size = UDim2.new(1, 0, 0, headerHeight)
 			DropBtn.BackgroundTransparency = 1
 			DropBtn.Text = ""
-			DropBtn.ZIndex = 31
+			DropBtn.ZIndex = 35 -- زر الهيدر أصبح في طبقة منفصلة أعلى العناصر أثناء الإغلاق
 			DropBtn.Parent = DropMain
 
 			local TitleLbl = Instance.new("TextLabel")
@@ -718,7 +717,7 @@ function Library:Create(config)
 			TitleLbl.TextSize = 11
 			TitleLbl.Font = Enum.Font.GothamBold
 			TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-			TitleLbl.ZIndex = 32
+			TitleLbl.ZIndex = 36
 			TitleLbl.Parent = DropBtn
 
 			local DropScroll = Instance.new("ScrollingFrame")
@@ -728,7 +727,7 @@ function Library:Create(config)
 			DropScroll.BorderSizePixel = 0
 			DropScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 			DropScroll.ScrollBarThickness = 3
-			DropScroll.ZIndex = 33
+			DropScroll.ZIndex = 40
 			DropScroll.Parent = DropMain
 
 			local DropListLayout = Instance.new("UIListLayout")
@@ -750,13 +749,14 @@ function Library:Create(config)
 				OptBtn.TextColor3 = currentTheme.Sub
 				OptBtn.TextSize = 10
 				OptBtn.Font = Enum.Font.GothamMedium
-				OptBtn.ZIndex = 34
+				OptBtn.ZIndex = 41
 				OptBtn.Parent = DropScroll
 				Instance.new("UICorner", OptBtn).CornerRadius = UDim.new(0, 4)
 
 				OptBtn.MouseButton1Click:Connect(function()
-					TitleLbl.Text = name .. " : " + option
+					TitleLbl.Text = name .. " : " .. option
 					isOpen = false
+					DropBtn.ZIndex = 35
 					TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, closedHeight)}):Play()
 					if callback then callback(option) end
 				end)
@@ -765,6 +765,11 @@ function Library:Create(config)
 			DropBtn.MouseButton1Click:Connect(function()
 				isOpen = not isOpen
 				local targetHeight = isOpen and openedHeight or closedHeight
+				if isOpen then
+					DropBtn.ZIndex = 45 -- عند الفتح نخلي الهيدر تحت العناصر عشان نقدر نضغط على العناصر براحة
+				else
+					DropBtn.ZIndex = 35
+				end
 				TweenService:Create(DropMain, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, targetHeight)}):Play()
 			end)
 		end
