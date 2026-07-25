@@ -500,8 +500,9 @@ function GGH:CreateWindow(Config)
     Main.Size = UDim2.new(0, 520, 0, 340)
     Main.Position = UDim2.new(0.5, -260, 0.5, -170)
     Main.BackgroundColor3 = CurrentTheme.MainBg
+    Main.BackgroundTransparency = 0
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true
+    Main.ClipsDescendants = false
     Main.Parent = ScreenGui
     Corner(Main, 16)
     local MainStroke = Stroke(Main, CurrentTheme.Stroke, 1)
@@ -524,21 +525,24 @@ function GGH:CreateWindow(Config)
     BackgroundImage.Image = ""
     BackgroundImage.ImageTransparency = 1
     BackgroundImage.ScaleType = Enum.ScaleType.Crop
-    BackgroundImage.ZIndex = 0
+    BackgroundImage.ZIndex = 1
+    BackgroundImage.Active = false
     Corner(BackgroundImage, 16)
     local BackgroundOverlay = Instance.new("Frame", Main)
     BackgroundOverlay.Name = "BackgroundOverlay"
     BackgroundOverlay.Size = UDim2.new(1,0,1,0)
     BackgroundOverlay.BackgroundColor3 = CurrentTheme.MainBg
-    BackgroundOverlay.BackgroundTransparency = 0
-    BackgroundOverlay.ZIndex = 1
+    BackgroundOverlay.BackgroundTransparency = 1 -- FIXED: Transparent so content visible
+    BackgroundOverlay.ZIndex = 2
+    BackgroundOverlay.BorderSizePixel = 0
+    BackgroundOverlay.Active = false
     Corner(BackgroundOverlay, 16)
     local Header = Instance.new("Frame", Main)
     Header.Name = "Header"
     Header.Size = UDim2.new(1,0,0,48)
     Header.BackgroundColor3 = CurrentTheme.HeaderBg
     Header.BorderSizePixel = 0
-    Header.ZIndex = 3
+    Header.ZIndex = 20
     Corner(Header, 16)
     local HeaderFix = Instance.new("Frame", Header)
     HeaderFix.Name = "HeaderFix"
@@ -546,7 +550,7 @@ function GGH:CreateWindow(Config)
     HeaderFix.Position = UDim2.new(0,0,1,-8)
     HeaderFix.BackgroundColor3 = CurrentTheme.HeaderBg
     HeaderFix.BorderSizePixel = 0
-    HeaderFix.ZIndex = 2
+    HeaderFix.ZIndex = 19
     local TitleLabel = Instance.new("TextLabel", Header)
     TitleLabel.Text = Title
     TitleLabel.Position = UDim2.new(0,18,0,7)
@@ -633,7 +637,7 @@ function GGH:CreateWindow(Config)
     SearchBar.Position = UDim2.new(0,8,0,52)
     SearchBar.BackgroundColor3 = CurrentTheme.ElementBg
     SearchBar.Visible = false
-    SearchBar.ZIndex = 90
+    SearchBar.ZIndex = 50
     Corner(SearchBar, 10)
     local SBStroke = Stroke(SearchBar, CurrentTheme.Accent, 1)
     SBStroke.Name = "SearchStroke"
@@ -688,6 +692,7 @@ function GGH:CreateWindow(Config)
     local TLP = Instance.new("UIPadding", ThemeList)
     TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,40) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
     local currentTransparency = 0
+    local TLConn
     TL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         ThemeList.CanvasSize = UDim2.new(0,0,0,TL.AbsoluteContentSize.Y + 50)
     end)
@@ -913,6 +918,7 @@ function GGH:CreateWindow(Config)
     TabList.Position = UDim2.new(0,8,0,52)
     TabList.BackgroundColor3 = CurrentTheme.TabListBg
     TabList.BorderSizePixel = 0
+    TabList.ZIndex = 10
     TabList.CanvasSize = UDim2.new(0,0,0,0)
     TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
     TabList.ScrollBarThickness = 2
@@ -929,6 +935,7 @@ function GGH:CreateWindow(Config)
     Container.Position = UDim2.new(0,144,0,52)
     Container.BackgroundTransparency = 1
     Container.ClipsDescendants = false
+    Container.ZIndex = 10
     local ConfirmFrame = Instance.new("Frame", ScreenGui)
     ConfirmFrame.Name = "ConfirmOverlay"
     ConfirmFrame.Size = Main.Size
