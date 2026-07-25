@@ -498,7 +498,8 @@ function GGH:CreateWindow(Config)
     local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Size = UDim2.new(0, 440, 0, 320)
-    Main.Position = UDim2.new(0.5, -220, 0.5, -160)
+    Main.Position = UDim2.new(0.5, -220, 0.5, -160) -- Center
+    Main.AnchorPoint = Vector2.new(0,0)
     Main.BackgroundColor3 = CurrentTheme.MainBg
     Main.BackgroundTransparency = 0.2 -- FIXED: Original transparency 80% (0.2)
     Main.BorderSizePixel = 0
@@ -647,28 +648,20 @@ function GGH:CreateWindow(Config)
     Stroke(ThemeDropdown, CurrentTheme.Stroke, 1)
     -- Enhanced Settings Panel: Themes + Size + Transparency
     local ThemeList = Instance.new("ScrollingFrame", ThemeDropdown)
-    ThemeList.Name = "ThemeList"
     ThemeList.Size = UDim2.new(1,-4,1,-4)
     ThemeList.Position = UDim2.new(0,2,0,2)
     ThemeList.BackgroundTransparency = 1
     ThemeList.CanvasSize = UDim2.new(0,0,0,0)
     ThemeList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    ThemeList.ScrollBarThickness = 3
-    ThemeList.ScrollingDirection = Enum.ScrollingDirection.Y
+    ThemeList.ScrollBarThickness = 2
     ThemeList.ScrollBarImageColor3 = CurrentTheme.Accent
     ThemeList.ZIndex = 101
     ThemeList.ClipsDescendants = true
-    ThemeList.ElasticBehavior = Enum.ElasticBehavior.Never
-    ThemeList.CanvasPosition = Vector2.new(0,0)
     local TL = Instance.new("UIListLayout", ThemeList)
     TL.Padding = UDim.new(0,8)
     TL.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP = Instance.new("UIPadding", ThemeList)
-    TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,30) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8) -- FIXED: More bottom padding so scroll reaches end
-    -- FIXED: Force canvas update when size changes
-    TL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        ThemeList.CanvasSize = UDim2.new(0,0,0,TL.AbsoluteContentSize.Y + 40)
-    end)
+    TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
 
     -- ===== NEW: Window Size Control =====
     local SizeSection = Instance.new("TextLabel", ThemeList)
@@ -743,11 +736,6 @@ function GGH:CreateWindow(Config)
             local newH = math.floor(320 * currentScale)
             Main.Size = UDim2.new(0, newW, 0, newH)
             ConfirmFrame.Size = Main.Size
-            -- FIXED: Update ThemeDropdown scroll canvas when size changes
-            task.wait(0.05)
-            ThemeList.CanvasPosition = Vector2.new(0,0)
-            -- Force recalculate
-            ThemeList.CanvasSize = UDim2.new(0,0,0,TL.AbsoluteContentSize.Y + 50)
         end
     end)
     
@@ -970,12 +958,11 @@ function GGH:CreateWindow(Config)
     end
     local minimized = false
     local savedSize = Main.Size
-
-    -- NEW: Center Top Floating Button for Minimize (with transform animation)
+    -- NEW: Center Top Floating Button - Instant + Always Center
     local CenterTopButton = Instance.new("TextButton", ScreenGui)
     CenterTopButton.Name = "CenterTopButton"
-    CenterTopButton.Size = UDim2.new(0,0,0,0) -- Start hidden small
-    CenterTopButton.Position = UDim2.new(0.5,0,0,20)
+    CenterTopButton.Size = UDim2.new(0,100,0,32)
+    CenterTopButton.Position = UDim2.new(0.5, -50, 0, 20) -- Always top center
     CenterTopButton.AnchorPoint = Vector2.new(0.5,0)
     CenterTopButton.BackgroundColor3 = CurrentTheme.Accent
     CenterTopButton.Text = "GGH ▼"
@@ -983,14 +970,12 @@ function GGH:CreateWindow(Config)
     CenterTopButton.TextSize = 14
     CenterTopButton.TextColor3 = Color3.fromRGB(255,255,255)
     CenterTopButton.Visible = false
-    CenterTopButton.ZIndex = 50
+    CenterTopButton.ZIndex = 100
     CenterTopButton.AutoButtonColor = false
-    CenterTopButton.TextTransparency = 1
     Corner(CenterTopButton, 16)
-    local CenterStroke = Stroke(CenterTopButton, CurrentTheme.Stroke, 1)
-    CenterStroke.Transparency = 1
+    Stroke(CenterTopButton, CurrentTheme.Stroke, 1)
     
-    -- Draggable center button
+    -- Draggable center button - no clamp, can go anywhere
     do
         local dragging = false
         local dragStart, startPos
@@ -1004,10 +989,8 @@ function GGH:CreateWindow(Config)
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
-                local newX = startPos.X.Offset + delta.X
-                local newY = startPos.Y.Offset + delta.Y
-                -- FIXED: Allow moving anywhere including top, no clamp to bottom only
-                CenterTopButton.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+                -- FIXED: No clamp at all - can move anywhere
+                CenterTopButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
@@ -1015,11 +998,43 @@ function GGH:CreateWindow(Config)
         end)
     end
     
-    CenterTopButton.MouseEnter:Connect(function() Tween(CenterTopButton, {BackgroundColor3 = Color3.fromRGB(math.clamp(CurrentTheme.Accent.R*255+20,0,255), math.clamp(CurrentTheme.Accent.G*255+20,0,255), math.clamp(CurrentTheme.Accent.B*255+20,0,255))}, 0.2) end)
-    CenterTopButton.MouseLeave:Connect(function() Tween(CenterTopButton, {BackgroundColor3 = CurrentTheme.Accent}, 0.2) end)
+    MinBtn.MouseButton1Click:Connect(function()
+        if not minimized then
+            minimized = true
+            savedSize = Main.Size
+            -- FIXED: Instant hide, no animation
+            Main.Visible = false
+            TabList.Visible = false
+            Container.Visible = false
+            ThemeDropdown.Visible = false
+            SearchBar.Visible = false
+            -- Show button instantly at top center
+            CenterTopButton.Visible = true
+            CenterTopButton.Position = UDim2.new(0.5, -50, 0, 20) -- Always top center
+            CenterTopButton.Size = UDim2.new(0,100,0,32)
+        end
+    end)
     
-
-    -- FIXED: Main window dragging - allow moving anywhere including top
+    local function RestoreWindow()
+        if minimized then
+            minimized = false
+            -- FIXED: Instant show, always at center
+            local centerPos = UDim2.new(0.5, -Main.Size.X.Offset/2, 0.5, -Main.Size.Y.Offset/2)
+            Main.Position = centerPos -- Always center
+            Main.Visible = true
+            TabList.Visible = true
+            Container.Visible = true
+            HeaderFix.Visible = true
+            ConfirmFrame.Position = Main.Position
+            ConfirmFrame.Size = Main.Size
+            CenterTopButton.Visible = false
+        end
+    end
+    
+    CenterTopButton.MouseButton1Click:Connect(RestoreWindow)
+    MaxBtn.MouseButton1Click:Connect(RestoreWindow)
+    
+    -- FIXED: Main window dragging - no clamp, can go above middle
     do
         local draggingMain = false
         local dragInput, dragStart, startPos
@@ -1039,94 +1054,15 @@ function GGH:CreateWindow(Config)
             end
         end)
         UserInputService.InputChanged:Connect(function(input)
-            if input == dragInput and draggingMain then
+            if input == dragInput and draggingMain and not minimized then
                 local delta = input.Position - dragStart
-                -- FIXED: No clamp that prevents moving above middle, allow full screen
-                Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-                ConfirmFrame.Position = Main.Position
+                -- FIXED: No clamp, allow moving anywhere even above top
+                local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                Main.Position = newPos
+                ConfirmFrame.Position = newPos
             end
         end)
     end
-    
-
-    MinBtn.MouseButton1Click:Connect(function()
-        if not minimized then
-            minimized = true
-            savedSize = Main.Size
-            savedPos = Main.Position
-            ThemeDropdown.Visible = false
-            SearchBar.Visible = false
-            
-            -- FIXED: Animation - Window transforms into button (not instant disappear)
-            local targetPos = UDim2.new(0.5, 0, 0, 20)
-            -- Step 1: Shrink window towards top center
-            Tween(Main, {Size = UDim2.new(0, 100, 0, 32), Position = targetPos, BackgroundTransparency = 1}, 0.35)
-            -- Fade out contents
-            Tween(Header, {BackgroundTransparency = 1}, 0.25)
-            Tween(TabList, {BackgroundTransparency = 1}, 0.2)
-            Tween(Container, {BackgroundTransparency = 1}, 0.2)
-            
-            task.wait(0.35)
-            Main.Visible = false
-            Header.BackgroundTransparency = 0
-            TabList.BackgroundTransparency = 0
-            Container.BackgroundTransparency = 1
-            
-            -- Step 2: Show and animate button from window position
-            CenterTopButton.Visible = true
-            CenterTopButton.Position = targetPos
-            CenterTopButton.Size = UDim2.new(0, 100, 0, 32)
-            CenterTopButton.AnchorPoint = Vector2.new(0.5,0)
-            CenterTopButton.BackgroundTransparency = 0
-            CenterTopButton.TextTransparency = 1
-            CenterStroke.Transparency = 0
-            -- Animate button appearing
-            Tween(CenterTopButton, {Size = UDim2.new(0, 100, 0, 32), BackgroundTransparency = 0}, 0.25)
-            TweenService:Create(CenterTopButton, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
-        end
-    end)
-    
-    local function RestoreWindow()
-        if minimized then
-            -- FIXED: Animation - Button transforms into window
-            local targetSize = savedSize
-            local targetPos = savedPos
-            
-            -- Step 1: Animate button to window position and size
-            Tween(CenterTopButton, {Position = targetPos, Size = targetSize, BackgroundTransparency = 0.2}, 0.35)
-            Tween(CenterTopButton, {TextTransparency = 1}, 0.15)
-            
-            task.wait(0.35)
-            CenterTopButton.Visible = false
-            CenterTopButton.Size = UDim2.new(0,0,0,0)
-            
-            -- Step 2: Show window with animation from button
-            Main.Visible = true
-            Main.Size = UDim2.new(0, 100, 0, 32)
-            Main.Position = UDim2.new(0.5, 0, 0, 20)
-            Main.AnchorPoint = Vector2.new(0.5,0)
-            Main.BackgroundTransparency = 1
-            TabList.Visible = true
-            Container.Visible = true
-            HeaderFix.Visible = true
-            
-            Tween(Main, {Size = targetSize, Position = targetPos, BackgroundTransparency = currentTransparency}, 0.4)
-            Tween(Header, {BackgroundTransparency = 0}, 0.3)
-            
-            task.wait(0.4)
-            Main.AnchorPoint = Vector2.new(0,0)
-            Main.Position = targetPos
-            minimized = false
-            -- FIXED: Ensure window can be dragged above middle after restore
-            ConfirmFrame.Position = Main.Position
-        end
-    end
-    
-    CenterTopButton.MouseButton1Click:Connect(RestoreWindow)
-    
-    MaxBtn.MouseButton1Click:Connect(function()
-        RestoreWindow()
-    end)
     
     CloseBtn.MouseButton1Click:Connect(function()
         if minimized then
@@ -1197,7 +1133,7 @@ function GGH:CreateWindow(Config)
         end
     end
     local ThemeOpen = false
-    ThemeBtn.MouseButton1Click:Connect(function() ThemeOpen = not ThemeOpen ThemeDropdown.Visible = ThemeOpen SearchBar.Visible = false if ThemeOpen then ThemeList.CanvasPosition = Vector2.new(0,0) task.wait(0.05) ThemeList.CanvasSize = UDim2.new(0,0,0,TL.AbsoluteContentSize.Y + 50) end end)
+    ThemeBtn.MouseButton1Click:Connect(function() ThemeOpen = not ThemeOpen ThemeDropdown.Visible = ThemeOpen SearchBar.Visible = false end)
     for name, th in pairs(Themes) do
         local Btn = Instance.new("TextButton", ThemeList)
         Btn.Size = UDim2.new(1,0,0,28)
