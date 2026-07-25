@@ -497,12 +497,13 @@ function GGH:CreateWindow(Config)
     ScreenGui.Parent = GetGuiParent()
     local Main = Instance.new("Frame")
     Main.Name = "Main"
-    Main.Size = UDim2.new(0, 520, 0, 340)
-    Main.Position = UDim2.new(0.5, -260, 0.5, -170)
+    Main.Size = UDim2.new(0, 440, 0, 320)
+    Main.Position = UDim2.new(0.5, -220, 0.5, -160)
     Main.BackgroundColor3 = CurrentTheme.MainBg
+    Main.BackgroundTransparency = 0.2 -- FIXED: Original transparency 80% (0.2)
     Main.BorderSizePixel = 0
     Main.Parent = ScreenGui
-    Main.ClipsDescendants = true -- FIXED: clip overflow when scrolling
+    Main.ClipsDescendants = true -- FIXED: No overflow outside
     Corner(Main, 16)
     local MainStroke = Stroke(Main, CurrentTheme.Stroke, 1)
     MainStroke.Name = "MainStroke"
@@ -636,13 +637,15 @@ function GGH:CreateWindow(Config)
     Corner(SearchClose, 7)
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
-    ThemeDropdown.Size = UDim2.new(0,160,0,220)
-    ThemeDropdown.Position = UDim2.new(1,-168,0,52)
+    ThemeDropdown.Size = UDim2.new(0,200,0,320) -- BIGGER: Now includes size & transparency
+    ThemeDropdown.Position = UDim2.new(1,-208,0,52)
     ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
     ThemeDropdown.Visible = false
     ThemeDropdown.ZIndex = 100
-    Corner(ThemeDropdown, 10)
+    ThemeDropdown.ClipsDescendants = true
+    Corner(ThemeDropdown, 12)
     Stroke(ThemeDropdown, CurrentTheme.Stroke, 1)
+    -- Enhanced Settings Panel: Themes + Size + Transparency
     local ThemeList = Instance.new("ScrollingFrame", ThemeDropdown)
     ThemeList.Size = UDim2.new(1,-4,1,-4)
     ThemeList.Position = UDim2.new(0,2,0,2)
@@ -652,17 +655,194 @@ function GGH:CreateWindow(Config)
     ThemeList.ScrollBarThickness = 2
     ThemeList.ScrollBarImageColor3 = CurrentTheme.Accent
     ThemeList.ZIndex = 101
+    ThemeList.ClipsDescendants = true
     local TL = Instance.new("UIListLayout", ThemeList)
-    TL.Padding = UDim.new(0,4)
+    TL.Padding = UDim.new(0,8)
+    TL.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP = Instance.new("UIPadding", ThemeList)
-    TLP.PaddingTop = UDim.new(0,4) TLP.PaddingBottom = UDim.new(0,4) TLP.PaddingLeft = UDim.new(0,4) TLP.PaddingRight = UDim.new(0,4)
+    TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
+
+    -- ===== NEW: Window Size Control =====
+    local SizeSection = Instance.new("TextLabel", ThemeList)
+    SizeSection.Size = UDim2.new(1,-8,0,18)
+    SizeSection.BackgroundTransparency = 1
+    SizeSection.Text = "📏 Window Size"
+    SizeSection.Font = Enum.Font.GothamBold
+    SizeSection.TextSize = 12
+    SizeSection.TextColor3 = CurrentTheme.Text
+    SizeSection.TextXAlignment = Enum.TextXAlignment.Left
+    SizeSection.LayoutOrder = 100
+    SizeSection.ZIndex = 102
+    
+    local SizeSlider = Instance.new("Frame", ThemeList)
+    SizeSlider.Size = UDim2.new(1,-8,0,40)
+    SizeSlider.BackgroundColor3 = CurrentTheme.ElementBg2
+    SizeSlider.LayoutOrder = 101
+    SizeSlider.ZIndex = 102
+    Corner(SizeSlider, 8)
+    
+    local SizeLabel = Instance.new("TextLabel", SizeSlider)
+    SizeLabel.Size = UDim2.new(1,-10,0,14)
+    SizeLabel.Position = UDim2.new(0,5,0,4)
+    SizeLabel.BackgroundTransparency = 1
+    SizeLabel.Text = "Size: 100%"
+    SizeLabel.Font = Enum.Font.Gotham
+    SizeLabel.TextSize = 10
+    SizeLabel.TextColor3 = CurrentTheme.SubText
+    SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SizeLabel.ZIndex = 103
+    
+    local SizeBar = Instance.new("Frame", SizeSlider)
+    SizeBar.Size = UDim2.new(1,-10,0,6)
+    SizeBar.Position = UDim2.new(0,5,0,22)
+    SizeBar.BackgroundColor3 = CurrentTheme.TabListBg
+    SizeBar.ZIndex = 103
+    Corner(SizeBar, 3)
+    
+    local SizeFill = Instance.new("Frame", SizeBar)
+    SizeFill.Size = UDim2.new(0.5,0,1,0)
+    SizeFill.BackgroundColor3 = CurrentTheme.Accent
+    SizeFill.ZIndex = 104
+    Corner(SizeFill, 3)
+    
+    local SizeBtn = Instance.new("TextButton", SizeBar)
+    SizeBtn.Size = UDim2.new(0,12,0,12)
+    SizeBtn.Position = UDim2.new(0.5,-6,0.5,-6)
+    SizeBtn.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    SizeBtn.Text = ""
+    SizeBtn.ZIndex = 105
+    Corner(SizeBtn, 6)
+    
+    -- Size drag logic
+    local draggingSize = false
+    SizeBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSize = true end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSize = false end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if draggingSize and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local barPos = SizeBar.AbsolutePosition.X
+            local barSize = SizeBar.AbsoluteSize.X
+            local mouseX = input.Position.X
+            local percent = math.clamp((mouseX - barPos) / barSize, 0, 1)
+            SizeFill.Size = UDim2.new(percent,0,1,0)
+            SizeBtn.Position = UDim2.new(percent,-6,0.5,-6)
+            currentScale = 0.7 + (percent * 0.8) -- 0.7x to 1.5x
+            SizeLabel.Text = "Size: "..math.floor(currentScale*100).."%"
+            local newW = math.floor(440 * currentScale)
+            local newH = math.floor(320 * currentScale)
+            Main.Size = UDim2.new(0, newW, 0, newH)
+            ConfirmFrame.Size = Main.Size
+        end
+    end)
+    
+    -- ===== NEW: Transparency Control (Only Main window, not tabs/buttons) =====
+    local TransSection = Instance.new("TextLabel", ThemeList)
+    TransSection.Size = UDim2.new(1,-8,0,18)
+    TransSection.BackgroundTransparency = 1
+    TransSection.Text = "👁️ Window Transparency"
+    TransSection.Font = Enum.Font.GothamBold
+    TransSection.TextSize = 12
+    TransSection.TextColor3 = CurrentTheme.Text
+    TransSection.TextXAlignment = Enum.TextXAlignment.Left
+    TransSection.LayoutOrder = 102
+    TransSection.ZIndex = 102
+    
+    local TransSlider = Instance.new("Frame", ThemeList)
+    TransSlider.Size = UDim2.new(1,-8,0,40)
+    TransSlider.BackgroundColor3 = CurrentTheme.ElementBg2
+    TransSlider.LayoutOrder = 103
+    TransSlider.ZIndex = 102
+    Corner(TransSlider, 8)
+    
+    local TransLabel = Instance.new("TextLabel", TransSlider)
+    TransLabel.Size = UDim2.new(1,-10,0,14)
+    TransLabel.Position = UDim2.new(0,5,0,4)
+    TransLabel.BackgroundTransparency = 1
+    TransLabel.Text = "Transparency: 20%"
+    TransLabel.Font = Enum.Font.Gotham
+    TransLabel.TextSize = 10
+    TransLabel.TextColor3 = CurrentTheme.SubText
+    TransLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TransLabel.ZIndex = 103
+    
+    local TransBar = Instance.new("Frame", TransSlider)
+    TransBar.Size = UDim2.new(1,-10,0,6)
+    TransBar.Position = UDim2.new(0,5,0,22)
+    TransBar.BackgroundColor3 = CurrentTheme.TabListBg
+    TransBar.ZIndex = 103
+    Corner(TransBar, 3)
+    
+    local TransFill = Instance.new("Frame", TransBar)
+    TransFill.Size = UDim2.new(0.2,0,1,0)
+    TransFill.BackgroundColor3 = CurrentTheme.Accent
+    TransFill.ZIndex = 104
+    Corner(TransFill, 3)
+    
+    local TransBtn = Instance.new("TextButton", TransBar)
+    TransBtn.Size = UDim2.new(0,12,0,12)
+    TransBtn.Position = UDim2.new(0.2,-6,0.5,-6)
+    TransBtn.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    TransBtn.Text = ""
+    TransBtn.ZIndex = 105
+    Corner(TransBtn, 6)
+    
+    local draggingTrans = false
+    TransBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingTrans = true end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingTrans = false end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if draggingTrans and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local barPos = TransBar.AbsolutePosition.X
+            local barSize = TransBar.AbsoluteSize.X
+            local mouseX = input.Position.X
+            local percent = math.clamp((mouseX - barPos) / barSize, 0, 1)
+            TransFill.Size = UDim2.new(percent,0,1,0)
+            TransBtn.Position = UDim2.new(percent,-6,0.5,-6)
+            currentTransparency = percent * 0.6 -- 0 to 0.6 max
+            TransLabel.Text = "Transparency: "..math.floor(percent*100).."%"
+            -- ONLY affect Main window background, not tabs/buttons
+            Main.BackgroundTransparency = currentTransparency
+        end
+    end)
+    
+    -- Separator before themes
+    local ThemeSep = Instance.new("Frame", ThemeList)
+    ThemeSep.Size = UDim2.new(1,-8,0,1)
+    ThemeSep.BackgroundColor3 = CurrentTheme.Stroke
+    ThemeSep.BackgroundTransparency = 0.5
+    ThemeSep.LayoutOrder = 104
+    ThemeSep.ZIndex = 102
+    
+    local ThemeTitle = Instance.new("TextLabel", ThemeList)
+    ThemeTitle.Size = UDim2.new(1,-8,0,18)
+    ThemeTitle.BackgroundTransparency = 1
+    ThemeTitle.Text = "🎨 Themes"
+    ThemeTitle.Font = Enum.Font.GothamBold
+    ThemeTitle.TextSize = 12
+    ThemeTitle.TextColor3 = CurrentTheme.Text
+    ThemeTitle.TextXAlignment = Enum.TextXAlignment.Left
+    ThemeTitle.LayoutOrder = 105
+    ThemeTitle.ZIndex = 102
+
+    
+    -- Size & Transparency variables
+    local currentScale = 1
+    local currentTransparency = 0.2
+    local originalSize = UDim2.new(0, 440, 0, 320)
+    
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,132,1,-58)
-    TabList.ClipsDescendants = true -- FIXED
     TabList.Position = UDim2.new(0,8,0,52)
     TabList.BackgroundColor3 = CurrentTheme.TabListBg
     TabList.BorderSizePixel = 0
+    TabList.ClipsDescendants = true -- FIXED
     TabList.CanvasSize = UDim2.new(0,0,0,0)
     TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
     TabList.ScrollBarThickness = 2
@@ -678,9 +858,8 @@ function GGH:CreateWindow(Config)
     Container.Size = UDim2.new(1,-152,1,-58)
     Container.Position = UDim2.new(0,144,0,52)
     Container.BackgroundTransparency = 1
-    Container.ClipsDescendants = true -- CRITICAL FIX: prevents content going outside when scrolling
+    Container.ClipsDescendants = true -- FIXED: No outside when scrolling
     Container.ZIndex = 1
-    Container.ClipsDescendants = true
     local ConfirmFrame = Instance.new("Frame", ScreenGui)
     ConfirmFrame.Name = "ConfirmOverlay"
     ConfirmFrame.Size = Main.Size
@@ -759,7 +938,17 @@ function GGH:CreateWindow(Config)
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
-                Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                local newX = startPos.X.Offset + delta.X
+                local newY = startPos.Y.Offset + delta.Y
+                -- FIX: Prevent window from going off-screen top (keep at least header visible)
+                local viewportSize = workspace.CurrentCamera.ViewportSize
+                local minY = 0
+                local maxY = viewportSize.Y - 60 -- keep at least 60px visible
+                local minX = -Main.AbsoluteSize.X + 100 -- keep 100px visible on sides
+                local maxX = viewportSize.X - 100
+                newY = math.clamp(newY, minY, maxY)
+                newX = math.clamp(newX, minX, maxX)
+                Main.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
@@ -768,32 +957,94 @@ function GGH:CreateWindow(Config)
     end
     local minimized = false
     local savedSize = Main.Size
+    local savedPos = Main.Position
+    -- NEW: Center Top Floating Button for Minimize (instead of shrinking header)
+    local CenterTopButton = Instance.new("TextButton", ScreenGui)
+    CenterTopButton.Name = "CenterTopButton"
+    CenterTopButton.Size = UDim2.new(0,100,0,32)
+    CenterTopButton.Position = UDim2.new(0.5,-50,0,20) -- Top center
+    CenterTopButton.BackgroundColor3 = CurrentTheme.Accent
+    CenterTopButton.Text = "GGH ▼"
+    CenterTopButton.Font = Enum.Font.GothamBold
+    CenterTopButton.TextSize = 14
+    CenterTopButton.TextColor3 = Color3.fromRGB(255,255,255)
+    CenterTopButton.Visible = false
+    CenterTopButton.ZIndex = 50
+    CenterTopButton.AutoButtonColor = false
+    Corner(CenterTopButton, 16)
+    Stroke(CenterTopButton, CurrentTheme.Stroke, 1)
+    
+    -- Draggable center button
+    do
+        local dragging = false
+        local dragStart, startPos
+        CenterTopButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = CenterTopButton.Position
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                local newX = startPos.X.Offset + delta.X
+                local newY = startPos.Y.Offset + delta.Y
+                local viewportSize = workspace.CurrentCamera.ViewportSize
+                newX = math.clamp(newX, 0, viewportSize.X - 100)
+                newY = math.clamp(newY, 0, viewportSize.Y - 32)
+                CenterTopButton.Position = UDim2.new(0, newX, 0, newY)
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+        end)
+    end
+    
+    -- Hover effects for center button
+    CenterTopButton.MouseEnter:Connect(function() Tween(CenterTopButton, {BackgroundColor3 = Color3.fromRGB(CurrentTheme.Accent.R*255+20, CurrentTheme.Accent.G*255+20, CurrentTheme.Accent.B*255+20)}, 0.2) end)
+    CenterTopButton.MouseLeave:Connect(function() Tween(CenterTopButton, {BackgroundColor3 = CurrentTheme.Accent}, 0.2) end)
+    
     MinBtn.MouseButton1Click:Connect(function()
         if not minimized then
             minimized = true
             savedSize = Main.Size
-            HeaderFix.Visible = false
+            -- savedPos is defined below with minimized vars
             ThemeDropdown.Visible = false
             SearchBar.Visible = false
-            Tween(Main, {Size = UDim2.new(0,520,0,48)}, 0.22)
+            -- NEW: Hide main window and show center top floating button (not shrink header)
+            Tween(Main, {Size = UDim2.new(0, savedSize.X.Offset, 0, 0), BackgroundTransparency = 1}, 0.25)
+            task.wait(0.15)
+            Main.Visible = false
             TabList.Visible = false
             Container.Visible = false
-            MinBtn.Visible = false
-            MaxBtn.Visible = true
+            CenterTopButton.Visible = true
+            CenterTopButton.Position = UDim2.new(0.5,-50,0,20) -- Reset to top center
+            Tween(CenterTopButton, {Size = UDim2.new(0,100,0,32)}, 0.2)
         end
     end)
-    MaxBtn.MouseButton1Click:Connect(function()
+    
+    local function RestoreWindow()
         if minimized then
             minimized = false
-            HeaderFix.Visible = true
-            Tween(Main, {Size = savedSize}, 0.25)
-            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
-            task.wait(0.12)
+            Main.Visible = true
+            Main.Size = UDim2.new(0, Main.Size.X.Offset, 0, 0)
+            Main.BackgroundTransparency = currentTransparency
+            Tween(Main, {Size = savedSize, BackgroundTransparency = currentTransparency}, 0.3)
+            ConfirmFrame.Size = savedSize
+            Tween(CenterTopButton, {Size = UDim2.new(0,0,0,0)}, 0.15)
+            task.wait(0.15)
+            CenterTopButton.Visible = false
             TabList.Visible = true
             Container.Visible = true
-            MaxBtn.Visible = false
-            MinBtn.Visible = true
+            HeaderFix.Visible = true
         end
+    end
+    
+    CenterTopButton.MouseButton1Click:Connect(RestoreWindow)
+    
+    MaxBtn.MouseButton1Click:Connect(function()
+        RestoreWindow()
     end)
     CloseBtn.MouseButton1Click:Connect(function()
         if minimized then
@@ -940,7 +1191,7 @@ function GGH:CreateWindow(Config)
         TabPage.ScrollBarImageColor3 = CurrentTheme.Accent
         TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
         TabPage.BorderSizePixel = 0
-        TabPage.ClipsDescendants = true
+        TabPage.ClipsDescendants = false
         RegisterThemable(TabPage, "ScrollBar", "Accent")
         local Layout = Instance.new("UIListLayout", TabPage)
         Layout.Padding = UDim.new(0, 8)
