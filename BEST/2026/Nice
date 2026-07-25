@@ -497,16 +497,42 @@ function GGH:CreateWindow(Config)
     ScreenGui.Parent = GetGuiParent()
     local Main = Instance.new("Frame")
     Main.Name = "Main"
-    Main.Size = UDim2.new(0, 440, 0, 320)
-    Main.Position = UDim2.new(0.5, -220, 0.5, -160)
+    Main.Size = UDim2.new(0, 520, 0, 340)
+    Main.Position = UDim2.new(0.5, -260, 0.5, -170)
     Main.BackgroundColor3 = CurrentTheme.MainBg
-    Main.BackgroundTransparency = 0.05 -- FIXED V2.1: Not transparent background
     Main.BorderSizePixel = 0
+    Main.ClipsDescendants = true
     Main.Parent = ScreenGui
-    Main.ClipsDescendants = true -- FIXED: No overflow outside
-    Corner(Main, 18) -- Wind Squircle
+    Corner(Main, 16)
     local MainStroke = Stroke(Main, CurrentTheme.Stroke, 1)
     MainStroke.Name = "MainStroke"
+    local Shadow = Instance.new("ImageLabel", ScreenGui)
+    Shadow.Name = "Shadow"
+    Shadow.Size = UDim2.new(0, 560, 0, 380)
+    Shadow.Position = UDim2.new(0, Main.Position.X.Offset -20, 0, Main.Position.Y.Offset -20)
+    Shadow.BackgroundTransparency = 1
+    Shadow.Image = "rbxassetid://1316045217"
+    Shadow.ImageColor3 = Color3.fromRGB(0,0,0)
+    Shadow.ImageTransparency = 0.6
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(10,10,118,118)
+    Shadow.ZIndex = -1
+    local BackgroundImage = Instance.new("ImageLabel", Main)
+    BackgroundImage.Name = "BackgroundImage"
+    BackgroundImage.Size = UDim2.new(1,0,1,0)
+    BackgroundImage.BackgroundTransparency = 1
+    BackgroundImage.Image = ""
+    BackgroundImage.ImageTransparency = 1
+    BackgroundImage.ScaleType = Enum.ScaleType.Crop
+    BackgroundImage.ZIndex = 0
+    Corner(BackgroundImage, 16)
+    local BackgroundOverlay = Instance.new("Frame", Main)
+    BackgroundOverlay.Name = "BackgroundOverlay"
+    BackgroundOverlay.Size = UDim2.new(1,0,1,0)
+    BackgroundOverlay.BackgroundColor3 = CurrentTheme.MainBg
+    BackgroundOverlay.BackgroundTransparency = 0
+    BackgroundOverlay.ZIndex = 1
+    Corner(BackgroundOverlay, 16)
     local Header = Instance.new("Frame", Main)
     Header.Name = "Header"
     Header.Size = UDim2.new(1,0,0,48)
@@ -637,240 +663,256 @@ function GGH:CreateWindow(Config)
     Corner(SearchClose, 7)
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
-    ThemeDropdown.Size = UDim2.new(0,200,0,320) -- BIGGER: Now includes size & transparency
-    ThemeDropdown.Position = UDim2.new(1,-208,0,52)
+    ThemeDropdown.Size = UDim2.new(0,260,0,400)
+    ThemeDropdown.Position = UDim2.new(1,-268,0,52)
     ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
     ThemeDropdown.Visible = false
     ThemeDropdown.ZIndex = 100
     ThemeDropdown.ClipsDescendants = true
     Corner(ThemeDropdown, 12)
     Stroke(ThemeDropdown, CurrentTheme.Stroke, 1)
-    -- Enhanced Settings Panel: Themes + Size + Transparency
     local ThemeList = Instance.new("ScrollingFrame", ThemeDropdown)
     ThemeList.Name = "ThemeList"
-    ThemeList.Size = UDim2.new(1,-4,1,-4)
-    ThemeList.Position = UDim2.new(0,2,0,2)
+    ThemeList.Size = UDim2.new(1,-6,1,-6)
+    ThemeList.Position = UDim2.new(0,3,0,3)
     ThemeList.BackgroundTransparency = 1
     ThemeList.CanvasSize = UDim2.new(0,0,0,0)
     ThemeList.AutomaticCanvasSize = Enum.AutomaticSize.Y
     ThemeList.ScrollBarThickness = 3
-    ThemeList.ScrollingDirection = Enum.ScrollingDirection.Y
     ThemeList.ScrollBarImageColor3 = CurrentTheme.Accent
     ThemeList.ZIndex = 101
     ThemeList.ClipsDescendants = true
-    ThemeList.ElasticBehavior = Enum.ElasticBehavior.Never
-    ThemeList.CanvasPosition = Vector2.new(0,0)
     local TL = Instance.new("UIListLayout", ThemeList)
     TL.Padding = UDim.new(0,8)
     TL.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP = Instance.new("UIPadding", ThemeList)
-    TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,30) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8) -- FIXED: More bottom padding so scroll reaches end
-    -- FIXED: Force canvas update when size changes
+    TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,40) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
+    local currentTransparency = 0
     TL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        ThemeList.CanvasSize = UDim2.new(0,0,0,TL.AbsoluteContentSize.Y + 40)
+        ThemeList.CanvasSize = UDim2.new(0,0,0,TL.AbsoluteContentSize.Y + 50)
     end)
-
-    -- ===== NEW: Window Size Control =====
+    -- Size
     local SizeSection = Instance.new("TextLabel", ThemeList)
-    SizeSection.Size = UDim2.new(1,-8,0,18)
+    SizeSection.Size = UDim2.new(1,-8,0,20)
     SizeSection.BackgroundTransparency = 1
-    SizeSection.Text = "📏 Window Size"
+    SizeSection.Text = "📏 Size (Release to apply)"
     SizeSection.Font = Enum.Font.GothamBold
     SizeSection.TextSize = 12
     SizeSection.TextColor3 = CurrentTheme.Text
     SizeSection.TextXAlignment = Enum.TextXAlignment.Left
-    SizeSection.LayoutOrder = 100
+    SizeSection.LayoutOrder = 1
     SizeSection.ZIndex = 102
-    
     local SizeSlider = Instance.new("Frame", ThemeList)
-    SizeSlider.Size = UDim2.new(1,-8,0,40)
+    SizeSlider.Size = UDim2.new(1,-8,0,44)
     SizeSlider.BackgroundColor3 = CurrentTheme.ElementBg2
-    SizeSlider.LayoutOrder = 101
+    SizeSlider.LayoutOrder = 2
     SizeSlider.ZIndex = 102
     Corner(SizeSlider, 8)
-    
     local SizeLabel = Instance.new("TextLabel", SizeSlider)
     SizeLabel.Size = UDim2.new(1,-10,0,14)
-    SizeLabel.Position = UDim2.new(0,5,0,4)
+    SizeLabel.Position = UDim2.new(0,8,0,6)
     SizeLabel.BackgroundTransparency = 1
     SizeLabel.Text = "Size: 100%"
     SizeLabel.Font = Enum.Font.Gotham
-    SizeLabel.TextSize = 10
+    SizeLabel.TextSize = 11
     SizeLabel.TextColor3 = CurrentTheme.SubText
     SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
     SizeLabel.ZIndex = 103
-    
     local SizeBar = Instance.new("Frame", SizeSlider)
-    SizeBar.Size = UDim2.new(1,-10,0,6)
-    SizeBar.Position = UDim2.new(0,5,0,22)
+    SizeBar.Size = UDim2.new(1,-16,0,6)
+    SizeBar.Position = UDim2.new(0,8,0,26)
     SizeBar.BackgroundColor3 = CurrentTheme.TabListBg
     SizeBar.ZIndex = 103
     Corner(SizeBar, 3)
-    
     local SizeFill = Instance.new("Frame", SizeBar)
     SizeFill.Size = UDim2.new(0.5,0,1,0)
     SizeFill.BackgroundColor3 = CurrentTheme.Accent
     SizeFill.ZIndex = 104
     Corner(SizeFill, 3)
-    
     local SizeBtn = Instance.new("TextButton", SizeBar)
-    SizeBtn.Size = UDim2.new(0,12,0,12)
-    SizeBtn.Position = UDim2.new(0.5,-6,0.5,-6)
+    SizeBtn.Size = UDim2.new(0,14,0,14)
+    SizeBtn.Position = UDim2.new(0.5,-7,0.5,-7)
     SizeBtn.BackgroundColor3 = Color3.fromRGB(255,255,255)
     SizeBtn.Text = ""
     SizeBtn.ZIndex = 105
-    Corner(SizeBtn, 6)
-    
-    -- Size drag logic
+    Corner(SizeBtn, 7)
     local draggingSize = false
-    SizeBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSize = true end
-    end)
+    local pendingSize = nil
+    local pendingScale = 1
+    SizeBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSize = true end end)
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if draggingSize and getgenv().GGH_PendingSize then
-                -- FIXED: Apply only when finger lifted
-                Main.Size = getgenv().GGH_PendingSize
-                ConfirmFrame.Size = getgenv().GGH_PendingSize
-                if Shadow then 
-                    Shadow.Size = UDim2.new(0, getgenv().GGH_PendingSize.X.Offset +40, 0, getgenv().GGH_PendingSize.Y.Offset +40) 
-                    Shadow.Position = UDim2.new(0, Main.Position.X.Offset -20, 0, Main.Position.Y.Offset -20)
-                end
-                SizeLabel.Text = "Size: "..math.floor(getgenv().GGH_PendingScale*100).."% ✓ Applied"
-                getgenv().GGH_PendingSize = nil
+            if draggingSize and pendingSize then
+                Main.Size = pendingSize
+                ConfirmFrame.Size = pendingSize
+                SizeLabel.Text = "Size: "..math.floor(pendingScale*100).."% ✓"
+                pendingSize = nil
             end
             draggingSize = false
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
         if draggingSize and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local barPos = SizeBar.AbsolutePosition.X
-            local barSize = SizeBar.AbsoluteSize.X
-            local mouseX = input.Position.X
-            local percent = math.clamp((mouseX - barPos) / barSize, 0, 1)
+            local percent = math.clamp((input.Position.X - SizeBar.AbsolutePosition.X) / SizeBar.AbsoluteSize.X, 0, 1)
             SizeFill.Size = UDim2.new(percent,0,1,0)
-            SizeBtn.Position = UDim2.new(percent,-6,0.5,-6)
-            currentScale = 0.7 + (percent * 0.8) -- 0.7x to 1.5x
-            SizeLabel.Text = "Size: "..math.floor(currentScale*100).."%"
-            local newW = math.floor(520 * currentScale)
-            local newH = math.floor(380 * currentScale)
-            -- FIXED: Preview only
-            SizeLabel.Text = "Size: "..math.floor(currentScale*100).."% (Release to apply)"
-            getgenv().GGH_PendingSize = UDim2.new(0, newW, 0, newH)
-            getgenv().GGH_PendingScale = currentScale
-            -- FIXED: Update ThemeDropdown scroll canvas when size changes
-            task.wait(0.05)
-            ThemeList.CanvasPosition = Vector2.new(0,0)
-            -- Force recalculate
-            ThemeList.CanvasSize = UDim2.new(0,0,0,TL.AbsoluteContentSize.Y + 50)
+            SizeBtn.Position = UDim2.new(percent,-7,0.5,-7)
+            local scale = 0.7 + (percent * 0.8)
+            pendingScale = scale
+            SizeLabel.Text = "Size: "..math.floor(scale*100).."% (Release)"
+            local newW = math.floor(520 * scale)
+            local newH = math.floor(340 * scale)
+            pendingSize = UDim2.new(0, newW, 0, newH)
         end
     end)
-    
-    -- ===== NEW: Transparency Control (Only Main window, not tabs/buttons) =====
+    -- Transparency
     local TransSection = Instance.new("TextLabel", ThemeList)
-    TransSection.Size = UDim2.new(1,-8,0,18)
+    TransSection.Size = UDim2.new(1,-8,0,20)
     TransSection.BackgroundTransparency = 1
-    TransSection.Text = "👁️ Window Transparency"
+    TransSection.Text = "👁️ Transparency"
     TransSection.Font = Enum.Font.GothamBold
     TransSection.TextSize = 12
     TransSection.TextColor3 = CurrentTheme.Text
     TransSection.TextXAlignment = Enum.TextXAlignment.Left
-    TransSection.LayoutOrder = 102
+    TransSection.LayoutOrder = 3
     TransSection.ZIndex = 102
-    
     local TransSlider = Instance.new("Frame", ThemeList)
-    TransSlider.Size = UDim2.new(1,-8,0,40)
+    TransSlider.Size = UDim2.new(1,-8,0,44)
     TransSlider.BackgroundColor3 = CurrentTheme.ElementBg2
-    TransSlider.LayoutOrder = 103
+    TransSlider.LayoutOrder = 4
     TransSlider.ZIndex = 102
     Corner(TransSlider, 8)
-    
     local TransLabel = Instance.new("TextLabel", TransSlider)
     TransLabel.Size = UDim2.new(1,-10,0,14)
-    TransLabel.Position = UDim2.new(0,5,0,4)
+    TransLabel.Position = UDim2.new(0,8,0,6)
     TransLabel.BackgroundTransparency = 1
-    TransLabel.Text = "Transparency: 20%"
+    TransLabel.Text = "Transparency: 0%"
     TransLabel.Font = Enum.Font.Gotham
-    TransLabel.TextSize = 10
+    TransLabel.TextSize = 11
     TransLabel.TextColor3 = CurrentTheme.SubText
     TransLabel.TextXAlignment = Enum.TextXAlignment.Left
     TransLabel.ZIndex = 103
-    
     local TransBar = Instance.new("Frame", TransSlider)
-    TransBar.Size = UDim2.new(1,-10,0,6)
-    TransBar.Position = UDim2.new(0,5,0,22)
+    TransBar.Size = UDim2.new(1,-16,0,6)
+    TransBar.Position = UDim2.new(0,8,0,26)
     TransBar.BackgroundColor3 = CurrentTheme.TabListBg
     TransBar.ZIndex = 103
     Corner(TransBar, 3)
-    
     local TransFill = Instance.new("Frame", TransBar)
-    TransFill.Size = UDim2.new(0.2,0,1,0)
+    TransFill.Size = UDim2.new(0,0,1,0)
     TransFill.BackgroundColor3 = CurrentTheme.Accent
     TransFill.ZIndex = 104
     Corner(TransFill, 3)
-    
     local TransBtn = Instance.new("TextButton", TransBar)
-    TransBtn.Size = UDim2.new(0,12,0,12)
-    TransBtn.Position = UDim2.new(0.2,-6,0.5,-6)
+    TransBtn.Size = UDim2.new(0,14,0,14)
+    TransBtn.Position = UDim2.new(0,-7,0.5,-7)
     TransBtn.BackgroundColor3 = Color3.fromRGB(255,255,255)
     TransBtn.Text = ""
     TransBtn.ZIndex = 105
-    Corner(TransBtn, 6)
-    
+    Corner(TransBtn, 7)
     local draggingTrans = false
-    TransBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingTrans = true end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingTrans = false end
-    end)
+    TransBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingTrans = true end end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingTrans = false end end)
     UserInputService.InputChanged:Connect(function(input)
         if draggingTrans and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local barPos = TransBar.AbsolutePosition.X
-            local barSize = TransBar.AbsoluteSize.X
-            local mouseX = input.Position.X
-            local percent = math.clamp((mouseX - barPos) / barSize, 0, 1)
+            local percent = math.clamp((input.Position.X - TransBar.AbsolutePosition.X) / TransBar.AbsoluteSize.X, 0, 1)
             TransFill.Size = UDim2.new(percent,0,1,0)
-            TransBtn.Position = UDim2.new(percent,-6,0.5,-6)
-            currentTransparency = percent * 0.6 -- 0 to 0.6 max
+            TransBtn.Position = UDim2.new(percent,-7,0.5,-7)
+            currentTransparency = percent * 0.8
             TransLabel.Text = "Transparency: "..math.floor(percent*100).."%"
-            -- ONLY affect Main window background, not tabs/buttons
             Main.BackgroundTransparency = currentTransparency
+            BackgroundOverlay.BackgroundTransparency = currentTransparency
         end
     end)
-    
-    -- Separator before themes
+    -- Background Image
+    local BgSection = Instance.new("TextLabel", ThemeList)
+    BgSection.Size = UDim2.new(1,-8,0,20)
+    BgSection.BackgroundTransparency = 1
+    BgSection.Text = "🖼️ Background (URL or ID)"
+    BgSection.Font = Enum.Font.GothamBold
+    BgSection.TextSize = 12
+    BgSection.TextColor3 = CurrentTheme.Text
+    BgSection.TextXAlignment = Enum.TextXAlignment.Left
+    BgSection.LayoutOrder = 5
+    BgSection.ZIndex = 102
+    local BgFrame = Instance.new("Frame", ThemeList)
+    BgFrame.Size = UDim2.new(1,-8,0,90)
+    BgFrame.BackgroundColor3 = CurrentTheme.ElementBg2
+    BgFrame.LayoutOrder = 6
+    BgFrame.ZIndex = 102
+    Corner(BgFrame, 8)
+    local BgInput = Instance.new("TextBox", BgFrame)
+    BgInput.Size = UDim2.new(1,-16,0,30)
+    BgInput.Position = UDim2.new(0,8,0,8)
+    BgInput.BackgroundColor3 = CurrentTheme.TabListBg
+    BgInput.PlaceholderText = "rbxassetid://123 or ID"
+    BgInput.Text = ""
+    BgInput.Font = Enum.Font.Gotham
+    BgInput.TextSize = 11
+    BgInput.TextColor3 = CurrentTheme.Text
+    BgInput.PlaceholderColor3 = CurrentTheme.SubText
+    BgInput.ZIndex = 103
+    Corner(BgInput, 6)
+    local ApplyBgBtn = Instance.new("TextButton", BgFrame)
+    ApplyBgBtn.Size = UDim2.new(0.48,0,0,28)
+    ApplyBgBtn.Position = UDim2.new(0,8,0,48)
+    ApplyBgBtn.BackgroundColor3 = CurrentTheme.Accent
+    ApplyBgBtn.Text = "Apply Image"
+    ApplyBgBtn.Font = Enum.Font.GothamBold
+    ApplyBgBtn.TextSize = 11
+    ApplyBgBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    ApplyBgBtn.ZIndex = 104
+    Corner(ApplyBgBtn, 6)
+    local ClearBgBtn = Instance.new("TextButton", BgFrame)
+    ClearBgBtn.Size = UDim2.new(0.48,0,0,28)
+    ClearBgBtn.Position = UDim2.new(0.52,0,0,48)
+    ClearBgBtn.BackgroundColor3 = CurrentTheme.ElementBg
+    ClearBgBtn.Text = "Clear"
+    ClearBgBtn.Font = Enum.Font.GothamBold
+    ClearBgBtn.TextSize = 11
+    ClearBgBtn.TextColor3 = CurrentTheme.Text
+    ClearBgBtn.ZIndex = 104
+    Corner(ClearBgBtn, 6)
+    ApplyBgBtn.MouseButton1Click:Connect(function()
+        local input = BgInput.Text
+        if input ~= "" then
+            local img = input
+            if not string.find(input, "rbxassetid://") and not string.find(input, "http") then
+                img = "rbxassetid://"..input
+            end
+            BackgroundImage.Image = img
+            BackgroundImage.ImageTransparency = 0.3
+            BackgroundOverlay.BackgroundTransparency = 0.5
+        end
+    end)
+    ClearBgBtn.MouseButton1Click:Connect(function()
+        BackgroundImage.Image = ""
+        BackgroundImage.ImageTransparency = 1
+        BackgroundOverlay.BackgroundTransparency = 0
+        BgInput.Text = ""
+    end)
     local ThemeSep = Instance.new("Frame", ThemeList)
     ThemeSep.Size = UDim2.new(1,-8,0,1)
     ThemeSep.BackgroundColor3 = CurrentTheme.Stroke
     ThemeSep.BackgroundTransparency = 0.5
-    ThemeSep.LayoutOrder = 104
+    ThemeSep.LayoutOrder = 7
     ThemeSep.ZIndex = 102
-    
     local ThemeTitle = Instance.new("TextLabel", ThemeList)
-    ThemeTitle.Size = UDim2.new(1,-8,0,18)
+    ThemeTitle.Size = UDim2.new(1,-8,0,20)
     ThemeTitle.BackgroundTransparency = 1
     ThemeTitle.Text = "🎨 Themes"
     ThemeTitle.Font = Enum.Font.GothamBold
     ThemeTitle.TextSize = 12
     ThemeTitle.TextColor3 = CurrentTheme.Text
     ThemeTitle.TextXAlignment = Enum.TextXAlignment.Left
-    ThemeTitle.LayoutOrder = 105
+    ThemeTitle.LayoutOrder = 8
     ThemeTitle.ZIndex = 102
 
-    
-    -- Size & Transparency variables
-    local currentScale = 1
-    local currentTransparency = 0.2
-    local originalSize = UDim2.new(0, 440, 0, 320)
-    
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,132,1,-58)
     TabList.Position = UDim2.new(0,8,0,52)
     TabList.BackgroundColor3 = CurrentTheme.TabListBg
     TabList.BorderSizePixel = 0
-    TabList.ClipsDescendants = true -- FIXED
     TabList.CanvasSize = UDim2.new(0,0,0,0)
     TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
     TabList.ScrollBarThickness = 2
@@ -886,8 +928,7 @@ function GGH:CreateWindow(Config)
     Container.Size = UDim2.new(1,-152,1,-58)
     Container.Position = UDim2.new(0,144,0,52)
     Container.BackgroundTransparency = 1
-    Container.ClipsDescendants = true -- FIXED: No outside when scrolling
-    Container.ZIndex = 1
+    Container.ClipsDescendants = false
     local ConfirmFrame = Instance.new("Frame", ScreenGui)
     ConfirmFrame.Name = "ConfirmOverlay"
     ConfirmFrame.Size = Main.Size
@@ -966,46 +1007,110 @@ function GGH:CreateWindow(Config)
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
-                local newX = startPos.X.Offset + delta.X
-                local newY = startPos.Y.Offset + delta.Y
-                -- FIX: Prevent window from going off-screen top (keep at least header visible)
-                local viewportSize = workspace.CurrentCamera.ViewportSize
-                local minY = 0
-                local maxY = viewportSize.Y - 60 -- keep at least 60px visible
-                local minX = -Main.AbsoluteSize.X + 100 -- keep 100px visible on sides
-                local maxX = viewportSize.X - 100
-                newY = math.clamp(newY, minY, maxY)
-                newX = math.clamp(newX, minX, maxX)
-                Main.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+                Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
         end)
     end
+
+    -- NEW: Resize Grip at corners
+    local ResizeGrip = Instance.new("Frame", Main)
+    ResizeGrip.Name = "ResizeGrip"
+    ResizeGrip.Size = UDim2.new(0,20,0,20)
+    ResizeGrip.Position = UDim2.new(1,-20,1,-20)
+    ResizeGrip.BackgroundTransparency = 1
+    ResizeGrip.ZIndex = 50
+    for i=1,3 do
+        local line = Instance.new("Frame", ResizeGrip)
+        line.Size = UDim2.new(0, 10 - (i*2), 0, 1)
+        line.Position = UDim2.new(1, -10 + (i*2) -2, 1, -10 + (i*2) -2)
+        line.BackgroundColor3 = CurrentTheme.SubText
+        line.BackgroundTransparency = 0.5
+        line.BorderSizePixel = 0
+        line.Rotation = -45
+        line.ZIndex = 51
+    end
+    local TopGrip = Instance.new("Frame", Main)
+    TopGrip.Name = "TopGrip"
+    TopGrip.Size = UDim2.new(0,20,0,20)
+    TopGrip.Position = UDim2.new(0,0,0,0)
+    TopGrip.BackgroundTransparency = 1
+    TopGrip.ZIndex = 50
+    for i=1,3 do
+        local line = Instance.new("Frame", TopGrip)
+        line.Size = UDim2.new(0, 10 - (i*2), 0, 1)
+        line.Position = UDim2.new(0, 2, 0, 2 + (i*3))
+        line.BackgroundColor3 = CurrentTheme.SubText
+        line.BackgroundTransparency = 0.7
+        line.BorderSizePixel = 0
+        line.Rotation = -45
+        line.ZIndex = 51
+    end
+    local resizing = false
+    local resizeStart, startSize
+    ResizeGrip.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            resizing = true
+            resizeStart = input.Position
+            startSize = Main.Size
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - resizeStart
+            local newW = math.clamp(startSize.X.Offset + delta.X, 400, 800)
+            local newH = math.clamp(startSize.Y.Offset + delta.Y, 300, 600)
+            Main.Size = UDim2.new(0, newW, 0, newH)
+            ConfirmFrame.Size = UDim2.new(0, newW, 0, newH)
+            if Shadow then Shadow.Size = UDim2.new(0, newW+40, 0, newH+40) end
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then resizing = false end
+    end)
+
     local minimized = false
     local savedSize = Main.Size
 
-    -- NEW: Center Top Floating Button for Minimize (with transform animation)
+    -- NEW: Beautiful floating button instead of shrinking header
     local CenterTopButton = Instance.new("TextButton", ScreenGui)
-    CenterTopButton.Name = "CenterTopButton"
-    CenterTopButton.Size = UDim2.new(0,0,0,0) -- Start hidden small
-    CenterTopButton.Position = UDim2.new(0.5,0,0,20)
+    CenterTopButton.Name = "GGH_FloatingMinButton"
+    CenterTopButton.Size = UDim2.new(0,120,0,42)
+    CenterTopButton.Position = UDim2.new(0.5, -60, 0, 16)
     CenterTopButton.AnchorPoint = Vector2.new(0.5,0)
     CenterTopButton.BackgroundColor3 = CurrentTheme.Accent
-    CenterTopButton.Text = "GGH ▼"
-    CenterTopButton.Font = Enum.Font.GothamBold
-    CenterTopButton.TextSize = 14
-    CenterTopButton.TextColor3 = Color3.fromRGB(255,255,255)
+    CenterTopButton.BackgroundTransparency = 0.05
+    CenterTopButton.Text = ""
     CenterTopButton.Visible = false
-    CenterTopButton.ZIndex = 50
+    CenterTopButton.ZIndex = 100
     CenterTopButton.AutoButtonColor = false
-    CenterTopButton.TextTransparency = 1
-    Corner(CenterTopButton, 16)
-    local CenterStroke = Stroke(CenterTopButton, CurrentTheme.Stroke, 1)
-    CenterStroke.Transparency = 1
-    
-    -- Draggable center button
+    Corner(CenterTopButton, 21)
+    local CenterStroke = Stroke(CenterTopButton, CurrentTheme.StrokeLight, 1.5, 0.3)
+    local CenterGradient = Instance.new("UIGradient", CenterTopButton)
+    CenterGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.Accent), ColorSequenceKeypoint.new(1, Color3.fromRGB(CurrentTheme.Accent.R*255+30, CurrentTheme.Accent.G*255+30, CurrentTheme.Accent.B*255+50))}
+    CenterGradient.Rotation = 90
+    local CenterIcon = Instance.new("TextLabel", CenterTopButton)
+    CenterIcon.Size = UDim2.new(1,0,1,0)
+    CenterIcon.BackgroundTransparency = 1
+    CenterIcon.Text = "GGH ▼"
+    CenterIcon.Font = Enum.Font.GothamBold
+    CenterIcon.TextSize = 15
+    CenterIcon.TextColor3 = Color3.fromRGB(255,255,255)
+    CenterIcon.ZIndex = 101
+    local CenterShadow = Instance.new("ImageLabel", ScreenGui)
+    CenterShadow.Size = UDim2.new(0, 140, 0, 62)
+    CenterShadow.Position = UDim2.new(0.5, -70, 0, 6)
+    CenterShadow.AnchorPoint = Vector2.new(0.5,0)
+    CenterShadow.BackgroundTransparency = 1
+    CenterShadow.Image = "rbxassetid://1316045217"
+    CenterShadow.ImageColor3 = Color3.fromRGB(0,0,0)
+    CenterShadow.ImageTransparency = 0.6
+    CenterShadow.ScaleType = Enum.ScaleType.Slice
+    CenterShadow.SliceCenter = Rect.new(10,10,118,118)
+    CenterShadow.ZIndex = 99
+    CenterShadow.Visible = false
     do
         local dragging = false
         local dragStart, startPos
@@ -1019,130 +1124,54 @@ function GGH:CreateWindow(Config)
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
-                local newX = startPos.X.Offset + delta.X
-                local newY = startPos.Y.Offset + delta.Y
-                -- FIXED: Allow moving anywhere including top, no clamp to bottom only
-                CenterTopButton.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+                CenterTopButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
         end)
     end
-    
-    CenterTopButton.MouseEnter:Connect(function() Tween(CenterTopButton, {BackgroundColor3 = Color3.fromRGB(math.clamp(CurrentTheme.Accent.R*255+20,0,255), math.clamp(CurrentTheme.Accent.G*255+20,0,255), math.clamp(CurrentTheme.Accent.B*255+20,0,255))}, 0.2) end)
-    CenterTopButton.MouseLeave:Connect(function() Tween(CenterTopButton, {BackgroundColor3 = CurrentTheme.Accent}, 0.2) end)
-    
-
-    -- FIXED: Main window dragging - allow moving anywhere including top
-    do
-        local draggingMain = false
-        local dragInput, dragStart, startPos
-        Header.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                draggingMain = true
-                dragStart = input.Position
-                startPos = Main.Position
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then draggingMain = false end
-                end)
-            end
-        end)
-        Header.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                dragInput = input
-            end
-        end)
-        UserInputService.InputChanged:Connect(function(input)
-            if input == dragInput and draggingMain then
-                local delta = input.Position - dragStart
-                -- FIXED: No clamp that prevents moving above middle, allow full screen
-                Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-                ConfirmFrame.Position = Main.Position
-            end
-        end)
-    end
-    
-
+    CenterTopButton.MouseEnter:Connect(function()
+        Tween(CenterTopButton, {BackgroundTransparency = 0, Size = UDim2.new(0,126,0,44)}, 0.2)
+    end)
+    CenterTopButton.MouseLeave:Connect(function()
+        Tween(CenterTopButton, {BackgroundTransparency = 0.05, Size = UDim2.new(0,120,0,42)}, 0.2)
+    end)
     MinBtn.MouseButton1Click:Connect(function()
         if not minimized then
             minimized = true
             savedSize = Main.Size
-            savedPos = Main.Position
             ThemeDropdown.Visible = false
             SearchBar.Visible = false
-            
-            -- FIXED: Animation - Window transforms into button (not instant disappear)
-            local targetPos = UDim2.new(0.5, 0, 0, 20)
-            -- Step 1: Shrink window towards top center
-            Tween(Main, {Size = UDim2.new(0, 100, 0, 32), Position = targetPos, BackgroundTransparency = 1}, 0.35)
-            -- Fade out contents
-            Tween(Header, {BackgroundTransparency = 1}, 0.25)
-            Tween(TabList, {BackgroundTransparency = 1}, 0.2)
-            Tween(Container, {BackgroundTransparency = 1}, 0.2)
-            
-            task.wait(0.35)
             Main.Visible = false
-            Header.BackgroundTransparency = 0
-            TabList.BackgroundTransparency = 0
-            Container.BackgroundTransparency = 1
-            
-            -- Step 2: Show and animate button from window position
+            TabList.Visible = false
+            Container.Visible = false
+            Shadow.Visible = false
             CenterTopButton.Visible = true
-            CenterTopButton.Position = targetPos
-            CenterTopButton.Size = UDim2.new(0, 100, 0, 32)
-            CenterTopButton.AnchorPoint = Vector2.new(0.5,0)
-            CenterTopButton.BackgroundTransparency = 0
-            CenterTopButton.TextTransparency = 1
-            CenterStroke.Transparency = 0
-            -- Animate button appearing
-            Tween(CenterTopButton, {Size = UDim2.new(0, 100, 0, 32), BackgroundTransparency = 0}, 0.25)
-            TweenService:Create(CenterTopButton, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+            CenterShadow.Visible = true
+            CenterTopButton.Position = UDim2.new(0.5, -60, 0, 16)
+            CenterTopButton.Size = UDim2.new(0,0,0,0)
+            Tween(CenterTopButton, {Size = UDim2.new(0,120,0,42)}, 0.35)
         end
     end)
-    
     local function RestoreWindow()
         if minimized then
-            -- FIXED: Animation - Button transforms into window
-            local targetSize = savedSize
-            local targetPos = savedPos
-            
-            -- Step 1: Animate button to window position and size
-            Tween(CenterTopButton, {Position = targetPos, Size = targetSize, BackgroundTransparency = 0.2}, 0.35)
-            Tween(CenterTopButton, {TextTransparency = 1}, 0.15)
-            
-            task.wait(0.35)
-            CenterTopButton.Visible = false
-            CenterTopButton.Size = UDim2.new(0,0,0,0)
-            
-            -- Step 2: Show window with animation from button
+            minimized = false
+            local centerPos = UDim2.new(0.5, -Main.Size.X.Offset/2, 0.5, -Main.Size.Y.Offset/2)
+            Main.Position = centerPos
             Main.Visible = true
-            Main.Size = UDim2.new(0, 100, 0, 32)
-            Main.Position = UDim2.new(0.5, 0, 0, 20)
-            Main.AnchorPoint = Vector2.new(0.5,0)
-            Main.BackgroundTransparency = 1
             TabList.Visible = true
             Container.Visible = true
-            HeaderFix.Visible = true
-            
-            Tween(Main, {Size = targetSize, Position = targetPos, BackgroundTransparency = currentTransparency}, 0.4)
-            Tween(Header, {BackgroundTransparency = 0}, 0.3)
-            
-            task.wait(0.4)
-            Main.AnchorPoint = Vector2.new(0,0)
-            Main.Position = targetPos
-            minimized = false
-            -- FIXED: Ensure window can be dragged above middle after restore
+            Shadow.Visible = true
             ConfirmFrame.Position = Main.Position
+            ConfirmFrame.Size = Main.Size
+            CenterTopButton.Visible = false
+            CenterShadow.Visible = false
         end
     end
-    
     CenterTopButton.MouseButton1Click:Connect(RestoreWindow)
-    
-    MaxBtn.MouseButton1Click:Connect(function()
-        RestoreWindow()
-    end)
-    
+    MaxBtn.MouseButton1Click:Connect(RestoreWindow)
+
     CloseBtn.MouseButton1Click:Connect(function()
         if minimized then
             minimized = false
@@ -1212,7 +1241,7 @@ function GGH:CreateWindow(Config)
         end
     end
     local ThemeOpen = false
-    ThemeBtn.MouseButton1Click:Connect(function() ThemeOpen = not ThemeOpen ThemeDropdown.Visible = ThemeOpen SearchBar.Visible = false if ThemeOpen then ThemeList.CanvasPosition = Vector2.new(0,0) task.wait(0.05) ThemeList.CanvasSize = UDim2.new(0,0,0,TL.AbsoluteContentSize.Y + 50) end end)
+    ThemeBtn.MouseButton1Click:Connect(function() ThemeOpen = not ThemeOpen ThemeDropdown.Visible = ThemeOpen SearchBar.Visible = false end)
     for name, th in pairs(Themes) do
         local Btn = Instance.new("TextButton", ThemeList)
         Btn.Size = UDim2.new(1,0,0,28)
@@ -1692,10 +1721,15 @@ function GGH:CreateWindow(Config)
             Label.TextSize = Cfg.TextSize or 13
             Label.TextColor3 = Cfg.Color or Cfg.TextColor or CurrentTheme.Text
             Label.TextXAlignment = Cfg.Alignment and (Cfg.Alignment == "Center" and Enum.TextXAlignment.Center or Cfg.Alignment == "Right" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left) or Enum.TextXAlignment.Left
+            Label.TextYAlignment = Enum.TextYAlignment.Top
             Label.TextWrapped = true
             Label.AutoLocalize = Cfg.AutoLocalize ~= false
             RegisterThemable(Label, "TextColor3", "Text")
+            if Cfg.Color then
+                -- If custom color provided, don't themable
+            end
         end
+
         local function CreateSeparator(Cfg)
             Cfg = Cfg or {}
             local Frame = Instance.new("Frame", TabPage)
@@ -1707,8 +1741,12 @@ function GGH:CreateWindow(Config)
             Line.Position = UDim2.new(0,0,0.5,0)
             Line.BackgroundColor3 = Cfg.Color or CurrentTheme.Stroke
             Line.BackgroundTransparency = Cfg.Transparency or 0.5
+            Line.BorderSizePixel = 0
             Corner(Line, 1)
-            if not Cfg.Color then RegisterThemable(Line, "BackgroundColor3", "Stroke") end
+            if not Cfg.Color then
+                RegisterThemable(Line, "BackgroundColor3", "Stroke")
+            end
+            -- Optional text in middle
             if Cfg.Title and Cfg.Title ~= "" then
                 local Text = Instance.new("TextLabel", Frame)
                 Text.Size = UDim2.new(0,0,1,0)
@@ -1716,28 +1754,48 @@ function GGH:CreateWindow(Config)
                 Text.Position = UDim2.new(0.5,0,0,0)
                 Text.AnchorPoint = Vector2.new(0.5,0)
                 Text.BackgroundColor3 = CurrentTheme.MainBg
+                Text.BorderSizePixel = 0
                 Text.Text = " "..Cfg.Title.." "
                 Text.Font = Enum.Font.Gotham
                 Text.TextSize = 11
                 Text.TextColor3 = CurrentTheme.SubText
+                Text.AutoLocalize = true
                 Corner(Text, 4)
                 RegisterThemable(Text, "BackgroundColor3", "MainBg")
+                RegisterThemable(Text, "TextColor3", "SubText")
+                local Pad = Instance.new("UIPadding", Text)
+                Pad.PaddingLeft = UDim.new(0,8)
+                Pad.PaddingRight = UDim.new(0,8)
             end
         end
+
         local function CreateImage(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             local imgHeight = Cfg.Height or 100
             Frame.Size = UDim2.new(1,-4,0,imgHeight)
             Frame.BackgroundTransparency = 1
-            if Cfg.Rounded then Frame.BackgroundColor3 = CurrentTheme.ElementBg Corner(Frame, Cfg.CornerRadius or 10) RegisterThemable(Frame, "BackgroundColor3", "ElementBg") end
+            if Cfg.Rounded then
+                Frame.BackgroundColor3 = CurrentTheme.ElementBg
+                Frame.BackgroundTransparency = 0
+                Corner(Frame, Cfg.CornerRadius or 10)
+                RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            end
             AddSearch(Frame, Cfg.Title or "Image", "Image", Name)
             local Image = Instance.new("ImageLabel", Frame)
             Image.Size = Cfg.Size and UDim2.new(0,Cfg.Size.X,0,Cfg.Size.Y) or UDim2.new(1,0,1,0)
-            if Cfg.Size then Image.Position = UDim2.new(0.5,0,0.5,0) Image.AnchorPoint = Vector2.new(0.5,0.5) end
+            if Cfg.Size then
+                Image.Position = UDim2.new(0.5,0,0.5,0)
+                Image.AnchorPoint = Vector2.new(0.5,0.5)
+            end
             Image.BackgroundTransparency = 1
             Image.Image = Cfg.Image or Cfg.Url or "rbxassetid://0"
+            Image.ImageColor3 = Cfg.ImageColor or Cfg.Color or Color3.fromRGB(255,255,255)
             Image.ScaleType = Cfg.ScaleType or Enum.ScaleType.Fit
-            if Cfg.Rounded then Corner(Image, Cfg.CornerRadius or 10) end
+            Image.AutoLocalize = false
+            if Cfg.Rounded then
+                Corner(Image, Cfg.CornerRadius or 10)
+            end
+            -- Optional title below image
             if Cfg.Title and Cfg.Title ~= "" then
                 Frame.Size = UDim2.new(1,-4,0,imgHeight + 24)
                 local Title = Instance.new("TextLabel", Frame)
@@ -1748,9 +1806,11 @@ function GGH:CreateWindow(Config)
                 Title.Font = Enum.Font.GothamMedium
                 Title.TextSize = 12
                 Title.TextColor3 = CurrentTheme.Text
+                Title.AutoLocalize = true
                 RegisterThemable(Title, "TextColor3", "Text")
             end
         end
+
 
         local Elements = {}
 
