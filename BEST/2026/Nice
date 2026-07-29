@@ -1,189 +1,304 @@
---[[ 
-    GGH Library - Main Source Code
+--[[
+    ================================================================
+    GGH LIBRARY (UI HUB FRAMEWORK v3.0)
     Developer: AM_BR / AM_BRCR7
-    Repository Target: Library-GGH/refs/heads/main/BEST/2026/Nice
+    Architecture: Full-Scale Luau Advanced GUI Engine
+    Repository File: BEST/2026/Nice
+    ================================================================
 --]]
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local TextService = game:GetService("TextService")
 
 local Library = {
     CurrentTheme = "Dark",
+    ToggleKey = Enum.KeyCode.RightShift,
+    Registry = {},
+    Flags = {},
+    Unloaded = false,
     Themes = {
-        Dark = {Background = Color3.fromRGB(20, 20, 25), Container = Color3.fromRGB(30, 30, 38), Text = Color3.fromRGB(255, 255, 255), Accent = Color3.fromRGB(45, 120, 240)},
-        Light = {Background = Color3.fromRGB(240, 240, 240), Container = Color3.fromRGB(220, 220, 220), Text = Color3.fromRGB(20, 20, 20), Accent = Color3.fromRGB(0, 120, 215)},
-        Midnight = {Background = Color3.fromRGB(10, 10, 15), Container = Color3.fromRGB(18, 18, 26), Text = Color3.fromRGB(220, 220, 255), Accent = Color3.fromRGB(90, 70, 255)},
-        Aqua = {Background = Color3.fromRGB(15, 28, 35), Container = Color3.fromRGB(22, 42, 52), Text = Color3.fromRGB(220, 250, 255), Accent = Color3.fromRGB(0, 200, 220)},
-        BloodRed = {Background = Color3.fromRGB(25, 10, 10), Container = Color3.fromRGB(40, 15, 15), Text = Color3.fromRGB(255, 220, 220), Accent = Color3.fromRGB(220, 40, 40)},
-        Ocean = {Background = Color3.fromRGB(10, 20, 30), Container = Color3.fromRGB(15, 30, 48), Text = Color3.fromRGB(220, 240, 255), Accent = Color3.fromRGB(30, 144, 255)},
-        Emerald = {Background = Color3.fromRGB(10, 25, 15), Container = Color3.fromRGB(18, 40, 25), Text = Color3.fromRGB(220, 255, 230), Accent = Color3.fromRGB(40, 200, 100)},
-        Amethyst = {Background = Color3.fromRGB(20, 10, 28), Container = Color3.fromRGB(32, 18, 45), Text = Color3.fromRGB(240, 220, 255), Accent = Color3.fromRGB(160, 60, 230)},
-        Cyberpunk = {Background = Color3.fromRGB(25, 20, 5), Container = Color3.fromRGB(40, 32, 10), Text = Color3.fromRGB(255, 240, 0), Accent = Color3.fromRGB(255, 0, 120)},
-        Dracula = {Background = Color3.fromRGB(40, 42, 54), Container = Color3.fromRGB(68, 71, 90), Text = Color3.fromRGB(248, 248, 242), Accent = Color3.fromRGB(255, 121, 198)},
-        Nord = {Background = Color3.fromRGB(46, 52, 64), Container = Color3.fromRGB(59, 66, 82), Text = Color3.fromRGB(236, 239, 244), Accent = Color3.fromRGB(136, 192, 208)},
-        Gruvbox = {Background = Color3.fromRGB(40, 40, 40), Container = Color3.fromRGB(60, 56, 54), Text = Color3.fromRGB(251, 241, 199), Accent = Color3.fromRGB(254, 128, 25)},
-        Monokai = {Background = Color3.fromRGB(39, 40, 34), Container = Color3.fromRGB(62, 62, 50), Text = Color3.fromRGB(248, 248, 242), Accent = Color3.fromRGB(166, 226, 46)},
-        Synthwave = {Background = Color3.fromRGB(36, 20, 46), Container = Color3.fromRGB(52, 28, 68), Text = Color3.fromRGB(255, 125, 230), Accent = Color3.fromRGB(0, 240, 255)},
-        SolarizedDark = {Background = Color3.fromRGB(0, 43, 54), Container = Color3.fromRGB(7, 54, 66), Text = Color3.fromRGB(147, 161, 161), Accent = Color3.fromRGB(181, 137, 0)},
-        SolarizedLight = {Background = Color3.fromRGB(253, 246, 227), Container = Color3.fromRGB(238, 232, 213), Text = Color3.fromRGB(101, 123, 131), Accent = Color3.fromRGB(38, 139, 210)},
-        TokyoNight = {Background = Color3.fromRGB(26, 27, 38), Container = Color3.fromRGB(36, 40, 59), Text = Color3.fromRGB(192, 202, 245), Accent = Color3.fromRGB(122, 162, 247)},
-        RosePine = {Background = Color3.fromRGB(25, 23, 36), Container = Color3.fromRGB(31, 29, 46), Text = Color3.fromRGB(224, 222, 244), Accent = Color3.fromRGB(235, 111, 146)},
-        CatppuccinMocha = {Background = Color3.fromRGB(30, 30, 46), Container = Color3.fromRGB(45, 45, 67), Text = Color3.fromRGB(205, 214, 244), Accent = Color3.fromRGB(203, 166, 247)},
-        CatppuccinMacchiato = {Background = Color3.fromRGB(36, 39, 58), Container = Color3.fromRGB(54, 58, 79), Text = Color3.fromRGB(202, 211, 245), Accent = Color3.fromRGB(245, 189, 230)},
-        CatppuccinFrappe = {Background = Color3.fromRGB(48, 52, 70), Container = Color3.fromRGB(65, 69, 89), Text = Color3.fromRGB(198, 208, 245), Accent = Color3.fromRGB(234, 157, 188)},
-        CatppuccinLatte = {Background = Color3.fromRGB(239, 241, 245), Container = Color3.fromRGB(220, 224, 232), Text = Color3.fromRGB(76, 79, 105), Accent = Color3.fromRGB(136, 57, 239)},
-        OneDark = {Background = Color3.fromRGB(40, 44, 52), Container = Color3.fromRGB(50, 56, 66), Text = Color3.fromRGB(171, 178, 191), Accent = Color3.fromRGB(97, 175, 239)},
-        MaterialDark = {Background = Color3.fromRGB(33, 33, 33), Container = Color3.fromRGB(48, 48, 48), Text = Color3.fromRGB(255, 255, 255), Accent = Color3.fromRGB(0, 229, 255)},
-        MaterialOcean = {Background = Color3.fromRGB(15, 17, 26), Container = Color3.fromRGB(27, 30, 43), Text = Color3.fromRGB(143, 147, 162), Accent = Color3.fromRGB(130, 170, 255)},
-        Horizon = {Background = Color3.fromRGB(28, 30, 38), Container = Color3.fromRGB(35, 38, 48), Text = Color3.fromRGB(220, 223, 228), Accent = Color3.fromRGB(233, 86, 120)},
-        Neon = {Background = Color3.fromRGB(10, 10, 10), Container = Color3.fromRGB(20, 20, 20), Text = Color3.fromRGB(255, 255, 255), Accent = Color3.fromRGB(57, 255, 20)},
-        Sunset = {Background = Color3.fromRGB(30, 15, 25), Container = Color3.fromRGB(45, 22, 38), Text = Color3.fromRGB(255, 220, 200), Accent = Color3.fromRGB(255, 100, 80)},
-        Forest = {Background = Color3.fromRGB(15, 25, 18), Container = Color3.fromRGB(24, 38, 28), Text = Color3.fromRGB(220, 245, 225), Accent = Color3.fromRGB(70, 180, 100)},
-        Lavender = {Background = Color3.fromRGB(24, 22, 32), Container = Color3.fromRGB(36, 33, 48), Text = Color3.fromRGB(235, 230, 255), Accent = Color3.fromRGB(170, 140, 255)},
-        Gold = {Background = Color3.fromRGB(25, 22, 12), Container = Color3.fromRGB(40, 35, 20), Text = Color3.fromRGB(255, 245, 210), Accent = Color3.fromRGB(230, 180, 40)},
-        Carbon = {Background = Color3.fromRGB(18, 18, 18), Container = Color3.fromRGB(28, 28, 28), Text = Color3.fromRGB(200, 200, 200), Accent = Color3.fromRGB(120, 120, 120)},
-        Vaporwave = {Background = Color3.fromRGB(30, 15, 40), Container = Color3.fromRGB(45, 25, 60), Text = Color3.fromRGB(255, 210, 255), Accent = Color3.fromRGB(255, 110, 190)},
-        Pastel = {Background = Color3.fromRGB(35, 32, 38), Container = Color3.fromRGB(50, 46, 54), Text = Color3.fromRGB(240, 235, 245), Accent = Color3.fromRGB(180, 200, 255)},
-        Matrix = {Background = Color3.fromRGB(5, 15, 5), Container = Color3.fromRGB(10, 28, 10), Text = Color3.fromRGB(150, 255, 150), Accent = Color3.fromRGB(0, 255, 65)},
-        Retro = {Background = Color3.fromRGB(40, 30, 20), Container = Color3.fromRGB(60, 45, 30), Text = Color3.fromRGB(255, 230, 200), Accent = Color3.fromRGB(220, 120, 50)},
-        Slate = {Background = Color3.fromRGB(30, 34, 42), Container = Color3.fromRGB(42, 48, 58), Text = Color3.fromRGB(210, 220, 230), Accent = Color3.fromRGB(100, 140, 180)},
-        Crimson = {Background = Color3.fromRGB(28, 10, 15), Container = Color3.fromRGB(45, 18, 24), Text = Color3.fromRGB(255, 220, 225), Accent = Color3.fromRGB(220, 20, 60)},
-        Ice = {Background = Color3.fromRGB(12, 24, 32), Container = Color3.fromRGB(20, 38, 50), Text = Color3.fromRGB(230, 248, 255), Accent = Color3.fromRGB(120, 210, 255)},
-        DeepSea = {Background = Color3.fromRGB(8, 15, 24), Container = Color3.fromRGB(14, 25, 40), Text = Color3.fromRGB(200, 230, 255), Accent = Color3.fromRGB(0, 150, 220)}
+        Dark = {
+            Background = Color3.fromRGB(18, 18, 22),
+            Secondary = Color3.fromRGB(24, 24, 30),
+            Container = Color3.fromRGB(30, 30, 38),
+            Border = Color3.fromRGB(45, 45, 55),
+            Text = Color3.fromRGB(240, 240, 245),
+            SubText = Color3.fromRGB(150, 150, 165),
+            Accent = Color3.fromRGB(55, 125, 255),
+            AccentDark = Color3.fromRGB(35, 95, 210),
+            Hover = Color3.fromRGB(38, 38, 48),
+            Outline = Color3.fromRGB(50, 50, 65)
+        },
+        Light = {
+            Background = Color3.fromRGB(245, 245, 250),
+            Secondary = Color3.fromRGB(230, 230, 238),
+            Container = Color3.fromRGB(220, 220, 228),
+            Border = Color3.fromRGB(200, 200, 210),
+            Text = Color3.fromRGB(20, 20, 30),
+            SubText = Color3.fromRGB(100, 100, 115),
+            Accent = Color3.fromRGB(0, 122, 255),
+            AccentDark = Color3.fromRGB(0, 90, 200),
+            Hover = Color3.fromRGB(210, 210, 220),
+            Outline = Color3.fromRGB(190, 190, 205)
+        },
+        Midnight = {
+            Background = Color3.fromRGB(10, 10, 14),
+            Secondary = Color3.fromRGB(15, 15, 22),
+            Container = Color3.fromRGB(22, 22, 32),
+            Border = Color3.fromRGB(35, 35, 50),
+            Text = Color3.fromRGB(220, 225, 245),
+            SubText = Color3.fromRGB(120, 125, 150),
+            Accent = Color3.fromRGB(100, 80, 255),
+            AccentDark = Color3.fromRGB(70, 50, 210),
+            Hover = Color3.fromRGB(28, 28, 40),
+            Outline = Color3.fromRGB(40, 40, 60)
+        },
+        Aqua = {
+            Background = Color3.fromRGB(12, 22, 28),
+            Secondary = Color3.fromRGB(18, 32, 40),
+            Container = Color3.fromRGB(25, 42, 52),
+            Border = Color3.fromRGB(35, 60, 75),
+            Text = Color3.fromRGB(220, 250, 255),
+            SubText = Color3.fromRGB(120, 170, 185),
+            Accent = Color3.fromRGB(0, 200, 230),
+            AccentDark = Color3.fromRGB(0, 150, 180),
+            Hover = Color3.fromRGB(30, 52, 65),
+            Outline = Color3.fromRGB(40, 70, 90)
+        },
+        BloodRed = {
+            Background = Color3.fromRGB(20, 10, 12),
+            Secondary = Color3.fromRGB(30, 14, 16),
+            Container = Color3.fromRGB(42, 18, 22),
+            Border = Color3.fromRGB(60, 25, 30),
+            Text = Color3.fromRGB(255, 220, 225),
+            SubText = Color3.fromRGB(180, 120, 125),
+            Accent = Color3.fromRGB(230, 45, 55),
+            AccentDark = Color3.fromRGB(170, 25, 35),
+            Hover = Color3.fromRGB(52, 22, 26),
+            Outline = Color3.fromRGB(70, 30, 35)
+        },
+        Ocean = { Background = Color3.fromRGB(10, 20, 30), Secondary = Color3.fromRGB(15, 28, 42), Container = Color3.fromRGB(22, 38, 58), Border = Color3.fromRGB(35, 55, 80), Text = Color3.fromRGB(220, 240, 255), SubText = Color3.fromRGB(130, 165, 195), Accent = Color3.fromRGB(30, 144, 255), AccentDark = Color3.fromRGB(15, 100, 200), Hover = Color3.fromRGB(28, 48, 72), Outline = Color3.fromRGB(45, 70, 100) },
+        Emerald = { Background = Color3.fromRGB(10, 22, 15), Secondary = Color3.fromRGB(15, 32, 22), Container = Color3.fromRGB(22, 45, 30), Border = Color3.fromRGB(32, 65, 42), Text = Color3.fromRGB(220, 255, 230), SubText = Color3.fromRGB(120, 180, 140), Accent = Color3.fromRGB(40, 200, 100), AccentDark = Color3.fromRGB(25, 150, 70), Hover = Color3.fromRGB(28, 55, 38), Outline = Color3.fromRGB(40, 80, 52) },
+        Amethyst = { Background = Color3.fromRGB(18, 10, 25), Secondary = Color3.fromRGB(26, 15, 36), Container = Color3.fromRGB(36, 20, 50), Border = Color3.fromRGB(55, 30, 75), Text = Color3.fromRGB(240, 220, 255), SubText = Color3.fromRGB(160, 130, 185), Accent = Color3.fromRGB(160, 60, 230), AccentDark = Color3.fromRGB(120, 40, 180), Hover = Color3.fromRGB(45, 25, 62), Outline = Color3.fromRGB(65, 35, 90) },
+        Cyberpunk = { Background = Color3.fromRGB(22, 18, 8), Secondary = Color3.fromRGB(32, 26, 10), Container = Color3.fromRGB(45, 36, 12), Border = Color3.fromRGB(65, 52, 15), Text = Color3.fromRGB(255, 240, 0), SubText = Color3.fromRGB(180, 170, 50), Accent = Color3.fromRGB(255, 0, 120), AccentDark = Color3.fromRGB(190, 0, 90), Hover = Color3.fromRGB(55, 44, 15), Outline = Color3.fromRGB(80, 65, 18) },
+        Dracula = { Background = Color3.fromRGB(40, 42, 54), Secondary = Color3.fromRGB(50, 52, 66), Container = Color3.fromRGB(68, 71, 90), Border = Color3.fromRGB(90, 93, 115), Text = Color3.fromRGB(248, 248, 242), SubText = Color3.fromRGB(150, 152, 170), Accent = Color3.fromRGB(255, 121, 198), AccentDark = Color3.fromRGB(200, 80, 150), Hover = Color3.fromRGB(80, 83, 105), Outline = Color3.fromRGB(100, 103, 125) },
+        Nord = { Background = Color3.fromRGB(46, 52, 64), Secondary = Color3.fromRGB(53, 60, 74), Container = Color3.fromRGB(59, 66, 82), Border = Color3.fromRGB(76, 86, 106), Text = Color3.fromRGB(236, 239, 244), SubText = Color3.fromRGB(143, 188, 187), Accent = Color3.fromRGB(136, 192, 208), AccentDark = Color3.fromRGB(94, 129, 172), Hover = Color3.fromRGB(67, 76, 94), Outline = Color3.fromRGB(88, 100, 122) },
+        Gruvbox = { Background = Color3.fromRGB(40, 40, 40), Secondary = Color3.fromRGB(50, 48, 47), Container = Color3.fromRGB(60, 56, 54), Border = Color3.fromRGB(80, 73, 69), Text = Color3.fromRGB(251, 241, 199), SubText = Color3.fromRGB(168, 153, 132), Accent = Color3.fromRGB(254, 128, 25), AccentDark = Color3.fromRGB(214, 93, 14), Hover = Color3.fromRGB(70, 65, 61), Outline = Color3.fromRGB(92, 84, 78) },
+        Monokai = { Background = Color3.fromRGB(39, 40, 34), Secondary = Color3.fromRGB(49, 50, 42), Container = Color3.fromRGB(62, 62, 50), Border = Color3.fromRGB(85, 85, 70), Text = Color3.fromRGB(248, 248, 242), SubText = Color3.fromRGB(160, 160, 145), Accent = Color3.fromRGB(166, 226, 46), AccentDark = Color3.fromRGB(120, 175, 20), Hover = Color3.fromRGB(72, 72, 58), Outline = Color3.fromRGB(95, 95, 78) },
+        Synthwave = { Background = Color3.fromRGB(32, 18, 42), Secondary = Color3.fromRGB(42, 24, 55), Container = Color3.fromRGB(55, 30, 72), Border = Color3.fromRGB(80, 42, 105), Text = Color3.fromRGB(255, 125, 230), SubText = Color3.fromRGB(180, 100, 190), Accent = Color3.fromRGB(0, 240, 255), AccentDark = Color3.fromRGB(0, 170, 200), Hover = Color3.fromRGB(68, 36, 88), Outline = Color3.fromRGB(92, 48, 120) },
+        SolarizedDark = { Background = Color3.fromRGB(0, 43, 54), Secondary = Color3.fromRGB(4, 53, 66), Container = Color3.fromRGB(7, 54, 66), Border = Color3.fromRGB(14, 75, 90), Text = Color3.fromRGB(147, 161, 161), SubText = Color3.fromRGB(101, 123, 131), Accent = Color3.fromRGB(181, 137, 0), AccentDark = Color3.fromRGB(140, 100, 0), Hover = Color3.fromRGB(10, 65, 80), Outline = Color3.fromRGB(18, 85, 100) },
+        SolarizedLight = { Background = Color3.fromRGB(253, 246, 227), Secondary = Color3.fromRGB(245, 237, 212), Container = Color3.fromRGB(238, 232, 213), Border = Color3.fromRGB(215, 208, 188), Text = Color3.fromRGB(101, 123, 131), SubText = Color3.fromRGB(147, 161, 161), Accent = Color3.fromRGB(38, 139, 210), AccentDark = Color3.fromRGB(25, 100, 160), Hover = Color3.fromRGB(225, 218, 198), Outline = Color3.fromRGB(200, 192, 172) },
+        TokyoNight = { Background = Color3.fromRGB(26, 27, 38), Secondary = Color3.fromRGB(32, 34, 48), Container = Color3.fromRGB(36, 40, 59), Border = Color3.fromRGB(50, 56, 80), Text = Color3.fromRGB(192, 202, 245), SubText = Color3.fromRGB(120, 130, 175), Accent = Color3.fromRGB(122, 162, 247), AccentDark = Color3.fromRGB(80, 120, 200), Hover = Color3.fromRGB(44, 48, 70), Outline = Color3.fromRGB(60, 66, 95) },
+        RosePine = { Background = Color3.fromRGB(25, 23, 36), Secondary = Color3.fromRGB(31, 29, 46), Container = Color3.fromRGB(38, 35, 56), Border = Color3.fromRGB(55, 50, 80), Text = Color3.fromRGB(224, 222, 244), SubText = Color3.fromRGB(144, 140, 170), Accent = Color3.fromRGB(235, 111, 146), AccentDark = Color3.fromRGB(185, 75, 110), Hover = Color3.fromRGB(46, 42, 68), Outline = Color3.fromRGB(65, 60, 95) },
+        CatppuccinMocha = { Background = Color3.fromRGB(30, 30, 46), Secondary = Color3.fromRGB(36, 36, 56), Container = Color3.fromRGB(45, 45, 67), Border = Color3.fromRGB(62, 62, 90), Text = Color3.fromRGB(205, 214, 244), SubText = Color3.fromRGB(147, 153, 178), Accent = Color3.fromRGB(203, 166, 247), AccentDark = Color3.fromRGB(150, 110, 200), Hover = Color3.fromRGB(54, 54, 78), Outline = Color3.fromRGB(72, 72, 102) },
+        CatppuccinMacchiato = { Background = Color3.fromRGB(36, 39, 58), Secondary = Color3.fromRGB(44, 47, 70), Container = Color3.fromRGB(54, 58, 79), Border = Color3.fromRGB(73, 77, 102), Text = Color3.fromRGB(202, 211, 245), SubText = Color3.fromRGB(141, 149, 182), Accent = Color3.fromRGB(245, 189, 230), AccentDark = Color3.fromRGB(195, 139, 180), Hover = Color3.fromRGB(63, 67, 91), Outline = Color3.fromRGB(82, 86, 114) },
+        CatppuccinFrappe = { Background = Color3.fromRGB(48, 52, 70), Secondary = Color3.fromRGB(56, 60, 80), Container = Color3.fromRGB(65, 69, 89), Border = Color3.fromRGB(83, 87, 110), Text = Color3.fromRGB(198, 208, 245), SubText = Color3.fromRGB(140, 149, 180), Accent = Color3.fromRGB(234, 157, 188), AccentDark = Color3.fromRGB(184, 107, 138), Hover = Color3.fromRGB(74, 78, 100), Outline = Color3.fromRGB(93, 97, 122) },
+        CatppuccinLatte = { Background = Color3.fromRGB(239, 241, 245), Secondary = Color3.fromRGB(230, 233, 239), Container = Color3.fromRGB(220, 224, 232), Border = Color3.fromRGB(198, 202, 214), Text = Color3.fromRGB(76, 79, 105), SubText = Color3.fromRGB(124, 127, 147), Accent = Color3.fromRGB(136, 57, 239), AccentDark = Color3.fromRGB(96, 20, 190), Hover = Color3.fromRGB(210, 214, 222), Outline = Color3.fromRGB(185, 189, 201) },
+        OneDark = { Background = Color3.fromRGB(40, 44, 52), Secondary = Color3.fromRGB(45, 50, 60), Container = Color3.fromRGB(50, 56, 66), Border = Color3.fromRGB(68, 75, 88), Text = Color3.fromRGB(171, 178, 191), SubText = Color3.fromRGB(120, 126, 138), Accent = Color3.fromRGB(97, 175, 239), AccentDark = Color3.fromRGB(60, 130, 190), Hover = Color3.fromRGB(58, 64, 76), Outline = Color3.fromRGB(78, 85, 98) },
+        MaterialDark = { Background = Color3.fromRGB(33, 33, 33), Secondary = Color3.fromRGB(40, 40, 40), Container = Color3.fromRGB(48, 48, 48), Border = Color3.fromRGB(65, 65, 65), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(160, 160, 160), Accent = Color3.fromRGB(0, 229, 255), AccentDark = Color3.fromRGB(0, 170, 200), Hover = Color3.fromRGB(56, 56, 56), Outline = Color3.fromRGB(75, 75, 75) },
+        MaterialOcean = { Background = Color3.fromRGB(15, 17, 26), Secondary = Color3.fromRGB(20, 22, 34), Container = Color3.fromRGB(27, 30, 43), Border = Color3.fromRGB(40, 44, 62), Text = Color3.fromRGB(143, 147, 162), SubText = Color3.fromRGB(100, 104, 120), Accent = Color3.fromRGB(130, 170, 255), AccentDark = Color3.fromRGB(80, 120, 210), Hover = Color3.fromRGB(33, 37, 52), Outline = Color3.fromRGB(48, 53, 72) },
+        Horizon = { Background = Color3.fromRGB(28, 30, 38), Secondary = Color3.fromRGB(32, 35, 44), Container = Color3.fromRGB(35, 38, 48), Border = Color3.fromRGB(50, 54, 68), Text = Color3.fromRGB(220, 223, 228), SubText = Color3.fromRGB(140, 144, 155), Accent = Color3.fromRGB(233, 86, 120), AccentDark = Color3.fromRGB(183, 40, 80), Hover = Color3.fromRGB(42, 45, 56), Outline = Color3.fromRGB(58, 62, 78) },
+        Neon = { Background = Color3.fromRGB(10, 10, 10), Secondary = Color3.fromRGB(15, 15, 15), Container = Color3.fromRGB(20, 20, 20), Border = Color3.fromRGB(35, 35, 35), Text = Color3.fromRGB(255, 255, 255), SubText = Color3.fromRGB(150, 150, 150), Accent = Color3.fromRGB(57, 255, 20), AccentDark = Color3.fromRGB(30, 190, 0), Hover = Color3.fromRGB(28, 28, 28), Outline = Color3.fromRGB(42, 42, 42) },
+        Sunset = { Background = Color3.fromRGB(30, 15, 25), Secondary = Color3.fromRGB(38, 18, 32), Container = Color3.fromRGB(45, 22, 38), Border = Color3.fromRGB(65, 32, 55), Text = Color3.fromRGB(255, 220, 200), SubText = Color3.fromRGB(180, 140, 130), Accent = Color3.fromRGB(255, 100, 80), AccentDark = Color3.fromRGB(200, 60, 40), Hover = Color3.fromRGB(52, 26, 44), Outline = Color3.fromRGB(72, 36, 62) },
+        Forest = { Background = Color3.fromRGB(15, 25, 18), Secondary = Color3.fromRGB(20, 32, 23), Container = Color3.fromRGB(24, 38, 28), Border = Color3.fromRGB(38, 58, 42), Text = Color3.fromRGB(220, 245, 225), SubText = Color3.fromRGB(130, 175, 140), Accent = Color3.fromRGB(70, 180, 100), AccentDark = Color3.fromRGB(40, 130, 70), Hover = Color3.fromRGB(30, 46, 34), Outline = Color3.fromRGB(45, 68, 50) },
+        Lavender = { Background = Color3.fromRGB(24, 22, 32), Secondary = Color3.fromRGB(30, 27, 40), Container = Color3.fromRGB(36, 33, 48), Border = Color3.fromRGB(52, 48, 68), Text = Color3.fromRGB(235, 230, 255), SubText = Color3.fromRGB(150, 142, 175), Accent = Color3.fromRGB(170, 140, 255), AccentDark = Color3.fromRGB(120, 90, 205), Hover = Color3.fromRGB(42, 38, 56), Outline = Color3.fromRGB(60, 55, 78) },
+        Gold = { Background = Color3.fromRGB(25, 22, 12), Secondary = Color3.fromRGB(32, 28, 15), Container = Color3.fromRGB(40, 35, 20), Border = Color3.fromRGB(60, 52, 30), Text = Color3.fromRGB(255, 245, 210), SubText = Color3.fromRGB(180, 168, 120), Accent = Color3.fromRGB(230, 180, 40), AccentDark = Color3.fromRGB(180, 135, 10), Hover = Color3.fromRGB(48, 42, 24), Outline = Color3.fromRGB(68, 60, 35) },
+        Carbon = { Background = Color3.fromRGB(18, 18, 18), Secondary = Color3.fromRGB(23, 23, 23), Container = Color3.fromRGB(28, 28, 28), Border = Color3.fromRGB(42, 42, 42), Text = Color3.fromRGB(200, 200, 200), SubText = Color3.fromRGB(130, 130, 130), Accent = Color3.fromRGB(120, 120, 120), AccentDark = Color3.fromRGB(80, 80, 80), Hover = Color3.fromRGB(34, 34, 34), Outline = Color3.fromRGB(48, 48, 48) },
+        Vaporwave = { Background = Color3.fromRGB(30, 15, 40), Secondary = Color3.fromRGB(38, 20, 50), Container = Color3.fromRGB(45, 25, 60), Border = Color3.fromRGB(68, 38, 90), Text = Color3.fromRGB(255, 210, 255), SubText = Color3.fromRGB(180, 130, 190), Accent = Color3.fromRGB(255, 110, 190), AccentDark = Color3.fromRGB(200, 60, 140), Hover = Color3.fromRGB(52, 28, 70), Outline = Color3.fromRGB(75, 42, 100) },
+        Pastel = { Background = Color3.fromRGB(35, 32, 38), Secondary = Color3.fromRGB(42, 38, 46), Container = Color3.fromRGB(50, 46, 54), Border = Color3.fromRGB(70, 65, 76), Text = Color3.fromRGB(240, 235, 245), SubText = Color3.fromRGB(160, 155, 170), Accent = Color3.fromRGB(180, 200, 255), AccentDark = Color3.fromRGB(130, 150, 210), Hover = Color3.fromRGB(58, 53, 62), Outline = Color3.fromRGB(78, 72, 84) },
+        Matrix = { Background = Color3.fromRGB(5, 15, 5), Secondary = Color3.fromRGB(8, 22, 8), Container = Color3.fromRGB(10, 28, 10), Border = Color3.fromRGB(15, 45, 15), Text = Color3.fromRGB(150, 255, 150), SubText = Color3.fromRGB(80, 180, 80), Accent = Color3.fromRGB(0, 255, 65), AccentDark = Color3.fromRGB(0, 180, 40), Hover = Color3.fromRGB(12, 34, 12), Outline = Color3.fromRGB(18, 52, 18) },
+        Retro = { Background = Color3.fromRGB(40, 30, 20), Secondary = Color3.fromRGB(50, 38, 25), Container = Color3.fromRGB(60, 45, 30), Border = Color3.fromRGB(85, 65, 42), Text = Color3.fromRGB(255, 230, 200), SubText = Color3.fromRGB(180, 150, 120), Accent = Color3.fromRGB(220, 120, 50), AccentDark = Color3.fromRGB(170, 80, 20), Hover = Color3.fromRGB(70, 52, 35), Outline = Color3.fromRGB(92, 70, 46) },
+        Slate = { Background = Color3.fromRGB(30, 34, 42), Secondary = Color3.fromRGB(36, 40, 50), Container = Color3.fromRGB(42, 48, 58), Border = Color3.fromRGB(60, 68, 82), Text = Color3.fromRGB(210, 220, 230), SubText = Color3.fromRGB(130, 142, 158), Accent = Color3.fromRGB(100, 140, 180), AccentDark = Color3.fromRGB(65, 100, 140), Hover = Color3.fromRGB(48, 55, 66), Outline = Color3.fromRGB(66, 75, 90) },
+        Crimson = { Background = Color3.fromRGB(28, 10, 15), Secondary = Color3.fromRGB(36, 14, 20), Container = Color3.fromRGB(45, 18, 24), Border = Color3.fromRGB(68, 25, 35), Text = Color3.fromRGB(255, 220, 225), SubText = Color3.fromRGB(180, 130, 138), Accent = Color3.fromRGB(220, 20, 60), AccentDark = Color3.fromRGB(160, 10, 40), Hover = Color3.fromRGB(52, 21, 28), Outline = Color3.fromRGB(75, 28, 38) },
+        Ice = { Background = Color3.fromRGB(12, 24, 32), Secondary = Color3.fromRGB(16, 30, 40), Container = Color3.fromRGB(20, 38, 50), Border = Color3.fromRGB(30, 55, 72), Text = Color3.fromRGB(230, 248, 255), SubText = Color3.fromRGB(130, 175, 200), Accent = Color3.fromRGB(120, 210, 255), AccentDark = Color3.fromRGB(70, 160, 210), Hover = Color3.fromRGB(24, 44, 58), Outline = Color3.fromRGB(35, 62, 82) },
+        DeepSea = { Background = Color3.fromRGB(8, 15, 24), Secondary = Color3.fromRGB(10, 20, 32), Container = Color3.fromRGB(14, 25, 40), Border = Color3.fromRGB(22, 40, 62), Text = Color3.fromRGB(200, 230, 255), SubText = Color3.fromRGB(110, 150, 185), Accent = Color3.fromRGB(0, 150, 220), AccentDark = Color3.fromRGB(0, 100, 160), Hover = Color3.fromRGB(18, 30, 48), Outline = Color3.fromRGB(26, 46, 70) }
     }
 }
 
--- إنشاء شاشة واجهة المستخدم الشاملة
+-- ScreenGui Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GGH_Library_UI"
+ScreenGui.Name = "GGH_UI_Engine"
 ScreenGui.ResetOnSpawn = false
-pcall(function() ScreenGui.Parent = CoreGui end)
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- ==========================================
--- 1. شريط التصغير المستطيل العريض (Minimize Bar)
--- ==========================================
+pcall(function()
+    if gethui then
+        ScreenGui.Parent = gethui()
+    elseif syn and syn.protect_gui then
+        syn.protect_gui(ScreenGui)
+        ScreenGui.Parent = CoreGui
+    else
+        ScreenGui.Parent = CoreGui
+    end
+end)
+
+-- Tween Utility Function
+local function Tween(object, info, properties)
+    local tween = TweenService:Create(object, info, properties)
+    tween:Play()
+    return tween
+end
+
+-- ================================================================
+-- 1. STYLED MINIMIZE BAR ENGINE (WIDE RECTANGLE)
+-- ================================================================
 local MinimizeBar = Instance.new("Frame")
-MinimizeBar.Name = "MinimizeBar"
+MinimizeBar.Name = "GGH_MinimizeBar"
 MinimizeBar.Size = UDim2.new(0, 320, 0, 42)
 MinimizeBar.Position = UDim2.new(0.5, -160, 0, 15)
-MinimizeBar.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-MinimizeBar.BorderSizePixel = 0
+MinimizeBar.BackgroundColor3 = Library.Themes.Dark.Background
+MinimizeBar.BorderColor3 = Library.Themes.Dark.Border
+MinimizeBar.BorderSizePixel = 1
 MinimizeBar.Active = true
 MinimizeBar.Visible = false
+MinimizeBar.ZIndex = 99999
 MinimizeBar.Parent = ScreenGui
 
-local BarCorner = Instance.new("UICorner", MinimizeBar)
-BarCorner.CornerRadius = UDim.new(0, 8)
+local MinBarCorner = Instance.new("UICorner", MinimizeBar)
+MinBarCorner.CornerRadius = UDim.new(0, 8)
 
-local BarTitle = Instance.new("TextLabel")
-BarTitle.Size = UDim2.new(1, -90, 1, 0)
-BarTitle.Position = UDim2.new(0, 12, 0, 0)
-BarTitle.BackgroundTransparency = 1
-BarTitle.Text = "GGH Library Hub"
-BarTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-BarTitle.TextSize = 14
-BarTitle.Font = Enum.Font.SourceSansBold
-BarTitle.TextXAlignment = Enum.TextXAlignment.Left
-BarTitle.Parent = MinimizeBar
+local MinBarGradient = Instance.new("UIGradient", MinimizeBar)
+MinBarGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 40)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 18, 22))
+})
+MinBarGradient.Rotation = 90
 
--- زر التحريك ❖
+local MinBarTitle = Instance.new("TextLabel")
+MinBarTitle.Size = UDim2.new(1, -95, 1, 0)
+MinBarTitle.Position = UDim2.new(0, 12, 0, 0)
+MinBarTitle.BackgroundTransparency = 1
+MinBarTitle.Text = "GGH Library Hub"
+MinBarTitle.TextColor3 = Library.Themes.Dark.Text
+MinBarTitle.TextSize = 14
+MinBarTitle.Font = Enum.Font.GothamBold
+MinBarTitle.TextXAlignment = Enum.TextXAlignment.Left
+MinBarTitle.Parent = MinimizeBar
+
+-- Move Drag Handle Button ❖
 local MoveBtn = Instance.new("TextButton")
 MoveBtn.Size = UDim2.new(0, 32, 0, 32)
-MoveBtn.Position = UDim2.new(1, -78, 0.5, -16)
-MoveBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+MoveBtn.Position = UDim2.new(1, -80, 0.5, -16)
+MoveBtn.BackgroundColor3 = Library.Themes.Dark.Secondary
+MoveBtn.BorderColor3 = Library.Themes.Dark.Border
 MoveBtn.Text = "❖"
-MoveBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+MoveBtn.TextColor3 = Library.Themes.Dark.SubText
 MoveBtn.TextSize = 16
+MoveBtn.Font = Enum.Font.Gotham
 MoveBtn.Parent = MinimizeBar
 Instance.new("UICorner", MoveBtn).CornerRadius = UDim.new(0, 6)
 
--- زر التكبير +
+-- Expand Window Button +
 local ExpandBtn = Instance.new("TextButton")
 ExpandBtn.Size = UDim2.new(0, 32, 0, 32)
-ExpandBtn.Position = UDim2.new(1, -38, 0.5, -16)
-ExpandBtn.BackgroundColor3 = Color3.fromRGB(45, 120, 240)
+ExpandBtn.Position = UDim2.new(1, -40, 0.5, -16)
+ExpandBtn.BackgroundColor3 = Library.Themes.Dark.Accent
+ExpandBtn.BorderColor3 = Library.Themes.Dark.Border
 ExpandBtn.Text = "+"
 ExpandBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ExpandBtn.TextSize = 18
+ExpandBtn.Font = Enum.Font.GothamBold
 ExpandBtn.Parent = MinimizeBar
 Instance.new("UICorner", ExpandBtn).CornerRadius = UDim.new(0, 6)
 
--- كود السحب والتحريك المباشر لشريط التصغير
-local dragging, dragStart, startPos
+-- Smooth Touch & Mouse Drag Logic
+local draggingBar, dragStartBar, startPosBar
 MoveBtn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MinimizeBar.Position
+        draggingBar = true
+        dragStartBar = input.Position
+        startPosBar = MinimizeBar.Position
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        MinimizeBar.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    if draggingBar and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStartBar
+        MinimizeBar.Position = UDim2.new(startPosBar.X.Scale, startPosBar.X.Offset + delta.X, startPosBar.Y.Scale, startPosBar.Y.Offset + delta.Y)
     end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
+        draggingBar = false
     end
 end)
 
--- ==========================================
--- 2. دالة بناء النافذة الرئيسية (CreateWindow)
--- ==========================================
+-- ================================================================
+-- 2. MAIN WINDOW CREATION ENGINE
+-- ================================================================
 function Library:CreateWindow(Settings)
     Settings = Settings or {}
-    local TitleText = Settings.Title or "GGH Library"
-    local CurrentTheme = Library.Themes[Settings.Theme or "Dark"] or Library.Themes.Dark
+    local Title = Settings.Title or "GGH HUB"
+    local SubTitle = Settings.SubTitle or "v3.0 Engine"
+    local Size = Settings.Size or UDim2.fromOffset(620, 500)
+    local ThemeName = Settings.Theme or "Dark"
+    local CurrentTheme = Library.Themes[ThemeName] or Library.Themes.Dark
+    Library.CurrentTheme = ThemeName
 
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = Settings.Size or UDim2.fromOffset(600, 480)
-    MainFrame.Position = UDim2.new(0.5, -300, 0.5, -240)
+    MainFrame.Size = Size
+    MainFrame.Position = UDim2.new(0.5, -Size.X.Offset/2, 0.5, -Size.Y.Offset/2)
     MainFrame.BackgroundColor3 = CurrentTheme.Background
-    MainFrame.BorderSizePixel = 0
-    MainFrame.ClipsDescendants = true -- **حماية أساسية لمنع بروز أي عنصر خارج النافذة**
+    MainFrame.BorderColor3 = CurrentTheme.Border
+    MainFrame.BorderSizePixel = 1
+    MainFrame.ClipsDescendants = true -- **حماية منع البروز الخارجى الكلي**
     MainFrame.Parent = ScreenGui
 
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
-    -- الشريط العلوي للنافذة
+    -- Window Top Header
     local TopBar = Instance.new("Frame")
-    TopBar.Size = UDim2.new(1, 0, 0, 40)
-    TopBar.BackgroundColor3 = CurrentTheme.Container
+    TopBar.Name = "TopBar"
+    TopBar.Size = UDim2.new(1, 0, 0, 45)
+    TopBar.BackgroundColor3 = CurrentTheme.Secondary
+    TopBar.BorderColor3 = CurrentTheme.Border
+    TopBar.BorderSizePixel = 0
     TopBar.Parent = MainFrame
 
-    local WindowTitle = Instance.new("TextLabel")
-    WindowTitle.Size = UDim2.new(1, -60, 1, 0)
-    WindowTitle.Position = UDim2.new(0, 12, 0, 0)
-    WindowTitle.BackgroundTransparency = 1
-    WindowTitle.Text = TitleText
-    WindowTitle.TextColor3 = CurrentTheme.Text
-    WindowTitle.TextSize = 16
-    WindowTitle.Font = Enum.Font.SourceSansBold
-    WindowTitle.TextXAlignment = Enum.TextXAlignment.Left
-    WindowTitle.Parent = TopBar
+    local TopTitle = Instance.new("TextLabel")
+    TopTitle.Size = UDim2.new(1, -100, 0, 22)
+    TopTitle.Position = UDim2.new(0, 15, 0, 4)
+    TopTitle.BackgroundTransparency = 1
+    TopTitle.Text = Title
+    TopTitle.TextColor3 = CurrentTheme.Text
+    TopTitle.TextSize = 15
+    TopTitle.Font = Enum.Font.GothamBold
+    TopTitle.TextXAlignment = Enum.TextXAlignment.Left
+    TopTitle.Parent = TopBar
 
-    -- زر التصغير `-` داخل النافذة
-    local MinBtn = Instance.new("TextButton")
-    MinBtn.Size = UDim2.new(0, 30, 0, 30)
-    MinBtn.Position = UDim2.new(1, -35, 0.5, -15)
-    MinBtn.BackgroundColor3 = CurrentTheme.Accent
-    MinBtn.Text = "-"
-    MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MinBtn.TextSize = 20
-    MinBtn.Font = Enum.Font.SourceSansBold
-    MinBtn.Parent = TopBar
-    Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+    local TopSub = Instance.new("TextLabel")
+    TopSub.Size = UDim2.new(1, -100, 0, 16)
+    TopSub.Position = UDim2.new(0, 15, 0, 24)
+    TopSub.BackgroundTransparency = 1
+    TopSub.Text = SubTitle
+    TopSub.TextColor3 = CurrentTheme.SubText
+    TopSub.TextSize = 11
+    TopSub.Font = Enum.Font.Gotham
+    TopSub.TextXAlignment = Enum.TextXAlignment.Left
+    TopSub.Parent = TopBar
 
-    MinBtn.MouseButton1Click:Connect(function()
+    -- Minimize Button (-)
+    local MinWindowBtn = Instance.new("TextButton")
+    MinWindowBtn.Size = UDim2.new(0, 32, 0, 32)
+    MinWindowBtn.Position = UDim2.new(1, -42, 0.5, -16)
+    MinWindowBtn.BackgroundColor3 = CurrentTheme.Container
+    MinWindowBtn.BorderColor3 = CurrentTheme.Border
+    MinWindowBtn.Text = "-"
+    MinWindowBtn.TextColor3 = CurrentTheme.Text
+    MinWindowBtn.TextSize = 20
+    MinWindowBtn.Font = Enum.Font.GothamBold
+    MinWindowBtn.Parent = TopBar
+    Instance.new("UICorner", MinWindowBtn).CornerRadius = UDim.new(0, 6)
+
+    MinWindowBtn.MouseButton1Click:Connect(function()
         MainFrame.Visible = false
         MinimizeBar.Visible = true
-        BarTitle.Text = TitleText
+        MinBarTitle.Text = Title
     end)
 
     ExpandBtn.MouseButton1Click:Connect(function()
@@ -191,272 +306,578 @@ function Library:CreateWindow(Settings)
         MainFrame.Visible = true
     end)
 
-    -- حاوي التبويبات والمحتوى
+    -- Window Dragging Mechanism
+    local draggingWin, dragStartWin, startPosWin
+    TopBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingWin = true
+            dragStartWin = input.Position
+            startPosWin = MainFrame.Position
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if draggingWin and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStartWin
+            MainFrame.Position = UDim2.new(startPosWin.X.Scale, startPosWin.X.Offset + delta.X, startPosWin.Y.Scale, startPosWin.Y.Offset + delta.Y)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingWin = false
+        end
+    end)
+
+    -- Sidebar Tabs Container
     local TabBar = Instance.new("ScrollingFrame")
-    TabBar.Size = UDim2.new(0, 150, 1, -45)
-    TabBar.Position = UDim2.new(0, 5, 0, 45)
-    TabBar.BackgroundColor3 = CurrentTheme.Container
+    TabBar.Name = "TabBar"
+    TabBar.Size = UDim2.new(0, Settings.TabWidth or 160, 1, -55)
+    TabBar.Position = UDim2.new(0, 8, 0, 50)
+    TabBar.BackgroundColor3 = CurrentTheme.Secondary
     TabBar.BorderSizePixel = 0
     TabBar.ScrollBarThickness = 2
+    TabBar.ScrollBarImageColor3 = CurrentTheme.Border
     TabBar.Parent = MainFrame
     Instance.new("UICorner", TabBar).CornerRadius = UDim.new(0, 8)
 
     local TabList = Instance.new("UIListLayout", TabBar)
     TabList.Padding = UDim.new(0, 5)
+    TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
+    local TabPadding = Instance.new("UIPadding", TabBar)
+    TabPadding.PaddingTop = UDim.new(0, 6)
+
+    -- Content Display Area
     local ContentArea = Instance.new("Frame")
-    ContentArea.Size = UDim2.new(1, -165, 1, -45)
-    ContentArea.Position = UDim2.new(0, 160, 0, 45)
+    ContentArea.Name = "ContentArea"
+    ContentArea.Size = UDim2.new(1, -(Settings.TabWidth or 160) - 22, 1, -55)
+    ContentArea.Position = UDim2.new(0, (Settings.TabWidth or 160) + 14, 0, 50)
     ContentArea.BackgroundTransparency = 1
-    ContentArea.ClipsDescendants = true -- **منع بروز عناصر التبويب**
+    ContentArea.ClipsDescendants = true -- **إصلاح حاسم لمنع خروج العناصر برة محتوى الشاشة**
     ContentArea.Parent = MainFrame
 
-    local WindowObj = {}
+    local WindowObj = {
+        CurrentTab = nil,
+        Tabs = {}
+    }
 
     function WindowObj:SetVisible(State)
         MainFrame.Visible = State
     end
 
-    function WindowObj:SetTheme(ThemeName)
-        if Library.Themes[ThemeName] then
-            local t = Library.Themes[ThemeName]
+    function WindowObj:SetTheme(NewThemeName)
+        if Library.Themes[NewThemeName] then
+            local t = Library.Themes[NewThemeName]
+            Library.CurrentTheme = NewThemeName
             MainFrame.BackgroundColor3 = t.Background
-            TopBar.BackgroundColor3 = t.Container
-            TabBar.BackgroundColor3 = t.Container
-            WindowTitle.TextColor3 = t.Text
-            MinBtn.BackgroundColor3 = t.Accent
+            MainFrame.BorderColor3 = t.Border
+            TopBar.BackgroundColor3 = t.Secondary
+            TopTitle.TextColor3 = t.Text
+            TopSub.TextColor3 = t.SubText
+            TabBar.BackgroundColor3 = t.Secondary
+            MinWindowBtn.BackgroundColor3 = t.Container
+            MinWindowBtn.TextColor3 = t.Text
+            MinimizeBar.BackgroundColor3 = t.Background
+            MinimizeBar.BorderColor3 = t.Border
+            MinBarTitle.TextColor3 = t.Text
+            MoveBtn.BackgroundColor3 = t.Secondary
+            MoveBtn.BorderColor3 = t.Border
+            ExpandBtn.BackgroundColor3 = t.Accent
         end
     end
 
-    -- ==========================================
-    -- 3. دالة إنشاء التبويب العناصر (CreateTab)
-    -- ==========================================
+    -- ================================================================
+    -- 3. TAB CREATION & ELEMENT ENGINE (FULL DETAILED LOGIC)
+    -- ================================================================
     function WindowObj:CreateTab(TabSettings)
+        TabSettings = TabSettings or {}
         local TabName = TabSettings.Name or "Tab"
-        
-        local TabButton = Instance.new("TextButton")
-        TabButton.Size = UDim2.new(1, -10, 0, 35)
-        TabButton.Position = UDim2.new(0, 5, 0, 0)
-        TabButton.BackgroundColor3 = CurrentTheme.Background
-        TabButton.Text = TabName
-        TabButton.TextColor3 = CurrentTheme.Text
-        TabButton.TextSize = 13
-        TabButton.Font = Enum.Font.SourceSans
-        TabButton.Parent = TabBar
-        Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 6)
+
+        local TabBtn = Instance.new("TextButton")
+        TabBtn.Size = UDim2.new(1, -12, 0, 36)
+        TabBtn.BackgroundColor3 = CurrentTheme.Background
+        TabBtn.BorderColor3 = CurrentTheme.Border
+        TabBtn.BorderSizePixel = 0
+        TabBtn.Text = "  " .. TabName
+        TabBtn.TextColor3 = CurrentTheme.SubText
+        TabBtn.TextSize = 13
+        TabBtn.Font = Enum.Font.GothamMedium
+        TabBtn.TextXAlignment = Enum.TextXAlignment.Left
+        TabBtn.Parent = TabBar
+        Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 6)
 
         local TabPage = Instance.new("ScrollingFrame")
+        TabPage.Name = TabName .. "_Page"
         TabPage.Size = UDim2.new(1, 0, 1, 0)
         TabPage.BackgroundTransparency = 1
         TabPage.Visible = false
-        TabPage.ClipsDescendants = true -- **تأكيد منع بروز القوائم برة التبويب**
-        TabPage.ScrollBarThickness = 4
+        TabPage.ClipsDescendants = true -- **عدم بروز العناصر عند التمرير داخل التبويب**
+        TabPage.ScrollBarThickness = 3
+        TabPage.ScrollBarImageColor3 = CurrentTheme.Accent
         TabPage.Parent = ContentArea
 
         local PageList = Instance.new("UIListLayout", TabPage)
-        PageList.Padding = UDim.new(0, 6)
+        PageList.Padding = UDim.new(0, 8)
+        PageList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-        TabButton.MouseButton1Click:Connect(function()
-            for _, page in pairs(ContentArea:GetChildren()) do
-                page.Visible = false
-            end
-            TabPage.Visible = true
+        PageList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            TabPage.CanvasSize = UDim2.new(0, 0, 0, PageList.AbsoluteContentSize.Y + 12)
         end)
 
-        local TabObj = {}
+        TabBtn.MouseButton1Click:Connect(function()
+            for _, t in pairs(WindowObj.Tabs) do
+                t.Page.Visible = false
+                Tween(t.Btn, TweenInfo.new(0.2), {BackgroundColor3 = CurrentTheme.Background, TextColor3 = CurrentTheme.SubText})
+            end
+            TabPage.Visible = true
+            Tween(TabBtn, TweenInfo.new(0.2), {BackgroundColor3 = CurrentTheme.Accent, TextColor3 = Color3.fromRGB(255, 255, 255)})
+        end)
 
-        -- [عنصر 1] زر عادي (Button)
-        function TabObj:CreateButton(Config)
-            local Btn = Instance.new("TextButton")
-            Btn.Size = UDim2.new(1, -10, 0, 35)
-            Btn.BackgroundColor3 = CurrentTheme.Container
-            Btn.Text = Config.Name or "Button"
-            Btn.TextColor3 = CurrentTheme.Text
-            Btn.TextSize = 14
-            Btn.Parent = TabPage
-            Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-            Btn.MouseButton1Click:Connect(function() pcall(Config.Callback or function() end) end)
-            return Btn
+        if #WindowObj.Tabs == 0 then
+            TabPage.Visible = true
+            TabBtn.BackgroundColor3 = CurrentTheme.Accent
+            TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
 
-        -- [عنصر 2] مفتاح تشغيل/إيقاف (Toggle)
-        function TabObj:CreateToggle(Config)
-            local State = Config.Default or false
-            local Tog = Instance.new("TextButton")
-            Tog.Size = UDim2.new(1, -10, 0, 35)
-            Tog.BackgroundColor3 = CurrentTheme.Container
-            Tog.Text = (Config.Name or "Toggle") .. " : " .. (State and "[ON]" or "[OFF]")
-            Tog.TextColor3 = State and CurrentTheme.Accent or CurrentTheme.Text
-            Tog.Parent = TabPage
-            Instance.new("UICorner", Tog).CornerRadius = UDim.new(0, 6)
+        local TabObj = {Page = TabPage, Btn = TabBtn}
+        table.insert(WindowObj.Tabs, TabObj)
 
-            Tog.MouseButton1Click:Connect(function()
+        -- ============================================================
+        -- 3.1 BUTTON ELEMENT
+        -- ============================================================
+        function TabObj:CreateButton(Config)
+            Config = Config or {}
+            local BtnFrame = Instance.new("Frame")
+            BtnFrame.Size = UDim2.new(1, -8, 0, 38)
+            BtnFrame.BackgroundColor3 = CurrentTheme.Container
+            BtnFrame.BorderColor3 = CurrentTheme.Border
+            BtnFrame.Parent = TabPage
+            Instance.new("UICorner", BtnFrame).CornerRadius = UDim.new(0, 6)
+
+            local ActionBtn = Instance.new("TextButton")
+            ActionBtn.Size = UDim2.new(1, 0, 1, 0)
+            ActionBtn.BackgroundTransparency = 1
+            ActionBtn.Text = Config.Name or "Button"
+            ActionBtn.TextColor3 = CurrentTheme.Text
+            ActionBtn.TextSize = 13
+            ActionBtn.Font = Enum.Font.GothamSemibold
+            ActionBtn.Parent = BtnFrame
+
+            ActionBtn.MouseEnter:Connect(function() Tween(BtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = CurrentTheme.Hover}) end)
+            ActionBtn.MouseLeave:Connect(function() Tween(BtnFrame, TweenInfo.new(0.2), {BackgroundColor3 = CurrentTheme.Container}) end)
+            ActionBtn.MouseButton1Click:Connect(function() pcall(Config.Callback or function() end) end)
+
+            return BtnFrame
+        end
+
+        -- ============================================================
+        -- 3.2 TOGGLE ELEMENT
+        -- ============================================================
+        function TabObj:CreateToggle(Config)
+            Config = Config or {}
+            local State = Config.Default or false
+
+            local TogFrame = Instance.new("Frame")
+            TogFrame.Size = UDim2.new(1, -8, 0, 38)
+            TogFrame.BackgroundColor3 = CurrentTheme.Container
+            TogFrame.Parent = TabPage
+            Instance.new("UICorner", TogFrame).CornerRadius = UDim.new(0, 6)
+
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -60, 1, 0)
+            Title.Position = UDim2.new(0, 12, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.Text = Config.Name or "Toggle"
+            Title.TextColor3 = CurrentTheme.Text
+            Title.TextSize = 13
+            Title.Font = Enum.Font.GothamMedium
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Parent = TogFrame
+
+            local Switch = Instance.new("Frame")
+            Switch.Size = UDim2.new(0, 40, 0, 20)
+            Switch.Position = UDim2.new(1, -50, 0.5, -10)
+            Switch.BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.Secondary
+            Switch.Parent = TogFrame
+            Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0)
+
+            local Knob = Instance.new("Frame")
+            Knob.Size = UDim2.new(0, 16, 0, 16)
+            Knob.Position = State and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+            Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Knob.Parent = Switch
+            Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+
+            local ClickArea = Instance.new("TextButton")
+            ClickArea.Size = UDim2.new(1, 0, 1, 0)
+            ClickArea.BackgroundTransparency = 1
+            ClickArea.Text = ""
+            ClickArea.Parent = TogFrame
+
+            ClickArea.MouseButton1Click:Connect(function()
                 State = not State
-                Tog.Text = (Config.Name or "Toggle") .. " : " .. (State and "[ON]" or "[OFF]")
-                Tog.TextColor3 = State and CurrentTheme.Accent or CurrentTheme.Text
+                Tween(Switch, TweenInfo.new(0.2), {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.Secondary})
+                Tween(Knob, TweenInfo.new(0.2), {Position = State and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)})
                 pcall(Config.Callback or function() end, State)
             end)
-            return Tog
+
+            return TogFrame
         end
 
-        -- [عنصر 3] شريط سحب (Slider)
+        -- ============================================================
+        -- 3.3 SLIDER ELEMENT
+        -- ============================================================
         function TabObj:CreateSlider(Config)
-            local Sld = Instance.new("TextButton")
-            Sld.Size = UDim2.new(1, -10, 0, 40)
-            Sld.BackgroundColor3 = CurrentTheme.Container
-            Sld.Text = (Config.Name or "Slider") .. " : " .. tostring(Config.Default or Config.Min or 0)
-            Sld.TextColor3 = CurrentTheme.Text
-            Sld.Parent = TabPage
-            Instance.new("UICorner", Sld).CornerRadius = UDim.new(0, 6)
+            Config = Config or {}
+            local Min = Config.Min or 0
+            local Max = Config.Max or 100
+            local Value = Config.Default or Min
 
-            Sld.MouseButton1Click:Connect(function()
-                local Val = Config.Default or Config.Min or 0
-                pcall(Config.Callback or function() end, Val)
+            local SldFrame = Instance.new("Frame")
+            SldFrame.Size = UDim2.new(1, -8, 0, 48)
+            SldFrame.BackgroundColor3 = CurrentTheme.Container
+            SldFrame.Parent = TabPage
+            Instance.new("UICorner", SldFrame).CornerRadius = UDim.new(0, 6)
+
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -70, 0, 22)
+            Title.Position = UDim2.new(0, 12, 0, 4)
+            Title.BackgroundTransparency = 1
+            Title.Text = Config.Name or "Slider"
+            Title.TextColor3 = CurrentTheme.Text
+            Title.TextSize = 13
+            Title.Font = Enum.Font.GothamMedium
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Parent = SldFrame
+
+            local ValLbl = Instance.new("TextLabel")
+            ValLbl.Size = UDim2.new(0, 50, 0, 22)
+            ValLbl.Position = UDim2.new(1, -60, 0, 4)
+            ValLbl.BackgroundTransparency = 1
+            ValLbl.Text = tostring(Value)
+            ValLbl.TextColor3 = CurrentTheme.SubText
+            ValLbl.TextSize = 12
+            ValLbl.Font = Enum.Font.Gotham
+            ValLbl.TextXAlignment = Enum.TextXAlignment.Right
+            ValLbl.Parent = SldFrame
+
+            local Bar = Instance.new("Frame")
+            Bar.Size = UDim2.new(1, -24, 0, 6)
+            Bar.Position = UDim2.new(0, 12, 0, 32)
+            Bar.BackgroundColor3 = CurrentTheme.Secondary
+            Bar.Parent = SldFrame
+            Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+
+            local Fill = Instance.new("Frame")
+            Fill.Size = UDim2.new((Value - Min)/(Max - Min), 0, 1, 0)
+            Fill.BackgroundColor3 = CurrentTheme.Accent
+            Fill.Parent = Bar
+            Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+
+            local SldBtn = Instance.new("TextButton")
+            SldBtn.Size = UDim2.new(1, 0, 1, 0)
+            SldBtn.BackgroundTransparency = 1
+            SldBtn.Text = ""
+            SldBtn.Parent = SldFrame
+
+            local function UpdateSlider(input)
+                local pos = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+                Value = math.floor(Min + (Max - Min) * pos)
+                Fill.Size = UDim2.new(pos, 0, 1, 0)
+                ValLbl.Text = tostring(Value)
+                pcall(Config.Callback or function() end, Value)
+            end
+
+            local active = false
+            SldBtn.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    active = true
+                    UpdateSlider(input)
+                end
             end)
-            return Sld
+
+            UserInputService.InputChanged:Connect(function(input)
+                if active and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    UpdateSlider(input)
+                end
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    active = false
+                end
+            end)
+
+            return SldFrame
         end
 
-        -- [عنصر 4] قائمة منسدلة محمية من البروز (Dropdown)
+        -- ============================================================
+        -- 3.4 DROPDOWN ELEMENT (PROTECTED CLIPS & CANVAS FIXED)
+        -- ============================================================
         function TabObj:CreateDropdown(Config)
+            Config = Config or {}
+            local Options = Config.Options or {}
+            local Selected = Config.CurrentOption or Options[1] or "Select..."
             local Expanded = false
+
             local DropFrame = Instance.new("Frame")
-            DropFrame.Size = UDim2.new(1, -10, 0, 35)
+            DropFrame.Size = UDim2.new(1, -8, 0, 38)
             DropFrame.BackgroundColor3 = CurrentTheme.Container
-            DropFrame.ClipsDescendants = true -- **الحل النهائي لمنع خروج القائمة عند الإغلاق**
+            DropFrame.ClipsDescendants = true -- **الحل النهائي لمعالجة بروز القائمة بالكامل عند الإغلاق**
             DropFrame.Parent = TabPage
             Instance.new("UICorner", DropFrame).CornerRadius = UDim.new(0, 6)
 
-            local DropBtn = Instance.new("TextButton")
-            DropBtn.Size = UDim2.new(1, 0, 0, 35)
-            DropBtn.BackgroundTransparency = 1
-            DropBtn.Text = (Config.Name or "Dropdown") .. " ▼"
-            DropBtn.TextColor3 = CurrentTheme.Text
-            DropBtn.Parent = DropFrame
+            local DropHeader = Instance.new("TextButton")
+            DropHeader.Size = UDim2.new(1, 0, 0, 38)
+            DropHeader.BackgroundTransparency = 1
+            DropHeader.Text = ""
+            DropHeader.Parent = DropFrame
 
-            local Container = Instance.new("Frame")
-            Container.Size = UDim2.new(1, 0, 0, 0)
-            Container.Position = UDim2.new(0, 0, 0, 35)
-            Container.BackgroundTransparency = 1
-            Container.Parent = DropFrame
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -40, 1, 0)
+            Title.Position = UDim2.new(0, 12, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.Text = (Config.Name or "Dropdown") .. " : " .. tostring(Selected)
+            Title.TextColor3 = CurrentTheme.Text
+            Title.TextSize = 13
+            Title.Font = Enum.Font.GothamMedium
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Parent = DropHeader
 
-            local CList = Instance.new("UIListLayout", Container)
+            local Arrow = Instance.new("TextLabel")
+            Arrow.Size = UDim2.new(0, 30, 1, 0)
+            Arrow.Position = UDim2.new(1, -30, 0, 0)
+            Arrow.BackgroundTransparency = 1
+            Arrow.Text = "▼"
+            Arrow.TextColor3 = CurrentTheme.SubText
+            Arrow.TextSize = 11
+            Arrow.Parent = DropHeader
 
-            for _, Opt in pairs(Config.Options or {}) do
+            local OptionContainer = Instance.new("Frame")
+            OptionContainer.Size = UDim2.new(1, -16, 0, 0)
+            OptionContainer.Position = UDim2.new(0, 8, 0, 38)
+            OptionContainer.BackgroundTransparency = 1
+            OptionContainer.Parent = DropFrame
+
+            local OptList = Instance.new("UIListLayout", OptionContainer)
+            OptList.Padding = UDim.new(0, 4)
+
+            for _, opt in pairs(Options) do
                 local OBtn = Instance.new("TextButton")
                 OBtn.Size = UDim2.new(1, 0, 0, 28)
-                OBtn.BackgroundColor3 = CurrentTheme.Background
-                OBtn.Text = tostring(Opt)
+                OBtn.BackgroundColor3 = CurrentTheme.Secondary
+                OBtn.Text = tostring(opt)
                 OBtn.TextColor3 = CurrentTheme.Text
-                OBtn.Parent = Container
+                OBtn.TextSize = 12
+                OBtn.Font = Enum.Font.Gotham
+                OBtn.Parent = OptionContainer
+                Instance.new("UICorner", OBtn).CornerRadius = UDim.new(0, 4)
+
                 OBtn.MouseButton1Click:Connect(function()
-                    DropBtn.Text = (Config.Name or "Dropdown") .. " : " .. tostring(Opt)
-                    DropFrame:TweenSize(UDim2.new(1, -10, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+                    Selected = opt
+                    Title.Text = (Config.Name or "Dropdown") .. " : " .. tostring(Selected)
                     Expanded = false
-                    pcall(Config.Callback or function() end, Opt)
+                    Arrow.Text = "▼"
+                    Tween(DropFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, -8, 0, 38)})
+                    pcall(Config.Callback or function() end, Selected)
                 end)
             end
 
-            DropBtn.MouseButton1Click:Connect(function()
+            DropHeader.MouseButton1Click:Connect(function()
                 Expanded = not Expanded
-                local TargetHeight = Expanded and (35 + (#(Config.Options or {}) * 28)) or 35
-                DropFrame:TweenSize(UDim2.new(1, -10, 0, TargetHeight), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+                Arrow.Text = Expanded and "▲" or "▼"
+                local TargetHeight = Expanded and (42 + (#Options * 32)) or 38
+                Tween(DropFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, -8, 0, TargetHeight)})
             end)
+
             return DropFrame
         end
 
-        -- [عنصر 5] صندوق إدخال نص (Textbox)
+        -- ============================================================
+        -- 3.5 TEXTBOX ELEMENT
+        -- ============================================================
         function TabObj:CreateTextbox(Config)
-            local Box = Instance.new("TextBox")
-            Box.Size = UDim2.new(1, -10, 0, 35)
-            Box.BackgroundColor3 = CurrentTheme.Container
-            Box.PlaceholderText = Config.PlaceholderText or Config.Name or "Type here..."
-            Box.Text = ""
-            Box.TextColor3 = CurrentTheme.Text
-            Box.Parent = TabPage
-            Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 6)
+            Config = Config or {}
+            local BoxFrame = Instance.new("Frame")
+            BoxFrame.Size = UDim2.new(1, -8, 0, 42)
+            BoxFrame.BackgroundColor3 = CurrentTheme.Container
+            BoxFrame.Parent = TabPage
+            Instance.new("UICorner", BoxFrame).CornerRadius = UDim.new(0, 6)
 
-            Box.FocusLost:Connect(function(Enter)
-                if Enter then pcall(Config.Callback or function() end, Box.Text) end
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(0.4, 0, 1, 0)
+            Title.Position = UDim2.new(0, 12, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.Text = Config.Name or "Input"
+            Title.TextColor3 = CurrentTheme.Text
+            Title.TextSize = 13
+            Title.Font = Enum.Font.GothamMedium
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Parent = BoxFrame
+
+            local InputBox = Instance.new("TextBox")
+            InputBox.Size = UDim2.new(0.55, -12, 0, 28)
+            InputBox.Position = UDim2.new(0.45, 0, 0.5, -14)
+            InputBox.BackgroundColor3 = CurrentTheme.Secondary
+            InputBox.Text = ""
+            InputBox.PlaceholderText = Config.PlaceholderText or "Type here..."
+            InputBox.TextColor3 = CurrentTheme.Text
+            InputBox.PlaceholderColor3 = CurrentTheme.SubText
+            InputBox.TextSize = 12
+            InputBox.Font = Enum.Font.Gotham
+            InputBox.Parent = BoxFrame
+            Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 4)
+
+            InputBox.FocusLost:Connect(function(Enter)
+                if Enter then pcall(Config.Callback or function() end, InputBox.Text) end
             end)
-            return Box
+
+            return BoxFrame
         end
 
-        -- [عنصر 6] اختيار الألوان (Colorpicker)
+        -- ============================================================
+        -- 3.6 COLORPICKER ELEMENT
+        -- ============================================================
         function TabObj:CreateColorpicker(Config)
-            local CP = Instance.new("TextButton")
-            CP.Size = UDim2.new(1, -10, 0, 35)
-            CP.BackgroundColor3 = CurrentTheme.Container
-            CP.Text = Config.Name or "Colorpicker"
-            CP.TextColor3 = Config.Default or CurrentTheme.Accent
-            CP.Parent = TabPage
-            Instance.new("UICorner", CP).CornerRadius = UDim.new(0, 6)
+            Config = Config or {}
+            local CurrentColor = Config.Default or Color3.fromRGB(255, 255, 255)
 
-            CP.MouseButton1Click:Connect(function()
-                pcall(Config.Callback or function() end, Config.Default or Color3.fromRGB(255, 255, 255))
+            local CPFrame = Instance.new("Frame")
+            CPFrame.Size = UDim2.new(1, -8, 0, 38)
+            CPFrame.BackgroundColor3 = CurrentTheme.Container
+            CPFrame.Parent = TabPage
+            Instance.new("UICorner", CPFrame).CornerRadius = UDim.new(0, 6)
+
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -50, 1, 0)
+            Title.Position = UDim2.new(0, 12, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.Text = Config.Name or "Color Picker"
+            Title.TextColor3 = CurrentTheme.Text
+            Title.TextSize = 13
+            Title.Font = Enum.Font.GothamMedium
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Parent = CPFrame
+
+            local ColorPreview = Instance.new("TextButton")
+            ColorPreview.Size = UDim2.new(0, 26, 0, 20)
+            ColorPreview.Position = UDim2.new(1, -38, 0.5, -10)
+            ColorPreview.BackgroundColor3 = CurrentColor
+            ColorPreview.Text = ""
+            ColorPreview.Parent = CPFrame
+            Instance.new("UICorner", ColorPreview).CornerRadius = UDim.new(0, 4)
+
+            ColorPreview.MouseButton1Click:Connect(function()
+                pcall(Config.Callback or function() end, CurrentColor)
             end)
-            return CP
+
+            return CPFrame
         end
 
-        -- [عنصر 7] تحديد الزر (Keybind)
+        -- ============================================================
+        -- 3.7 KEYBIND ELEMENT
+        -- ============================================================
         function TabObj:CreateKeybind(Config)
-            local Key = Instance.new("TextButton")
-            Key.Size = UDim2.new(1, -10, 0, 35)
-            Key.BackgroundColor3 = CurrentTheme.Container
-            Key.Text = (Config.Name or "Keybind") .. " : [" .. tostring(Config.Default and Config.Default.Name or "None") .. "]"
-            Key.TextColor3 = CurrentTheme.Text
-            Key.Parent = TabPage
-            Instance.new("UICorner", Key).CornerRadius = UDim.new(0, 6)
+            Config = Config or {}
+            local Bind = Config.Default or Enum.KeyCode.E
 
-            Key.MouseButton1Click:Connect(function()
-                pcall(Config.Callback or function() end, Config.Default)
+            local KeyFrame = Instance.new("Frame")
+            KeyFrame.Size = UDim2.new(1, -8, 0, 38)
+            KeyFrame.BackgroundColor3 = CurrentTheme.Container
+            KeyFrame.Parent = TabPage
+            Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 6)
+
+            local Title = Instance.new("TextLabel")
+            Title.Size = UDim2.new(1, -90, 1, 0)
+            Title.Position = UDim2.new(0, 12, 0, 0)
+            Title.BackgroundTransparency = 1
+            Title.Text = Config.Name or "Keybind"
+            Title.TextColor3 = CurrentTheme.Text
+            Title.TextSize = 13
+            Title.Font = Enum.Font.GothamMedium
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.Parent = KeyFrame
+
+            local KeyBtn = Instance.new("TextButton")
+            KeyBtn.Size = UDim2.new(0, 70, 0, 24)
+            KeyBtn.Position = UDim2.new(1, -80, 0.5, -12)
+            KeyBtn.BackgroundColor3 = CurrentTheme.Secondary
+            KeyBtn.Text = Bind.Name
+            KeyBtn.TextColor3 = CurrentTheme.SubText
+            KeyBtn.TextSize = 11
+            KeyBtn.Font = Enum.Font.GothamBold
+            KeyBtn.Parent = KeyFrame
+            Instance.new("UICorner", KeyBtn).CornerRadius = UDim.new(0, 4)
+
+            KeyBtn.MouseButton1Click:Connect(function()
+                KeyBtn.Text = "..."
+                local inputConn
+                inputConn = UserInputService.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        Bind = input.KeyCode
+                        KeyBtn.Text = Bind.Name
+                        inputConn:Disconnect()
+                        pcall(Config.Callback or function() end, Bind)
+                    end
+                end)
             end)
-            return Key
+
+            return KeyFrame
         end
 
-        -- [عنصر 8] نص توضيحي (Label)
-        function TabObj:CreateLabel(Text)
-            local Lbl = Instance.new("TextLabel")
-            Lbl.Size = UDim2.new(1, -10, 0, 25)
-            Lbl.BackgroundTransparency = 1
-            Lbl.Text = Text or "Label"
-            Lbl.TextColor3 = CurrentTheme.Text
-            Lbl.TextSize = 13
-            Lbl.Parent = TabPage
-            return Lbl
-        end
-
-        -- [عنصر 9] فقرة توضيحية (Paragraph)
+        -- ============================================================
+        -- 3.8 PARAGRAPH & SECTION ELEMENTS
+        -- ============================================================
         function TabObj:CreateParagraph(Config)
+            Config = Config or {}
             local PFrame = Instance.new("Frame")
-            PFrame.Size = UDim2.new(1, -10, 0, 50)
+            PFrame.Size = UDim2.new(1, -8, 0, 52)
             PFrame.BackgroundColor3 = CurrentTheme.Container
             PFrame.Parent = TabPage
             Instance.new("UICorner", PFrame).CornerRadius = UDim.new(0, 6)
 
             local PTitle = Instance.new("TextLabel")
-            PTitle.Size = UDim2.new(1, -10, 0, 20)
-            PTitle.Position = UDim2.new(0, 5, 0, 2)
+            PTitle.Size = UDim2.new(1, -20, 0, 20)
+            PTitle.Position = UDim2.new(0, 10, 0, 4)
             PTitle.BackgroundTransparency = 1
-            PTitle.Text = Config.Title or "Title"
+            PTitle.Text = Config.Title or "Information"
             PTitle.TextColor3 = CurrentTheme.Accent
             PTitle.TextSize = 13
-            PTitle.Font = Enum.Font.SourceSansBold
+            PTitle.Font = Enum.Font.GothamBold
+            PTitle.TextXAlignment = Enum.TextXAlignment.Left
             PTitle.Parent = PFrame
 
             local PContent = Instance.new("TextLabel")
-            PContent.Size = UDim2.new(1, -10, 0, 25)
-            PContent.Position = UDim2.new(0, 5, 0, 22)
+            PContent.Size = UDim2.new(1, -20, 0, 24)
+            PContent.Position = UDim2.new(0, 10, 0, 24)
             PContent.BackgroundTransparency = 1
-            PContent.Text = Config.Content or "Content"
-            PContent.TextColor3 = CurrentTheme.Text
-            PContent.TextSize = 12
+            PContent.Text = Config.Content or ""
+            PContent.TextColor3 = CurrentTheme.SubText
+            PContent.TextSize = 11
+            PContent.Font = Enum.Font.Gotham
+            PContent.TextXAlignment = Enum.TextXAlignment.Left
             PContent.Parent = PFrame
+
             return PFrame
         end
 
-        -- [عنصر 10] عنوان قسم (Section)
         function TabObj:CreateSection(Name)
-            return TabObj:CreateLabel("-- " .. (Name or "Section") .. " --")
+            local SecFrame = Instance.new("Frame")
+            SecFrame.Size = UDim2.new(1, -8, 0, 22)
+            SecFrame.BackgroundTransparency = 1
+            SecFrame.Parent = TabPage
+
+            local Lbl = Instance.new("TextLabel")
+            Lbl.Size = UDim2.new(1, 0, 1, 0)
+            Lbl.BackgroundTransparency = 1
+            Lbl.Text = "-- " .. string.upper(Name or "SECTION") .. " --"
+            Lbl.TextColor3 = CurrentTheme.SubText
+            Lbl.TextSize = 11
+            Lbl.Font = Enum.Font.GothamBold
+            Lbl.Parent = SecFrame
+
+            return SecFrame
         end
 
         return TabObj
@@ -465,37 +886,46 @@ function Library:CreateWindow(Settings)
     return WindowObj
 end
 
--- ==========================================
--- 4. نظام الإشعارات (Notify)
--- ==========================================
+-- ================================================================
+-- 4. NOTIFICATION SYSTEM
+-- ================================================================
 function Library:Notify(Config)
-    local Notif = Instance.new("Frame")
-    Notif.Size = UDim2.new(0, 220, 0, 50)
-    Notif.Position = UDim2.new(1, -230, 1, -60)
-    Notif.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    Notif.Parent = ScreenGui
-    Instance.new("UICorner", Notif).CornerRadius = UDim.new(0, 8)
+    Config = Config or {}
+    local NotifFrame = Instance.new("Frame")
+    NotifFrame.Size = UDim2.new(0, 240, 0, 55)
+    NotifFrame.Position = UDim2.new(1, 10, 1, -70)
+    NotifFrame.BackgroundColor3 = Library.Themes[Library.CurrentTheme].Secondary
+    NotifFrame.BorderColor3 = Library.Themes[Library.CurrentTheme].Border
+    NotifFrame.Parent = ScreenGui
+    Instance.new("UICorner", NotifFrame).CornerRadius = UDim.new(0, 8)
 
     local NTitle = Instance.new("TextLabel")
-    NTitle.Size = UDim2.new(1, -10, 0, 20)
-    NTitle.Position = UDim2.new(0, 5, 0, 2)
+    NTitle.Size = UDim2.new(1, -16, 0, 20)
+    NTitle.Position = UDim2.new(0, 10, 0, 4)
     NTitle.BackgroundTransparency = 1
     NTitle.Text = Config.Title or "Notification"
-    NTitle.TextColor3 = Color3.fromRGB(45, 120, 240)
-    NTitle.Font = Enum.Font.SourceSansBold
-    NTitle.Parent = Notif
+    NTitle.TextColor3 = Library.Themes[Library.CurrentTheme].Accent
+    NTitle.TextSize = 13
+    NTitle.Font = Enum.Font.GothamBold
+    NTitle.TextXAlignment = Enum.TextXAlignment.Left
+    NTitle.Parent = NotifFrame
 
     local NContent = Instance.new("TextLabel")
-    NContent.Size = UDim2.new(1, -10, 0, 25)
-    NContent.Position = UDim2.new(0, 5, 0, 22)
+    NContent.Size = UDim2.new(1, -16, 0, 26)
+    NContent.Position = UDim2.new(0, 10, 0, 24)
     NContent.BackgroundTransparency = 1
     NContent.Text = Config.Content or ""
-    NContent.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NContent.TextSize = 12
-    NContent.Parent = Notif
+    NContent.TextColor3 = Library.Themes[Library.CurrentTheme].Text
+    NContent.TextSize = 11
+    NContent.Font = Enum.Font.Gotham
+    NContent.TextXAlignment = Enum.TextXAlignment.Left
+    NContent.Parent = NotifFrame
+
+    Tween(NotifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -250, 1, -70)})
 
     task.delay(Config.Duration or 3, function()
-        Notif:Destroy()
+        local tw = Tween(NotifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 10, 1, -70)})
+        tw.Completed:Connect(function() NotifFrame:Destroy() end)
     end)
 end
 
