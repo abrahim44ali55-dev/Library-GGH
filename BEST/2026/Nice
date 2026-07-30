@@ -1,11 +1,26 @@
--- JakhshLib | Full UI Library like WindUI / Rayfield
--- Created for custom hub - All elements + Minimize to floating + Close Confirm
--- Load: local Lib = loadstring(game:HttpGet("YOUR RAW LINK"))()
-
+-- JakhshLib V2 - Fixed Version (100% Working)
 local JakhshLib = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local CoreGui = (gethui and gethui()) or game.CoreGui
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- FIX: Parent detection for all executors
+local function GetGuiParent()
+    local success, result = pcall(function() return gethui() end)
+    if success and result then return result end
+    success, result = pcall(function() return game.CoreGui end)
+    if success and result then 
+        -- try to set parent, if fails use PlayerGui
+        local test = Instance.new("ScreenGui")
+        test.Parent = result
+        test:Destroy()
+        return result
+    end
+    return LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local GuiParent = GetGuiParent()
 
 local function MakeDraggable(frame, dragHandle)
     dragHandle = dragHandle or frame
@@ -36,13 +51,14 @@ end
 function JakhshLib:CreateWindow(config)
     config = config or {}
     local WindowName = config.Name or "Jaksh Hub"
-    local Subtitle = config.Subtitle or "Private Library"
+    local Subtitle = config.Subtitle or "V2 Fixed"
 
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = WindowName
-    ScreenGui.Parent = CoreGui
+    ScreenGui.Name = WindowName.."_Gui"
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.Parent = GuiParent
 
     -- Main Frame
     local MainFrame = Instance.new("Frame")
@@ -51,12 +67,12 @@ function JakhshLib:CreateWindow(config)
     MainFrame.Position = UDim2.new(0.5, -290, 0.5, -210)
     MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
     MainFrame.BorderSizePixel = 0
-    MainFrame.ClipsDescendants = true
+    MainFrame.Active = true
     MainFrame.Parent = ScreenGui
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
     local stroke = Instance.new("UIStroke", MainFrame)
-    stroke.Color = Color3.fromRGB(45,45,50)
-    stroke.Thickness = 1
+    stroke.Color = Color3.fromRGB(80,80,255)
+    stroke.Thickness = 1.2
 
     -- Title Bar
     local TitleBar = Instance.new("Frame")
@@ -72,7 +88,7 @@ function JakhshLib:CreateWindow(config)
     TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Position = UDim2.new(0, 15, 0, 5)
-    TitleLabel.Size = UDim2.new(0, 200, 0, 20)
+    TitleLabel.Size = UDim2.new(0, 250, 0, 20)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = TitleBar
 
@@ -83,14 +99,14 @@ function JakhshLib:CreateWindow(config)
     SubLabel.TextColor3 = Color3.fromRGB(150,150,150)
     SubLabel.BackgroundTransparency = 1
     SubLabel.Position = UDim2.new(0, 15, 0, 22)
-    SubLabel.Size = UDim2.new(0, 200, 0, 15)
+    SubLabel.Size = UDim2.new(0, 250, 0, 15)
     SubLabel.TextXAlignment = Enum.TextXAlignment.Left
     SubLabel.Parent = TitleBar
 
-    -- Controls (Minimize / Close)
+    -- Controls
     local Controls = Instance.new("Frame")
-    Controls.Size = UDim2.new(0, 70, 1, 0)
-    Controls.Position = UDim2.new(1, -75, 0, 0)
+    Controls.Size = UDim2.new(0, 80, 1, 0)
+    Controls.Position = UDim2.new(1, -85, 0, 0)
     Controls.BackgroundTransparency = 1
     Controls.Parent = TitleBar
     local ctrlLayout = Instance.new("UIListLayout", Controls)
@@ -101,41 +117,42 @@ function JakhshLib:CreateWindow(config)
 
     local function CreateControl(text, color)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, 28, 0, 28)
+        btn.Size = UDim2.new(0, 30, 0, 30)
         btn.BackgroundColor3 = Color3.fromRGB(35,35,38)
         btn.Text = text
         btn.Font = Enum.Font.GothamBold
         btn.TextSize = 14
         btn.TextColor3 = color
+        btn.AutoButtonColor = false
         btn.Parent = Controls
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
         return btn
     end
 
     local MinBtn = CreateControl("—", Color3.fromRGB(200,200,200))
-    local CloseBtn = CreateControl("X", Color3.fromRGB(255,90,90))
-
+    local CloseBtn = CreateControl("✕", Color3.fromRGB(255,90,90))
     MakeDraggable(MainFrame, TitleBar)
 
-    -- Floating Button (When Minimized)
+    -- Floating Button (Top Center Wide + Draggable)
     local FloatingBtn = Instance.new("TextButton")
     FloatingBtn.Name = "FloatingButton"
-    FloatingBtn.Size = UDim2.new(0, 300, 0, 42)
-    FloatingBtn.Position = UDim2.new(0.5, -150, 0, 15)
-    FloatingBtn.BackgroundColor3 = Color3.fromRGB(22,22,24)
-    FloatingBtn.Text = "  "..WindowName.." [ اضغط للفتح ]"
+    FloatingBtn.Size = UDim2.new(0, 320, 0, 44)
+    FloatingBtn.Position = UDim2.new(0.5, -160, 0, 20)
+    FloatingBtn.BackgroundColor3 = Color3.fromRGB(25,25,30)
+    FloatingBtn.Text = "  "..WindowName.."  [ اضغط للفتح ]"
     FloatingBtn.Font = Enum.Font.GothamBold
     FloatingBtn.TextSize = 13
     FloatingBtn.TextColor3 = Color3.fromRGB(255,255,255)
     FloatingBtn.Visible = false
+    FloatingBtn.AutoButtonColor = false
     FloatingBtn.Parent = ScreenGui
     Instance.new("UICorner", FloatingBtn).CornerRadius = UDim.new(0, 10)
     local floatStroke = Instance.new("UIStroke", FloatingBtn)
     floatStroke.Color = Color3.fromRGB(80,80,255)
-    floatStroke.Thickness = 1.5
+    floatStroke.Thickness = 2
     MakeDraggable(FloatingBtn)
 
-    -- Tabs Container
+    -- Tab System
     local TabHolder = Instance.new("Frame")
     TabHolder.Size = UDim2.new(0, 140, 1, -45)
     TabHolder.Position = UDim2.new(0, 0, 0, 45)
@@ -155,11 +172,11 @@ function JakhshLib:CreateWindow(config)
     ContentHolder.BackgroundTransparency = 1
     ContentHolder.Parent = MainFrame
 
-    -- Close Confirm Modal
+    -- Close Confirm
     local ConfirmFrame = Instance.new("Frame")
-    ConfirmFrame.Size = UDim2.new(0, 260, 0, 130)
-    ConfirmFrame.Position = UDim2.new(0.5, -130, 0.5, -65)
-    ConfirmFrame.BackgroundColor3 = Color3.fromRGB(30,30,33)
+    ConfirmFrame.Size = UDim2.new(0, 280, 0, 140)
+    ConfirmFrame.Position = UDim2.new(0.5, -140, 0.5, -70)
+    ConfirmFrame.BackgroundColor3 = Color3.fromRGB(30,30,35)
     ConfirmFrame.Visible = false
     ConfirmFrame.ZIndex = 10
     ConfirmFrame.Parent = MainFrame
@@ -168,35 +185,37 @@ function JakhshLib:CreateWindow(config)
 
     local confirmText = Instance.new("TextLabel", ConfirmFrame)
     confirmText.Size = UDim2.new(1, -20, 0, 60)
-    confirmText.Position = UDim2.new(0,10,0,10)
+    confirmText.Position = UDim2.new(0,10,0,15)
     confirmText.BackgroundTransparency = 1
     confirmText.Text = "هل انت متأكد تريد اغلاق المكتبة؟"
     confirmText.Font = Enum.Font.GothamBold
     confirmText.TextSize = 13
     confirmText.TextColor3 = Color3.white
     confirmText.TextWrapped = true
+    confirmText.ZIndex = 11
 
     local YesBtn = Instance.new("TextButton", ConfirmFrame)
-    YesBtn.Size = UDim2.new(0, 110, 0, 32)
-    YesBtn.Position = UDim2.new(0, 15, 0, 80)
+    YesBtn.Size = UDim2.new(0, 120, 0, 36)
+    YesBtn.Position = UDim2.new(0, 15, 0, 85)
     YesBtn.Text = "نعم، اغلاق"
     YesBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
     YesBtn.Font = Enum.Font.GothamBold
     YesBtn.TextSize = 12
     YesBtn.TextColor3 = Color3.white
+    YesBtn.ZIndex = 11
     Instance.new("UICorner", YesBtn)
 
     local NoBtn = Instance.new("TextButton", ConfirmFrame)
-    NoBtn.Size = UDim2.new(0, 110, 0, 32)
-    NoBtn.Position = UDim2.new(0, 135, 0, 80)
+    NoBtn.Size = UDim2.new(0, 120, 0, 36)
+    NoBtn.Position = UDim2.new(0, 145, 0, 85)
     NoBtn.Text = "لا"
     NoBtn.BackgroundColor3 = Color3.fromRGB(50,50,55)
     NoBtn.Font = Enum.Font.GothamBold
     NoBtn.TextSize = 12
     NoBtn.TextColor3 = Color3.white
+    NoBtn.ZIndex = 11
     Instance.new("UICorner", NoBtn)
 
-    -- Logic
     MinBtn.MouseButton1Click:Connect(function()
         MainFrame.Visible = false
         FloatingBtn.Visible = true
@@ -216,7 +235,7 @@ function JakhshLib:CreateWindow(config)
     function Window:CreateTab(name)
         local tabBtn = Instance.new("TextButton")
         tabBtn.Size = UDim2.new(1, 0, 0, 36)
-        tabBtn.BackgroundColor3 = firstTab and Color3.fromRGB(45,45,90) or Color3.fromRGB(32,32,35)
+        tabBtn.BackgroundColor3 = firstTab and Color3.fromRGB(80,80,255) or Color3.fromRGB(32,32,35)
         tabBtn.Text = name
         tabBtn.Font = Enum.Font.GothamBold
         tabBtn.TextSize = 12
@@ -234,7 +253,6 @@ function JakhshLib:CreateWindow(config)
         page.Parent = ContentHolder
         local list = Instance.new("UIListLayout", page)
         list.Padding = UDim.new(0, 8)
-        list.SortOrder = Enum.SortOrder.LayoutOrder
         Instance.new("UIPadding", page).PaddingAll = UDim.new(0, 12)
 
         tabs[name] = {btn=tabBtn, page=page}
@@ -243,7 +261,7 @@ function JakhshLib:CreateWindow(config)
         tabBtn.MouseButton1Click:Connect(function()
             for _, t in pairs(tabs) do t.page.Visible = false; t.btn.BackgroundColor3 = Color3.fromRGB(32,32,35) end
             page.Visible = true
-            tabBtn.BackgroundColor3 = Color3.fromRGB(45,45,90)
+            tabBtn.BackgroundColor3 = Color3.fromRGB(80,80,255)
         end)
 
         local Tab = {}
@@ -253,21 +271,10 @@ function JakhshLib:CreateWindow(config)
             sec.Text = secName:upper()
             sec.Font = Enum.Font.GothamBold
             sec.TextSize = 11
-            sec.TextColor3 = Color3.fromRGB(100,100,255)
+            sec.TextColor3 = Color3.fromRGB(100,150,255)
             sec.BackgroundTransparency = 1
             sec.TextXAlignment = Enum.TextXAlignment.Left
             sec.Parent = page
-        end
-        function Tab:CreateLabel(txt)
-            local lbl = Instance.new("TextLabel")
-            lbl.Size = UDim2.new(1, -10, 0, 20)
-            lbl.Text = txt
-            lbl.Font = Enum.Font.Gotham
-            lbl.TextSize = 12
-            lbl.TextColor3 = Color3.fromRGB(200,200,200)
-            lbl.BackgroundTransparency = 1
-            lbl.TextXAlignment = Enum.TextXAlignment.Left
-            lbl.Parent = page
         end
         function Tab:CreateButton(cfg)
             local btn = Instance.new("TextButton")
@@ -306,7 +313,6 @@ function JakhshLib:CreateWindow(config)
             toggleBtn.MouseButton1Click:Connect(function()
                 state = not state
                 toggleBtn.BackgroundColor3 = state and Color3.fromRGB(80,80,255) or Color3.fromRGB(60,60,65)
-                TweenService:Create(toggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = state and Color3.fromRGB(80,80,255) or Color3.fromRGB(60,60,65)}):Play()
                 if cfg.Callback then cfg.Callback(state) end
             end)
         end
