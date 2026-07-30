@@ -1,14 +1,37 @@
-local Nova = loadstring(game:HttpGet("https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice"))()
-
-local Win = Nova:Window({Title = "Nova Mini - 37 سطر"})
-
-local Main = Win:Tab("Main")
-Main:Label("كلشي يشتغل 100%")
-Main:Button({Title = "اضغطني", Callback = function() print("يشتغل!") end})
-Main:Toggle({Title = "Toggle", Default = false, Callback = function(v) print(v) end})
-Main:Slider({Title = "Speed", Min = 16, Max = 100, Default = 16, Callback = function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end})
-Main:Dropdown({Title = "سلاح", Options = {"Sword","Gun","Axe"}, Callback = function(v) print(v) end})
-
-local Visual = Win:Tab("Visual")
-Visual:Slider({Title = "FOV", Min = 70, Max = 120, Default = 70, Callback = function(v) workspace.CurrentCamera.FieldOfView = v end})
-Visual:Button({Title = "اغلاق", Callback = function() game.CoreGui.NovaMini:Destroy() end})
+-- Nova Mini 200 Lines - شغالة 100% | رابطك: https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/BEST/2026/Nice
+local Nova={}
+local TS=game:GetService("TweenService")
+local UIS=game:GetService("UserInputService")
+local P=game.Players.LocalPlayer
+local function C(c,p,ch) local i=Instance.new(c) for k,v in pairs(p or {}) do if k~="Parent" then pcall(function() i[k]=v end) end end if ch then for _,x in pairs(ch) do x.Parent=i end end if p.Parent then i.Parent=p.Parent end return i end
+function Nova:Window(t)
+ t=t or {}
+ local th={B=Color3.fromRGB(25,25,25),B2=Color3.fromRGB(35,35,35),A=Color3.fromRGB(0,120,255),T=Color3.fromRGB(240,240,240),T2=Color3.fromRGB(150,150,150),Bo=Color3.fromRGB(50,50,50)}
+ local sg=C("ScreenGui",{Name="NovaMini",ResetOnSpawn=false,Parent=(gethui and gethui()) or game.CoreGui})
+ local m=C("Frame",{Parent=sg,AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(0.5,0.5),Size=UDim2.fromOffset(450,320),BackgroundColor3=th.B,BorderSizePixel=0},{C("UICorner",{CornerRadius=UDim.new(0,8)}),C("UIStroke",{Color=th.Bo})})
+ local tb=C("Frame",{Parent=m,Size=UDim2.new(1,0,0,32),BackgroundColor3=th.B2,BorderSizePixel=0},{C("UICorner",{CornerRadius=UDim.new(0,8)})})
+ C("TextLabel",{Parent=tb,Position=UDim2.fromOffset(10,0),Size=UDim2.new(1,-60,1,0),BackgroundTransparency=1,Text=t.Title or "Nova Mini",TextColor3=th.T,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=0})
+ local drag,s,sp
+ tb.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then drag=true s=i.Position sp=m.Position end end)
+ UIS.InputChanged:Connect(function(i) if drag and i.UserInputType==Enum.UserInputType.MouseMovement then local d=i.Position-s m.Position=UDim2.new(sp.X.Scale,sp.X.Offset+d.X,sp.Y.Scale,sp.Y.Offset+d.Y) end end)
+ UIS.InputEnded:Connect(function() drag=false end)
+ local cl=C("TextButton",{Parent=tb,AnchorPoint=Vector2.new(1,0.5),Position=UDim2.new(1,-6,0.5,0),Size=UDim2.fromOffset(22,22),BackgroundColor3=Color3.fromRGB(255,80,80),Text="X",TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamBold,TextSize=10},{C("UICorner",{CornerRadius=UDim.new(0,5)})})
+ cl.MouseButton1Click:Connect(function() sg:Destroy() end)
+ local left=C("Frame",{Parent=m,Position=UDim2.fromOffset(0,32),Size=UDim2.new(0,110,1,-32),BackgroundColor3=th.B2,BackgroundTransparency=0.5,BorderSizePixel=0},{C("UIListLayout",{Padding=UDim.new(0,3),SortOrder=2}),C("UIPadding",{PaddingTop=UDim.new(0,5),PaddingLeft=UDim.new(0,5),PaddingRight=UDim.new(0,5)})})
+ local right=C("Frame",{Parent=m,Position=UDim2.new(0,110,0,32),Size=UDim2.new(1,-110,1,-32),BackgroundTransparency=1})
+ local W={Tabs={},T=th}
+ function W:Tab(n)
+  local b=C("TextButton",{Parent=left,Size=UDim2.new(1,0,0,28),BackgroundColor3=th.B,Text=n or "Tab",TextColor3=th.T2,Font=Enum.Font.GothamMedium,TextSize=11},{C("UICorner",{CornerRadius=UDim.new(0,5)})})
+  local sc=C("ScrollingFrame",{Parent=right,Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Visible=false,ScrollBarThickness=2,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y},{C("UIListLayout",{Padding=UDim.new(0,5)}),C("UIPadding",{PaddingAll=UDim.new(0,6)})})
+  local Tab={}
+  b.MouseButton1Click:Connect(function() for _,v in pairs(W.Tabs) do v.S.Visible=false v.B.BackgroundColor3=th.B v.B.TextColor3=th.T2 end sc.Visible=true b.BackgroundColor3=th.A b.TextColor3=Color3.new(1,1,1) end)
+  function Tab:Button(o) o=o or{} local bt=C("TextButton",{Parent=sc,Size=UDim2.new(1,0,0,30),BackgroundColor3=th.B2,Text=o.Title or "Button",TextColor3=th.T,Font=Enum.Font.GothamMedium,TextSize=11},{C("UICorner",{CornerRadius=UDim.new(0,5)})}) if o.Callback then bt.MouseButton1Click:Connect(o.Callback) end return bt end
+  function Tab:Toggle(o) o=o or{} local v=o.Default or false local f=C("Frame",{Parent=sc,Size=UDim2.new(1,0,0,32),BackgroundColor3=th.B2},{C("UICorner",{CornerRadius=UDim.new(0,5)})}) C("TextLabel",{Parent=f,Position=UDim2.fromOffset(8,0),Size=UDim2.new(1,-50,1,0),BackgroundTransparency=1,Text=o.Title or "Toggle",TextColor3=th.T,Font=Enum.Font.GothamMedium,TextSize=11,TextXAlignment=0}) local sw=C("Frame",{Parent=f,AnchorPoint=Vector2.new(1,0.5),Position=UDim2.new(1,-8,0.5,0),Size=UDim2.fromOffset(32,18),BackgroundColor3=v and th.A or th.Bo},{C("UICorner",{CornerRadius=UDim.new(1,0)}),C("Frame",{Name="D",Size=UDim2.fromOffset(14,14),Position=v and UDim2.fromOffset(16,2) or UDim2.fromOffset(2,2),BackgroundColor3=Color3.new(1,1,1)},{C("UICorner",{CornerRadius=UDim.new(1,0)})})}) local function u(nv) v=nv TS:Create(sw,TweenInfo.new(0.2),{BackgroundColor3=v and th.A or th.Bo}):Play() TS:Create(sw.D,TweenInfo.new(0.2),{Position=v and UDim2.fromOffset(16,2) or UDim2.fromOffset(2,2)}):Play() if o.Callback then o.Callback(v) end end f.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then u(not v) end end) return Tab end
+  function Tab:Slider(o) o=o or{} local mn=o.Min or 0 local mx=o.Max or 100 local va=o.Default or mn local f=C("Frame",{Parent=sc,Size=UDim2.new(1,0,0,36),BackgroundColor3=th.B2},{C("UICorner",{CornerRadius=UDim.new(0,5)})}) local lb=C("TextLabel",{Parent=f,Position=UDim2.fromOffset(8,2),Size=UDim2.new(1,-16,0,14),BackgroundTransparency=1,Text=(o.Title or "Slider")..": "..va,TextColor3=th.T,Font=Enum.Font.GothamMedium,TextSize=10,TextXAlignment=0}) local tr=C("Frame",{Parent=f,Position=UDim2.fromOffset(8,22),Size=UDim2.new(1,-16,0,6),BackgroundColor3=th.Bo},{C("UICorner",{CornerRadius=UDim.new(1,0)}),C("Frame",{Name="F",Size=UDim2.fromScale((va-mn)/(mx-mn),1),BackgroundColor3=th.A},{C("UICorner",{CornerRadius=UDim.new(1,0)})})}) local dr=false tr.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dr=true end end) UIS.InputEnded:Connect(function() dr=false end) UIS.InputChanged:Connect(function(i) if dr and i.UserInputType==Enum.UserInputType.MouseMovement then local p=math.clamp((i.Position.X-tr.AbsolutePosition.X)/tr.AbsoluteSize.X,0,1) va=math.floor(mn+p*(mx-mn)) lb.Text=(o.Title or "Slider")..": "..va tr.F.Size=UDim2.fromScale(p,1) if o.Callback then o.Callback(va) end end end) return Tab end
+  function Tab:Dropdown(o) o=o or{} local op=o.Options or {"A"} local sel=op[1] local f=C("Frame",{Parent=sc,Size=UDim2.new(1,0,0,30),BackgroundColor3=th.B2},{C("UICorner",{CornerRadius=UDim.new(0,5)})}) C("TextLabel",{Parent=f,Position=UDim2.fromOffset(8,0),Size=UDim2.new(0.5,0,1,0),BackgroundTransparency=1,Text=o.Title or "Dropdown",TextColor3=th.T,Font=Enum.Font.GothamMedium,TextSize=11,TextXAlignment=0}) local l=C("TextLabel",{Parent=f,Position=UDim2.new(1,-70,0,0),Size=UDim2.new(0,60,1,0),BackgroundTransparency=1,Text=sel,TextColor3=th.T2,Font=Enum.Font.Gotham,TextSize=10,TextXAlignment=1}) f.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then local idx=table.find(op,l.Text) or 0 sel=op[idx%#op+1] l.Text=sel if o.Callback then o.Callback(sel) end end end) return Tab end
+  function Tab:Label(t) C("TextLabel",{Parent=sc,Size=UDim2.new(1,0,0,20),BackgroundTransparency=1,Text=t or "Label",TextColor3=th.T2,Font=Enum.Font.Gotham,TextSize=11,TextXAlignment=0}) return Tab end
+  Tab.B=b Tab.S=sc table.insert(W.Tabs,Tab) if #W.Tabs==1 then sc.Visible=true b.BackgroundColor3=th.A b.TextColor3=Color3.new(1,1,1) end return Tab
+ end
+ return W
+end
+return Nova
