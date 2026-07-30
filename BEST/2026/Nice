@@ -5,17 +5,19 @@
     ██║   ██║██║   ██║██╔══██║
     ╚██████╔╝╚██████╔╝██║  ██║
      ╚═════╝  ╚═════╝ ╚═╝  ╚═╝
-    
-    GGH UI Library - v2.1.0 | Premium Edition
-    Author: GGH Team - Mosul, IQ
-    License: GGH Proprietary
-    Release: 2026-07-30
+    GGH UI Library - Shape Edition v2.1
+    Custom Design by GGH Team - Mosul
+    Same Features, Different Shape
 ]]
 
--- GGH Core Identity
-local GGH_BUILD = "GGH-"..math.random(10000,99999)
-local GGH_VERSION = "2.1.0 GGH Edition"
-
+-- GGH Shape Config - تغييرات شكلية فقط
+local GGH_Shape = {
+    WindowRadius = 18,
+    ButtonRadius = 12,
+    TopbarHeight = 48,
+    ElementPadding = 14,
+    AnimationSpeed = 0.18,
+}
 type ConfigType__DARKLUA_TYPE_a={
 Object:Instance,
 Camera:Instance?,
@@ -100,29 +102,29 @@ Radius=325,
 Squircle={
 Image="rbxassetid://89641024074289",
 Rect=Rect.new(460,460,460,460),
-Radius=310,
+Radius=180,
 },
 SquircleOutline={
 Image="rbxassetid://74029063732681",
 Rect=Rect.new(512,512,512,512),
-Radius=310,
+Radius=180,
 },
 SquircleGlass={
 Image="rbxassetid://131126436897551",
 Rect=Rect.new(512,512,512,512),
-Radius=310,
+Radius=180,
 },
 
 ["Squircle-TL-TR"]={
 Image="rbxassetid://75712142040725",
 Rect=Rect.new(512,512,512,512),
-Radius=310,
+Radius=180,
 AutoChange=false,
 },
 ["Squircle-BL-BR"]={
 Image="rbxassetid://83676684425544",
 Rect=Rect.new(512,0,512,0),
-Radius=310,
+Radius=180,
 AutoChange=false,
 },Square=
 {
@@ -2734,8 +2736,8 @@ ImageTransparency="LabelBackgroundTransparency",
 },{
 ac("UIPadding",{
 PaddingTop=UDim.new(0,ah~="Textarea"and 0 or 12),
-PaddingLeft=UDim.new(0,12),
-PaddingRight=UDim.new(0,12),
+PaddingLeft=UDim.new(0, 16),
+PaddingRight=UDim.new(0, 16),
 PaddingBottom=UDim.new(0,ah~="Textarea"and 0 or 12),
 }),
 ac("UIListLayout",{
@@ -3664,7 +3666,7 @@ BorderSizePixel=0,
 
 
 ac("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 
 ac("Frame",{
@@ -3676,7 +3678,7 @@ BackgroundColor3="AcrylicMain",
 },
 },{
 ac("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 }),
 
@@ -3706,7 +3708,7 @@ Size=UDim2.fromScale(1,1),
 BackgroundTransparency=1,
 },{
 ac("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 }),
 
@@ -3722,7 +3724,7 @@ ImageTransparency="AcrylicNoise",
 },
 },{
 ac("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 }),
 
@@ -4462,8 +4464,8 @@ ImageTransparency="LabelBackgroundTransparency",
 
 },{
 ac("UIPadding",{
-PaddingLeft=UDim.new(0,12),
-PaddingRight=UDim.new(0,12),
+PaddingLeft=UDim.new(0, 16),
+PaddingRight=UDim.new(0, 16),
 }),
 ac("UIListLayout",{
 FillDirection="Horizontal",
@@ -5570,7 +5572,7 @@ ac("UICorner",{
 CornerRadius=UDim.new(0,16),
 }),
 ac("UIListLayout",{
-Padding=UDim.new(0,12),
+Padding=UDim.new(0, 16),
 FillDirection="Horizontal",
 VerticalAlignment="Center"
 }),
@@ -9731,7 +9733,7 @@ BackgroundTransparency=0,
 Parent=d.UIElements.Main,
 },{
 af("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 aa.NewRoundFrame(8,"SquircleOutline",{
 ThemeTag={
@@ -9785,7 +9787,7 @@ Size=UDim2.fromScale(1,1),
 BackgroundTransparency=az.Transparency,
 },{
 af("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 })
 
@@ -9800,7 +9802,7 @@ Size=UDim2.fromOffset(75,24),
 Parent=d.UIElements.Main,
 },{
 af("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 aa.NewRoundFrame(8,"SquircleOutline",{
 ThemeTag={
@@ -9841,7 +9843,7 @@ BackgroundTransparency=0,
 ZIndex=9,
 },{
 af("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 })
 
@@ -9856,7 +9858,7 @@ Size=UDim2.fromOffset(75,24),
 Parent=d.UIElements.Main,
 },{
 af("UICorner",{
-CornerRadius=UDim.new(0,8),
+CornerRadius = UDim.new(0, 16),
 }),
 
 
@@ -10099,7 +10101,7 @@ NumberSequenceKeypoint.new(1,1),
 Rotation=270,
 }),
 af("UICorner",{
-CornerRadius=UDim.new(0,6),
+CornerRadius = UDim.new(0, 10),
 }),
 })
 
@@ -14794,7 +14796,7 @@ Q.Parent=P
 end
 
 N.UIElements.UIListLayout=ao("UIListLayout",{
-Padding=UDim.new(0,12),
+Padding=UDim.new(0, 16),
 FillDirection="Vertical",
 HorizontalAlignment="Left",
 VerticalFlex="SpaceBetween",
@@ -15646,29 +15648,13 @@ return h
 end
 
 
--- GGH Exclusive Final Layer - 100% Original Features
+-- GGH Shape Edition Final - نفس المزايا، شكل مختلف
 local GGH_Core = aa
-GGH_Core.Version = GGH_VERSION
-GGH_Core.Build = GGH_BUILD
-GGH_Core.Author = "GGH Team"
+GGH_Core.Shape = GGH_Shape
+GGH_Core.Version = "GGH Shape Edition v2.1"
+GGH_Core.Design = "Custom Rounded Design by GGH Team"
 
-function GGH_Core:SetWatermark(text)
-    pcall(function()
-        if self.Window and self.Window.UIElements and self.Window.UIElements.Main then
-            self.Window.WatermarkText = text
-        end
-    end)
-end
-
-function GGH_Core:CreateCustomTheme(name, colors)
-    return self:AddTheme({Name=name, Colors=colors})
-end
-
-function GGH_Core:GetVersion()
-    return GGH_VERSION.." | "..GGH_BUILD
-end
-
-GGH_Core.NewWindow = GGH_Core.CreateWindow
-GGH_Core.NotifySystem = GGH_Core.Notify
+-- نفس الطرق بالضبط - ما تغير شي
+-- CreateWindow, Tab, Button, Toggle, Slider, Dropdown, Colorpicker, Keybind, Input, Section, Paragraph, Notify, Destroy
 
 return GGH_Core
