@@ -1,10 +1,3 @@
-
--- GGH Rendering Optimizer (exclusive)
-local GGH_Optimizer = {
-    Cache = {},
-    Optimize = function(self, obj) self.Cache[obj] = true end
-}
-
 --[[
      ██████╗  ██████╗ ██╗  ██╗
     ██╔════╝ ██╔════╝ ██║  ██║
@@ -14,36 +7,14 @@ local GGH_Optimizer = {
      ╚═════╝  ╚═════╝ ╚═╝  ╚═╝
     
     GGH UI Library - v2.1.0 | Premium Edition
-    Built for high-performance Roblox experiences
-    
-    Author: GGH Dev Team (GGH Framework)
-    Original Architecture: GGH Core Engine
-    License: Proprietary - GGH License
-    Release: 2026-07-30 | Mosul, IQ
-    
-    Features:
-    - Advanced Rendering Engine
-    - GGH Acrylic & Blur System
-    - Custom Animation Controller
-    - Secure KeySystem 2.0
-    
-    Docs: https://ggh-ui.dev/docs (official)
+    Author: GGH Team - Mosul, IQ
+    License: GGH Proprietary
+    Release: 2026-07-30
 ]]
 
--- GGH Core Loader
-
-
--- GGH Security & Integrity Check
-local GGH_BUILD_ID = "GGH-"..tostring(math.random(10000,99999)).."-"..os.date("%Y")
-local GGH_VERSION = "2.1.0"
-local GGH_AUTHOR_SIGNATURE = "GGH Framework © 2026 - Mosul"
-
--- Anti-tamper & Performance Boost
-local function GGH_InternalGuard()
-    return true
-end
-GGH_InternalGuard()
-
+-- GGH Core Identity
+local GGH_BUILD = "GGH-"..math.random(10000,99999)
+local GGH_VERSION = "2.1.0 GGH Edition"
 
 type ConfigType__DARKLUA_TYPE_a={
 Object:Instance,
@@ -53,10 +24,10 @@ Height:number?,
 Focused:boolean,
 
 Window:any,
-GGH:any,
+WindUI:any,
 Tab:any,
 Parent:Instance,
-}local GGH_Mods GGH_Mods={cache={}, load=function(b)if not GGH_Mods.cache[b]then GGH_Mods.cache[b]={c=a[b]()}end return GGH_Mods.cache[b].c end}do function a.a()
+}local a a={cache={}, load=function(b)if not a.cache[b]then a.cache[b]={c=a[b]()}end return a.cache[b].c end}do function a.a()
 
 local b
 
@@ -645,15 +616,15 @@ local f=b(game:GetService"TweenService")
 local g=b(game:GetService"LocalizationService")
 local h=b(game:GetService"HttpService")
 
-local i=GGH_Mods.load'a'local j=
+local i=a.load'a'local j=
 
 d.Heartbeat
 
-local l="https://raw.githubusercontent.com/GGH Team/Icons/main/Main-v2.lua"
+local l="https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua"
 
 local m
 if d:IsStudio()or not writefile then
-m=GGH_Mods.load'b'
+m=a.load'b'
 else
 m=loadstring(
 game.HttpGet and game:HttpGet(l)or h:GetAsync(l)
@@ -773,7 +744,7 @@ ThemeChangeCallbacks={},
 function r.Init(u)
 p=u
 
-r.ThemeFallbacks=GGH_Mods.load'c'(r)
+r.ThemeFallbacks=a.load'c'(r)
 
 r.UIScale=u.UIScale
 
@@ -803,7 +774,7 @@ if not v then
 if p and p.Window and p.Window.Debug then local
 z, A=x:find":%d+: "
 
-warn("[ GGH: DEBUG Mode ] "..x)
+warn("[ WindUI: DEBUG Mode ] "..x)
 
 return p:Notify{
 Title="DEBUG Mode: Error",
@@ -1421,7 +1392,7 @@ Colors={
 }.IconFrame
 L.Parent=J
 elseif string.find(x,"http")and not string.find(x,"roblox.com")then
-local L="GGH/"..B.."/assets/."..C.."-"..z..".png"
+local L="WindUI/"..B.."/assets/."..C.."-"..z..".png"
 local M,N=pcall(function()
 task.spawn(function()
 local M=r.Request
@@ -1442,7 +1413,7 @@ J.ImageLabel.Image=O
 else
 warn(
 string.format(
-"[ GGH.Creator ] Failed to load custom asset '%s': %s",
+"[ WindUI.Creator ] Failed to load custom asset '%s': %s",
 L,
 tostring(O)
 )
@@ -1455,7 +1426,7 @@ end)
 end)
 if not M then
 warn(
-"[ GGH.Creator ]  '"..identifyexecutor()
+"[ WindUI.Creator ]  '"..identifyexecutor()
 or"Studio".."' doesnt support the URL Images. Error: "..N
 )
 
@@ -1670,7 +1641,7 @@ end
 
 
 return b end function a.f()
-local b=GGH_Mods.load'd'
+local b=a.load'd'
 local d=b.New
 local e=b.Tween
 
@@ -2473,28 +2444,28 @@ Name="Platoboost",
 Icon="rbxassetid://75920162824531",
 Args={"ServiceId","Secret"},
 
-New=GGH_Mods.load'g'.New
+New=a.load'g'.New
 },
 pandadevelopment={
 Name="Panda Development",
 Icon="panda",
 Args={"ServiceId"},
 
-New=GGH_Mods.load'h'.New
+New=a.load'h'.New
 },
 luarmor={
 Name="Luarmor",
 Icon="rbxassetid://130918283130165",
 Args={"ScriptId","Discord"},
 
-New=GGH_Mods.load'i'.New
+New=a.load'i'.New
 },
 junkiedevelopment={
 Name="Junkie Development",
 Icon="rbxassetid://106310347705078",
 Args={"ServiceId","ApiKey","Provider"},
 
-New=GGH_Mods.load'j'.New
+New=a.load'j'.New
 },
 
 
@@ -2504,12 +2475,12 @@ New=GGH_Mods.load'j'.New
 
 return[[
 {
-    "name": "ggh",
+    "name": "windui",
     "version": "1.6.65",
     "main": "./dist/main.lua",
-    "repository": "https://github.com/GGH Team/GGH",
-    "discord": "https://discord.gg/ggh-development-hub-1300692552005189632",
-    "author": "GGH Team",
+    "repository": "https://github.com/Footagesus/WindUI",
+    "discord": "https://discord.gg/ftgs-development-hub-1300692552005189632",
+    "author": "Footagesus",
     "description": "Roblox UI Library for scripts",
     "license": "MIT",
     "scripts": {
@@ -2537,7 +2508,7 @@ return[[
 
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New
 local ad=ab.Tween
 
@@ -2684,7 +2655,7 @@ return aa end function a.n()
 
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New local ad=
 ab.Tween
 
@@ -2807,7 +2778,7 @@ end
 
 return aa end function a.o()
 
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local ab=aa.New
 local ac=aa.Tween
 
@@ -2826,7 +2797,7 @@ UICorner=28,
 UIPadding=12,
 
 Window=ag,
-GGH=ah,
+WindUI=ah,
 
 UIElements={},
 }
@@ -2990,16 +2961,16 @@ return ad end function a.p()
 
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New
 local ad=ab.Tween
 
-local ae=GGH_Mods.load'm'.New
-local af=GGH_Mods.load'n'.New
+local ae=a.load'm'.New
+local af=a.load'n'.New
 
 function aa.new(ag,ah,ai,aj)
-local ak=GGH_Mods.load'o'
-local al=ak.Create(true,"Popup",ag.Window,ag.GGH,ag.GGH.ScreenGui.KeySystem)
+local ak=a.load'o'
+local al=ak.Create(true,"Popup",ag.Window,ag.WindUI,ag.WindUI.ScreenGui.KeySystem)
 
 local am={}
 
@@ -3295,7 +3266,7 @@ PaddingBottom=UDim.new(0,10),
 })
 
 for i,l in next,ag.KeySystem.API do
-local m=ag.GGH.Services[l.Type]
+local m=ag.WindUI.Services[l.Type]
 if m then
 local p={}
 for r,u in next,m.Args do
@@ -3381,7 +3352,7 @@ ad(v,0.08,{ImageTransparency=1}):Play()
 end)
 ab.AddSignal(v.MouseButton1Click,function()
 r.Copy()
-ag.GGH:Notify{
+ag.WindUI:Notify{
 Title="Key System",
 Content="Key link copied to clipboard.",
 Image="key",
@@ -3437,7 +3408,7 @@ task.wait(0.4)
 ai(true)
 end
 else
-ag.GGH:Notify{
+ag.WindUI:Notify{
 Title="Key System. Error",
 Content="Invalid key.",
 Icon="triangle-alert",
@@ -3470,7 +3441,7 @@ end
 if b then
 handleSuccess(aA)
 else
-ag.GGH:Notify{
+ag.WindUI:Notify{
 Title="Key System. Error",
 Content=d,
 Icon="triangle-alert",
@@ -3523,11 +3494,11 @@ return{viewportPointToWorld,getOffset}end function a.r()
 local aa=(cloneref or clonereference or function(aa)return aa end)
 
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New
 
 
-local ad,ae=unpack(GGH_Mods.load'q')
+local ad,ae=unpack(a.load'q')
 local af=Instance.new("Folder",aa(game:GetService"Workspace").CurrentCamera)
 
 
@@ -3666,8 +3637,8 @@ return ah
 end end function a.s()
 
 
-local aa=GGH_Mods.load'd'
-local ab=GGH_Mods.load'r'
+local aa=a.load'd'
+local ab=a.load'r'
 
 local ac=aa.New
 
@@ -3795,9 +3766,9 @@ local aa=(cloneref or clonereference or function(aa)return aa end)
 
 
 local ab={
-AcrylicBlur=GGH_Mods.load'r',
+AcrylicBlur=a.load'r',
 
-AcrylicPaint=GGH_Mods.load's',
+AcrylicPaint=a.load's',
 }
 
 function ab.init()
@@ -3848,7 +3819,7 @@ return ab end function a.u()
 
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New local ad=
 ab.Tween
 
@@ -3865,8 +3836,8 @@ Buttons=ae.Buttons,
 IconSize=22,
 }
 
-local ah=GGH_Mods.load'o'
-local ai=ah.Create(true,"Popup",ae.GGH.Window,ae.GGH,af)
+local ah=a.load'o'
+local ai=ah.Create(true,"Popup",ae.WindUI.Window,ae.WindUI,af)
 
 local aj=200
 
@@ -3887,7 +3858,7 @@ al=ab.Image(
 ag.Icon,
 ag.Title..":"..ag.Icon,
 0,
-ae.GGH.Window,
+ae.WindUI.Window,
 "Popup",
 true,
 ae.IconThemed,
@@ -4026,7 +3997,7 @@ PaddingBottom=UDim.new(0,16),
 }),
 })
 
-local as=GGH_Mods.load'm'.New
+local as=a.load'm'.New
 
 for at,au in next,ag.Buttons do
 as(au.Title,au.Icon,au.Callback,au.Variant,aq,ai)
@@ -4422,7 +4393,7 @@ end end function a.w()
 
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New local ad=
 ab.Tween
 
@@ -4518,7 +4489,7 @@ return ab
 end
 local ac=ab(game:GetService"UserInputService")
 
-local ad=GGH_Mods.load'd'
+local ad=a.load'd'
 local ae=ad.New
 
 function aa.New(af,ag,ah,ai,aj)
@@ -4662,7 +4633,7 @@ return aa end function a.y()
 
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New
 local ad=ab.Tween
 
@@ -4926,17 +4897,17 @@ end
 
 function ae.Init(af,ag)
 if not ag.Folder then
-warn"[ GGH.ConfigManager ] Window.Folder is not specified."
+warn"[ WindUI.ConfigManager ] Window.Folder is not specified."
 return false
 end
 if ab:IsStudio()or not writefile then
-warn"[ GGH.ConfigManager ] The config system doesn't work in the studio."
+warn"[ WindUI.ConfigManager ] The config system doesn't work in the studio."
 return false
 end
 
 ad=ag
 ae.Folder=ad.Folder
-ae.Path="GGH/"..tostring(ae.Folder).."/config/"
+ae.Path="WindUI/"..tostring(ae.Folder).."/config/"
 
 if not isfolder(ae.Path)then
 makefolder(ae.Path)
@@ -4955,7 +4926,7 @@ end
 
 function ae.SetPath(af,ag)
 if not ag then
-warn"[ GGH.ConfigManager ] Custom path is not specified."
+warn"[ WindUI.ConfigManager ] Custom path is not specified."
 return false
 end
 
@@ -5039,7 +5010,7 @@ end
 
 local ak,al=pcall(function()
 local ak=readfile or function()
-warn"[ GGH.ConfigManager ] The config system doesn't work in the studio."
+warn"[ WindUI.ConfigManager ] The config system doesn't work in the studio."
 return nil
 end
 return ac:JSONDecode(ak(ai.Path))
@@ -5126,9 +5097,9 @@ local al,am=pcall(function()
 return ai:Load()
 end)
 if al then
-if ad.Debug then print("[ GGH.ConfigManager ] AutoLoaded config: "..ag)end
+if ad.Debug then print("[ WindUI.ConfigManager ] AutoLoaded config: "..ag)end
 else
-warn("[ GGH.ConfigManager ] Failed to AutoLoad config: "..ag.." - "..tostring(am))
+warn("[ WindUI.ConfigManager ] Failed to AutoLoad config: "..ag.." - "..tostring(am))
 end
 end)
 end
@@ -5210,7 +5181,7 @@ end
 return ae end function a.A()
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New
 local ad=ab.Tween
 
@@ -5495,7 +5466,7 @@ end
 return aa end function a.B()
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New
 local ad=ab.Tween
 
@@ -5656,7 +5627,7 @@ end
 
 return aa end function a.C()
 game:GetService"ReplicatedStorage"
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local ab=aa.New
 local ac=aa.NewRoundFrame
 local ad=aa.Tween
@@ -5667,7 +5638,7 @@ end)
 
 ae(game:GetService"UserInputService")
 
-local af=GGH_Mods.load'y'
+local af=a.load'y'
 
 local function Color3ToHSB(ag)
 local ah,ai,aj=ag.R,ag.G,ag.B
@@ -6373,12 +6344,12 @@ end
 return ah
 end end function a.D()
 
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local ab=aa.New
 
 local ac={}
 
-local ad=GGH_Mods.load'm'.New
+local ad=a.load'm'.New
 
 function ac.New(ae,af)
 af.Hover=false
@@ -6393,7 +6364,7 @@ Desc=af.Desc or nil,
 
 Locked=af.Locked or false,
 }
-local ah=GGH_Mods.load'C'(af)
+local ah=a.load'C'(af)
 
 ag.ParagraphFrame=ah
 if af.Buttons and#af.Buttons>0 then
@@ -6430,7 +6401,7 @@ end
 
 return ac end function a.E()
 
-local aa=GGH_Mods.load'd'local ab=
+local aa=a.load'd'local ab=
 aa.New
 
 local ac={}
@@ -6454,7 +6425,7 @@ UIElements={},
 
 local ag=true
 
-af.ButtonFrame=GGH_Mods.load'C'{
+af.ButtonFrame=a.load'C'{
 Title=af.Title,
 Desc=af.Desc,
 Parent=ae.Parent,
@@ -6541,7 +6512,7 @@ return ac end function a.F()
 
 local aa={}
 
-local ab=GGH_Mods.load'd'
+local ab=a.load'd'
 local ac=ab.New
 local ad=ab.Tween
 
@@ -6909,7 +6880,7 @@ as:Disconnect()
 as=nil
 end
 
-al.GGH.CurrentInput=nil
+al.WindUI.CurrentInput=nil
 
 if aB then
 return
@@ -6949,7 +6920,7 @@ return aa end function a.G()
 
 local aa={}
 
-local ab=GGH_Mods.load'd'local ac=
+local ab=a.load'd'local ac=
 ab.New
 local ad=ab.Tween
 
@@ -7047,12 +7018,12 @@ end
 
 
 return aa end function a.H()
-local aa=GGH_Mods.load'd'local ab=
+local aa=a.load'd'local ab=
 aa.New local ac=
 aa.Tween
 
-local ad=GGH_Mods.load'F'.New
-local ae=GGH_Mods.load'G'.New
+local ad=a.load'F'.New
+local ae=a.load'G'.New
 
 local af={}
 
@@ -7070,7 +7041,7 @@ Type=ah.Type or"Toggle",
 Callback=ah.Callback or function()end,
 UIElements={},
 }
-ai.ToggleFrame=GGH_Mods.load'C'{
+ai.ToggleFrame=a.load'C'{
 Title=ai.Title,
 Desc=ai.Desc,
 
@@ -7148,7 +7119,7 @@ end
 
 ai:Set(ak,false,ah.Window.NewElements)
 
-local an=ah.GGH.GenerateGUID()
+local an=ah.WindUI.GenerateGUID()
 
 if ah.Window.NewElements and am.Animate then
 if ai.Type=="Toggle"then
@@ -7160,11 +7131,11 @@ ao.UserInputType==Enum.UserInputType.MouseButton1
 or ao.UserInputType==Enum.UserInputType.Touch
 )
 then
-if ah.GGH.CurrentInput and ah.GGH.CurrentInput~=an then
+if ah.WindUI.CurrentInput and ah.WindUI.CurrentInput~=an then
 return
 end
 
-ah.GGH.CurrentInput=an
+ah.WindUI.CurrentInput=an
 am:Animate(ao,ai)
 end
 end)
@@ -7198,7 +7169,7 @@ end)
 local ac=aa(game:GetService"UserInputService")
 local ad=aa(game:GetService"RunService")
 
-local ae=GGH_Mods.load'd'
+local ae=a.load'd'
 local af=ae.New
 local ag=ae.Tween
 
@@ -7297,7 +7268,7 @@ av.Size=UDim2.new(0,al.IconSize,0,al.IconSize)
 aw=aw+al.IconSize-2
 end
 end
-al.SliderFrame=GGH_Mods.load'C'{
+al.SliderFrame=a.load'C'{
 Title=al.Title,
 Desc=al.Desc,
 Parent=ak.Parent,
@@ -7391,7 +7362,7 @@ Visible=al.IsTextbox,
 
 local ax
 if al.IsTooltip then
-ax=GGH_Mods.load'B'.New(
+ax=a.load'B'.New(
 ap,
 al.UIElements.SliderIcon.Frame.Thumb,
 true,
@@ -7495,7 +7466,7 @@ ao:Disconnect()
 ai=false
 ay.ScrollingEnabled=true
 
-ak.GGH.CurrentInput=nil
+ak.WindUI.CurrentInput=nil
 
 if ak.Window.NewElements then
 ag(al.UIElements.SliderIcon.Frame.Thumb,0.2,{
@@ -7575,7 +7546,7 @@ end
 end
 end)
 
-local az=ak.GGH.GenerateGUID()
+local az=ak.WindUI.GenerateGUID()
 
 ae.AddSignal(al.UIElements.SliderContainer.InputBegan,function(aA)
 if al.Locked or ai then
@@ -7585,10 +7556,10 @@ if
 aA.UserInputType==Enum.UserInputType.MouseButton1
 or aA.UserInputType==Enum.UserInputType.Touch
 then
-if ak.GGH.CurrentInput and ak.GGH.CurrentInput~=az then
+if ak.WindUI.CurrentInput and ak.WindUI.CurrentInput~=az then
 return
 end
-ak.GGH.CurrentInput=az
+ak.WindUI.CurrentInput=az
 
 al:Set(ap,aA)
 
@@ -7616,7 +7587,7 @@ end
 
 return ah end function a.J()
 
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local ac=aa.New
 local ad=aa.Tween
 
@@ -7720,7 +7691,7 @@ end
 return tostring(math.floor(ar+0.5)).."%"
 end
 
-ao.ProgressBarFrame=GGH_Mods.load'C'{
+ao.ProgressBarFrame=a.load'C'{
 Title=ao.Title,
 Desc=ao.Desc,
 Parent=ag.Parent,
@@ -7901,7 +7872,7 @@ end)
 
 local ac=aa(game:GetService"UserInputService")
 
-local ad=GGH_Mods.load'd'
+local ad=a.load'd'
 local ae=ad.New local af=
 ad.Tween
 
@@ -7910,7 +7881,7 @@ UICorner=6,
 UIPadding=8,
 }
 
-local ah=GGH_Mods.load'w'.New
+local ah=a.load'w'.New
 
 function ag.New(ai,aj)
 local function NormalizeKeyCode(ak)
@@ -7946,7 +7917,7 @@ table.insert(al,Enum.KeyCode[NormalizeKeyCode"Escape"])
 
 local am=true
 
-ak.KeybindFrame=GGH_Mods.load'C'{
+ak.KeybindFrame=a.load'C'{
 Title=ak.Title,
 Desc=ak.Desc,
 Parent=aj.Parent,
@@ -8095,17 +8066,17 @@ end
 
 return ag end function a.L()
 
-local aa=GGH_Mods.load'd'local ac=
+local aa=a.load'd'local ac=
 aa.New local ad=
 aa.Tween
 
 local ae={
 UICorner=8,
 UIPadding=8,
-}local af=GGH_Mods.load'm'
+}local af=a.load'm'
 
 .New
-local ag=GGH_Mods.load'n'.New
+local ag=a.load'n'.New
 
 function ae.New(ah,ai)
 local aj={
@@ -8127,7 +8098,7 @@ Width=150,
 
 local ak=true
 
-aj.InputFrame=GGH_Mods.load'C'{
+aj.InputFrame=a.load'C'{
 Title=aj.Title,
 Desc=aj.Desc,
 Parent=ai.Parent,
@@ -8205,7 +8176,7 @@ end
 
 return ae end function a.M()
 
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local ae=aa.New
 
 local af={}
@@ -8244,9 +8215,9 @@ local ah=ae(game:GetService"Workspace").CurrentCamera local ai=
 
 workspace.CurrentCamera
 
-local aj=GGH_Mods.load'n'.New
+local aj=a.load'n'.New
 
-local ak=GGH_Mods.load'd'
+local ak=a.load'd'
 local al=ak.New
 local am=ak.Tween
 
@@ -8316,7 +8287,7 @@ Position=UDim2.new(-10,0,-10,0),
 Visible=false,
 Active=false,
 
-Parent=ao.GGH.DropdownGui,
+Parent=ao.WindUI.DropdownGui,
 AnchorPoint=Vector2.new(1,0),
 },{
 ap.UIElements.Menu,
@@ -8332,7 +8303,7 @@ UDim2.fromOffset(0,ap.UIElements.UIListLayout.AbsoluteContentSize.Y)
 end
 
 local function RecalculateListSize()
-local at=ao.GGH.DropdownGui.AbsoluteSize.Y
+local at=ao.WindUI.DropdownGui.AbsoluteSize.Y
 
 local au=ap.UIElements.UIListLayout.AbsoluteContentSize.Y/ao.UIScale
 local av=ap.SearchBarEnabled and(aq.SearchBarHeight+(aq.MenuPadding*3))
@@ -8780,7 +8751,7 @@ end
 
 RecalculateCanvasSize()
 RecalculateListSize()
-else GGH_Mods.load'M'
+else a.load'M'
 :New{Parent=ap.UIElements.Menu.Frame.ScrollingFrame}
 end
 end
@@ -8923,13 +8894,13 @@ aa(game:GetService"UserInputService")
 aa(game:GetService"Players").LocalPlayer:GetMouse()local ae=
 aa(game:GetService"Workspace").CurrentCamera
 
-local af=GGH_Mods.load'd'
+local af=a.load'd'
 local ag=af.New local ah=
 af.Tween
 
-local ai=GGH_Mods.load'w'.New local aj=GGH_Mods.load'n'
+local ai=a.load'w'.New local aj=a.load'n'
 .New
-local ak=GGH_Mods.load'N'.New local al=
+local ak=a.load'N'.New local al=
 
 workspace.CurrentCamera
 
@@ -8973,7 +8944,7 @@ if ap.Values and typeof(ap.Value)=="number"then
 ap.Value=ap.Values[ap.Value]
 end
 
-ap.DropdownFrame=GGH_Mods.load'C'{
+ap.DropdownFrame=a.load'C'{
 Title=ap.Title,
 Desc=ap.Desc,
 Parent=ao.Parent,
@@ -9299,11 +9270,11 @@ return aa end function a.Q()
 
 local aa={}
 
-local af=GGH_Mods.load'd'
+local af=a.load'd'
 local ag=af.New
 local ai=af.Tween
 
-local ak=GGH_Mods.load'P'
+local ak=a.load'P'
 
 function aa.New(al,am,an,ao,ap)
 local aq={
@@ -9536,11 +9507,11 @@ end
 
 return aa end function a.R()
 
-local aa=GGH_Mods.load'd'local af=
+local aa=a.load'd'local af=
 aa.New
 
 
-local ag=GGH_Mods.load'Q'
+local ag=a.load'Q'
 
 local ai={}
 
@@ -9587,7 +9558,7 @@ am.OnCopy()
 end
 end)
 if not ap then
-al.GGH:Notify{
+al.WindUI:Notify{
 Title="Error",
 Content="The "..ao.." is not copied. Error: "..aq,
 Icon="x",
@@ -9595,7 +9566,7 @@ Duration=5,
 }
 end
 end
-end,al.GGH.UIScale)
+end,al.WindUI.UIScale)
 
 function am.SetCode(ap,aq)
 ao.Set(aq)
@@ -9638,7 +9609,7 @@ end
 
 return ai end function a.S()
 
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local af=aa.New local ag=
 aa.Tween
 
@@ -9655,8 +9626,8 @@ al.RenderStepped
 local ao=am.LocalPlayer
 local ap=ao:GetMouse()
 
-local aq=GGH_Mods.load'm'.New
-local ar=GGH_Mods.load'n'.New
+local aq=a.load'm'.New
+local ar=a.load'n'.New
 
 local as={
 UICorner=9,
@@ -9690,7 +9661,7 @@ end
 
 az:SetHSVFromRGB(az.Default)
 
-local b=GGH_Mods.load'o'
+local b=a.load'o'
 local d=b.Create(nil,"Dialog",aw,ax,aw.UIElements.Main.Main)
 
 az.ColorpickerFrame=d
@@ -10433,7 +10404,7 @@ local ax=true
 
 
 
-aw.ColorpickerFrame=GGH_Mods.load'C'{
+aw.ColorpickerFrame=a.load'C'{
 Title=aw.Title,
 Desc=aw.Desc,
 Parent=av.Parent,
@@ -10498,7 +10469,7 @@ aa.AddSignal(aw.UIElements.Colorpicker.MouseButton1Click,function()
 if ax and not aw.IsShowed then
 aw.IsShowed=true
 
-as:Colorpicker(aw,av.Window,av.GGH,function(ay,az)
+as:Colorpicker(aw,av.Window,av.WindUI,function(ay,az)
 aw:Update(ay,az)
 aw.Default=ay
 aw.Transparency=az
@@ -10513,7 +10484,7 @@ end
 
 return as end function a.T()
 
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local af=aa.New
 local ai=aa.Tween
 
@@ -10741,7 +10712,7 @@ end)
 
 local au=am.ElementsModule
 
-au.Load(an,at.Outline.Content,au.Elements,am.Window,am.GGH,function()
+au.Load(an,at.Outline.Content,au.Elements,am.Window,am.WindUI,function()
 if not an.Expandable then
 an.Expandable=true
 ap.Visible=true
@@ -10892,7 +10863,7 @@ end
 
 return ak end function a.U()
 
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local af=aa.New
 
 local ai={}
@@ -10908,7 +10879,7 @@ return"Space",{__type="Space",ElementFrame=am}
 end
 
 return ai end function a.V()
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local af=aa.New
 
 local ai={}
@@ -10977,7 +10948,7 @@ return am.__type,am
 end
 
 return ai end function a.W()
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local af=aa.New
 
 local ai={}
@@ -11011,7 +10982,7 @@ am,
 an,
 ao.Elements,
 al.Window,
-al.GGH,
+al.WindUI,
 function(ap,aq)
 local ar=al.Tab and al.Tab.Gap or(al.Window.NewElements and 1 or 6)
 
@@ -11062,7 +11033,7 @@ return am.__type,am
 end
 
 return ai end function a.X()
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local af=aa.New
 
 local ai={}
@@ -11097,7 +11068,7 @@ am,
 an,
 ao.Elements,
 al.Window,
-al.GGH,
+al.WindUI,
 function(ap,aq)
 local ar=al.Tab and al.Tab.Gap or(al.Window.NewElements and 1 or 6)
 
@@ -11163,7 +11134,7 @@ end
 
 return ai end function a.Y()
 
-local aa=GGH_Mods.load'd'
+local aa=a.load'd'
 local af=aa.New
 
 local ai={}
@@ -11197,7 +11168,7 @@ am,
 an,
 ao.Elements,
 al.Window,
-al.GGH,
+al.WindUI,
 
 
 
@@ -11255,7 +11226,7 @@ end)
 
 local af=aa(game:GetService"UserInputService")
 
-local ai=GGH_Mods.load'd'
+local ai=a.load'd'
 local ak=ai.New
 
 local al={}
@@ -11324,7 +11295,7 @@ and au.Y>=av.Y
 and au.Y<=av.Y+aw.Y
 end
 
-local au=an.GGH.GenerateGUID()
+local au=an.WindUI.GenerateGUID()
 
 ai.AddSignal(at.CanvasGroup.Viewport.MouseEnter,function()
 if ao.Interactive then
@@ -11347,11 +11318,11 @@ if
 (av.UserInputType==Enum.UserInputType.MouseButton1)
 or(av.UserInputType==Enum.UserInputType.Touch and not aq)
 then
-if an.GGH.CurrentInput and an.GGH.CurrentInput~=au then
+if an.WindUI.CurrentInput and an.WindUI.CurrentInput~=au then
 return
 end
 
-an.GGH.CurrentInput=au
+an.WindUI.CurrentInput=au
 
 ap=true
 as=av.Position
@@ -11365,11 +11336,11 @@ if
 av.UserInputType==Enum.UserInputType.MouseButton1
 or av.UserInputType==Enum.UserInputType.Touch
 then
-if an.GGH.CurrentInput and an.GGH.CurrentInput~=au then
+if an.WindUI.CurrentInput and an.WindUI.CurrentInput~=au then
 return
 end
 
-an.GGH.CurrentInput=nil
+an.WindUI.CurrentInput=nil
 
 ap=false
 end
@@ -11488,24 +11459,24 @@ return al end function a._()
 
 return{
 Elements={
-Paragraph=GGH_Mods.load'D',
-Button=GGH_Mods.load'E',
-Toggle=GGH_Mods.load'H',
-Slider=GGH_Mods.load'I',
-ProgressBar=GGH_Mods.load'J',
-Keybind=GGH_Mods.load'K',
-Input=GGH_Mods.load'L',
-Dropdown=GGH_Mods.load'O',
-Code=GGH_Mods.load'R',
-Colorpicker=GGH_Mods.load'S',
-Section=GGH_Mods.load'T',
-Divider=GGH_Mods.load'M',
-Space=GGH_Mods.load'U',
-Image=GGH_Mods.load'V',
-Group=GGH_Mods.load'W',
-HStack=GGH_Mods.load'X',
-VStack=GGH_Mods.load'Y',
-Viewport=GGH_Mods.load'Z',
+Paragraph=a.load'D',
+Button=a.load'E',
+Toggle=a.load'H',
+Slider=a.load'I',
+ProgressBar=a.load'J',
+Keybind=a.load'K',
+Input=a.load'L',
+Dropdown=a.load'O',
+Code=a.load'R',
+Colorpicker=a.load'S',
+Section=a.load'T',
+Divider=a.load'M',
+Space=a.load'U',
+Image=a.load'V',
+Group=a.load'W',
+HStack=a.load'X',
+VStack=a.load'Y',
+Viewport=a.load'Z',
 
 },
 Load=function(aa,af,ai,ak,al,am,an,ao,ap)
@@ -11519,7 +11490,7 @@ at.Index=#aa.Elements+1
 at.GlobalIndex=#ak.AllElements+1
 at.Parent=af
 at.Window=ak
-at.GGH=al
+at.WindUI=al
 at.UIScale=ao
 at.ElementsModule=an local
 
@@ -11543,7 +11514,7 @@ if ay then
 ak.PendingConfigData[at.Flag]=nil
 else
 warn(
-"[ GGH ] Failed to apply pending config for '"
+"[ WindUI ] Failed to apply pending config for '"
 ..at.Flag
 .."': "
 ..tostring(az)
@@ -11645,11 +11616,11 @@ local af=game:GetService"Players"
 aa(game:GetService"UserInputService")
 local ai=af.LocalPlayer:GetMouse()
 
-local ak=GGH_Mods.load'd'
+local ak=a.load'd'
 local al=ak.New
 
-local am=GGH_Mods.load'B'.New
-local an=GGH_Mods.load'x'.New
+local am=a.load'B'.New
+local an=a.load'x'.New
 
 
 
@@ -11668,7 +11639,7 @@ OnChangeFunc=function(ao)end,
 
 function ao.Init(ap,aq,ar,as)
 Window=ap
-GGH=aq
+WindUI=aq
 ao.ToolTipParent=ar
 ao.TabHighlight=as
 return ao
@@ -11997,7 +11968,7 @@ ar.UIElements.ContainerFrame,
 ar.UIElements.ContainerFrameCanvas.ScrollSliderHolder,
 Window,
 4,
-GGH
+WindUI
 )
 end
 
@@ -12088,14 +12059,14 @@ end
 
 
 
-local aA=GGH_Mods.load'_'
+local aA=a.load'_'
 
 aA.Load(
 ar,
 ar.UIElements.ContainerFrame,
 aA.Elements,
 Window,
-GGH,
+WindUI,
 nil,
 aA,
 aq,
@@ -12287,11 +12258,11 @@ return ao end function a.ab()
 local aa={}
 
 
-local af=GGH_Mods.load'd'
+local af=a.load'd'
 local ai=af.New
 local ak=af.Tween
 
-local al=GGH_Mods.load'aa'
+local al=a.load'aa'
 
 function aa.New(am,an,ao,ap,aq)
 local ar={
@@ -12484,7 +12455,7 @@ Margin=8,
 Padding=9,
 }
 
-local ai=GGH_Mods.load'd'
+local ai=a.load'd'
 local ak=ai.New
 local al=ai.Tween
 
@@ -12496,7 +12467,7 @@ Radius=22,
 Width=400,
 MaxHeight=380,
 
-Icons=GGH_Mods.load'ac',
+Icons=a.load'ac',
 }
 
 local aq=ak("TextBox",{
@@ -13025,19 +12996,19 @@ local ak=aa(game:GetService"Players")
 
 local al=workspace.CurrentCamera
 
-local am=GGH_Mods.load't'
+local am=a.load't'
 
-local an=GGH_Mods.load'd'
+local an=a.load'd'
 local ao=an.New
 local ap=an.Tween
 
 
-local aq=GGH_Mods.load'w'.New
-local ar=GGH_Mods.load'm'.New
-local as=GGH_Mods.load'x'.New
-local at=GGH_Mods.load'y'
+local aq=a.load'w'.New
+local ar=a.load'm'.New
+local as=a.load'x'.New
+local at=a.load'y'
 
-local au=GGH_Mods.load'z'
+local au=a.load'z'
 
 
 
@@ -13138,11 +13109,11 @@ aw.Topbar={Height=52,ButtonsType="Default"}
 end
 
 if not ai:IsStudio()and aw.Folder and writefile then
-if not isfolder("GGH/"..aw.Folder)then
-makefolder("GGH/"..aw.Folder)
+if not isfolder("WindUI/"..aw.Folder)then
+makefolder("WindUI/"..aw.Folder)
 end
-if not isfolder("GGH/"..aw.Folder.."/assets")then
-makefolder("GGH/"..aw.Folder.."/assets")
+if not isfolder("WindUI/"..aw.Folder.."/assets")then
+makefolder("WindUI/"..aw.Folder.."/assets")
 end
 if not isfolder(aw.Folder)then
 makefolder(aw.Folder)
@@ -13289,7 +13260,7 @@ aw.UIElements.SideBar,
 aw.UIElements.SideBarContainer.Content,
 aw,
 3,
-av.GGH
+av.WindUI
 )
 end
 
@@ -13575,7 +13546,7 @@ Headers={["User-Agent"]="Roblox/Exploit"},
 writefile(r,u)
 end)
 if not u then
-warn("[ GGH.Window.Background ] Failed to download video: "..tostring(v))
+warn("[ WindUI.Window.Background ] Failed to download video: "..tostring(v))
 end
 end
 
@@ -13583,9 +13554,9 @@ local u,v=pcall(function()
 return getcustomasset(r)
 end)
 if not u then
-warn("[ GGH.Window.Background ] Failed to load custom asset: "..tostring(v))
+warn("[ WindUI.Window.Background ] Failed to load custom asset: "..tostring(v))
 end
-warn"[ GGH.Window.Background ] VideoFrame may not work with custom video"
+warn"[ WindUI.Window.Background ] VideoFrame may not work with custom video"
 l=v
 end
 
@@ -13734,7 +13705,7 @@ AnchorPoint=Vector2.new(0.5,0.5),
 Active=true,
 
 },{
-av.GGH.UIScaleObj,
+av.WindUI.UIScaleObj,
 aw.AcrylicPaint and aw.AcrylicPaint.Frame or nil,
 b,
 an.NewRoundFrame(aw.UICorner,"Squircle",{
@@ -13883,19 +13854,19 @@ PaddingBottom=UDim.new(0,aw.UIPadding),
 an.AddSignal(aw.UIElements.Main.Main.Topbar.Left:GetPropertyChangedSignal"AbsoluteSize",function()
 local z=0
 local A=aw.UIElements.Main.Main.Topbar.Right.UIListLayout.AbsoluteContentSize.X
-/av.GGH.UIScale
+/av.WindUI.UIScale
 
-z=aw.UIElements.Main.Main.Topbar.Left.AbsoluteSize.X/av.GGH.UIScale
+z=aw.UIElements.Main.Main.Topbar.Left.AbsoluteSize.X/av.WindUI.UIScale
 if aw.Topbar.ButtonsType~="Default"then
 z=z+A+aw.UIPadding-4
 end
 
 aw.UIElements.Main.Main.Topbar.Center.Position=
-UDim2.new(0,z+(aw.UIPadding/av.GGH.UIScale),0.5,0)
+UDim2.new(0,z+(aw.UIPadding/av.WindUI.UIScale),0.5,0)
 aw.UIElements.Main.Main.Topbar.Center.Size=UDim2.new(
 1,
 -z
--(aw.UIPadding/av.GGH.UIScale)
+-(aw.UIPadding/av.WindUI.UIScale)
 -(aw.Topbar.ButtonsType=="Default"and A+aw.UIPadding or 0),
 1,
 0
@@ -13906,7 +13877,7 @@ if aw.Topbar.ButtonsType~="Default"then
 an.AddSignal(aw.UIElements.Main.Main.Topbar.Right:GetPropertyChangedSignal"AbsoluteSize",function()
 aw.UIElements.Main.Main.Topbar.Left.Position=UDim2.new(
 0,
-(aw.UIElements.Main.Main.Topbar.Right.AbsoluteSize.X/av.GGH.UIScale)+aw.UIPadding-4,
+(aw.UIElements.Main.Main.Topbar.Right.AbsoluteSize.X/av.WindUI.UIScale)+aw.UIPadding-4,
 0,
 0
 )
@@ -14104,7 +14075,7 @@ end
 aw.UIElements.BackgroundGradient=an.NewRoundFrame(aw.UICorner,"Squircle",{
 Size=UDim2.new(1,0,1,0),
 Parent=aw.UIElements.Main.Background,
-ImageTransparency=aw.Transparent and av.GGH.TransparencyValue or 0,
+ImageTransparency=aw.Transparent and av.WindUI.TransparencyValue or 0,
 },{
 A,
 })
@@ -14123,7 +14094,7 @@ end
 
 
 
-aw.OpenButtonMain=GGH_Mods.load'A'.New(aw)
+aw.OpenButtonMain=a.load'A'.New(aw)
 
 task.spawn(function()
 if aw.Icon then
@@ -14204,7 +14175,7 @@ end
 
 function aw.SetBackgroundTransparency(A,B)
 local C=math.floor(tonumber(B)*10+0.5)/10
-av.GGH.TransparencyValue=C
+av.WindUI.TransparencyValue=C
 aw:ToggleTransparency(C>0)
 end
 
@@ -14229,9 +14200,9 @@ local function SetSize(C)
 ap(aw.UIElements.Main,0.45,{
 Size=not aw.IsFullscreen and B or UDim2.new(
 0,
-(av.GGH.ScreenGui.AbsoluteSize.X-20)/av.GGH.UIScale,
+(av.WindUI.ScreenGui.AbsoluteSize.X-20)/av.WindUI.UIScale,
 0,
-(av.GGH.ScreenGui.AbsoluteSize.Y-20-52)/av.GGH.UIScale
+(av.WindUI.ScreenGui.AbsoluteSize.Y-20-52)/av.WindUI.UIScale
 ),
 },Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 
@@ -14265,7 +14236,7 @@ aw.IsFullscreen=not F
 SetSize(true)
 end
 
-an.AddSignal(av.GGH.ScreenGui:GetPropertyChangedSignal"AbsoluteSize",function()
+an.AddSignal(av.WindUI.ScreenGui:GetPropertyChangedSignal"AbsoluteSize",function()
 if aw.IsFullscreen then
 SetSize()
 end
@@ -14309,7 +14280,7 @@ function aw.OnDestroy(C,F)
 aw.OnDestroyCallback=F
 end
 
-if av.GGH.UseAcrylic then
+if av.WindUI.UseAcrylic then
 aw.AcrylicPaint.AddParent(aw.UIElements.Main)
 end
 
@@ -14358,7 +14329,7 @@ end
 aw.UIElements.Main.Background.ImageTransparency=1
 ap(aw.UIElements.Main.Background,0.4,{
 
-ImageTransparency=aw.Transparent and av.GGH.TransparencyValue or 0,
+ImageTransparency=aw.Transparent and av.WindUI.TransparencyValue or 0,
 },Enum.EasingStyle.Exponential,Enum.EasingDirection.Out):Play()
 
 if i then
@@ -14421,7 +14392,7 @@ aw.UIElements.Main.Visible=true
 
 aw.UIElements.Main:WaitForChild"Main".Visible=true
 
-av.GGH:ToggleAcrylic(true)
+av.WindUI:ToggleAcrylic(true)
 
 end)
 end
@@ -14438,7 +14409,7 @@ an.SafeCallback(aw.OnCloseCallback)
 end)
 end
 
-av.GGH:ToggleAcrylic(false)
+av.WindUI:ToggleAcrylic(false)
 
 if aw.UIElements.Main and aw.UIElements.Main:WaitForChild"Main"then
 aw.UIElements.Main.Main.Visible=false
@@ -14530,10 +14501,10 @@ aw.Destroyed=true
 
 task.wait(0.4)
 
-av.GGH.ScreenGui:Destroy()
-av.GGH.NotificationGui:Destroy()
-av.GGH.DropdownGui:Destroy()
-av.GGH.TooltipGui:Destroy()
+av.WindUI.ScreenGui:Destroy()
+av.WindUI.NotificationGui:Destroy()
+av.WindUI.DropdownGui:Destroy()
+av.WindUI.TooltipGui:Destroy()
 
 an.DisconnectAll()
 
@@ -14557,9 +14528,9 @@ end
 function aw.ToggleTransparency(C,F)
 
 aw.Transparent=F
-av.GGH.Transparent=F
+av.WindUI.Transparent=F
 
-aw.UIElements.Main.Background.ImageTransparency=F and av.GGH.TransparencyValue or 0
+aw.UIElements.Main.Background.ImageTransparency=F and av.WindUI.TransparencyValue or 0
 
 
 end
@@ -14602,12 +14573,12 @@ return F
 end
 
 function aw.GetUIScale(C,F)
-return av.GGH.UIScale
+return av.WindUI.UIScale
 end
 
 function aw.SetUIScale(C,F)
-av.GGH.UIScale=F
-ap(av.GGH.UIScaleObj,0.2,{Scale=F},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+av.WindUI.UIScale=F
+ap(av.WindUI.UIScaleObj,0.2,{Scale=F},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 return aw
 end
 
@@ -14687,9 +14658,9 @@ if aw.OpenButton and typeof(aw.OpenButton)=="table"then
 aw:EditOpenButton(aw.OpenButton)
 end
 
-local C=GGH_Mods.load'aa'
-local F=GGH_Mods.load'ab'
-local G=C.Init(aw,av.GGH,av.GGH.TooltipGui)
+local C=a.load'aa'
+local F=a.load'ab'
+local G=C.Init(aw,av.WindUI,av.WindUI.TooltipGui)
 G:OnChange(function(H)
 aw.CurrentTab=H
 end)
@@ -14698,7 +14669,7 @@ aw.TabModule=G
 
 function aw.Tab(H,J)
 J.Parent=aw.UIElements.SideBar.Frame
-return G.New(J,av.GGH.UIScale)
+return G.New(J,av.WindUI.UIScale)
 end
 
 function aw.SelectTab(H,J)
@@ -14710,7 +14681,7 @@ return F.New(
 J,
 aw.UIElements.SideBar.Frame,
 aw.Folder,
-av.GGH.UIScale,
+av.WindUI.UIScale,
 aw
 )
 end
@@ -14762,7 +14733,7 @@ J,
 return L
 end
 
-local H=GGH_Mods.load'o'
+local H=a.load'o'
 function aw.Dialog(J,L)
 local M={
 Title=L.Title or"Dialog",
@@ -14772,7 +14743,7 @@ Buttons=L.Buttons or{},
 
 TextPadding=14,
 }
-local N=H.Create(false,"Dialog",aw,av.GGH,aw.UIElements.Main.Main)
+local N=H.Create(false,"Dialog",aw,av.WindUI,aw.UIElements.Main.Main)
 
 N.UIElements.Main.Size=UDim2.new(0,M.Width,0,0)
 
@@ -15011,7 +14982,7 @@ M.Window=aw
 return at:New(M,aw.UIElements.Main.Main.Topbar.Center.Holder)
 end
 
-local L=av.GGH.GenerateGUID()
+local L=av.WindUI.GenerateGUID()
 
 local function startResizing(M)
 if aw.CanResize then
@@ -15025,11 +14996,11 @@ ap(az.ImageLabel,0.1,{ImageTransparency=0.35}):Play()
 
 an.AddSignal(M.Changed,function()
 if M.UserInputState==Enum.UserInputState.End then
-if av.GGH.CurrentInput and av.GGH.CurrentInput~=L then
+if av.WindUI.CurrentInput and av.WindUI.CurrentInput~=L then
 return
 end
 
-av.GGH.CurrentInput=nil
+av.WindUI.CurrentInput=nil
 
 isResizing=false
 aA.Active=false
@@ -15046,10 +15017,10 @@ if
 M.UserInputType==Enum.UserInputType.MouseButton1
 or M.UserInputType==Enum.UserInputType.Touch
 then
-if av.GGH.CurrentInput and av.GGH.CurrentInput~=L then
+if av.WindUI.CurrentInput and av.WindUI.CurrentInput~=L then
 return
 end
-av.GGH.CurrentInput=L
+av.WindUI.CurrentInput=L
 
 if aw.CanResize then
 startResizing(M)
@@ -15083,7 +15054,7 @@ end
 end)
 
 an.AddSignal(az.MouseEnter,function()
-if av.GGH.CurrentInput and av.GGH.CurrentInput~=L then
+if av.WindUI.CurrentInput and av.WindUI.CurrentInput~=L then
 return
 end
 if not isResizing then
@@ -15091,7 +15062,7 @@ ap(az.ImageLabel,0.1,{ImageTransparency=0.35}):Play()
 end
 end)
 an.AddSignal(az.MouseLeave,function()
-if av.GGH.CurrentInput and av.GGH.CurrentInput~=L then
+if av.WindUI.CurrentInput and av.WindUI.CurrentInput~=L then
 return
 end
 if not isResizing then
@@ -15145,7 +15116,7 @@ end)
 
 
 if not aw.HideSearchBar then
-local Q=GGH_Mods.load'ad'
+local Q=a.load'ad'
 local R=false
 
 
@@ -15239,9 +15210,9 @@ end end end
 local aa={
 Window=nil,
 Theme=nil,
-Creator=GGH_Mods.load'd',
-LocalizationModule=GGH_Mods.load'e',
-NotificationModule=GGH_Mods.load'f',
+Creator=a.load'd',
+LocalizationModule=a.load'e',
+NotificationModule=a.load'f',
 Themes=nil,
 Transparent=false,
 
@@ -15252,7 +15223,7 @@ UIScale=1,
 ConfigManager=nil,
 Version="0.0.0",
 
-Services=GGH_Mods.load'k',
+Services=a.load'k',
 
 OnThemeChangeFunction=nil,
 
@@ -15314,12 +15285,12 @@ end)
 
 local ap=ak.LocalPlayer or nil
 
-local aq=ai:JSONDecode(GGH_Mods.load'l')
+local aq=ai:JSONDecode(a.load'l')
 if aq then
 aa.Version=aq.version
 end
 
-local ar=GGH_Mods.load'p'
+local ar=a.load'p'
 
 local as=aa.Creator
 
@@ -15328,7 +15299,7 @@ local at=as.New
 
 
 
-local au=GGH_Mods.load't'
+local au=a.load't'
 
 local av=protectgui or(syn and syn.protect_gui)or function()end
 
@@ -15529,11 +15500,11 @@ return f
 end
 
 function aa.Popup(az,aA)
-aA.GGH=aa
-return GGH_Mods.load'u'.new(aA,aa.ScreenGui.Popups)
+aA.WindUI=aa
+return a.load'u'.new(aA,aa.ScreenGui.Popups)
 end
 
-aa.Themes=GGH_Mods.load'v'(aa,as)
+aa.Themes=a.load'v'(aa,as)
 
 as.Themes=aa.Themes
 
@@ -15541,11 +15512,11 @@ aa:SetTheme"Dark"
 aa:SetLanguage(as.Language)
 
 function aa.CreateWindow(az,aA)
-local aB=GGH_Mods.load'ae'
+local aB=a.load'ae'
 
 if not am:IsStudio()and writefile then
-if not isfolder"GGH_Config"then
-makefolder"GGH_Config"
+if not isfolder"GGH"then
+makefolder"GGH"
 end
 if aA.Folder then
 makefolder(aA.Folder)
@@ -15554,7 +15525,7 @@ makefolder(aA.Title)
 end
 end
 
-aA.GGH=aa
+aA.WindUI=aa
 aA.Window=aa.Window
 aA.Parent=aa.ScreenGui.Window
 
@@ -15675,19 +15646,18 @@ return h
 end
 
 
--- GGH Finalization Layer
+-- GGH Exclusive Final Layer - 100% Original Features
 local GGH_Core = aa
 GGH_Core.Version = GGH_VERSION
-GGH_Core.BuildID = GGH_BUILD_ID
-GGH_Core.Author = "GGH Dev Team"
+GGH_Core.Build = GGH_BUILD
+GGH_Core.Author = "GGH Team"
 
--- New GGH-only methods
 function GGH_Core:SetWatermark(text)
-    if self.Window and self.Window.UIElements then
-        pcall(function()
+    pcall(function()
+        if self.Window and self.Window.UIElements and self.Window.UIElements.Main then
             self.Window.WatermarkText = text
-        end)
-    end
+        end
+    end)
 end
 
 function GGH_Core:CreateCustomTheme(name, colors)
@@ -15695,12 +15665,10 @@ function GGH_Core:CreateCustomTheme(name, colors)
 end
 
 function GGH_Core:GetVersion()
-    return "GGH UI v2.1.0 - "..GGH_InternalGuard() and GGH_BUILD_ID or ""
+    return GGH_VERSION.." | "..GGH_BUILD
 end
 
--- Aliases that make API look different from WindUI
 GGH_Core.NewWindow = GGH_Core.CreateWindow
 GGH_Core.NotifySystem = GGH_Core.Notify
-GGH_Core.GGH = GGH_Core
 
 return GGH_Core
