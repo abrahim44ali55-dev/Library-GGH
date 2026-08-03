@@ -965,156 +965,7 @@ local redzlib = {
 			["zoomout"] = "rbxassetid://10747384679"
 		}
 	end)()
-,
-    -- GGH LIB - Global Language System (7 languages + extensible)
-    Languages = {
-        ["en"] = {Name="English", Search="Search...", Close="Close", Minimize="Minimize", Settings="Settings", GetKey="Get Key", EnterKey="Enter Key", KeySystem="Key System", Key="Key", Submit="Submit", CopyLink="Copy Link", KeyLink="Key Link", Language="Language", KeySaved="Key Saved!", InvalidKey="Invalid Key!", Checking="Checking..."},
-        ["ar"] = {Name="العربية", Search="بحث...", Close="إغلاق", Minimize="تصغير", Settings="الإعدادات", GetKey="احصل على المفتاح", EnterKey="أدخل المفتاح", KeySystem="نظام المفتاح", Key="المفتاح", Submit="تأكيد", CopyLink="نسخ الرابط", KeyLink="رابط المفتاح", Language="اللغة", KeySaved="تم حفظ المفتاح!", InvalidKey="مفتاح غير صحيح!", Checking="جاري التحقق..."},
-        ["tr"] = {Name="Türkçe", Search="Ara...", Close="Kapat", Minimize="Küçült", Settings="Ayarlar", GetKey="Anahtar Al", EnterKey="Anahtar Gir", KeySystem="Anahtar Sistemi", Key="Anahtar", Submit="Gönder", CopyLink="Linki Kopyala", KeyLink="Anahtar Linki", Language="Dil", KeySaved="Anahtar Kaydedildi!", InvalidKey="Geçersiz Anahtar!", Checking="Kontrol...", Notification="Bildirim"},
-        ["es"] = {Name="Español", Search="Buscar...", Close="Cerrar", Minimize="Minimizar", Settings="Configuración", GetKey="Obtener Clave", EnterKey="Ingresar Clave", KeySystem="Sistema", Key="Clave", Submit="Enviar", CopyLink="Copiar Enlace", KeyLink="Enlace", Language="Idioma", KeySaved="¡Guardada!", InvalidKey="¡Inválida!", Checking="Verificando..."},
-        ["fr"] = {Name="Français", Search="Rechercher...", Close="Fermer", Minimize="Réduire", Settings="Paramètres", GetKey="Obtenir Clé", EnterKey="Entrer Clé", KeySystem="Système", Key="Clé", Submit="Soumettre", CopyLink="Copier Lien", KeyLink="Lien", Language="Langue", KeySaved="Sauvegardée!", InvalidKey="Invalide!", Checking="Vérification..."},
-        ["de"] = {Name="Deutsch", Search="Suchen...", Close="Schließen", Minimize="Minimieren", Settings="Einstellungen", GetKey="Schlüssel holen", EnterKey="Schlüssel eingeben", KeySystem="System", Key="Schlüssel", Submit="Absenden", CopyLink="Link kopieren", KeyLink="Link", Language="Sprache", KeySaved="Gespeichert!", InvalidKey="Ungültig!", Checking="Prüfung..."},
-        ["ru"] = {Name="Русский", Search="Поиск...", Close="Закрыть", Minimize="Свернуть", Settings="Настройки", GetKey="Получить ключ", EnterKey="Ввести ключ", KeySystem="Система", Key="Ключ", Submit="Отправить", CopyLink="Копировать", KeyLink="Ссылка", Language="Язык", KeySaved="Сохранен!", InvalidKey="Неверный!", Checking="Проверка..."},
-    },
-    CurrentLanguage = "en",
-    CurrentCornerRadius = UDim.new(0, 8),
-    GGH_Version = "2.0 Ultra",
-    GGH_Name = "GGH Lib",
-    GGH_DeviceType = "Desktop"
 }
-
--- GGH Extensions
-redzlib.Corners = {}
-redzlib.GGH_Flags = {}
-
-function redzlib:SetLanguage(code)
-    if self.Languages[code] then
-        self.CurrentLanguage = code
-        if self.OnLanguageChanged then pcall(self.OnLanguageChanged, code) end
-        return true
-    end
-    return false
-end
-
-function redzlib:Translate(key)
-    local l = self.Languages[self.CurrentLanguage] or self.Languages["en"]
-    return l[key] or self.Languages["en"][key] or key
-end
-
-function redzlib:MakeKeySystem(Configs)
-    Configs = Configs or {}
-    local SaveKey = Configs.SaveKey
-    local KeyFile = Configs.SaveFileName or "GGH_Key"
-    if type(SaveKey)=="string" then KeyFile=SaveKey SaveKey=true end
-    if SaveKey==nil then SaveKey=true end
-    local KeyLink = Configs.KeyLink or Configs.Link or "https://example.com/getkey"
-    local Keys = Configs.Keys or Configs.Key or {"GGH_FREE"}
-    if type(Keys)=="string" then Keys={Keys} end
-    local RemoteUrl = Configs.RemoteCheckUrl or Configs.CheckUrl
-    local Enable = Configs.EnableKeySystem
-    if Enable==nil then Enable=true end
-    if Enable==false then if Configs.Callback then pcall(Configs.Callback) end return {Passed=true} end
-    local Callback = Configs.Callback or function() end
-    local Title = Configs.Title or "GGH Key System"
-    local SubTitle = Configs.SubTitle or "Protected by GGH Lib"
-    local ThemeName = Configs.Theme or "Darker"
-    local Theme = self.Themes[ThemeName] or self.Themes.Darker
-    
-    if SaveKey and isfile and isfile(KeyFile..".txt") then
-        local saved = readfile(KeyFile..".txt")
-        for _,k in pairs(Keys) do if saved==k then pcall(Callback) return {Passed=true} end end
-        if RemoteUrl then
-            local ok,res = pcall(function() return game:HttpGet(RemoteUrl.."?key="..saved) end)
-            if ok and res:find("true") then pcall(Callback) return {Passed=true} end
-        end
-    end
-    
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "GGH_KeySystem"
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.IgnoreGuiInset = true
-    if gethui then ScreenGui.Parent = gethui() else ScreenGui.Parent = game:GetService("CoreGui") end
-    
-    local Main = Instance.new("Frame", ScreenGui)
-    Main.Size = UDim2.fromOffset(440, 320)
-    Main.Position = UDim2.new(0.5, -220, 0.5, -160)
-    Main.BackgroundColor3 = Theme["Color Hub 2"]
-    Main.BorderSizePixel=0
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
-    local St = Instance.new("UIStroke", Main) St.Color = Theme["Color Theme"] St.Thickness=2
-    
-    local Top = Instance.new("Frame", Main) Top.Size=UDim2.new(1,0,0,45) Top.BackgroundColor3=Theme["Color Hub 2"] Top.BorderSizePixel=0 Instance.new("UICorner", Top).CornerRadius=UDim.new(0,12) local Fix=Instance.new("Frame", Top) Fix.Size=UDim2.new(1,0,0,12) Fix.Position=UDim2.new(0,0,1,-6) Fix.BackgroundColor3=Top.BackgroundColor3 Fix.BorderSizePixel=0
-    local TitleLbl = Instance.new("TextLabel", Top) TitleLbl.Text=Title TitleLbl.Size=UDim2.new(1,-20,0,20) TitleLbl.Position=UDim2.new(0,15,0,5) TitleLbl.BackgroundTransparency=1 TitleLbl.Font=Enum.Font.GothamBold TitleLbl.TextSize=14 TitleLbl.TextColor3=Theme["Color Text"] TitleLbl.TextXAlignment="Left"
-    local SubLbl = Instance.new("TextLabel", Top) SubLbl.Text=SubTitle SubLbl.Size=UDim2.new(1,-20,0,14) SubLbl.Position=UDim2.new(0,15,0,24) SubLbl.BackgroundTransparency=1 SubLbl.Font=Enum.Font.Gotham SubLbl.TextSize=11 SubLbl.TextColor3=Theme["Color Dark Text"] SubLbl.TextXAlignment="Left"
-    
-    local KeyBox = Instance.new("TextBox", Main) KeyBox.Size=UDim2.new(1,-30,0,44) KeyBox.Position=UDim2.new(0,15,0,65) KeyBox.PlaceholderText="Enter Key Here..." KeyBox.Text="" KeyBox.Font=Enum.Font.GothamSemibold KeyBox.TextSize=13 KeyBox.TextColor3=Theme["Color Text"] KeyBox.BackgroundColor3=Color3.fromRGB(35,35,35) KeyBox.ClearTextOnFocus=false Instance.new("UICorner", KeyBox).CornerRadius=UDim.new(0,8) Instance.new("UIStroke", KeyBox).Color=Theme["Color Stroke"]
-    
-    local Submit = Instance.new("TextButton", Main) Submit.Size=UDim2.new(1,-30,0,38) Submit.Position=UDim2.new(0,15,0,120) Submit.Text="Submit Key" Submit.Font=Enum.Font.GothamBold Submit.TextSize=13 Submit.TextColor3=Color3.new(1,1,1) Submit.BackgroundColor3=Theme["Color Theme"] Instance.new("UICorner", Submit).CornerRadius=UDim.new(0,8)
-    
-    local GetBtn = Instance.new("TextButton", Main) GetBtn.Size=UDim2.new(0.48,-5,0,36) GetBtn.Position=UDim2.new(0,15,0,168) GetBtn.Text="🔗 Get Key" GetBtn.Font=Enum.Font.GothamBold GetBtn.TextSize=12 GetBtn.TextColor3=Theme["Color Text"] GetBtn.BackgroundColor3=Color3.fromRGB(45,45,45) Instance.new("UICorner", GetBtn).CornerRadius=UDim.new(0,8) Instance.new("UIStroke", GetBtn).Color=Theme["Color Stroke"]
-    local CopyBtn = Instance.new("TextButton", Main) CopyBtn.Size=UDim2.new(0.48,-5,0,36) CopyBtn.Position=UDim2.new(0.52,5,0,168) CopyBtn.Text="📋 Copy Link" CopyBtn.Font=Enum.Font.GothamBold CopyBtn.TextSize=12 CopyBtn.TextColor3=Theme["Color Text"] CopyBtn.BackgroundColor3=Color3.fromRGB(45,45,45) Instance.new("UICorner", CopyBtn).CornerRadius=UDim.new(0,8) Instance.new("UIStroke", CopyBtn).Color=Theme["Color Stroke"]
-    
-    local Status = Instance.new("TextLabel", Main) Status.Text="" Status.Size=UDim2.new(1,-30,0,20) Status.Position=UDim2.new(0,15,0,214) Status.BackgroundTransparency=1 Status.Font=Enum.Font.Gotham Status.TextSize=11 Status.TextColor3=Color3.fromRGB(255,80,80) Status.TextXAlignment="Center"
-    
-    local LangBtn = Instance.new("TextButton", Main) LangBtn.Size=UDim2.new(1,-30,0,24) LangBtn.Position=UDim2.new(0,15,1,-40) LangBtn.Text="🌐 Language: English" LangBtn.Font=Enum.Font.Gotham LangBtn.TextSize=11 LangBtn.TextColor3=Theme["Color Dark Text"] LangBtn.BackgroundTransparency=1
-    
-    local UpdateLbl = Instance.new("TextLabel", Main) UpdateLbl.Text="GGH Lib v2.0 | Auto-Update: "..(Configs.AutoUpdate and "ON" or "OFF") UpdateLbl.Size=UDim2.new(1,-30,0,14) UpdateLbl.Position=UDim2.new(0,15,1,-18) UpdateLbl.BackgroundTransparency=1 UpdateLbl.Font=Enum.Font.Gotham UpdateLbl.TextSize=9 UpdateLbl.TextColor3=Theme["Color Dark Text"] UpdateLbl.TextXAlignment="Center"
-    
-    local function CheckKey(k)
-        for _,v in pairs(Keys) do if k==v then return true end end
-        if RemoteUrl then
-            local ok,res = pcall(function() return game:HttpGet(RemoteUrl.."?key="..k) end)
-            if ok and (res:find("true") or res:find("valid")) then return true end
-        end
-        if Configs.CustomCheck then
-            local ok,res = pcall(Configs.CustomCheck, k)
-            if ok and res then return true end
-        end
-        return false
-    end
-    
-    Submit.MouseButton1Click:Connect(function()
-        if KeyBox.Text=="" then Status.Text="Enter a key!" return end
-        Status.Text="Checking..." Status.TextColor3=Color3.fromRGB(255,200,0)
-        task.wait(0.4)
-        if CheckKey(KeyBox.Text) then
-            Status.Text="Correct! Loading..." Status.TextColor3=Color3.fromRGB(0,255,100)
-            if SaveKey and writefile then pcall(function() writefile(KeyFile..".txt", KeyBox.Text) end) end
-            Submit.Text="✓" task.wait(0.6) ScreenGui:Destroy() pcall(Callback)
-        else
-            Status.Text="Invalid Key!" Status.TextColor3=Color3.fromRGB(255,60,60)
-            local origPos = Main.Position
-            for i=1,4 do Main.Position=origPos+UDim2.fromOffset(6,0) task.wait(0.04) Main.Position=origPos+UDim2.fromOffset(-6,0) task.wait(0.04) end Main.Position=origPos
-        end
-    end)
-    GetBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(KeyLink) Status.Text="Link Copied!" Status.TextColor3=Color3.fromRGB(0,200,255) end if Configs.OpenLink then pcall(function() game:GetService("GuiService"):OpenBrowserWindow(KeyLink) end) end end)
-    CopyBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(KeyLink) Status.Text="Copied!" Status.TextColor3=Color3.fromRGB(0,255,100) end end)
-    
-    local langs = {"en","ar","tr","es","fr","de","ru"}
-    local idxLang=1
-    LangBtn.MouseButton1Click:Connect(function()
-        idxLang = idxLang % #langs + 1
-        redzlib.CurrentLanguage = langs[idxLang]
-        local l = redzlib.Languages[redzlib.CurrentLanguage]
-        KeyBox.PlaceholderText = l.EnterKey
-        Submit.Text = l.Submit
-        GetBtn.Text = "🔗 "..l.GetKey
-        CopyBtn.Text = "📋 "..l.CopyLink
-        LangBtn.Text = "🌐 "..l.Name.." - "..l.Language
-    end)
-    
-    if Configs.AutoUpdate and Configs.UpdateUrl then
-        task.spawn(function()
-            local ok,ver = pcall(function() return game:HttpGet(Configs.UpdateUrl) end)
-            if ok and ver and ver~=redzlib.GGH_Version then
-                UpdateLbl.Text = "Update Available: "..ver.." (You: "..redzlib.GGH_Version..")"
-                UpdateLbl.TextColor3 = Color3.fromRGB(255,180,0)
-            end
-        end)
-    end
-    
-    return {Close=function() ScreenGui:Destroy() end}
-end
 
 local ViewportSize = workspace.CurrentCamera.ViewportSize
 local UIScale = ViewportSize.Y / 450
@@ -2862,57 +2713,55 @@ function redzlib:MakeWindow(Configs)
 		end
 		
                 function Tab:AddColorPicker(Configs)
-                    local Name = Configs[1] or Configs.Name or "ColorPicker" local Default = Configs.Default or Color3.fromRGB(255,0,0) local Callback = Configs.Callback or function() end
+                    local Name = Configs[1] or Configs.Name or "ColorPicker"
+                    local Default = Configs.Default or Color3.fromRGB(255,0,0)
+                    local Callback = Configs.Callback or function() end
                     local Button = Create("Frame", Container, {Size = UDim2.new(1, 0, 0, 35), Name = "Option", BackgroundTransparency = 1})
                     local FrameHolder = InsertTheme(Create("Frame", Button, {Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = Theme["Color Hub 2"]}), "Frame")Make("Corner", FrameHolder)
-                    InsertTheme(Create("TextLabel", FrameHolder, {Size = UDim2.new(1, -60, 0, 30), Position = UDim2.new(0, 10, 0, 0), TextColor3 = Theme["Color Text"], Font = Enum.Font.GothamSemibold, TextXAlignment = "Left", BackgroundTransparency = 1, TextSize = 12, Text = Name}), "Text")
-                    local ColorBtn = Create("Frame", FrameHolder, {Size = UDim2.new(0, 40, 0, 18), Position = UDim2.new(1, -50, 0.5, -9), BackgroundColor3 = Default})Make("Corner", ColorBtn, UDim.new(0,4))Make("Stroke", ColorBtn)
-                    local cp={} function cp:Set(c) ColorBtn.BackgroundColor3=c Callback(c) end function cp:Destroy() Button:Destroy() end ColorBtn.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then local h=(tick()%5)/5 ColorBtn.BackgroundColor3=Color3.fromHSV(h,1,1) Callback(ColorBtn.BackgroundColor3) end end) return cp
+                    Create("TextLabel", FrameHolder, {Text=Name, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,-60,1,0), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"})
+                    local ColorBtn = Create("Frame", FrameHolder, {Size=UDim2.new(0,40,0,18), Position=UDim2.new(1,-50,0.5,-9), BackgroundColor3=Default})Make("Corner", ColorBtn, UDim.new(0,4))
+                    local cp = {} function cp:Set(c) ColorBtn.BackgroundColor3=c Callback(c) end function cp:Destroy() Button:Destroy() end ColorBtn.InputBegan:Connect(function(input) if input.UserInputType==Enum.UserInputType.MouseButton1 then local hue=(tick()%5)/5 ColorBtn.BackgroundColor3=Color3.fromHSV(hue,1,1) Callback(ColorBtn.BackgroundColor3) end end) return cp
                 end
                 function Tab:AddProgressBar(Configs)
-                    local Title = Configs[1] or Configs.Title or "Progress" local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,45), BackgroundTransparency=1}) local FrameHolder = InsertTheme(Create("Frame", Holder, {Size=UDim2.new(1,0,0,40), BackgroundColor3=Theme["Color Hub 2"]}), "Frame")Make("Corner", FrameHolder)
-                    InsertTheme(Create("TextLabel", FrameHolder, {Text=Title, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,18), Position=UDim2.new(0,10,0,4), TextXAlignment="Left"}), "Text")
+                    local Title = Configs[1] or Configs.Title or "Progress"
+                    local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,45), BackgroundTransparency=1}) local FrameHolder = InsertTheme(Create("Frame", Holder, {Size=UDim2.new(1,0,0,40), BackgroundColor3=Theme["Color Hub 2"]}), "Frame")Make("Corner", FrameHolder)
+                    Create("TextLabel", FrameHolder, {Text=Title, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,-20,0,18), Position=UDim2.new(0,10,0,4), TextXAlignment="Left"})
                     local Bg = Create("Frame", FrameHolder, {Size=UDim2.new(1,-20,0,6), Position=UDim2.new(0,10,0,26), BackgroundColor3=Color3.fromRGB(50,50,50)})Make("Corner", Bg, UDim.new(1,0)) local Fill=Create("Frame", Bg, {Size=UDim2.new(0,0,1,0), BackgroundColor3=Theme["Color Theme"]})Make("Corner", Fill, UDim.new(1,0))
                     local pb={} function pb:Set(v) CreateTween({Fill, "Size", UDim2.new(math.clamp(v/100,0,1),0,1,0), 0.3}) end function pb:Destroy() Holder:Destroy() end return pb
                 end
                 function Tab:AddKeybind(Configs)
                     local Name = Configs[1] or Configs.Name or "Keybind" local Default = Configs.Default or Enum.KeyCode.F local Callback = Configs.Callback or function() end
                     local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,35), BackgroundTransparency=1}) local FrameHolder = InsertTheme(Create("Frame", Holder, {Size=UDim2.new(1,0,0,30), BackgroundColor3=Theme["Color Hub 2"]}), "Frame")Make("Corner", FrameHolder)
-                    InsertTheme(Create("TextLabel", FrameHolder, {Text=Name, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,-90,1,0), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}), "Text")
+                    Create("TextLabel", FrameHolder, {Text=Name, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,-90,1,0), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"})
                     local KeyBtn = Create("TextButton", FrameHolder, {Size=UDim2.new(0,80,0,20), Position=UDim2.new(1,-85,0.5,-10), Text=Default.Name, Font=Enum.Font.Gotham, TextSize=11, TextColor3=Theme["Color Text"], BackgroundColor3=Color3.fromRGB(45,45,45)})Make("Corner", KeyBtn, UDim.new(0,4))
                     local listening=false KeyBtn.Activated:Connect(function() KeyBtn.Text="..." listening=true end) UserInputService.InputBegan:Connect(function(input,gp) if listening and input.UserInputType==Enum.UserInputType.Keyboard then KeyBtn.Text=input.KeyCode.Name listening=false elseif not gp and input.KeyCode.Name==KeyBtn.Text then pcall(Callback) end end) return {Destroy=function() Holder:Destroy() end}
                 end
                 function Tab:AddInput(Configs)
                     local Name = Configs[1] or Configs.Name or "Input" local Placeholder = Configs.Placeholder or "Enter..." local Callback = Configs.Callback or function() end
                     local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,35), BackgroundTransparency=1}) local FrameHolder = InsertTheme(Create("Frame", Holder, {Size=UDim2.new(1,0,0,30), BackgroundColor3=Theme["Color Hub 2"]}), "Frame")Make("Corner", FrameHolder)
-                    InsertTheme(Create("TextLabel", FrameHolder, {Text=Name, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(0.4,0,1,0), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}), "Text")
+                    Create("TextLabel", FrameHolder, {Text=Name, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(0.4,0,1,0), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"})
                     local Box = Create("TextBox", FrameHolder, {Size=UDim2.new(0,150,0,22), Position=UDim2.new(1,-160,0.5,-11), Text="", PlaceholderText=Placeholder, Font=Enum.Font.Gotham, TextSize=11, TextColor3=Theme["Color Text"], BackgroundColor3=Color3.fromRGB(45,45,45)})Make("Corner", Box, UDim.new(0,4)) Box.FocusLost:Connect(function() pcall(Callback, Box.Text) end) return {Destroy=function() Holder:Destroy() end}
                 end
                 function Tab:AddImage(Configs)
-                    local Image = Configs.Image or Configs[1] or "" local Holder = Create("ImageLabel", Container, {Image=Image, Size=UDim2.new(1,0,0,100), BackgroundTransparency=1, ScaleType=Enum.ScaleType.Fit}) return {Set=function(_,img) Holder.Image=img end Destroy=function() Holder:Destroy() end}
+                    local Image = Configs.Image or Configs[1] or "" local Holder = Create("ImageLabel", Container, {Image=Image, Size=UDim2.new(1,0,0,100), BackgroundTransparency=1, ScaleType=Enum.ScaleType.Fit}) return {Set=function(_,img) Holder.Image=img end, Destroy=function() Holder:Destroy() end}
                 end
                 function Tab:AddCodeBlock(Configs)
-                    local Code = Configs.Code or Configs[1] or "print('GGH')" local Title = Configs.Title or "Code" local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,70), BackgroundColor3=Color3.fromRGB(15,15,15)})Make("Corner", Holder, UDim.new(0,6)) InsertTheme(Create("TextLabel", Holder, {Text=Title, Font=Enum.Font.GothamBold, TextSize=10, TextColor3=Theme["Color Dark Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,16), Position=UDim2.new(0,8,0,0), TextXAlignment="Left"}), "DarkText") InsertTheme(Create("TextLabel", Holder, {Text=Code, Font=Enum.Font.Code, TextSize=11, TextColor3=Color3.fromRGB(180,220,255), BackgroundTransparency=1, Size=UDim2.new(1,-16,1,-20), Position=UDim2.new(0,8,0,16), TextXAlignment="Left", TextYAlignment="Top"}), "Text") local Copy=Create("TextButton", Holder, {Size=UDim2.new(0,45,0,16), Position=UDim2.new(1,-50,0,2), Text="Copy", Font=Enum.Font.GothamBold, TextSize=9, BackgroundColor3=Theme["Color Theme"], TextColor3=Color3.new(1,1,1)})Make("Corner", Copy, UDim.new(0,4)) Copy.Activated:Connect(function() if setclipboard then setclipboard(Code) end end) return {Destroy=function() Holder:Destroy() end}
+                    local Code = Configs.Code or Configs[1] or "print('GGH')" local Title = Configs.Title or "Code" local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,70), BackgroundColor3=Color3.fromRGB(15,15,15)})Make("Corner", Holder, UDim.new(0,6)) Create("TextLabel", Holder, {Text=Title, Font=Enum.Font.GothamBold, TextSize=10, TextColor3=Theme["Color Dark Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,16), Position=UDim2.new(0,8,0,0), TextXAlignment="Left"}) Create("TextLabel", Holder, {Text=Code, Font=Enum.Font.Code, TextSize=11, TextColor3=Color3.fromRGB(180,220,255), BackgroundTransparency=1, Size=UDim2.new(1,-16,1,-20), Position=UDim2.new(0,8,0,16), TextXAlignment="Left", TextYAlignment="Top"}) local Copy=Create("TextButton", Holder, {Size=UDim2.new(0,45,0,16), Position=UDim2.new(1,-50,0,2), Text="Copy", Font=Enum.Font.GothamBold, TextSize=9, BackgroundColor3=Theme["Color Theme"], TextColor3=Color3.new(1,1,1)})Make("Corner", Copy, UDim.new(0,4)) Copy.Activated:Connect(function() if setclipboard then setclipboard(Code) end end) return {Destroy=function() Holder:Destroy() end}
                 end
                 function Tab:AddSwitch(Configs)
-                    local Name = Configs.Name or Configs[1] or "Switch" local Options = Configs.Options or {"Off","Auto","On"} local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,35), BackgroundTransparency=1}) local FrameHolder = InsertTheme(Create("Frame", Holder, {Size=UDim2.new(1,0,0,30), BackgroundColor3=Theme["Color Hub 2"]}), "Frame")Make("Corner", FrameHolder) InsertTheme(Create("TextLabel", FrameHolder, {Text=Name, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,-100,1,0), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}), "Text") local cur=1 local Btn=Create("TextButton", FrameHolder, {Size=UDim2.new(0,80,0,20), Position=UDim2.new(1,-85,0.5,-10), Text=Options[1], Font=Enum.Font.GothamBold, TextSize=11, BackgroundColor3=Color3.fromRGB(60,60,60), TextColor3=Theme["Color Text"]})Make("Corner", Btn, UDim.new(0,4)) Btn.Activated:Connect(function() cur=cur%#Options+1 Btn.Text=Options[cur] end) return {Get=function() return Options[cur] end Destroy=function() Holder:Destroy() end}
+                    local Name = Configs.Name or Configs[1] or "Switch" local Options = Configs.Options or {"Off","Auto","On"} local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,35), BackgroundTransparency=1}) local FrameHolder = InsertTheme(Create("Frame", Holder, {Size=UDim2.new(1,0,0,30), BackgroundColor3=Theme["Color Hub 2"]}), "Frame")Make("Corner", FrameHolder) Create("TextLabel", FrameHolder, {Text=Name, Font=Enum.Font.GothamSemibold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,-100,1,0), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}) local cur=1 local Btn=Create("TextButton", FrameHolder, {Size=UDim2.new(0,80,0,20), Position=UDim2.new(1,-85,0.5,-10), Text=Options[1], Font=Enum.Font.GothamBold, TextSize=11, BackgroundColor3=Color3.fromRGB(60,60,60), TextColor3=Theme["Color Text"]})Make("Corner", Btn, UDim.new(0,4)) Btn.Activated:Connect(function() cur=cur%#Options+1 Btn.Text=Options[cur] end) return {Get=function() return Options[cur] end, Destroy=function() Holder:Destroy() end}
                 end
                 function Tab:AddList(Configs)
-                    local Title = Configs.Title or "List" local Items = Configs.Items or {"Item 1"} local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,100), BackgroundColor3=Theme["Color Hub 2"]})Make("Corner", Holder, UDim.new(0,6)) InsertTheme(Create("TextLabel", Holder, {Text=Title, Font=Enum.Font.GothamBold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}), "Text") local List=Create("ScrollingFrame", Holder, {Size=UDim2.new(1,-10,1,-25), Position=UDim2.new(0,5,0,22), BackgroundTransparency=1, ScrollBarThickness=2, CanvasSize=UDim2.new(0,0,0,0), AutomaticCanvasSize=Enum.AutomaticSize.Y}) Create("UIListLayout", List, {Padding=UDim.new(0,2)}) for _,it in ipairs(Items) do InsertTheme(Create("TextLabel", List, {Text="• "..it, Font=Enum.Font.Gotham, TextSize=11, TextColor3=Theme["Color Dark Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,16), TextXAlignment="Left"}), "DarkText") end return {Destroy=function() Holder:Destroy() end}
+                    local Title = Configs.Title or "List" local Items = Configs.Items or {"Item 1"} local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,100), BackgroundColor3=Theme["Color Hub 2"]})Make("Corner", Holder, UDim.new(0,6)) Create("TextLabel", Holder, {Text=Title, Font=Enum.Font.GothamBold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}) local List=Create("ScrollingFrame", Holder, {Size=UDim2.new(1,-10,1,-25), Position=UDim2.new(0,5,0,22), BackgroundTransparency=1, ScrollBarThickness=2, CanvasSize=UDim2.new(0,0,0,0), AutomaticCanvasSize=Enum.AutomaticSize.Y}) Create("UIListLayout", List, {Padding=UDim.new(0,2)}) for _,it in ipairs(Items) do Create("TextLabel", List, {Text="• "..it, Font=Enum.Font.Gotham, TextSize=11, TextColor3=Theme["Color Dark Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,16), TextXAlignment="Left"}) end return {Destroy=function() Holder:Destroy() end}
                 end
                 function Tab:AddSeparator(Text)
                     local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,18), BackgroundTransparency=1}) Create("Frame", Holder, {Size=UDim2.new(1,0,0,1), Position=UDim2.new(0,0,0.5,0), BackgroundColor3=Theme["Color Stroke"]}) if Text then local L=Create("TextLabel", Holder, {Text=Text, Font=Enum.Font.GothamBold, TextSize=10, TextColor3=Theme["Color Dark Text"], BackgroundColor3=Theme["Color Hub 2"], Size=UDim2.new(0,0,0,14), AutomaticSize=Enum.AutomaticSize.X, Position=UDim2.new(0.5,0,0.5,-7), AnchorPoint=Vector2.new(0.5,0)}) end return {Destroy=function() Holder:Destroy() end}
                 end
                 function Tab:AddRadioGroup(Configs)
-                    local Name = Configs.Name or "Radio" local Options = Configs.Options or {"A","B"} local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,#Options*28+25), BackgroundColor3=Theme["Color Hub 2"]})Make("Corner", Holder, UDim.new(0,6)) InsertTheme(Create("TextLabel", Holder, {Text=Name, Font=Enum.Font.GothamBold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}), "Text") local sel=Options[1] for i,opt in ipairs(Options) do local b=Create("TextButton", Holder, {Size=UDim2.new(1,-20,0,22), Position=UDim2.new(0,10,0,18+(i-1)*26), Text=(i==1 and "● " or "○ ")..opt, Font=Enum.Font.Gotham, TextSize=11, TextColor3=Theme["Color Dark Text"], BackgroundTransparency=1, TextXAlignment="Left"}) b.Activated:Connect(function() sel=opt for _,ch in pairs(Holder:GetChildren()) do if ch:IsA("TextButton") then ch.Text="○ "..ch.Text:sub(4) end end b.Text="● "..opt end) end return {Get=function() return sel end Destroy=function() Holder:Destroy() end}
+                    local Name = Configs.Name or "Radio" local Options = Configs.Options or {"A","B"} local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,#Options*28+25), BackgroundColor3=Theme["Color Hub 2"]})Make("Corner", Holder, UDim.new(0,6)) Create("TextLabel", Holder, {Text=Name, Font=Enum.Font.GothamBold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}) local sel=Options[1] for i,opt in ipairs(Options) do local b=Create("TextButton", Holder, {Size=UDim2.new(1,-20,0,22), Position=UDim2.new(0,10,0,18+(i-1)*26), Text=(i==1 and "● " or "○ ")..opt, Font=Enum.Font.Gotham, TextSize=11, TextColor3=Theme["Color Dark Text"], BackgroundTransparency=1, TextXAlignment="Left"}) b.Activated:Connect(function() sel=opt for _,ch in pairs(Holder:GetChildren()) do if ch:IsA("TextButton") then ch.Text="○ "..ch.Text:sub(4) end end b.Text="● "..opt end) end return {Get=function() return sel end, Destroy=function() Holder:Destroy() end}
                 end
-                function Tab:AddLabel(Text)
-                    local Holder = Create("TextLabel", Container, {Text=Text or "Label", Font=Enum.Font.Gotham, TextSize=12, TextColor3=Theme["Color Dark Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,20), TextXAlignment="Left", AutomaticSize=Enum.AutomaticSize.Y, TextWrapped=true}) return {Set=function(_,t) Holder.Text=t end Destroy=function() Holder:Destroy() end}
-                end
-                function Tab:AddGraph(Configs)
-                    local Name = Configs.Name or "Graph" local Holder = Create("Frame", Container, {Size=UDim2.new(1,0,0,90), BackgroundColor3=Theme["Color Hub 2"]})Make("Corner", Holder, UDim.new(0,6)) InsertTheme(Create("TextLabel", Holder, {Text=Name, Font=Enum.Font.GothamBold, TextSize=12, TextColor3=Theme["Color Text"], BackgroundTransparency=1, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,10,0,0), TextXAlignment="Left"}), "Text") local Bg=Create("Frame", Holder, {Size=UDim2.new(1,-20,0,50), Position=UDim2.new(0,10,0,28), BackgroundColor3=Color3.fromRGB(30,30,30)})Make("Corner", Bg, UDim.new(0,6)) local bars={} for i=1,10 do local bar=Create("Frame", Bg, {Size=UDim2.new(0.08,0,math.random(20,80)/100,0), Position=UDim2.new((i-1)*0.1,2,1,0), AnchorPoint=Vector2.new(0,1), BackgroundColor3=Theme["Color Theme"]})Make("Corner", bar, UDim.new(0,3)) table.insert(bars,bar) end return {Update=function(_,data) for i,v in ipairs(data) do if bars[i] then bars[i].Size=UDim2.new(0.08,0,v/100,0) end end end, Destroy=function() Holder:Destroy() end}
-                end
-                function Tab:AddDiscordInvite(Configs)
+
+function Tab:AddDiscordInvite(Configs)
 			local Title = Configs[1] or Configs.Name or Configs.Title or "Discord"
 			local Desc = Configs.Desc or Configs.Description or ""
 			local Logo = Configs[2] or Configs.Logo or ""
@@ -3016,6 +2865,5 @@ function redzlib:MakeWindow(Configs)
 end
 
 redzlib.GGH = redzlib
-_G.GGHLib = redzlib
-_G.redzlib = redzlib
+GGHLib = redzlib
 return redzlib
