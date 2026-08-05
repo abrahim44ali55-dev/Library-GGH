@@ -38,20 +38,20 @@ end
 
 local Themes = {
     ["Dark"] = {
-        MainBg = Color3.fromRGB(16,16,20),
-        HeaderBg = Color3.fromRGB(24,24,30),
-        TabListBg = Color3.fromRGB(20,20,26),
-        ElementBg = Color3.fromRGB(28,28,36),
-        ElementBg2 = Color3.fromRGB(36,36,46),
+        MainBg = Color3.fromRGB(13,13,16),
+        HeaderBg = Color3.fromRGB(22,22,28),
+        TabListBg = Color3.fromRGB(18,18,22),
+        ElementBg = Color3.fromRGB(26,26,32),
+        ElementBg2 = Color3.fromRGB(32,32,40),
         Text = Color3.fromRGB(255,255,255),
-        SubText = Color3.fromRGB(160,160,175),
-        SectionText = Color3.fromRGB(120,120,135),
-        ParagraphText = Color3.fromRGB(210,210,220),
+        SubText = Color3.fromRGB(150,150,165),
+        SectionText = Color3.fromRGB(115,115,130),
+        ParagraphText = Color3.fromRGB(200,200,210),
         Accent = Color3.fromRGB(90,70,255),
-        Stroke = Color3.fromRGB(50,50,62),
-        StrokeLight = Color3.fromRGB(65,65,80),
-        CloseBg = Color3.fromRGB(75,35,42),
-        CloseText = Color3.fromRGB(255,100,100),
+        Stroke = Color3.fromRGB(45,45,58),
+        StrokeLight = Color3.fromRGB(60,60,70),
+        CloseBg = Color3.fromRGB(70,32,40),
+        CloseText = Color3.fromRGB(255,95,95),
     },
     ["Midnight Blue"] = {
         MainBg = Color3.fromRGB(10,14,23),
@@ -500,33 +500,28 @@ function GGH:CreateWindow(Config)
     Main.Size = UDim2.new(0, 520, 0, 340)
     Main.Position = UDim2.new(0.5, -260, 0.5, -170)
     Main.BackgroundColor3 = CurrentTheme.MainBg
-    Main.BackgroundTransparency = 0.08 -- WindUI transparency
+    Main.BackgroundTransparency = 0.02
     Main.BorderSizePixel = 0
-    Main.ClipsDescendants = true -- FIXED: Prevent overflow when scrolling
+    Main.ClipsDescendants = true
     Main.Parent = ScreenGui
-    Corner(Main, 18) -- WindUI squircle
+    Corner(Main, 18)
     local MainStroke = Stroke(Main, CurrentTheme.Stroke, 1)
     MainStroke.Name = "MainStroke"
-    MainStroke.Transparency = 0.3 -- More transparent stroke for WindUI
-    -- WindUI Shadow + Blur effect
-    local Shadow = Instance.new("ImageLabel", ScreenGui)
-    Shadow.Name = "Shadow"
-    Shadow.Size = UDim2.new(0, 560, 0, 380)
-    Shadow.Position = UDim2.new(0, Main.Position.X.Offset -20, 0, Main.Position.Y.Offset -20)
-    Shadow.BackgroundTransparency = 1
-    Shadow.Image = "rbxassetid://1316045217"
-    Shadow.ImageColor3 = Color3.fromRGB(0,0,0)
-    Shadow.ImageTransparency = 0.55
-    Shadow.ScaleType = Enum.ScaleType.Slice
-    Shadow.SliceCenter = Rect.new(10,10,118,118)
-    Shadow.ZIndex = -1
-    Main:GetPropertyChangedSignal("Position"):Connect(function() Shadow.Position = UDim2.new(0, Main.Position.X.Offset -20, 0, Main.Position.Y.Offset -20) end)
-    Main:GetPropertyChangedSignal("Size"):Connect(function() Shadow.Size = UDim2.new(0, Main.Size.X.Offset +40, 0, Main.Size.Y.Offset +40) Shadow.Position = UDim2.new(0, Main.Position.X.Offset -20, 0, Main.Position.Y.Offset -20) end)
+    MainStroke.Transparency = 0.5
+    local BackgroundImage = Instance.new("ImageLabel", Main)
+    BackgroundImage.Name = "BackgroundImage"
+    BackgroundImage.Size = UDim2.new(1,0,1,0)
+    BackgroundImage.BackgroundTransparency = 1
+    BackgroundImage.Image = ""
+    BackgroundImage.ImageTransparency = 1
+    BackgroundImage.ScaleType = Enum.ScaleType.Crop
+    BackgroundImage.ZIndex = 0
+    Corner(BackgroundImage, 18)
     local Header = Instance.new("Frame", Main)
     Header.Name = "Header"
-    Header.Size = UDim2.new(1,0,0,52)
+    Header.Size = UDim2.new(1,0,0,50)
     Header.BackgroundColor3 = CurrentTheme.HeaderBg
-    Header.BackgroundTransparency = 0.1 -- WindUI transparent header
+    Header.BackgroundTransparency = 0.02
     Header.BorderSizePixel = 0
     Header.ZIndex = 10
     Corner(Header, 18)
@@ -535,18 +530,16 @@ function GGH:CreateWindow(Config)
     HeaderFix.Size = UDim2.new(1,0,0,18)
     HeaderFix.Position = UDim2.new(0,0,1,-9)
     HeaderFix.BackgroundColor3 = CurrentTheme.HeaderBg
-    HeaderFix.BackgroundTransparency = 0.1
+    HeaderFix.BackgroundTransparency = 0.02
     HeaderFix.BorderSizePixel = 0
     HeaderFix.ZIndex = 9
-    -- WindUI top accent line
     local AccentLine = Instance.new("Frame", Header)
-    AccentLine.Name = "AccentLine"
     AccentLine.Size = UDim2.new(1,0,0,1)
     AccentLine.Position = UDim2.new(0,0,1,0)
     AccentLine.BackgroundColor3 = CurrentTheme.Accent
-    AccentLine.BackgroundTransparency = 0.5
-    AccentLine.BorderSizePixel = 0
+    AccentLine.BackgroundTransparency = 0.7
     AccentLine.ZIndex = 11
+    AccentLine.BorderSizePixel = 0
     local TitleLabel = Instance.new("TextLabel", Header)
     TitleLabel.Text = Title
     TitleLabel.Position = UDim2.new(0,18,0,7)
@@ -579,36 +572,33 @@ function GGH:CreateWindow(Config)
     SearchBtn.Size = UDim2.new(0,32,0,32)
     SearchBtn.Position = UDim2.new(0,0,0,0)
     SearchBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-    SearchBtn.BackgroundTransparency = 0.2
     SearchBtn.Text = "🔍"
     SearchBtn.Font = Enum.Font.GothamBold
     SearchBtn.TextSize = 14
     SearchBtn.TextColor3 = CurrentTheme.Text
     SearchBtn.ZIndex = 10
-    Corner(SearchBtn, 10) -- More rounded WindUI
+    Corner(SearchBtn, 9)
     local ThemeBtn = Instance.new("TextButton", Controls)
     ThemeBtn.Name = "ThemeBtn"
     ThemeBtn.Size = UDim2.new(0,32,0,32)
     ThemeBtn.Position = UDim2.new(0,36,0,0)
     ThemeBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-    ThemeBtn.BackgroundTransparency = 0.2
     ThemeBtn.Text = "⚙"
     ThemeBtn.Font = Enum.Font.GothamBold
     ThemeBtn.TextSize = 16
     ThemeBtn.TextColor3 = CurrentTheme.Text
     ThemeBtn.ZIndex = 10
-    Corner(ThemeBtn, 10)
+    Corner(ThemeBtn, 9)
     local MinBtn = Instance.new("TextButton", Controls)
     MinBtn.Size = UDim2.new(0,32,0,32)
     MinBtn.Position = UDim2.new(0,74,0,0)
     MinBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-    MinBtn.BackgroundTransparency = 0.2
     MinBtn.Text = "-"
     MinBtn.Font = Enum.Font.GothamBold
     MinBtn.TextSize = 20
     MinBtn.TextColor3 = CurrentTheme.Text
     MinBtn.ZIndex = 10
-    Corner(MinBtn, 10)
+    Corner(MinBtn, 9)
     local MaxBtn = Instance.new("TextButton", Controls)
     MaxBtn.Size = UDim2.new(0,32,0,32)
     MaxBtn.Position = UDim2.new(0,74,0,0)
@@ -621,15 +611,17 @@ function GGH:CreateWindow(Config)
     MaxBtn.ZIndex = 10
     Corner(MaxBtn, 9)
     local CloseBtn = Instance.new("TextButton", Controls)
+    CloseBtn.Name = "CloseBtn"
     CloseBtn.Size = UDim2.new(0,32,0,32)
     CloseBtn.Position = UDim2.new(0,112,0,0)
     CloseBtn.BackgroundColor3 = CurrentTheme.CloseBg
-    CloseBtn.BackgroundTransparency = 0.15
-    CloseBtn.Text = "✕"
+    CloseBtn.BackgroundTransparency = 0.05
+    CloseBtn.Text = "X"
     CloseBtn.Font = Enum.Font.GothamBold
     CloseBtn.TextSize = 13
     CloseBtn.TextColor3 = CurrentTheme.CloseText
     CloseBtn.ZIndex = 10
+    CloseBtn.AutoButtonColor = false
     Corner(CloseBtn, 10)
     local SearchBar = Instance.new("Frame", Main)
     SearchBar.Name = "SearchBar"
@@ -689,17 +681,16 @@ function GGH:CreateWindow(Config)
     TLP.PaddingTop = UDim.new(0,4) TLP.PaddingBottom = UDim.new(0,4) TLP.PaddingLeft = UDim.new(0,4) TLP.PaddingRight = UDim.new(0,4)
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
-    TabList.Size = UDim2.new(0,132,1,-62)
-    TabList.Position = UDim2.new(0,8,0,56)
+    TabList.Size = UDim2.new(0,132,1,-60)
+    TabList.Position = UDim2.new(0,8,0,54)
     TabList.BackgroundColor3 = CurrentTheme.TabListBg
-    TabList.BackgroundTransparency = 0.15 -- WindUI transparent
+    TabList.BackgroundTransparency = 0.05
     TabList.BorderSizePixel = 0
     TabList.CanvasSize = UDim2.new(0,0,0,0)
     TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
     TabList.ScrollBarThickness = 3
     TabList.ScrollBarImageColor3 = CurrentTheme.Accent
-    TabList.ScrollBarImageTransparency = 0.3
-    TabList.ClipsDescendants = true -- FIXED: Clip scrolling
+    TabList.ClipsDescendants = true
     TabList.ZIndex = 5
     Corner(TabList, 12)
     local TLLayout = Instance.new("UIListLayout", TabList)
@@ -709,17 +700,17 @@ function GGH:CreateWindow(Config)
     TLP2.PaddingTop = UDim.new(0,6) TLP2.PaddingBottom = UDim.new(0,6) TLP2.PaddingLeft = UDim.new(0,6) TLP2.PaddingRight = UDim.new(0,6)
     local Container = Instance.new("Frame", Main)
     Container.Name = "Container"
-    Container.Size = UDim2.new(1,-152,1,-62)
-    Container.Position = UDim2.new(0,144,0,56)
+    Container.Size = UDim2.new(1,-152,1,-60)
+    Container.Position = UDim2.new(0,144,0,54)
     Container.BackgroundTransparency = 1
-    Container.ClipsDescendants = true -- FIXED: Prevent overflow
+    Container.ClipsDescendants = true
     Container.ZIndex = 5
     local ConfirmFrame = Instance.new("Frame", ScreenGui)
     ConfirmFrame.Name = "ConfirmOverlay"
     ConfirmFrame.Size = Main.Size
     ConfirmFrame.Position = Main.Position
     ConfirmFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    ConfirmFrame.BackgroundTransparency = 0.4
+    ConfirmFrame.BackgroundTransparency = 0.5
     ConfirmFrame.Visible = false
     ConfirmFrame.ZIndex = 200
     Corner(ConfirmFrame, 16)
@@ -954,13 +945,20 @@ function GGH:CreateWindow(Config)
         local TabButton = Instance.new("TextButton", TabList)
         TabButton.Size = UDim2.new(1,0,0,34)
         TabButton.BackgroundColor3 = CurrentTheme.ElementBg
+        TabButton.BackgroundTransparency = 0.05
         TabButton.Text = Name
+        TabButton.TextTruncate = Enum.TextTruncate.AtEnd
+        TabButton.TextXAlignment = Enum.TextXAlignment.Left
         TabButton.Font = Enum.Font.GothamMedium
-        TabButton.TextSize = 12
+        TabButton.TextSize = 11
         TabButton.TextColor3 = Color3.fromRGB(170,170,180)
         TabButton.AutoButtonColor = false
         TabButton.AutoLocalize = true
-        Corner(TabButton, 8)
+        TabButton.ClipsDescendants = true
+        Corner(TabButton, 10)
+        local tabPad = Instance.new("UIPadding", TabButton)
+        tabPad.PaddingLeft = UDim.new(0,10)
+        tabPad.PaddingRight = UDim.new(0,6)
         RegisterThemable(TabButton, "BackgroundColor3", "ElementBg")
         local TabPage = Instance.new("ScrollingFrame", Container)
         TabPage.Name = Name.."Page"
@@ -973,9 +971,8 @@ function GGH:CreateWindow(Config)
         TabPage.ScrollBarImageColor3 = CurrentTheme.Accent
         TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
         TabPage.BorderSizePixel = 0
-        TabPage.ClipsDescendants = true -- FIXED: Clip content when scrolling
+        TabPage.ClipsDescendants = true
         TabPage.ZIndex = 6
-        TabPage.ScrollBarImageTransparency = 0.4
         RegisterThemable(TabPage, "ScrollBar", "Accent")
         local Layout = Instance.new("UIListLayout", TabPage)
         Layout.Padding = UDim.new(0, 8)
@@ -998,7 +995,6 @@ function GGH:CreateWindow(Config)
             local SecFrame = Instance.new("Frame", TabPage)
             SecFrame.Size = UDim2.new(1,-4,0,26)
             SecFrame.BackgroundTransparency = 1
-            SecFrame.ZIndex = 7
             AddSearch(SecFrame, Cfg.Title or "Section", "Section", Name)
             local Dot = Instance.new("Frame", SecFrame)
             Dot.Size = UDim2.new(0,6,0,6)
@@ -1051,17 +1047,15 @@ function GGH:CreateWindow(Config)
 
         local function CreateButton(Cfg)
             local Btn = Instance.new("TextButton", TabPage)
-            Btn.Size = UDim2.new(1,-4,0,36)
+            Btn.Size = UDim2.new(1,-4,0,34)
             Btn.BackgroundColor3 = CurrentTheme.ElementBg2
-            Btn.BackgroundTransparency = 0.1
             Btn.Text = Cfg.Title
             Btn.Font = Enum.Font.GothamMedium
             Btn.TextSize = 12
             Btn.TextColor3 = CurrentTheme.Text
             Btn.AutoButtonColor = false
             Btn.AutoLocalize = true
-            Btn.ZIndex = 7
-            Corner(Btn, 10)
+            Corner(Btn, 8)
             local st = Stroke(Btn, CurrentTheme.StrokeLight, 1)
             RegisterThemable(Btn, "BackgroundColor3", "ElementBg2")
             RegisterThemable(Btn, "TextColor3", "Text")
@@ -1492,7 +1486,12 @@ function GGH:CreateWindow(Config)
             elseif Type == "label" then CreateLabel(Cfg)
             elseif Type == "separator" or Type == "line" or Type == "divider" then CreateSeparator(Cfg)
             elseif Type == "image" or Type == "img" or Type == "logo" then CreateImage(Cfg)
-            else warn("[GGH Library v1.8.0] Unknown Add type: "..tostring(Type))
+            elseif Type == "groupbox" or Type == "group" then CreateGroupbox(Cfg)
+            elseif Type == "checkbox" or Type == "check" then CreateCheckbox(Cfg)
+            elseif Type == "textarea" or Type == "area" then CreateTextArea(Cfg)
+            elseif Type == "progress" or Type == "bar" then CreateProgress(Cfg)
+            elseif Type == "divider" or Type == "heading" then CreateDivider(Cfg)
+            else warn("[GGH Library v1.8.2] Unknown Add type: "..tostring(Type))
             end
         end
 
@@ -1510,6 +1509,11 @@ function GGH:CreateWindow(Config)
         function Elements:Label(Cfg) return self:Add("Label", Cfg) end
         function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
+        function Elements:Groupbox(Cfg) return self:Add("Groupbox", Cfg) end
+        function Elements:Checkbox(Cfg) return self:Add("Checkbox", Cfg) end
+        function Elements:TextArea(Cfg) return self:Add("TextArea", Cfg) end
+        function Elements:Progress(Cfg) return self:Add("Progress", Cfg) end
+        function Elements:Divider(Cfg) return self:Add("Divider", Cfg) end
 
         return Elements
     end
