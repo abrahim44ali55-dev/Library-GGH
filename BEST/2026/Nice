@@ -39,15 +39,15 @@ end
 
 local Themes = {
     ["Dark"] = {
-        MainBg = Color3.fromRGB(18,18,22),
-        HeaderBg = Color3.fromRGB(26,26,32),
-        TabListBg = Color3.fromRGB(22,22,28),
-        ElementBg = Color3.fromRGB(32,32,40),
-        ElementBg2 = Color3.fromRGB(42,42,52),
+        MainBg = Color3.fromRGB(16,16,20),
+        HeaderBg = Color3.fromRGB(24,24,30),
+        TabListBg = Color3.fromRGB(20,20,26),
+        ElementBg = Color3.fromRGB(30,30,38),
+        ElementBg2 = Color3.fromRGB(40,40,50),
         Text = Color3.fromRGB(255,255,255),
         SubText = Color3.fromRGB(180,180,190),
-        SectionText = Color3.fromRGB(140,140,150),
-        ParagraphText = Color3.fromRGB(220,220,230),
+        SectionText = Color3.fromRGB(150,150,160),
+        ParagraphText = Color3.fromRGB(235,235,240),
         Accent = Color3.fromRGB(90,70,255),
         Stroke = Color3.fromRGB(55,55,65),
         StrokeLight = Color3.fromRGB(70,70,80),
@@ -496,52 +496,38 @@ function GGH:CreateWindow(Config)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
+    -- Natural small size if not set: 480x320 (small not long wide)
+    local defaultW = Config.Width or 480
+    local defaultH = Config.Height or 320
     local Main = Instance.new("Frame")
     Main.Name = "Main"
-    Main.Size = UDim2.new(0, Config.Width or 520, 0, Config.Height or 380)
-    Main.Position = UDim2.new(0.5, -(Config.Width or 520)/2, 0.5, -(Config.Height or 380)/2)
+    Main.Size = UDim2.new(0, defaultW, 0, defaultH)
+    Main.Position = UDim2.new(0.5, -defaultW/2, 0.5, -defaultH/2)
     Main.BackgroundColor3 = CurrentTheme.MainBg
-    Main.BackgroundTransparency = Config.Transparency or Config.BackgroundTransparency or 0
+    Main.BackgroundTransparency = Config.Transparency or 0
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
     Main.Parent = ScreenGui
-    Corner(Main, 18)
+    Corner(Main, 16)
     local MainStroke = Stroke(Main, CurrentTheme.Stroke, 1)
     MainStroke.Name = "MainStroke"
     MainStroke.Transparency = 0.5
     local Header = Instance.new("Frame", Main)
     Header.Name = "Header"
-    Header.Size = UDim2.new(1,0,0,52)
+    Header.Size = UDim2.new(1,0,0,48)
     Header.BackgroundColor3 = CurrentTheme.HeaderBg
     Header.BackgroundTransparency = 0
     Header.BorderSizePixel = 0
     Header.ZIndex = 20
-    Corner(Header, 18)
+    Corner(Header, 16)
     local HeaderFix = Instance.new("Frame", Header)
     HeaderFix.Name = "HeaderFix"
-    HeaderFix.Size = UDim2.new(1,0,0,18)
-    HeaderFix.Position = UDim2.new(0,0,1,-9)
+    HeaderFix.Size = UDim2.new(1,0,0,16)
+    HeaderFix.Position = UDim2.new(0,0,1,-8)
     HeaderFix.BackgroundColor3 = CurrentTheme.HeaderBg
     HeaderFix.BackgroundTransparency = 0
     HeaderFix.BorderSizePixel = 0
     HeaderFix.ZIndex = 19
-    local function UpdateHeader()
-        local w = Main.AbsoluteSize.X
-        if w < 400 then
-            TitleLabel.Size = UDim2.new(0,100,0,18)
-            SubLabel.Visible = false
-        elseif w < 500 then
-            TitleLabel.Size = UDim2.new(0,150,0,18)
-            SubLabel.Visible = true
-            SubLabel.Size = UDim2.new(0,150,0,12)
-        else
-            TitleLabel.Size = UDim2.new(0,200,0,18)
-            SubLabel.Visible = true
-            SubLabel.Size = UDim2.new(0,200,0,12)
-        end
-    end
-    Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateHeader)
-    task.spawn(function() task.wait(0.5) UpdateHeader() end)
     local AccentLine = Instance.new("Frame", Header)
     AccentLine.Size = UDim2.new(1,0,0,1)
     AccentLine.Position = UDim2.new(0,0,1,0)
@@ -578,43 +564,43 @@ function GGH:CreateWindow(Config)
     Controls.ZIndex = 10
     local SearchBtn = Instance.new("TextButton", Controls)
     SearchBtn.Name = "SearchBtn"
-    SearchBtn.Size = UDim2.new(0,32,0,32)
-    SearchBtn.Position = UDim2.new(0,0,0,0)
+    SearchBtn.Size = UDim2.new(0,26,0,26)
+    SearchBtn.Position = UDim2.new(0,0,0,1)
     SearchBtn.BackgroundColor3 = CurrentTheme.ElementBg2
     SearchBtn.BackgroundTransparency = 0
     SearchBtn.Text = "🔍"
     SearchBtn.Font = Enum.Font.GothamBold
-    SearchBtn.TextSize = 14
+    SearchBtn.TextSize = 12
     SearchBtn.TextColor3 = CurrentTheme.Text
-    SearchBtn.ZIndex = 25
+    SearchBtn.ZIndex = 26
     SearchBtn.AutoButtonColor = false
-    Corner(SearchBtn, 10)
+    Corner(SearchBtn, 7)
     local ThemeBtn = Instance.new("TextButton", Controls)
     ThemeBtn.Name = "ThemeBtn"
-    ThemeBtn.Size = UDim2.new(0,32,0,32)
-    ThemeBtn.Position = UDim2.new(0,36,0,0)
+    ThemeBtn.Size = UDim2.new(0,26,0,26)
+    ThemeBtn.Position = UDim2.new(0,28,0,1)
     ThemeBtn.BackgroundColor3 = CurrentTheme.ElementBg2
     ThemeBtn.BackgroundTransparency = 0
     ThemeBtn.Text = "⚙"
     ThemeBtn.Font = Enum.Font.GothamBold
-    ThemeBtn.TextSize = 16
+    ThemeBtn.TextSize = 13
     ThemeBtn.TextColor3 = CurrentTheme.Text
-    ThemeBtn.ZIndex = 25
+    ThemeBtn.ZIndex = 26
     ThemeBtn.AutoButtonColor = false
-    Corner(ThemeBtn, 10)
+    Corner(ThemeBtn, 7)
     local MinBtn = Instance.new("TextButton", Controls)
     MinBtn.Name = "MinBtn"
-    MinBtn.Size = UDim2.new(0,32,0,32)
-    MinBtn.Position = UDim2.new(0,72,0,0)
+    MinBtn.Size = UDim2.new(0,26,0,26)
+    MinBtn.Position = UDim2.new(0,56,0,1)
     MinBtn.BackgroundColor3 = CurrentTheme.ElementBg2
     MinBtn.BackgroundTransparency = 0
     MinBtn.Text = "-"
     MinBtn.Font = Enum.Font.GothamBold
-    MinBtn.TextSize = 20
+    MinBtn.TextSize = 16
     MinBtn.TextColor3 = CurrentTheme.Text
-    MinBtn.ZIndex = 25
+    MinBtn.ZIndex = 26
     MinBtn.AutoButtonColor = false
-    Corner(MinBtn, 10)
+    Corner(MinBtn, 7)
     local MaxBtn = Instance.new("TextButton", Controls)
     MaxBtn.Size = UDim2.new(0,32,0,32)
     MaxBtn.Position = UDim2.new(0,74,0,0)
@@ -626,105 +612,28 @@ function GGH:CreateWindow(Config)
     MaxBtn.TextColor3 = CurrentTheme.Text
     MaxBtn.ZIndex = 10
     Corner(MaxBtn, 9)
-    -- 5th button: Float toggle
-    local FloatBtn = Instance.new("TextButton", Controls)
-    FloatBtn.Name = "FloatBtn"
-    FloatBtn.Size = UDim2.new(0,32,0,32)
-    FloatBtn.Position = UDim2.new(0,108,0,0)
-    FloatBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-    FloatBtn.BackgroundTransparency = 0
-    FloatBtn.Text = "◉"
-    FloatBtn.Font = Enum.Font.GothamBold
-    FloatBtn.TextSize = 14
-    FloatBtn.TextColor3 = CurrentTheme.Text
-    FloatBtn.ZIndex = 25
-    FloatBtn.AutoButtonColor = false
-    Corner(FloatBtn, 10)
-    -- Floating button that appears in center top
-    local FloatingIcon = nil
-    local floatEnabled = false
-    local function CreateFloatingIcon()
-        if FloatingIcon then FloatingIcon:Destroy() end
-        FloatingIcon = Instance.new("TextButton", ScreenGui)
-        FloatingIcon.Name = "FloatingIcon"
-        FloatingIcon.Size = UDim2.new(0,50,0,50)
-        FloatingIcon.Position = UDim2.new(0.5,-25,0,20)
-        FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
-        FloatingIcon.Text = "G"
-        FloatingIcon.Font = Enum.Font.GothamBold
-        FloatingIcon.TextSize = 20
-        FloatingIcon.TextColor3 = Color3.new(1,1,1)
-        FloatingIcon.ZIndex = 100
-        Corner(FloatingIcon, 25)
-        Stroke(FloatingIcon, CurrentTheme.Stroke, 1)
-        -- Draggable
-        local dragging = false
-        local dragStart, startPos
-        FloatingIcon.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = FloatingIcon.Position
-            end
-        end)
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                local delta = input.Position - dragStart
-                FloatingIcon.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            end
-        end)
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end)
-        FloatingIcon.MouseButton1Click:Connect(function()
-            if not dragging then
-                Main.Visible = not Main.Visible
-                if Main.Visible then
-                    Tween(Main, {Size = savedSize}, 0.2)
-                end
-            end
-        end)
-    end
-    FloatBtn.MouseButton1Click:Connect(function()
-        floatEnabled = not floatEnabled
-        if floatEnabled then
-            FloatBtn.BackgroundColor3 = CurrentTheme.Accent
-            FloatBtn.TextColor3 = Color3.new(1,1,1)
-            CreateFloatingIcon()
-        else
-            FloatBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-            FloatBtn.TextColor3 = CurrentTheme.Text
-            if FloatingIcon then
-                FloatingIcon:Destroy()
-                FloatingIcon = nil
-            end
-        end
-    end)
-
     local CloseBtn = Instance.new("TextButton", Controls)
     CloseBtn.Name = "CloseBtn"
-    CloseBtn.Size = UDim2.new(0,32,0,32)
-    CloseBtn.Position = UDim2.new(0,144,0,0)
+    CloseBtn.Size = UDim2.new(0,26,0,26)
+    CloseBtn.Position = UDim2.new(0,84,0,1)
     CloseBtn.BackgroundColor3 = CurrentTheme.CloseBg
     CloseBtn.BackgroundTransparency = 0
     CloseBtn.Text = "X"
     CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.TextSize = 13
+    CloseBtn.TextSize = 11
     CloseBtn.TextColor3 = CurrentTheme.CloseText
-    CloseBtn.ZIndex = 25
+    CloseBtn.ZIndex = 26
     CloseBtn.AutoButtonColor = false
-    Corner(CloseBtn, 10)
+    Corner(CloseBtn, 7)
     local SearchBar = Instance.new("Frame", Main)
     SearchBar.Name = "SearchBar"
-    SearchBar.Size = UDim2.new(1,-16,0,0)
-    SearchBar.Position = UDim2.new(0,8,0,56)
+    SearchBar.Size = UDim2.new(1,-12,0,0)
+    SearchBar.Position = UDim2.new(0,6,0,52)
     SearchBar.BackgroundColor3 = CurrentTheme.ElementBg
     SearchBar.Visible = false
     SearchBar.ZIndex = 90
     SearchBar.ClipsDescendants = true
-    Corner(SearchBar, 10)
+    Corner(SearchBar, 8)
     local SBStroke = Stroke(SearchBar, CurrentTheme.Accent, 1)
     SBStroke.Name = "SearchStroke"
     local SearchBox = Instance.new("TextBox", SearchBar)
@@ -753,17 +662,17 @@ function GGH:CreateWindow(Config)
     Corner(SearchClose, 7)
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
-    ThemeDropdown.Size = UDim2.new(0,180,0,0)
-    ThemeDropdown.Position = UDim2.new(1,-188,0,56)
+    ThemeDropdown.Size = UDim2.new(0,160,0,0)
+    ThemeDropdown.Position = UDim2.new(1,-166,0,52)
     ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
     ThemeDropdown.Visible = false
     ThemeDropdown.ZIndex = 100
     ThemeDropdown.ClipsDescendants = true
-    Corner(ThemeDropdown, 12)
+    Corner(ThemeDropdown, 10)
     Stroke(ThemeDropdown, CurrentTheme.Stroke, 1)
     local ThemeList = Instance.new("ScrollingFrame", ThemeDropdown)
-    ThemeList.Size = UDim2.new(1,-8,1,-8)
-    ThemeList.Position = UDim2.new(0,4,0,4)
+    ThemeList.Size = UDim2.new(1,-6,1,-6)
+    ThemeList.Position = UDim2.new(0,3,0,3)
     ThemeList.BackgroundTransparency = 1
     ThemeList.CanvasSize = UDim2.new(0,0,0,0)
     ThemeList.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -771,14 +680,13 @@ function GGH:CreateWindow(Config)
     ThemeList.ScrollBarImageColor3 = CurrentTheme.Accent
     ThemeList.ZIndex = 101
     ThemeList.ClipsDescendants = true
-    ThemeList.ScrollingDirection = Enum.ScrollingDirection.Y
     local TL = Instance.new("UIListLayout", ThemeList)
-    TL.Padding = UDim.new(0,6)
+    TL.Padding = UDim.new(0,5)
     TL.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP = Instance.new("UIPadding", ThemeList)
-    TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
+    TLP.PaddingTop = UDim.new(0,6) TLP.PaddingBottom = UDim.new(0,6) TLP.PaddingLeft = UDim.new(0,6) TLP.PaddingRight = UDim.new(0,6)
     local ThemeHeader = Instance.new("TextLabel", ThemeList)
-    ThemeHeader.Size = UDim2.new(1,0,0,18)
+    ThemeHeader.Size = UDim2.new(1,0,0,16)
     ThemeHeader.BackgroundTransparency = 1
     ThemeHeader.Text = "THEMES"
     ThemeHeader.Font = Enum.Font.GothamBold
@@ -787,21 +695,21 @@ function GGH:CreateWindow(Config)
     ThemeHeader.TextXAlignment = Enum.TextXAlignment.Left
     ThemeHeader.LayoutOrder = -100
     local TransLabel = Instance.new("TextLabel", ThemeList)
-    TransLabel.Size = UDim2.new(1,0,0,14)
+    TransLabel.Size = UDim2.new(1,0,0,12)
     TransLabel.BackgroundTransparency = 1
-    TransLabel.Text = "TRANSPARENCY (0-100)"
+    TransLabel.Text = "TRANSPARENCY 0-100"
     TransLabel.Font = Enum.Font.GothamBold
-    TransLabel.TextSize = 9
+    TransLabel.TextSize = 8
     TransLabel.TextColor3 = CurrentTheme.SubText
     TransLabel.TextXAlignment = Enum.TextXAlignment.Left
     TransLabel.LayoutOrder = -20
     local TransBox = Instance.new("TextBox", ThemeList)
-    TransBox.Size = UDim2.new(1,0,0,26)
+    TransBox.Size = UDim2.new(1,0,0,24)
     TransBox.BackgroundColor3 = CurrentTheme.ElementBg2
     TransBox.PlaceholderText = "0-100"
     TransBox.Text = "0"
     TransBox.Font = Enum.Font.Gotham
-    TransBox.TextSize = 11
+    TransBox.TextSize = 10
     TransBox.TextColor3 = CurrentTheme.Text
     TransBox.LayoutOrder = -19
     Corner(TransBox, 6)
@@ -815,8 +723,8 @@ function GGH:CreateWindow(Config)
     end)
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
-    TabList.Size = UDim2.new(0,140,1,-64)
-    TabList.Position = UDim2.new(0,8,0,58)
+    TabList.Size = UDim2.new(0,130,1,-56)
+    TabList.Position = UDim2.new(0,6,0,54)
     TabList.BackgroundColor3 = CurrentTheme.TabListBg
     TabList.BackgroundTransparency = 0
     TabList.BorderSizePixel = 0
@@ -826,7 +734,7 @@ function GGH:CreateWindow(Config)
     TabList.ScrollBarImageColor3 = CurrentTheme.Accent
     TabList.ClipsDescendants = true
     TabList.ZIndex = 15
-    Corner(TabList, 12)
+    Corner(TabList, 10)
     local TLLayout = Instance.new("UIListLayout", TabList)
     TLLayout.Padding = UDim.new(0,6)
     TLLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -834,8 +742,8 @@ function GGH:CreateWindow(Config)
     TLP2.PaddingTop = UDim.new(0,6) TLP2.PaddingBottom = UDim.new(0,6) TLP2.PaddingLeft = UDim.new(0,6) TLP2.PaddingRight = UDim.new(0,6)
     local Container = Instance.new("Frame", Main)
     Container.Name = "Container"
-    Container.Size = UDim2.new(1,-160,1,-64)
-    Container.Position = UDim2.new(0,152,0,58)
+    Container.Size = UDim2.new(1,-142,1,-56)
+    Container.Position = UDim2.new(0,140,0,54)
     Container.BackgroundTransparency = 1
     Container.ClipsDescendants = true
     Container.ZIndex = 15
@@ -925,37 +833,27 @@ function GGH:CreateWindow(Config)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
         end)
     end
+    -- Resize grip - hides when minimized ( + ), shows when expanded ( - )
     local ResizeGrip = Instance.new("Frame", Main)
     ResizeGrip.Name = "ResizeGrip"
-    ResizeGrip.Size = UDim2.new(0,20,0,20)
-    ResizeGrip.Position = UDim2.new(1,-20,1,-20)
+    ResizeGrip.Size = UDim2.new(0,18,0,18)
+    ResizeGrip.Position = UDim2.new(1,-18,1,-18)
     ResizeGrip.BackgroundTransparency = 1
     ResizeGrip.ZIndex = 50
-    ResizeGrip.Visible = false
+    ResizeGrip.Visible = true
     for i=1,3 do
         local line = Instance.new("Frame", ResizeGrip)
-        line.Size = UDim2.new(0, 12 - (i*2), 0, 1.5)
-        line.Position = UDim2.new(1, -12 + (i*2) -1, 1, -12 + (i*2) -1)
+        line.Size = UDim2.new(0, 10 - (i*2), 0, 1)
+        line.Position = UDim2.new(1, -10 + (i*2) -1, 1, -10 + (i*2) -1)
         line.BackgroundColor3 = CurrentTheme.SubText
         line.BackgroundTransparency = 0.4
         line.BorderSizePixel = 0
         line.Rotation = -45
         line.ZIndex = 51
     end
-    local function UpdateResizeGrip()
-        if minimized then
-            ResizeGrip.Visible = false
-            return
-        end
-        local w = Main.AbsoluteSize.X
-        if w > 480 then ResizeGrip.Visible = true else ResizeGrip.Visible = false end
-    end
-    Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateResizeGrip)
-    task.spawn(function() task.wait(0.5) UpdateResizeGrip() end)
     local resizing = false
     local resizeStart, startSize
     ResizeGrip.InputBegan:Connect(function(input)
-        if minimized then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             resizing = true
             resizeStart = input.Position
@@ -963,10 +861,10 @@ function GGH:CreateWindow(Config)
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if resizing and not minimized and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - resizeStart
-            local newW = math.clamp(startSize.X.Offset + delta.X, 380, 900)
-            local newH = math.clamp(startSize.Y.Offset + delta.Y, 300, 700)
+            local newW = math.clamp(startSize.X.Offset + delta.X, 360, 800)
+            local newH = math.clamp(startSize.Y.Offset + delta.Y, 280, 600)
             Main.Size = UDim2.new(0, newW, 0, newH)
             ConfirmFrame.Size = UDim2.new(0, newW, 0, newH)
         end
@@ -1000,6 +898,7 @@ function GGH:CreateWindow(Config)
             task.wait(0.12)
             TabList.Visible = true
             Container.Visible = true
+            ResizeGrip.Visible = true
             MaxBtn.Visible = false
             MinBtn.Visible = true
         end
@@ -1012,6 +911,7 @@ function GGH:CreateWindow(Config)
             Tween(ConfirmFrame, {Size = savedSize}, 0.25)
             TabList.Visible = true
             Container.Visible = true
+            ResizeGrip.Visible = true
             MaxBtn.Visible = false
             MinBtn.Visible = true
             task.wait(0.27)
@@ -1078,13 +978,13 @@ function GGH:CreateWindow(Config)
         ThemeOpen = not ThemeOpen 
         if ThemeOpen then
             originalMainSizeTheme = Main.Size
-            local newH = Main.Size.Y.Offset + 80
+            local newH = Main.Size.Y.Offset + 70
             Tween(Main, {Size = UDim2.new(0, Main.Size.X.Offset, 0, newH)}, 0.3)
             ThemeDropdown.Visible = true
-            ThemeDropdown.Size = UDim2.new(0,180,0,0)
-            Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,360)}, 0.3)
+            ThemeDropdown.Size = UDim2.new(0,160,0,0)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,180,0,300)}, 0.3)
         else
-            Tween(ThemeDropdown, {Size = UDim2.new(0,180,0,0)}, 0.25)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,160,0,0)}, 0.25)
             if originalMainSizeTheme then
                 Tween(Main, {Size = originalMainSizeTheme}, 0.25)
             end
@@ -1113,35 +1013,34 @@ function GGH:CreateWindow(Config)
     local AllSearchElements = {}
     local function AddSearch(frame, title, typ, tabName) table.insert(AllSearchElements, {Frame=frame, Title=title:lower(), Type=typ:lower(), Tab=tabName:lower()}) end
     local SearchOpen = false
-    local originalMainSize = nil
+    local originalMainSizeSearch = nil
     local function ToggleSearch()
         SearchOpen = not SearchOpen
         ThemeDropdown.Visible = false
         ThemeOpen = false
         if SearchOpen then
-            originalMainSize = Main.Size
-            -- Enlarge window when search opens
-            local newH = Main.Size.Y.Offset + 50
+            originalMainSizeSearch = Main.Size
+            local newH = Main.Size.Y.Offset + 46
             Tween(Main, {Size = UDim2.new(0, Main.Size.X.Offset, 0, newH)}, 0.25)
             SearchBar.Visible = true
-            SearchBar.Size = UDim2.new(1,-16,0,0)
-            Tween(SearchBar, {Size = UDim2.new(1,-16,0,42)}, 0.25)
-            Tween(TabList, {Position = UDim2.new(0,8,0,104), Size = UDim2.new(0,140,1,-110)}, 0.2)
-            Tween(Container, {Position = UDim2.new(0,152,0,104), Size = UDim2.new(1,-160,1,-110)}, 0.2)
+            SearchBar.Size = UDim2.new(1,-12,0,0)
+            Tween(SearchBar, {Size = UDim2.new(1,-12,0,36)}, 0.25)
+            Tween(TabList, {Position = UDim2.new(0,6,0,92), Size = UDim2.new(0,130,1,-98)}, 0.2)
+            Tween(Container, {Position = UDim2.new(0,140,0,92), Size = UDim2.new(1,-142,1,-98)}, 0.2)
             task.wait(0.1)
             SearchBox:CaptureFocus()
         else
             SearchBox.Text = ""
             for _, el in ipairs(AllSearchElements) do if el.Frame and el.Frame.Parent then el.Frame.Visible = true end end
             for _, t in pairs(Tabs) do if t.Button then t.Button.Visible = true end end
-            Tween(SearchBar, {Size = UDim2.new(1,-16,0,0)}, 0.2)
+            Tween(SearchBar, {Size = UDim2.new(1,-12,0,0)}, 0.2)
             task.wait(0.2)
             SearchBar.Visible = false
-            if originalMainSize then
-                Tween(Main, {Size = originalMainSize}, 0.25)
+            if originalMainSizeSearch then
+                Tween(Main, {Size = originalMainSizeSearch}, 0.25)
             end
-            Tween(TabList, {Position = UDim2.new(0,8,0,58), Size = UDim2.new(0,140,1,-64)}, 0.2)
-            Tween(Container, {Position = UDim2.new(0,152,0,58), Size = UDim2.new(1,-160,1,-64)}, 0.2)
+            Tween(TabList, {Position = UDim2.new(0,6,0,54), Size = UDim2.new(0,130,1,-56)}, 0.2)
+            Tween(Container, {Position = UDim2.new(0,140,0,54), Size = UDim2.new(1,-142,1,-56)}, 0.2)
         end
     end
     SearchBtn.MouseButton1Click:Connect(ToggleSearch)
@@ -1161,36 +1060,33 @@ function GGH:CreateWindow(Config)
     end)
     function Window:CreateTab(Name)
         local TabButton = Instance.new("TextButton", TabList)
-        TabButton.Size = UDim2.new(1,0,0,36)
+        TabButton.Size = UDim2.new(1,0,0,34)
         TabButton.BackgroundColor3 = CurrentTheme.ElementBg
         TabButton.BackgroundTransparency = 0
         TabButton.Text = Name
         TabButton.TextTruncate = Enum.TextTruncate.AtEnd
-        TabButton.TextWrapped = false
         TabButton.Font = Enum.Font.GothamMedium
         TabButton.TextSize = 11
-        TabButton.TextColor3 = Color3.fromRGB(170,170,180)
+        TabButton.TextColor3 = CurrentTheme.SubText
         TabButton.TextXAlignment = Enum.TextXAlignment.Left
         TabButton.AutoButtonColor = false
         TabButton.AutoLocalize = true
         TabButton.ClipsDescendants = true
-        Corner(TabButton, 10)
+        Corner(TabButton, 8)
         local tabPad = Instance.new("UIPadding", TabButton)
-        tabPad.PaddingLeft = UDim.new(0,12)
-        tabPad.PaddingRight = UDim.new(0,8)
+        tabPad.PaddingLeft = UDim.new(0,10)
+        tabPad.PaddingRight = UDim.new(0,6)
         TabButton.MouseEnter:Connect(function()
-            if #Name > 15 then
+            if #Name > 14 then
                 SubLabel.Text = Name
                 TabButton.TextWrapped = true
-                Tween(TabButton, {Size = UDim2.new(1,0,0,52)}, 0.2)
-                TabButton.Text = Name
+                Tween(TabButton, {Size = UDim2.new(1,0,0,48)}, 0.2)
             end
         end)
         TabButton.MouseLeave:Connect(function()
             SubLabel.Text = SubTitle
-            Tween(TabButton, {Size = UDim2.new(1,0,0,36)}, 0.2)
+            Tween(TabButton, {Size = UDim2.new(1,0,0,34)}, 0.2)
             TabButton.TextWrapped = false
-            TabButton.Text = Name
         end)
         RegisterThemable(TabButton, "BackgroundColor3", "ElementBg")
         local TabPage = Instance.new("ScrollingFrame", Container)
@@ -1718,8 +1614,12 @@ function GGH:CreateWindow(Config)
             elseif Type == "code" then CreateCode(Cfg)
             elseif Type == "label" then CreateLabel(Cfg)
             elseif Type == "separator" or Type == "line" or Type == "divider" then CreateSeparator(Cfg)
-            elseif Type == "image" or Type == "img" or Type == "logo" then CreateImage(Cfg)
-            else warn("[GGH Library v1.8.0] Unknown Add type: "..tostring(Type))
+            elseif Type == "groupbox" or Type == "group" then CreateGroupbox(Cfg)
+            elseif Type == "checkbox" or Type == "check" then CreateCheckbox(Cfg)
+            elseif Type == "textarea" or Type == "area" then CreateTextArea(Cfg)
+            elseif Type == "progress" or Type == "bar" then CreateProgress(Cfg)
+            elseif Type == "divider" or Type == "heading" then CreateDivider(Cfg)
+            else warn("[GGH Library v1.8.6] Image removed, type: "..tostring(Type))
             end
         end
 
@@ -1736,7 +1636,11 @@ function GGH:CreateWindow(Config)
         function Elements:Code(Cfg) return self:Add("Code", Cfg) end
         function Elements:Label(Cfg) return self:Add("Label", Cfg) end
         function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
-        function Elements:Image(Cfg) return self:Add("Image", Cfg) end
+        function Elements:Groupbox(Cfg) return self:Add("Groupbox", Cfg) end
+        function Elements:Checkbox(Cfg) return self:Add("Checkbox", Cfg) end
+        function Elements:TextArea(Cfg) return self:Add("TextArea", Cfg) end
+        function Elements:Progress(Cfg) return self:Add("Progress", Cfg) end
+        function Elements:Divider(Cfg) return self:Add("Divider", Cfg) end
 
         return Elements
     end
