@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.9.0 ULTIMATE AUTO SIZE + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.8.9 CLEAN FIX - SCROLL ORIGINAL + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -33,18 +33,6 @@ local function Stroke(p,color,thick)
     s.Parent = p
     return s
 end
-
-local function AddTextStroke(txtObj)
-    if not txtObj then return end
-    local st = Instance.new("UIStroke", txtObj)
-    st.Color = Color3.fromRGB(0,0,0)
-    st.Thickness = 1.2
-    st.Transparency = 0.3
-    st.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
-    st.LineJoinMode = Enum.LineJoinMode.Round
-    return st
-end
-
 
 local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
@@ -608,7 +596,6 @@ function GGH:CreateWindow(Config)
         BgImage.ScaleType = Config.BgScaleType or Enum.ScaleType.Crop
         BgImage.ZIndex = 0
         Corner(BgImage, 18)
-    Stroke(BgImage, Color3.fromRGB(0,0,0), 1).Transparency = 0.6
         -- make main slightly transparent to see image
         if not Config.BackgroundTransparency then
             Main.BackgroundTransparency = 0.1
@@ -670,7 +657,7 @@ function GGH:CreateWindow(Config)
     TitleLabel.TextSize = 15
     TitleLabel.TextColor3 = CurrentTheme.Text
     TitleLabel.ZIndex = 4
-    TitleLabel.AutoLocalize = true AddTextStroke(TitleLabel)
+    TitleLabel.AutoLocalize = true
     local SubLabel = Instance.new("TextLabel", Header)
     SubLabel.Text = SubTitle
     SubLabel.Position = UDim2.new(0,18,0,26)
@@ -681,7 +668,7 @@ function GGH:CreateWindow(Config)
     SubLabel.TextSize = 11
     SubLabel.TextColor3 = CurrentTheme.SubText
     SubLabel.ZIndex = 4
-    SubLabel.AutoLocalize = true AddTextStroke(SubLabel)
+    SubLabel.AutoLocalize = true
     
     -- FIX 1: Controls with UIListLayout so X never goes outside
     local Controls = Instance.new("Frame", Header)
@@ -817,7 +804,7 @@ function GGH:CreateWindow(Config)
     TL.Padding = UDim.new(0,6)
     TL.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP = Instance.new("UIPadding", ThemeList)
-    TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,30) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
+    TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
     local ThemeHeader = Instance.new("TextLabel", ThemeList)
     ThemeHeader.Size = UDim2.new(1,0,0,18)
     ThemeHeader.BackgroundTransparency = 1
@@ -872,7 +859,7 @@ function GGH:CreateWindow(Config)
     TLLayout.Padding = UDim.new(0,6)
     TLLayout.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP2 = Instance.new("UIPadding", TabList)
-    TLP2.PaddingTop = UDim.new(0,6) TLP2.PaddingBottom = UDim.new(0,24) TLP2.PaddingLeft = UDim.new(0,6) TLP2.PaddingRight = UDim.new(0,6)
+    TLP2.PaddingTop = UDim.new(0,6) TLP2.PaddingBottom = UDim.new(0,6) TLP2.PaddingLeft = UDim.new(0,6) TLP2.PaddingRight = UDim.new(0,6)
     local Container = Instance.new("Frame", Main)
     Container.Name = "Container"
     Container.Size = UDim2.new(1,-160,1,-64)
@@ -945,24 +932,30 @@ function GGH:CreateWindow(Config)
     Corner(NoBtn, 9)
     do
         local dragging = false
+        local potentialDrag = false
         local dragStart, startPos
+        local DRAG_THRESHOLD = 8
         local dragObjects = {Header, TitleLabel, SubLabel, HeaderFix}
         local function StartDrag(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
+                potentialDrag = true
+                dragging = false
                 dragStart = input.Position
                 startPos = Main.Position
             end
         end
         for _, obj in ipairs(dragObjects) do obj.InputBegan:Connect(StartDrag) end
         UserInputService.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            if potentialDrag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
-                Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                if not dragging and delta.Magnitude >= DRAG_THRESHOLD then dragging = true end
+                if dragging then
+                    Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false potentialDrag = false end
         end)
     end
     local ResizeGrip = Instance.new("Frame", Main)
@@ -1206,6 +1199,7 @@ function GGH:CreateWindow(Config)
         end)
         FloatingIcon.MouseButton1Click:Connect(function()
             if hasDragged then return end
+            ConfirmFrame.Visible = false
             Main.Visible = not Main.Visible
             if Main.Visible then
                 -- FIX: always restore to base size, not enlarged size
@@ -1283,7 +1277,8 @@ function GGH:CreateWindow(Config)
             -- FIXED: ما يكبر النافذة، يطلع بنفس الحجم المحدد
             ThemeDropdown.Visible = true
             ThemeDropdown.Size = UDim2.new(0,200,0,0)
-            Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,360)}, 0.3)
+            local maxH = math.clamp(Main.AbsoluteSize.Y - 80, 150, 360)
+                Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,maxH)}, 0.3)
         else
             Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,0)}, 0.25)
             task.wait(0.25)
@@ -1412,12 +1407,11 @@ function GGH:CreateWindow(Config)
         TabPage.ClipsDescendants = true
         TabPage.ZIndex = 16
         RegisterThemable(TabPage, "ScrollBar", "Accent")
-    Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() TabPage.CanvasPosition = Vector2.new(0,0) end)
         local Layout = Instance.new("UIListLayout", TabPage)
         Layout.Padding = UDim.new(0, 8)
         Layout.SortOrder = Enum.SortOrder.LayoutOrder
         local Padding = Instance.new("UIPadding", TabPage)
-        Padding.PaddingTop = UDim.new(0,4) Padding.PaddingBottom = UDim.new(0,60) Padding.PaddingLeft = UDim.new(0,2) Padding.PaddingRight = UDim.new(0,4)
+        Padding.PaddingTop = UDim.new(0,2) Padding.PaddingBottom = UDim.new(0,20) Padding.PaddingLeft = UDim.new(0,2) Padding.PaddingRight = UDim.new(0,4)
         local IsScrolling = false
         TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function() IsScrolling = true task.delay(0.35, function() IsScrolling = false end) end)
         TabButton.MouseButton1Click:Connect(function()
@@ -1427,14 +1421,9 @@ function GGH:CreateWindow(Config)
             TabButton.TextColor3 = Color3.fromRGB(255,255,255)
         end)
         if FirstTab then FirstTab = false TabPage.Visible = true TabButton.BackgroundColor3 = CurrentTheme.Accent TabButton.TextColor3 = Color3.fromRGB(255,255,255) end
-           -- FIX SCROLL: bottom spacer so last element fully visible when window small
-    local BottomSpacer = Instance.new("Frame", TabPage)
-    BottomSpacer.Name = "BottomSpacer"
-    BottomSpacer.Size = UDim2.new(1,0,0,30)
-    BottomSpacer.BackgroundTransparency = 1
-    BottomSpacer.LayoutOrder = 99999
+        table.insert(Tabs, {Button = TabButton, Page = TabPage})
 
-    table.insert(Tabs, {Button = TabButton, Page = TabPage})
+    -- bottom spacer removed - keep original scroll working
 
         local function CreateSection(Cfg)
             local SecFrame = Instance.new("Frame", TabPage)
@@ -1663,10 +1652,7 @@ function GGH:CreateWindow(Config)
 
         
 local function CreateDropdown(Cfg)
-    local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
-    local Selected = isMulti and (Cfg.Default or {}) or (Cfg.Default or Cfg.Options[1])
-    if isMulti and type(Selected) ~= "table" then Selected = {Selected} end
-
+    local Selected = Cfg.Default or Cfg.Options[1]
     local Frame = Instance.new("Frame", TabPage)
     Frame.Size = UDim2.new(1,-4,0,38)
     Frame.BackgroundColor3 = CurrentTheme.ElementBg
@@ -1675,84 +1661,50 @@ local function CreateDropdown(Cfg)
     RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
     AddSearch(Frame, Cfg.Title, "Dropdown", Name)
 
-    local function GetDisplayText()
-        if isMulti then
-            if #Selected == 0 then return Cfg.Title.." : (لا شيء)"
-            elseif #Selected == 1 then return Cfg.Title.." : "..Selected[1]
-            else return Cfg.Title.." : "..#Selected.." محدد"
-            end
-        else
-            return Cfg.Title.." : "..tostring(Selected)
-        end
-    end
-
     local Btn = Instance.new("TextButton", Frame)
     Btn.Size = UDim2.new(1,0,0,38)
     Btn.BackgroundTransparency = 1
-    Btn.Text = GetDisplayText()
+    Btn.Text = Cfg.Title.." : "..tostring(Selected)
     Btn.Font = Enum.Font.GothamMedium
     Btn.TextSize = 12
     Btn.TextColor3 = CurrentTheme.Text
     Btn.AutoLocalize = true
     Btn.TextTruncate = Enum.TextTruncate.AtEnd
     RegisterThemable(Btn, "TextColor3", "Text")
-    AddTextStroke(Btn)
 
     local List = Instance.new("Frame", Frame)
     List.Position = UDim2.new(0,0,0,38)
     List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
     List.BackgroundTransparency = 1
-    local ll = Instance.new("UIListLayout", List)
-    ll.Padding = UDim.new(0,2)
+    local listLayout = Instance.new("UIListLayout", List)
+    listLayout.Padding = UDim.new(0,2)
 
     local Open = false
-    Btn.Activated:Connect(function()
+    Btn.MouseButton1Click:Connect(function()
         if IsScrolling then return end
         Open = not Open
-        Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
+        -- FIX: لا يتخطى اخر وحدة - يحسب الحجم بالضبط بدون زيادة
+        local targetH = Open and (38 + #Cfg.Options*30 + 6) or 38
+        Tween(Frame, {Size = UDim2.new(1,-4,0,targetH)}, 0.2)
     end)
-
-    local function IsSelected(opt)
-        if not isMulti then return opt == Selected end
-        for _, v in ipairs(Selected) do if v == opt then return true end end
-        return false
-    end
 
     for _, opt in ipairs(Cfg.Options) do
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,0,0,28)
-        O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-        O.Text = (IsSelected(opt) and "✓ " or "")..opt
+        O.BackgroundColor3 = CurrentTheme.ElementBg2
+        O.Text = opt
         O.Font = Enum.Font.Gotham
         O.TextSize = 11
         O.TextColor3 = CurrentTheme.Text
         O.AutoLocalize = true
         Corner(O, 6)
         RegisterThemable(O, "BackgroundColor3", "ElementBg2")
-        AddTextStroke(O)
-        O.Activated:Connect(function()
-            if isMulti then
-                if IsSelected(opt) then
-                    for i,v in ipairs(Selected) do if v==opt then table.remove(Selected,i) break end end
-                else
-                    table.insert(Selected, opt)
-                end
-                for _, child in ipairs(List:GetChildren()) do
-                    if child:IsA("TextButton") then
-                        local name = child.Text:gsub("✓ ","")
-                        child.BackgroundColor3 = IsSelected(name) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                        child.Text = (IsSelected(name) and "✓ " or "")..name
-                    end
-                end
-                Btn.Text = GetDisplayText()
-                pcall(Cfg.Callback or function() end, Selected)
-            else
-                Selected = opt
-                Btn.Text = GetDisplayText()
-                Open = false
-                Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
-                pcall(Cfg.Callback or function() end, Selected)
-            end
+        O.MouseButton1Click:Connect(function()
+            Selected = opt
+            Btn.Text = Cfg.Title.." : "..tostring(Selected)
+            Open = false
+            Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
+            pcall(Cfg.Callback or function() end, Selected)
         end)
     end
 end
@@ -2007,13 +1959,9 @@ local function CreateColorpicker(Cfg)
             end
         end
 
-        -- ALIAS FIX for empty screen (user used AddTab)
-if not Window.AddTab then
-    Window.AddTab = function(self, Cfg)
-        Cfg = Cfg or {}
-        local name = Cfg.Title or Cfg.Name or "Tab"
-        return self:CreateTab(name)
-    end
+        -- FIX: Alias for AddTab (some scripts use AddTab)
+if true then
+    -- will be defined after Window created, placeholder
 end
 
 local Elements = {}
@@ -2051,7 +1999,13 @@ local Elements = {}
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
         return Elements
     end
-    function Window:SetSizePreset(presetName)
+    function Window:AddTab(Cfg)
+        Cfg = Cfg or {}
+        local name = Cfg.Title or Cfg.Name or "Tab"
+        return self:CreateTab(name)
+    end
+
+function Window:SetSizePreset(presetName)
         if GGH.SizePresets and GGH.SizePresets[presetName] then
             local p = GGH.SizePresets[presetName]
             local newSize = UDim2.new(0, p.W, 0, p.H)
