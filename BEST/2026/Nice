@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.8.6 AUTO SIZE + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.8.7 AUTO SIZE + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -539,7 +539,7 @@ function GGH:CreateWindow(Config)
         if not success then return nil end
     end
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or ("v1.8.6 FIXED ["..autoName.."]")
+    local SubTitle = Config.SubTitle or ("v1.8.7 FIXED ["..autoName.."]")
     local DefaultTheme = Config.Theme or "Monochrome"
     if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
     local CurrentTheme = Themes[DefaultTheme]
@@ -1223,6 +1223,7 @@ function GGH:CreateWindow(Config)
         local startGuiPos
         local hasDragged = false
         
+        -- FIXED TOUCH: لمس محسن للعائم
         FloatingIcon.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
@@ -1581,7 +1582,7 @@ function GGH:CreateWindow(Config)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
-            Btn.MouseButton1Click:Connect(function()
+            local function OnToggle()
                 if IsScrolling then return end
                 State = not State
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
