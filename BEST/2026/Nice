@@ -1548,7 +1548,18 @@ function GGH:CreateWindow(Config)
         end
 
         local function CreateDropdown(Cfg)
-            local Selected = Cfg.Default or Cfg.Options[1]
+            Cfg.Options = Cfg.Options or {"Option 1"}
+            local Multi = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
+            local MaxSelect = Cfg.MaxSelect or Cfg.Limit or 10
+            local Selected
+            if Multi then
+                if type(Cfg.Default) == "table" then Selected = Cfg.Default
+                elseif Cfg.Default then Selected = {Cfg.Default}
+                else Selected = {} end
+            else
+                Selected = Cfg.Default or Cfg.Options[1]
+            end
+
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
@@ -1556,29 +1567,44 @@ function GGH:CreateWindow(Config)
             Corner(Frame, 9)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
             AddSearch(Frame, Cfg.Title, "Dropdown", Name)
+
+            local function GetDisplayText()
+                if Multi then
+                    if #Selected == 0 then return Cfg.Title.." : None"
+                    elseif #Selected == 1 then return Cfg.Title.." : "..tostring(Selected[1])
+                    else return Cfg.Title.." : "..#Selected.." selected" end
+                else
+                    return Cfg.Title.." : "..tostring(Selected)
+                end
+            end
+
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,0,38)
             Btn.BackgroundTransparency = 1
-            Btn.Text = Cfg.Title.." : "..Selected
+            Btn.Text = GetDisplayText()
             Btn.Font = Enum.Font.GothamMedium
             Btn.TextSize = 12
             Btn.TextColor3 = CurrentTheme.Text
+            Btn.TextTruncate = Enum.TextTruncate.AtEnd
             Btn.AutoLocalize = true
             RegisterThemable(Btn, "TextColor3", "Text")
+
             local List = Instance.new("Frame", Frame)
             List.Position = UDim2.new(0,0,0,38)
-            List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
+            List.Size = UDim2.new(1,0,0,#Cfg.Options*32)
             List.BackgroundTransparency = 1
             Instance.new("UIListLayout", List).Padding = UDim.new(0,2)
+
             local Open = false
             Btn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
                 Open = not Open
-                Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
+                Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*32 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
             end)
+
             for _, opt in ipairs(Cfg.Options) do
                 local O = Instance.new("TextButton", List)
-                O.Size = UDim2.new(1,0,0,28)
+                O.Size = UDim2.new(1,0,0,30)
                 O.BackgroundColor3 = CurrentTheme.ElementBg2
                 O.Text = opt
                 O.Font = Enum.Font.Gotham
@@ -1587,12 +1613,46 @@ function GGH:CreateWindow(Config)
                 O.AutoLocalize = true
                 Corner(O, 6)
                 RegisterThemable(O, "BackgroundColor3", "ElementBg2")
+
+                local function UpdateVisual()
+                    if Multi then
+                        local isSel = table.find(Selected, opt) ~= nil
+                        if isSel then
+                            O.BackgroundColor3 = CurrentTheme.Accent
+                            O.TextColor3 = Color3.new(1,1,1)
+                            O.Text = "✓ "..opt
+                        else
+                            O.BackgroundColor3 = CurrentTheme.ElementBg2
+                            O.TextColor3 = CurrentTheme.Text
+                            O.Text = opt
+                        end
+                    else
+                        if Selected == opt then
+                            O.BackgroundColor3 = CurrentTheme.Accent
+                            O.TextColor3 = Color3.new(1,1,1)
+                        else
+                            O.BackgroundColor3 = CurrentTheme.ElementBg2
+                            O.TextColor3 = CurrentTheme.Text
+                        end
+                    end
+                end
+                UpdateVisual()
+
                 O.MouseButton1Click:Connect(function()
-                    Selected = opt
-                    Btn.Text = Cfg.Title.." : "..Selected
-                    Open = false
-                    Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
-                    pcall(Cfg.Callback or function() end, Selected)
+                    if Multi then
+                        local idx = table.find(Selected, opt)
+                        if idx then table.remove(Selected, idx)
+                        else if #Selected < MaxSelect then table.insert(Selected, opt) end end
+                        Btn.Text = GetDisplayText()
+                        UpdateVisual()
+                        pcall(Cfg.Callback or function() end, Selected)
+                    else
+                        Selected = opt
+                        Btn.Text = GetDisplayText()
+                        Open = false
+                        Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
+                        pcall(Cfg.Callback or function() end, Selected)
+                    end
                 end)
             end
         end
@@ -1748,39 +1808,100 @@ function GGH:CreateWindow(Config)
         end
 
         local function CreateImage(Cfg)
+            Cfg = Cfg or {}
+            local function extractId(text)
+                if not text then return nil end
+                text = tostring(text)
+                local id = text:match("id=(%d+)") or text:match("rbxassetid://(%d+)") or text:match("(%d+)")
+                return id
+            end
+
             local Frame = Instance.new("Frame", TabPage)
-            local imgHeight = Cfg.Height or 100
-            Frame.Size = UDim2.new(1,-4,0,imgHeight)
-            Frame.BackgroundTransparency = 1
-            if Cfg.Rounded then
-                Frame.BackgroundColor3 = CurrentTheme.ElementBg
-                Frame.BackgroundTransparency = 0
-                Corner(Frame, Cfg.CornerRadius or 10)
-                RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
-            end
+            local useInput = Cfg.AllowInput or Cfg.Input or Cfg.Viewer or false
+            local imgHeight = Cfg.Height or (useInput and 320 or 120)
+            Frame.Size = UDim2.new(1,-4,0,imgHeight + (Cfg.Title and Cfg.Title ~= "" and 24 or 0))
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
+            Frame.BackgroundTransparency = 0
+            Corner(Frame, 10)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
             AddSearch(Frame, Cfg.Title or "Image", "Image", Name)
-            local Image = Instance.new("ImageLabel", Frame)
-            Image.Size = Cfg.Size and UDim2.new(0,Cfg.Size.X,0,Cfg.Size.Y) or UDim2.new(1,0,1,0)
-            if Cfg.Size then
-                Image.Position = UDim2.new(0.5,0,0.5,0)
-                Image.AnchorPoint = Vector2.new(0.5,0.5)
+
+            local ImageLabel = Instance.new("ImageLabel", Frame)
+            local titleOffset = (Cfg.Title and Cfg.Title ~= "" and 24 or 0)
+            if useInput then
+                ImageLabel.Size = UDim2.new(1,-12,0,200)
+                ImageLabel.Position = UDim2.new(0,6,0,50)
+            else
+                ImageLabel.Size = Cfg.Size and UDim2.new(0,Cfg.Size.X,0,Cfg.Size.Y) or UDim2.new(1,-12,1,-12 - titleOffset)
+                ImageLabel.Position = UDim2.new(0,6,0,6)
             end
-            Image.BackgroundTransparency = 1
-            Image.Image = Cfg.Image or Cfg.Url or "rbxassetid://0"
-            Image.ImageColor3 = Cfg.ImageColor or Cfg.Color or Color3.fromRGB(255,255,255)
-            Image.ScaleType = Cfg.ScaleType or Enum.ScaleType.Fit
-            Image.AutoLocalize = false
-            if Cfg.Rounded then Corner(Image, Cfg.CornerRadius or 10) end
+            ImageLabel.BackgroundColor3 = Color3.fromRGB(20,20,22)
+            ImageLabel.BackgroundTransparency = 0.2
+            ImageLabel.ScaleType = Cfg.ScaleType or Enum.ScaleType.Fit
+            Corner(ImageLabel, 8)
+
+            local initialId = nil
+            if Cfg.Image then initialId = extractId(Cfg.Image) end
+            if Cfg.Url then initialId = extractId(Cfg.Url) end
+            if Cfg.Id then initialId = extractId(Cfg.Id) end
+            if Cfg.Default then initialId = extractId(Cfg.Default) end
+
+            if initialId then
+                ImageLabel.Image = "rbxassetid://"..initialId
+            elseif Cfg.Image and Cfg.Image:match("rbxasset") then
+                ImageLabel.Image = Cfg.Image
+            else
+                ImageLabel.Image = Cfg.Image or Cfg.Url or ""
+            end
+
+            if useInput then
+                local InputBox = Instance.new("TextBox", Frame)
+                InputBox.Size = UDim2.new(1,-12,0,32)
+                InputBox.Position = UDim2.new(0,6,0,6)
+                InputBox.BackgroundColor3 = CurrentTheme.ElementBg2
+                InputBox.PlaceholderText = Cfg.Placeholder or "حط كود او رابط الصورة هنا"
+                InputBox.Text = Cfg.DefaultText or ""
+                InputBox.TextColor3 = CurrentTheme.Text
+                InputBox.PlaceholderColor3 = CurrentTheme.SubText
+                InputBox.Font = Enum.Font.Gotham
+                InputBox.TextSize = 12
+                InputBox.ClearTextOnFocus = false
+                Corner(InputBox, 8)
+                RegisterThemable(InputBox, "BackgroundColor3", "ElementBg2")
+
+                local function showImageFromInput()
+                    local id = extractId(InputBox.Text)
+                    if id and id ~= "" then
+                        ImageLabel.Image = "rbxassetid://"..id
+                    end
+                end
+
+                InputBox.FocusLost:Connect(function(enter)
+                    if enter then showImageFromInput() end
+                end)
+
+                local ShowBtn = Instance.new("TextButton", Frame)
+                ShowBtn.Size = UDim2.new(1,-12,0,28)
+                ShowBtn.Position = UDim2.new(0,6,0,258)
+                ShowBtn.BackgroundColor3 = CurrentTheme.Accent
+                ShowBtn.Text = "عرض الصورة"
+                ShowBtn.TextColor3 = Color3.new(1,1,1)
+                ShowBtn.Font = Enum.Font.GothamBold
+                ShowBtn.TextSize = 12
+                Corner(ShowBtn, 8)
+                ShowBtn.MouseButton1Click:Connect(showImageFromInput)
+            end
+
             if Cfg.Title and Cfg.Title ~= "" then
-                Frame.Size = UDim2.new(1,-4,0,imgHeight + 24)
                 local Title = Instance.new("TextLabel", Frame)
-                Title.Size = UDim2.new(1,0,0,20)
-                Title.Position = UDim2.new(0,0,1,-20)
+                Title.Size = UDim2.new(1,-12,0,20)
+                Title.Position = UDim2.new(0,6,1,-20)
                 Title.BackgroundTransparency = 1
                 Title.Text = Cfg.Title
                 Title.Font = Enum.Font.GothamMedium
                 Title.TextSize = 12
                 Title.TextColor3 = CurrentTheme.Text
+                Title.TextXAlignment = Enum.TextXAlignment.Center
                 Title.AutoLocalize = true
                 RegisterThemable(Title, "TextColor3", "Text")
             end
@@ -1820,6 +1941,15 @@ function GGH:CreateWindow(Config)
         function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
         return Elements
+    end
+    function Window:SetSizePreset(presetName)
+        if GGH.SizePresets and GGH.SizePresets[presetName] then
+            local p = GGH.SizePresets[presetName]
+            local newSize = UDim2.new(0, p.W, 0, p.H)
+            savedSize = newSize
+            baseSize = newSize
+            Tween(Main, {Size = newSize}, 0.3)
+        end
     end
     return Window
 end
