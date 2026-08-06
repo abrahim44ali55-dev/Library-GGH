@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.8.8 SCROLL+EMPTY FIX AUTO SIZE + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.9.0 ULTIMATE AUTO SIZE + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -33,6 +33,18 @@ local function Stroke(p,color,thick)
     s.Parent = p
     return s
 end
+
+local function AddTextStroke(txtObj)
+    if not txtObj then return end
+    local st = Instance.new("UIStroke", txtObj)
+    st.Color = Color3.fromRGB(0,0,0)
+    st.Thickness = 1.2
+    st.Transparency = 0.3
+    st.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+    st.LineJoinMode = Enum.LineJoinMode.Round
+    return st
+end
+
 
 local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
@@ -596,6 +608,7 @@ function GGH:CreateWindow(Config)
         BgImage.ScaleType = Config.BgScaleType or Enum.ScaleType.Crop
         BgImage.ZIndex = 0
         Corner(BgImage, 18)
+    Stroke(BgImage, Color3.fromRGB(0,0,0), 1).Transparency = 0.6
         -- make main slightly transparent to see image
         if not Config.BackgroundTransparency then
             Main.BackgroundTransparency = 0.1
@@ -657,7 +670,7 @@ function GGH:CreateWindow(Config)
     TitleLabel.TextSize = 15
     TitleLabel.TextColor3 = CurrentTheme.Text
     TitleLabel.ZIndex = 4
-    TitleLabel.AutoLocalize = true
+    TitleLabel.AutoLocalize = true AddTextStroke(TitleLabel)
     local SubLabel = Instance.new("TextLabel", Header)
     SubLabel.Text = SubTitle
     SubLabel.Position = UDim2.new(0,18,0,26)
@@ -668,7 +681,7 @@ function GGH:CreateWindow(Config)
     SubLabel.TextSize = 11
     SubLabel.TextColor3 = CurrentTheme.SubText
     SubLabel.ZIndex = 4
-    SubLabel.AutoLocalize = true
+    SubLabel.AutoLocalize = true AddTextStroke(SubLabel)
     
     -- FIX 1: Controls with UIListLayout so X never goes outside
     local Controls = Instance.new("Frame", Header)
@@ -1232,7 +1245,7 @@ function GGH:CreateWindow(Config)
         else
             Tween(FloatBtn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.2)
             FloatBtn.TextColor3 = CurrentTheme.Text
-            if FloatingIcon then FloatingIcon:Destroy() FloatingIcon=nil end
+            if FloatingIcon then FloatingIcon:Destroy() FloatingIcon=nil end ConfirmFrame.Visible = false
         end
     end) end
 
@@ -1399,6 +1412,7 @@ function GGH:CreateWindow(Config)
         TabPage.ClipsDescendants = true
         TabPage.ZIndex = 16
         RegisterThemable(TabPage, "ScrollBar", "Accent")
+    Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() TabPage.CanvasPosition = Vector2.new(0,0) end)
         local Layout = Instance.new("UIListLayout", TabPage)
         Layout.Padding = UDim.new(0, 8)
         Layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1647,57 +1661,103 @@ function GGH:CreateWindow(Config)
             Box.FocusLost:Connect(function() if IsScrolling then return end pcall(Cfg.Callback or function() end, Box.Text) end)
         end
 
-        local function CreateDropdown(Cfg)
-            local Selected = Cfg.Default or Cfg.Options[1]
-            local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,38)
-            Frame.BackgroundColor3 = CurrentTheme.ElementBg
-            Frame.ClipsDescendants = true
-            Corner(Frame, 9)
-            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
-            AddSearch(Frame, Cfg.Title, "Dropdown", Name)
-            local Btn = Instance.new("TextButton", Frame)
-            Btn.Size = UDim2.new(1,0,0,38)
-            Btn.BackgroundTransparency = 1
-            Btn.Text = Cfg.Title.." : "..Selected
-            Btn.Font = Enum.Font.GothamMedium
-            Btn.TextSize = 12
-            Btn.TextColor3 = CurrentTheme.Text
-            Btn.AutoLocalize = true
-            RegisterThemable(Btn, "TextColor3", "Text")
-            local List = Instance.new("Frame", Frame)
-            List.Position = UDim2.new(0,0,0,38)
-            List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
-            List.BackgroundTransparency = 1
-            Instance.new("UIListLayout", List).Padding = UDim.new(0,2)
-            local Open = false
-            Btn.MouseButton1Click:Connect(function()
-                if IsScrolling then return end
-                Open = not Open
-                Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
-            end)
-            for _, opt in ipairs(Cfg.Options) do
-                local O = Instance.new("TextButton", List)
-                O.Size = UDim2.new(1,0,0,28)
-                O.BackgroundColor3 = CurrentTheme.ElementBg2
-                O.Text = opt
-                O.Font = Enum.Font.Gotham
-                O.TextSize = 11
-                O.TextColor3 = CurrentTheme.Text
-                O.AutoLocalize = true
-                Corner(O, 6)
-                RegisterThemable(O, "BackgroundColor3", "ElementBg2")
-                O.MouseButton1Click:Connect(function()
-                    Selected = opt
-                    Btn.Text = Cfg.Title.." : "..Selected
-                    Open = false
-                    Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
-                    pcall(Cfg.Callback or function() end, Selected)
-                end)
-            end
-        end
+        
+local function CreateDropdown(Cfg)
+    local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
+    local Selected = isMulti and (Cfg.Default or {}) or (Cfg.Default or Cfg.Options[1])
+    if isMulti and type(Selected) ~= "table" then Selected = {Selected} end
 
-        local function CreateColorpicker(Cfg)
+    local Frame = Instance.new("Frame", TabPage)
+    Frame.Size = UDim2.new(1,-4,0,38)
+    Frame.BackgroundColor3 = CurrentTheme.ElementBg
+    Frame.ClipsDescendants = true
+    Corner(Frame, 9)
+    RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+    AddSearch(Frame, Cfg.Title, "Dropdown", Name)
+
+    local function GetDisplayText()
+        if isMulti then
+            if #Selected == 0 then return Cfg.Title.." : (لا شيء)"
+            elseif #Selected == 1 then return Cfg.Title.." : "..Selected[1]
+            else return Cfg.Title.." : "..#Selected.." محدد"
+            end
+        else
+            return Cfg.Title.." : "..tostring(Selected)
+        end
+    end
+
+    local Btn = Instance.new("TextButton", Frame)
+    Btn.Size = UDim2.new(1,0,0,38)
+    Btn.BackgroundTransparency = 1
+    Btn.Text = GetDisplayText()
+    Btn.Font = Enum.Font.GothamMedium
+    Btn.TextSize = 12
+    Btn.TextColor3 = CurrentTheme.Text
+    Btn.AutoLocalize = true
+    Btn.TextTruncate = Enum.TextTruncate.AtEnd
+    RegisterThemable(Btn, "TextColor3", "Text")
+    AddTextStroke(Btn)
+
+    local List = Instance.new("Frame", Frame)
+    List.Position = UDim2.new(0,0,0,38)
+    List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
+    List.BackgroundTransparency = 1
+    local ll = Instance.new("UIListLayout", List)
+    ll.Padding = UDim.new(0,2)
+
+    local Open = false
+    Btn.Activated:Connect(function()
+        if IsScrolling then return end
+        Open = not Open
+        Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
+    end)
+
+    local function IsSelected(opt)
+        if not isMulti then return opt == Selected end
+        for _, v in ipairs(Selected) do if v == opt then return true end end
+        return false
+    end
+
+    for _, opt in ipairs(Cfg.Options) do
+        local O = Instance.new("TextButton", List)
+        O.Size = UDim2.new(1,0,0,28)
+        O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
+        O.Text = (IsSelected(opt) and "✓ " or "")..opt
+        O.Font = Enum.Font.Gotham
+        O.TextSize = 11
+        O.TextColor3 = CurrentTheme.Text
+        O.AutoLocalize = true
+        Corner(O, 6)
+        RegisterThemable(O, "BackgroundColor3", "ElementBg2")
+        AddTextStroke(O)
+        O.Activated:Connect(function()
+            if isMulti then
+                if IsSelected(opt) then
+                    for i,v in ipairs(Selected) do if v==opt then table.remove(Selected,i) break end end
+                else
+                    table.insert(Selected, opt)
+                end
+                for _, child in ipairs(List:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        local name = child.Text:gsub("✓ ","")
+                        child.BackgroundColor3 = IsSelected(name) and CurrentTheme.Accent or CurrentTheme.ElementBg2
+                        child.Text = (IsSelected(name) and "✓ " or "")..name
+                    end
+                end
+                Btn.Text = GetDisplayText()
+                pcall(Cfg.Callback or function() end, Selected)
+            else
+                Selected = opt
+                Btn.Text = GetDisplayText()
+                Open = false
+                Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
+                pcall(Cfg.Callback or function() end, Selected)
+            end
+        end)
+    end
+end
+
+local function CreateColorpicker(Cfg)
             local Color = Cfg.Default or CurrentTheme.Accent
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
