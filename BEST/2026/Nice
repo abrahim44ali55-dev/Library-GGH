@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.8.9 FIXED OPEN + TOUCH - خرب مو يفتح تم التصليح - ADD API EDITION
+    GGH Library v1.8.5 AUTO SIZE + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -14,13 +14,8 @@ local CoreGui = game:GetService("CoreGui")
 local LocalizationService = game:GetService("LocalizationService")
 
 local function GetGuiParent()
-    -- FIX: يدعم كل المنفذات - يجرب PlayerGui اولاً
-    local ok, hui = pcall(function() return gethui and gethui() end)
+    local ok, hui = pcall(function() return gethui() end)
     if ok and hui then return hui end
-    local ok2, plrGui = pcall(function()
-        return game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-    end)
-    if ok2 and plrGui then return plrGui end
     return CoreGui
 end
 
@@ -39,13 +34,17 @@ local function Stroke(p,color,thick)
     return s
 end
 
-local function Tween(o,props,dur, style)
-    -- سلس بدون تقطيع - Expo Out
-    TweenService:Create(o, TweenInfo.new(dur or 0.32, style or Enum.EasingStyle.Expo, Enum.EasingDirection.Out), props):Play()
+local function Tween(o,props,dur)
+    TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
-local function SmoothTween(o,props,dur)
-    TweenService:Create(o, TweenInfo.new(dur or 0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), props):Play()
+
+-- FIXED: Safe button connection for mobile + pc
+local function ConnectBtn(btn, callback)
+    if not btn then return end
+    -- Activated works perfectly on Mobile and PC
+    btn.Activated:Connect(callback)
 end
+
 
 local Themes = {
     ["Dark"] = {
@@ -55,9 +54,9 @@ local Themes = {
         ElementBg = Color3.fromRGB(32,32,40),
         ElementBg2 = Color3.fromRGB(42,42,52),
         Text = Color3.fromRGB(255,255,255),
-        SubText = Color3.fromRGB(170,170,180),
-        SectionText = Color3.fromRGB(120,120,130),
-        ParagraphText = Color3.fromRGB(230,230,235),
+        SubText = Color3.fromRGB(180,180,190),
+        SectionText = Color3.fromRGB(140,140,150),
+        ParagraphText = Color3.fromRGB(220,220,230),
         Accent = Color3.fromRGB(90,70,255),
         Stroke = Color3.fromRGB(55,55,65),
         StrokeLight = Color3.fromRGB(70,70,80),
@@ -70,10 +69,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(14,20,33),
         ElementBg = Color3.fromRGB(20,30,55),
         ElementBg2 = Color3.fromRGB(28,42,75),
-        Text = Color3.fromRGB(235,245,255),
-        SubText = Color3.fromRGB(150,180,210),
-        SectionText = Color3.fromRGB(110,140,180),
-        ParagraphText = Color3.fromRGB(200,220,245),
+        Text = Color3.fromRGB(220,235,255),
+        SubText = Color3.fromRGB(120,150,190),
+        SectionText = Color3.fromRGB(90,120,160),
+        ParagraphText = Color3.fromRGB(180,200,230),
         Accent = Color3.fromRGB(60,130,255),
         Stroke = Color3.fromRGB(30,50,90),
         StrokeLight = Color3.fromRGB(50,80,130),
@@ -86,10 +85,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(24,14,16),
         ElementBg = Color3.fromRGB(40,22,26),
         ElementBg2 = Color3.fromRGB(55,30,36),
-        Text = Color3.fromRGB(255,235,240),
-        SubText = Color3.fromRGB(220,160,170),
-        SectionText = Color3.fromRGB(190,110,120),
-        ParagraphText = Color3.fromRGB(245,210,215),
+        Text = Color3.fromRGB(255,230,235),
+        SubText = Color3.fromRGB(200,140,150),
+        SectionText = Color3.fromRGB(180,100,110),
+        ParagraphText = Color3.fromRGB(240,200,210),
         Accent = Color3.fromRGB(220,50,70),
         Stroke = Color3.fromRGB(70,35,40),
         StrokeLight = Color3.fromRGB(100,50,60),
@@ -102,10 +101,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(14,22,16),
         ElementBg = Color3.fromRGB(22,38,26),
         ElementBg2 = Color3.fromRGB(32,52,38),
-        Text = Color3.fromRGB(230,255,235),
-        SubText = Color3.fromRGB(160,200,170),
-        SectionText = Color3.fromRGB(120,170,130),
-        ParagraphText = Color3.fromRGB(200,235,210),
+        Text = Color3.fromRGB(220,255,225),
+        SubText = Color3.fromRGB(130,190,140),
+        SectionText = Color3.fromRGB(100,160,110),
+        ParagraphText = Color3.fromRGB(190,230,200),
         Accent = Color3.fromRGB(60,200,90),
         Stroke = Color3.fromRGB(35,70,45),
         StrokeLight = Color3.fromRGB(55,100,65),
@@ -118,10 +117,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(22,16,30),
         ElementBg = Color3.fromRGB(38,28,52),
         ElementBg2 = Color3.fromRGB(52,38,72),
-        Text = Color3.fromRGB(245,235,255),
-        SubText = Color3.fromRGB(180,160,210),
-        SectionText = Color3.fromRGB(150,130,180),
-        ParagraphText = Color3.fromRGB(215,205,240),
+        Text = Color3.fromRGB(240,230,255),
+        SubText = Color3.fromRGB(170,150,200),
+        SectionText = Color3.fromRGB(140,120,170),
+        ParagraphText = Color3.fromRGB(210,200,235),
         Accent = Color3.fromRGB(150,80,255),
         Stroke = Color3.fromRGB(60,45,80),
         StrokeLight = Color3.fromRGB(90,65,120),
@@ -134,10 +133,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(12,12,20),
         ElementBg = Color3.fromRGB(20,20,35),
         ElementBg2 = Color3.fromRGB(30,30,50),
-        Text = Color3.fromRGB(180,255,255),
-        SubText = Color3.fromRGB(120,200,220),
-        SectionText = Color3.fromRGB(255,120,255),
-        ParagraphText = Color3.fromRGB(200,255,255),
+        Text = Color3.fromRGB(0,255,255),
+        SubText = Color3.fromRGB(0,200,200),
+        SectionText = Color3.fromRGB(255,0,255),
+        ParagraphText = Color3.fromRGB(180,255,255),
         Accent = Color3.fromRGB(255,0,128),
         Stroke = Color3.fromRGB(0,255,255),
         StrokeLight = Color3.fromRGB(255,0,255),
@@ -150,10 +149,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(10,24,32),
         ElementBg = Color3.fromRGB(16,42,58),
         ElementBg2 = Color3.fromRGB(22,58,78),
-        Text = Color3.fromRGB(210,245,255),
-        SubText = Color3.fromRGB(130,190,210),
-        SectionText = Color3.fromRGB(100,160,190),
-        ParagraphText = Color3.fromRGB(180,225,245),
+        Text = Color3.fromRGB(200,245,255),
+        SubText = Color3.fromRGB(100,180,210),
+        SectionText = Color3.fromRGB(80,150,180),
+        ParagraphText = Color3.fromRGB(170,220,240),
         Accent = Color3.fromRGB(0,200,220),
         Stroke = Color3.fromRGB(20,80,100),
         StrokeLight = Color3.fromRGB(30,110,140),
@@ -166,10 +165,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(28,20,14),
         ElementBg = Color3.fromRGB(48,34,22),
         ElementBg2 = Color3.fromRGB(66,48,32),
-        Text = Color3.fromRGB(255,245,230),
-        SubText = Color3.fromRGB(220,190,150),
-        SectionText = Color3.fromRGB(200,160,110),
-        ParagraphText = Color3.fromRGB(255,230,200),
+        Text = Color3.fromRGB(255,240,220),
+        SubText = Color3.fromRGB(220,180,130),
+        SectionText = Color3.fromRGB(200,150,90),
+        ParagraphText = Color3.fromRGB(255,220,180),
         Accent = Color3.fromRGB(255,140,40),
         Stroke = Color3.fromRGB(80,55,35),
         StrokeLight = Color3.fromRGB(120,80,50),
@@ -177,19 +176,19 @@ local Themes = {
         CloseText = Color3.fromRGB(255,100,80),
     },
     ["Monochrome"] = {
-        MainBg = Color3.fromRGB(245,245,245),
-        HeaderBg = Color3.fromRGB(230,230,230),
-        TabListBg = Color3.fromRGB(235,235,235),
-        ElementBg = Color3.fromRGB(255,255,255),
-        ElementBg2 = Color3.fromRGB(220,220,220),
-        Text = Color3.fromRGB(15,15,15),
-        SubText = Color3.fromRGB(80,80,80),
-        SectionText = Color3.fromRGB(100,100,100),
-        ParagraphText = Color3.fromRGB(30,30,30),
-        Accent = Color3.fromRGB(50,50,50),
-        Stroke = Color3.fromRGB(200,200,200),
-        StrokeLight = Color3.fromRGB(180,180,180),
-        CloseBg = Color3.fromRGB(220,50,50),
+        MainBg = Color3.fromRGB(18,18,18),
+        HeaderBg = Color3.fromRGB(30,30,30),
+        TabListBg = Color3.fromRGB(24,24,24),
+        ElementBg = Color3.fromRGB(38,38,38),
+        ElementBg2 = Color3.fromRGB(50,50,50),
+        Text = Color3.fromRGB(255,255,255),
+        SubText = Color3.fromRGB(180,180,180),
+        SectionText = Color3.fromRGB(150,150,150),
+        ParagraphText = Color3.fromRGB(220,220,220),
+        Accent = Color3.fromRGB(255,255,255),
+        Stroke = Color3.fromRGB(60,60,60),
+        StrokeLight = Color3.fromRGB(80,80,80),
+        CloseBg = Color3.fromRGB(60,60,60),
         CloseText = Color3.fromRGB(255,255,255),
     },
     ["Toxic Green"] = {
@@ -198,41 +197,16 @@ local Themes = {
         TabListBg = Color3.fromRGB(14,22,14),
         ElementBg = Color3.fromRGB(22,38,22),
         ElementBg2 = Color3.fromRGB(32,55,32),
-        Text = Color3.fromRGB(210,255,210),
-        SubText = Color3.fromRGB(150,220,150),
-        SectionText = Color3.fromRGB(110,200,110),
-        ParagraphText = Color3.fromRGB(190,255,190),
+        Text = Color3.fromRGB(200,255,200),
+        SubText = Color3.fromRGB(120,220,120),
+        SectionText = Color3.fromRGB(90,200,90),
+        ParagraphText = Color3.fromRGB(180,255,180),
         Accent = Color3.fromRGB(120,255,60),
         Stroke = Color3.fromRGB(40,80,40),
         StrokeLight = Color3.fromRGB(60,120,60),
         CloseBg = Color3.fromRGB(70,40,30),
         CloseText = Color3.fromRGB(255,130,80),
     },
-    ["Light"] = {
-        MainBg = Color3.fromRGB(250,250,252),
-        HeaderBg = Color3.fromRGB(240,240,245),
-        TabListBg = Color3.fromRGB(245,245,248),
-        ElementBg = Color3.fromRGB(255,255,255),
-        ElementBg2 = Color3.fromRGB(235,235,240),
-        Text = Color3.fromRGB(25,25,30),
-        SubText = Color3.fromRGB(100,100,110),
-        SectionText = Color3.fromRGB(120,120,130),
-        ParagraphText = Color3.fromRGB(40,40,50),
-        Accent = Color3.fromRGB(90,70,255),
-        Stroke = Color3.fromRGB(220,220,225),
-        StrokeLight = Color3.fromRGB(200,200,210),
-        CloseBg = Color3.fromRGB(255,80,80),
-        CloseText = Color3.fromRGB(255,255,255),
-    },
-}
-
--- 50 EMOJIS READY
-GGH.Emojis = {
-    "✅", "❌", "⚠️", "🔥", "💀", "👑", "⭐", "💎", "🎯", "🚀",
-    "🔍", "⚙️", "🎮", "🖼️", "📋", "💾", "🔓", "🔒", "⚡", "💥",
-    "🎨", "🌟", "💡", "🔔", "📢", "❤️", "💚", "💙", "💜", "🧡",
-    "🟢", "🔴", "🟡", "🔵", "🟣", "⚫", "⚪", "🟠", "🎃", "👻",
-    "🤖", "👾", "🦾", "🧠", "👁️", "🛡️", "⚔️", "🏆", "💰", "🎁"
 }
 
 function GGH:CreateWindow(Config)
@@ -478,29 +452,7 @@ function GGH:CreateWindow(Config)
             timerLbl.TextColor3 = Colors.TextSecondary
             timerLbl.TextSize = 10
             timerLbl.Font = Enum.Font.Gotham
-            -- Enhanced Key System - يدعم كل الانظمة
-        local function checkKey(k)
-            -- يدعم مفاتيح متعددة
-            for _, v in ipairs(correctKeys) do
-                if k==v then return true end
-                -- يدعم نجمة * كـ wildcard
-                if v:find("%*") then
-                    local pattern = v:gsub("%*", ".*")
-                    if k:match("^"..pattern.."$") then return true end
-                end
-            end
-            return false
-        end
-        -- يدعم رابط يجيب المفاتيح من النت
-        local remoteKeys = {}
-        if Config.KeyLink and type(Config.KeyLink)=="string" and Config.KeyLink:match("https://") and Config.RemoteKeyCheck then
-            pcall(function()
-                local urlContent = game:HttpGet(Config.KeyLink)
-                for key in urlContent:gmatch("[^\n]+") do
-                    table.insert(remoteKeys, key:gsub("%s+", ""))
-                end
-            end)
-        end
+            local function checkKey(k) for _, v in ipairs(correctKeys) do if k==v then return true end end return false end
             local function doVerify()
                 local k = textBox.Text
                 if k=="" then status.Text="Please enter an access key" status.TextColor3=Colors.Error return end
@@ -532,7 +484,7 @@ function GGH:CreateWindow(Config)
                     container.Position=orig
                 end
             end
-            verifyBtn.Activated:Connect(doVerify)
+            verifyBtn.MouseButton1Click:Connect(doVerify)
             textBox.FocusLost:Connect(function(enter) if enter then doVerify() end end)
             getKeyBtn.Activated:Connect(function() if setclipboard then setclipboard(getLink) end status.Text="Get Key link copied!" status.TextColor3=Colors.Success end)
             discBtn.Activated:Connect(function() if setclipboard then setclipboard(discLink) end status.Text="Discord link copied!" status.TextColor3=Colors.Success end)
@@ -544,7 +496,7 @@ function GGH:CreateWindow(Config)
         if not success then return nil end
     end
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or "v1.8.6 FIXED" -- سيتم تحديثه بعد تحديد autoName
+    local SubTitle = Config.SubTitle or ("v1.8.5 FIXED ["..autoName.."]")
     local DefaultTheme = Config.Theme or "Monochrome"
     if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
     local CurrentTheme = Themes[DefaultTheme]
@@ -577,16 +529,13 @@ function GGH:CreateWindow(Config)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
-    -- 7 AUTO SIZES BY DEVICE - كل الاحجام
+    -- 5 AUTO SIZES BY DEVICE
     local SizePresets = {
-        ["ExtraSmall"] = {W=380, H=260}, -- XS
-        ["Tiny"]       = {W=420, H=280}, -- very small phones
-        ["Small"]      = {W=460, H=320}, -- normal phones (default)
-        ["Medium"]     = {W=520, H=360}, -- tablet
-        ["Large"]      = {W=600, H=400}, -- desktop
-        ["ExtraLarge"] = {W=680, H=460}, -- large screens
-        ["Huge"]       = {W=780, H=520}, -- huge
-        ["Full"]       = {W=900, H=600}, -- full
+        ["Tiny"]   = {W=420, H=280}, -- very small phones
+        ["Small"]  = {W=460, H=320}, -- normal phones (default now)
+        ["Medium"] = {W=520, H=360}, -- tablet
+        ["Large"]  = {W=600, H=400}, -- desktop
+        ["Huge"]   = {W=680, H=460}, -- large screens
     }
     local function DetectDevicePreset()
         local cam = workspace.CurrentCamera
@@ -609,10 +558,6 @@ function GGH:CreateWindow(Config)
     local autoPreset, autoName = DetectDevicePreset()
     local finalW = Config.Width or autoPreset.W
     local finalH = Config.Height or autoPreset.H
-    -- FIX: تحديث SubTitle بعد معرفة autoName (كان سبب عدم الفتح)
-    if not Config.SubTitle then
-        SubTitle = "v1.8.6 FIXED ["..autoName.."]"
-    end
     -- Force smaller default if user used old 560x400
     if not Config.Width and not Config.Height then
         -- user didnt set size, use auto (which is now 460x320 on mobile)
@@ -994,26 +939,40 @@ function GGH:CreateWindow(Config)
     NoBtn.AutoLocalize = true
     Corner(NoBtn, 9)
     do
+        -- FIXED DRAG: threshold to prevent stealing clicks on mobile
         local dragging = false
+        local potentialDrag = false
         local dragStart, startPos
+        local DRAG_THRESHOLD = 8
         local dragObjects = {Header, TitleLabel, SubLabel, HeaderFix}
         local function StartDrag(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
+                potentialDrag = true
+                dragging = false
                 dragStart = input.Position
                 startPos = Main.Position
             end
         end
-        for _, obj in ipairs(dragObjects) do obj.InputBegan:Connect(StartDrag) end
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local function OnDragMove(input)
+            if potentialDrag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
-                Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                if not dragging and delta.Magnitude >= DRAG_THRESHOLD then
+                    dragging = true
+                end
+                if dragging then
+                    Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
             end
-        end)
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
-        end)
+        end
+        local function EndDrag(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+                potentialDrag = false
+            end
+        end
+        for _, obj in ipairs(dragObjects) do obj.InputBegan:Connect(StartDrag) end
+        UserInputService.InputChanged:Connect(OnDragMove)
+        UserInputService.InputEnded:Connect(EndDrag)
     end
     local ResizeGrip = Instance.new("Frame", Main)
     ResizeGrip.Name = "ResizeGrip"
@@ -1074,7 +1033,7 @@ function GGH:CreateWindow(Config)
     end)
 
     -- MIN / MAX LOGIC - FIX 2
-    MinBtn.Activated:Connect(function()
+    ConnectBtn(MinBtn, function()
         if not minimized then
             minimized = true
             savedSize = Main.Size
@@ -1092,7 +1051,7 @@ function GGH:CreateWindow(Config)
             ResizeGrip.Visible = false
         end
     end)
-    MaxBtn.Activated:Connect(function()
+    ConnectBtn(MaxBtn, function()
         if minimized then
             minimized = false
             HeaderFix.Visible = true
@@ -1107,7 +1066,7 @@ function GGH:CreateWindow(Config)
             UpdateResizeGrip()
         end
     end)
-    CloseBtn.Activated:Connect(function()
+    ConnectBtn(CloseBtn, function()
         if minimized then
             minimized = false
             HeaderFix.Visible = true
@@ -1128,8 +1087,8 @@ function GGH:CreateWindow(Config)
             ConfirmFrame.Visible = true
         end
     end)
-    NoBtn.Activated:Connect(function() ConfirmFrame.Visible = false ConfirmFrame.Size = Main.Size end)
-    YesBtn.Activated:Connect(function() Tween(Main, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) Tween(ConfirmFrame, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) task.wait(0.25) ScreenGui:Destroy() end)
+    ConnectBtn(NoBtn, function() ConfirmFrame.Visible = false ConfirmFrame.Size = Main.Size end)
+    ConnectBtn(YesBtn, function() Tween(Main, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) Tween(ConfirmFrame, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) task.wait(0.25) ScreenGui:Destroy() end)
     local ThemableElements = {}
     local function RegisterThemable(obj, prop, themeKey) table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey}) end
     local function ApplyTheme(themeName)
@@ -1231,6 +1190,7 @@ function GGH:CreateWindow(Config)
         local dragStartPos
         local startGuiPos
         local hasDragged = false
+        local DRAG_THRESHOLD = 8
         
         FloatingIcon.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -1243,17 +1203,22 @@ function GGH:CreateWindow(Config)
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStartPos
-                if delta.Magnitude > 5 then hasDragged = true end
-                FloatingIcon.Position = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
+                if delta.Magnitude >= DRAG_THRESHOLD then
+                    hasDragged = true
+                    FloatingIcon.Position = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
+                end
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = false
-                task.wait(0.05)
-                hasDragged = false
+                -- keep hasDragged for a bit to block click
+                if hasDragged then
+                    task.delay(0.25, function() hasDragged = false end)
+                end
             end
         end)
+        -- FIXED: use Activated for better mobile support
         FloatingIcon.Activated:Connect(function()
             if hasDragged then return end
             Main.Visible = not Main.Visible
@@ -1400,7 +1365,7 @@ function GGH:CreateWindow(Config)
         end
     end
     if SearchBtn then SearchBtn.Activated:Connect(ToggleSearch) end
-    SearchClose.Activated:Connect(ToggleSearch)
+    ConnectBtn(SearchClose, ToggleSearch)
     SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local query = SearchBox.Text:lower()
         if query == "" then
@@ -1468,7 +1433,7 @@ function GGH:CreateWindow(Config)
         local Padding = Instance.new("UIPadding", TabPage)
         Padding.PaddingTop = UDim.new(0,2) Padding.PaddingBottom = UDim.new(0,20) Padding.PaddingLeft = UDim.new(0,2) Padding.PaddingRight = UDim.new(0,4)
         local IsScrolling = false
-        TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function() IsScrolling = true task.delay(0.12, function() IsScrolling = false end) end)
+        TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function() IsScrolling = true task.delay(0.35, function() IsScrolling = false end) end)
         TabButton.Activated:Connect(function()
             for _, t in pairs(Tabs) do if t.Page then t.Page.Visible = false end if t.Button then Tween(t.Button, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.15) t.Button.TextColor3 = Color3.fromRGB(170,170,180) end end
             TabPage.Visible = true
@@ -1985,7 +1950,7 @@ function GGH:CreateWindow(Config)
                 ShowBtn.Font = Enum.Font.GothamBold
                 ShowBtn.TextSize = 12
                 Corner(ShowBtn, 8)
-                ShowBtn.Activated:Connect(showImageFromInput)
+                ShowBtn.MouseButton1Click:Connect(showImageFromInput)
             end
 
             if Cfg.Title and Cfg.Title ~= "" then
