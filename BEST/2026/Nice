@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.8.6 AUTO SIZE + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.8.9 FIXED OPEN + TOUCH - خرب مو يفتح تم التصليح - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -14,8 +14,13 @@ local CoreGui = game:GetService("CoreGui")
 local LocalizationService = game:GetService("LocalizationService")
 
 local function GetGuiParent()
-    local ok, hui = pcall(function() return gethui() end)
+    -- FIX: يدعم كل المنفذات - يجرب PlayerGui اولاً
+    local ok, hui = pcall(function() return gethui and gethui() end)
     if ok and hui then return hui end
+    local ok2, plrGui = pcall(function()
+        return game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    end)
+    if ok2 and plrGui then return plrGui end
     return CoreGui
 end
 
@@ -41,45 +46,6 @@ end
 local function SmoothTween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), props):Play()
 end
-
--- ULTIMATE MOBILE TOUCH BYPASS - يخلي اللمس يشتغل حتى لو ScrollingFrame يحاول يسرقه
-local function MakeButtonMobilePerfect(btn, callback)
-    local startPos = nil
-    local started = false
-    local conn1, conn2
-    
-    btn.Active = true
-    btn.Selectable = false
-    btn.AutoButtonColor = false
-    
-    -- طريقة 1: InputBegan/Ended مباشر على الزر (اقوى طريقة للجوال)
-    btn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            startPos = input.Position
-            started = true
-        end
-    end)
-    
-    btn.InputEnded:Connect(function(input)
-        if started and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
-            local delta = (input.Position - (startPos or input.Position)).Magnitude
-            if delta < 25 then -- 25 بيكسل تسامح للجوال
-                pcall(callback)
-            end
-            started = false
-            startPos = nil
-        end
-    end)
-    
-    -- طريقة 2: Activated كنسخة احتياطية
-    btn.Activated:Connect(function()
-        -- لا ننفذ اذا InputEnded نفذ قبل اقل من 0.2 ثانية (تجنب التكرار)
-        if not started then
-            pcall(callback)
-        end
-    end)
-end
-
 
 local Themes = {
     ["Dark"] = {
@@ -566,11 +532,11 @@ function GGH:CreateWindow(Config)
                     container.Position=orig
                 end
             end
-            verifyBtn.MouseButton1Click:Connect(doVerify)
+            verifyBtn.Activated:Connect(doVerify)
             textBox.FocusLost:Connect(function(enter) if enter then doVerify() end end)
-            getKeyBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(getLink) end status.Text="Get Key link copied!" status.TextColor3=Colors.Success end)
-            discBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(discLink) end status.Text="Discord link copied!" status.TextColor3=Colors.Success end)
-            hwidBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(getHWID()) end status.Text="HWID copied!" status.TextColor3=Colors.Success end)
+            getKeyBtn.Activated:Connect(function() if setclipboard then setclipboard(getLink) end status.Text="Get Key link copied!" status.TextColor3=Colors.Success end)
+            discBtn.Activated:Connect(function() if setclipboard then setclipboard(discLink) end status.Text="Discord link copied!" status.TextColor3=Colors.Success end)
+            hwidBtn.Activated:Connect(function() if setclipboard then setclipboard(getHWID()) end status.Text="HWID copied!" status.TextColor3=Colors.Success end)
             container.Size=UDim2.new(0,0,0,0)
             TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size=UDim2.new(0,420,0,540)}):Play()
             repeat task.wait(0.1) until finished
@@ -578,7 +544,7 @@ function GGH:CreateWindow(Config)
         if not success then return nil end
     end
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or ("v1.8.6 FIXED ["..autoName.."]")
+    local SubTitle = Config.SubTitle or "v1.8.6 FIXED" -- سيتم تحديثه بعد تحديد autoName
     local DefaultTheme = Config.Theme or "Monochrome"
     if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
     local CurrentTheme = Themes[DefaultTheme]
@@ -643,6 +609,10 @@ function GGH:CreateWindow(Config)
     local autoPreset, autoName = DetectDevicePreset()
     local finalW = Config.Width or autoPreset.W
     local finalH = Config.Height or autoPreset.H
+    -- FIX: تحديث SubTitle بعد معرفة autoName (كان سبب عدم الفتح)
+    if not Config.SubTitle then
+        SubTitle = "v1.8.6 FIXED ["..autoName.."]"
+    end
     -- Force smaller default if user used old 560x400
     if not Config.Width and not Config.Height then
         -- user didnt set size, use auto (which is now 460x320 on mobile)
@@ -1026,45 +996,23 @@ function GGH:CreateWindow(Config)
     do
         local dragging = false
         local dragStart, startPos
-        local hasExceeded = false
-        local function IsOverControls(pos)
-            for _, btn in ipairs(Controls:GetChildren()) do
-                if btn:IsA("GuiObject") and btn.Visible then
-                    local absPos = btn.AbsolutePosition
-                    local absSize = btn.AbsoluteSize
-                    if pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y then
-                        return true
-                    end
-                end
-            end
-            return false
-        end
+        local dragObjects = {Header, TitleLabel, SubLabel, HeaderFix}
         local function StartDrag(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                if IsOverControls(input.Position) then return end
                 dragging = true
-                hasExceeded = false
                 dragStart = input.Position
                 startPos = Main.Position
             end
         end
-        for _, obj in ipairs({Header, TitleLabel, SubLabel, HeaderFix}) do
-            obj.InputBegan:Connect(StartDrag)
-            obj.Active = true
-        end
+        for _, obj in ipairs(dragObjects) do obj.InputBegan:Connect(StartDrag) end
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStart
-                if delta.Magnitude < 8 then return end
-                hasExceeded = true
                 Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-                hasExceeded = false
-            end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
         end)
     end
     local ResizeGrip = Instance.new("Frame", Main)
@@ -1126,7 +1074,7 @@ function GGH:CreateWindow(Config)
     end)
 
     -- MIN / MAX LOGIC - FIX 2
-    MinBtn.MouseButton1Click:Connect(function()
+    MinBtn.Activated:Connect(function()
         if not minimized then
             minimized = true
             savedSize = Main.Size
@@ -1144,7 +1092,7 @@ function GGH:CreateWindow(Config)
             ResizeGrip.Visible = false
         end
     end)
-    MaxBtn.MouseButton1Click:Connect(function()
+    MaxBtn.Activated:Connect(function()
         if minimized then
             minimized = false
             HeaderFix.Visible = true
@@ -1159,7 +1107,7 @@ function GGH:CreateWindow(Config)
             UpdateResizeGrip()
         end
     end)
-    CloseBtn.MouseButton1Click:Connect(function()
+    CloseBtn.Activated:Connect(function()
         if minimized then
             minimized = false
             HeaderFix.Visible = true
@@ -1180,8 +1128,8 @@ function GGH:CreateWindow(Config)
             ConfirmFrame.Visible = true
         end
     end)
-    NoBtn.MouseButton1Click:Connect(function() ConfirmFrame.Visible = false ConfirmFrame.Size = Main.Size end)
-    YesBtn.MouseButton1Click:Connect(function() Tween(Main, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) Tween(ConfirmFrame, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) task.wait(0.25) ScreenGui:Destroy() end)
+    NoBtn.Activated:Connect(function() ConfirmFrame.Visible = false ConfirmFrame.Size = Main.Size end)
+    YesBtn.Activated:Connect(function() Tween(Main, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) Tween(ConfirmFrame, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) task.wait(0.25) ScreenGui:Destroy() end)
     local ThemableElements = {}
     local function RegisterThemable(obj, prop, themeKey) table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey}) end
     local function ApplyTheme(themeName)
@@ -1306,7 +1254,7 @@ function GGH:CreateWindow(Config)
                 hasDragged = false
             end
         end)
-        FloatingIcon.MouseButton1Click:Connect(function()
+        FloatingIcon.Activated:Connect(function()
             if hasDragged then return end
             Main.Visible = not Main.Visible
             if Main.Visible then
@@ -1338,7 +1286,7 @@ function GGH:CreateWindow(Config)
         end)
     end
 
-    if FloatBtn then FloatBtn.MouseButton1Click:Connect(function()
+    if FloatBtn then FloatBtn.Activated:Connect(function()
         floatEnabled = not floatEnabled
         if floatEnabled then
             Tween(FloatBtn, {BackgroundColor3 = CurrentTheme.Accent}, 0.2)
@@ -1369,7 +1317,7 @@ function GGH:CreateWindow(Config)
         end
     end
 
-    if ThemeBtn then ThemeBtn.MouseButton1Click:Connect(function()  
+    if ThemeBtn then ThemeBtn.Activated:Connect(function()  
         EnsureUnminimizedForPopup()
         if SearchOpen then
             SearchOpen = false
@@ -1405,7 +1353,7 @@ function GGH:CreateWindow(Config)
         Btn.AutoLocalize = true
         Corner(Btn, 6)
         Stroke(Btn, th.Accent, 1)
-        Btn.MouseButton1Click:Connect(function() 
+        Btn.Activated:Connect(function() 
             ApplyTheme(name) 
             ThemeDropdown.Visible = false 
             ThemeOpen = false 
@@ -1451,8 +1399,8 @@ function GGH:CreateWindow(Config)
             Tween(Container, {Position = UDim2.new(0,152,0,58), Size = UDim2.new(1,-160,1,-64)}, 0.2)
         end
     end
-    if SearchBtn then SearchBtn.MouseButton1Click:Connect(ToggleSearch) end
-    SearchClose.MouseButton1Click:Connect(ToggleSearch)
+    if SearchBtn then SearchBtn.Activated:Connect(ToggleSearch) end
+    SearchClose.Activated:Connect(ToggleSearch)
     SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local query = SearchBox.Text:lower()
         if query == "" then
@@ -1507,18 +1455,7 @@ function GGH:CreateWindow(Config)
         TabPage.Visible = false
         TabPage.CanvasSize = UDim2.new(0,0,0,0)
         TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
-        TabPage.ScrollBarThickness = 3
-        TabPage.ScrollingEnabled = true
-        TabPage.Active = true
-        TabPage.Selectable = false
-        TabPage.SelectionGroup = false
-        TabPage.AutoButtonColor = false
-        -- CRITICAL MOBILE FIX: prevent scroll from stealing button touch
-        TabPage.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.Touch then
-                -- لا تفعل شي، خلي الزر هو الي يقرر
-            end
-        end)
+        TabPage.ScrollBarThickness = 2
         TabPage.ScrollBarImageColor3 = CurrentTheme.Accent
         TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
         TabPage.BorderSizePixel = 0
@@ -1531,8 +1468,8 @@ function GGH:CreateWindow(Config)
         local Padding = Instance.new("UIPadding", TabPage)
         Padding.PaddingTop = UDim.new(0,2) Padding.PaddingBottom = UDim.new(0,20) Padding.PaddingLeft = UDim.new(0,2) Padding.PaddingRight = UDim.new(0,4)
         local IsScrolling = false
-        TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function() IsScrolling = true task.delay(0.08, function() IsScrolling = false end) -- ULTIMATE MOBILE FIX 0.08s end)
-        TabButton.MouseButton1Click:Connect(function()
+        TabPage:GetPropertyChangedSignal("CanvasPosition"):Connect(function() IsScrolling = true task.delay(0.12, function() IsScrolling = false end) end)
+        TabButton.Activated:Connect(function()
             for _, t in pairs(Tabs) do if t.Page then t.Page.Visible = false end if t.Button then Tween(t.Button, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.15) t.Button.TextColor3 = Color3.fromRGB(170,170,180) end end
             TabPage.Visible = true
             Tween(TabButton, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
@@ -1611,8 +1548,8 @@ function GGH:CreateWindow(Config)
             RegisterThemable(Btn, "TextColor3", "Text")
             RegisterThemable(st, "Stroke", "StrokeLight")
             AddSearch(Btn, Cfg.Title, "Button", Name)
-            Btn.MouseButton1Click:Connect(function()
-                if IsScrolling and not (UserInputService.TouchEnabled) then return end -- MOBILE FIX: allow touch even when scrolling
+            Btn.Activated:Connect(function()
+                if IsScrolling then return end
                 Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.1)
                 task.wait(0.1)
                 Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.1)
@@ -1653,8 +1590,8 @@ function GGH:CreateWindow(Config)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
-            Btn.MouseButton1Click:Connect(function()
-                if IsScrolling and not (UserInputService.TouchEnabled) then return end -- MOBILE FIX: allow touch even when scrolling
+            Btn.Activated:Connect(function()
+                if IsScrolling then return end
                 State = not State
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
@@ -1763,7 +1700,7 @@ function GGH:CreateWindow(Config)
             Box.ClearTextOnFocus = false
             Box.AutoLocalize = true
             RegisterThemable(Box, "TextColor3", "Text")
-            Box.FocusLost:Connect(function() if IsScrolling and not (UserInputService.TouchEnabled) then return end -- MOBILE FIX: allow touch even when scrolling pcall(Cfg.Callback or function() end, Box.Text) end)
+            Box.FocusLost:Connect(function() if IsScrolling then return end pcall(Cfg.Callback or function() end, Box.Text) end)
         end
 
         local function CreateDropdown(Cfg)
@@ -1790,8 +1727,8 @@ function GGH:CreateWindow(Config)
             List.BackgroundTransparency = 1
             Instance.new("UIListLayout", List).Padding = UDim.new(0,2)
             local Open = false
-            Btn.MouseButton1Click:Connect(function()
-                if IsScrolling and not (UserInputService.TouchEnabled) then return end -- MOBILE FIX: allow touch even when scrolling
+            Btn.Activated:Connect(function()
+                if IsScrolling then return end
                 Open = not Open
                 Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
             end)
@@ -1806,7 +1743,7 @@ function GGH:CreateWindow(Config)
                 O.AutoLocalize = true
                 Corner(O, 6)
                 RegisterThemable(O, "BackgroundColor3", "ElementBg2")
-                O.MouseButton1Click:Connect(function()
+                O.Activated:Connect(function()
                     Selected = opt
                     Btn.Text = Cfg.Title.." : "..Selected
                     Open = false
@@ -1844,8 +1781,8 @@ function GGH:CreateWindow(Config)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
-            Btn.MouseButton1Click:Connect(function()
-                if IsScrolling and not (UserInputService.TouchEnabled) then return end -- MOBILE FIX: allow touch even when scrolling
+            Btn.Activated:Connect(function()
+                if IsScrolling then return end
                 local newColor = Color3.fromHSV(math.random(),1,1)
                 Preview.BackgroundColor3 = newColor
                 pcall(Cfg.Callback or function() end, newColor)
@@ -1875,8 +1812,8 @@ function GGH:CreateWindow(Config)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
-            Btn.MouseButton1Click:Connect(function()
-                if IsScrolling and not (UserInputService.TouchEnabled) then return end -- MOBILE FIX: allow touch even when scrolling
+            Btn.Activated:Connect(function()
+                if IsScrolling then return end
                 Label.Text = Cfg.Title.." : ..."
                 local conn; conn = UserInputService.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.Keyboard then
@@ -2048,7 +1985,7 @@ function GGH:CreateWindow(Config)
                 ShowBtn.Font = Enum.Font.GothamBold
                 ShowBtn.TextSize = 12
                 Corner(ShowBtn, 8)
-                ShowBtn.MouseButton1Click:Connect(showImageFromInput)
+                ShowBtn.Activated:Connect(showImageFromInput)
             end
 
             if Cfg.Title and Cfg.Title ~= "" then
