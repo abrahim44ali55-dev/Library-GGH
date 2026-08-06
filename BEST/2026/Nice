@@ -1223,7 +1223,6 @@ function GGH:CreateWindow(Config)
         local startGuiPos
         local hasDragged = false
         
-        -- FIXED TOUCH: لمس محسن للعائم
         FloatingIcon.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
@@ -1541,7 +1540,7 @@ function GGH:CreateWindow(Config)
             RegisterThemable(st, "Stroke", "StrokeLight")
             AddSearch(Btn, Cfg.Title, "Button", Name)
             Btn.MouseButton1Click:Connect(function()
-                -- INSTANT TOUCH: بدون فحص سكرول
+                if false then return end -- instant touch
                 Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.1)
                 task.wait(0.1)
                 Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.1)
@@ -1582,8 +1581,8 @@ function GGH:CreateWindow(Config)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
-            local function OnToggle()
-                -- INSTANT TOUCH: بدون فحص سكرول
+            Btn.MouseButton1Click:Connect(function()
+                if false then return end -- instant touch
                 State = not State
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
@@ -1692,7 +1691,7 @@ function GGH:CreateWindow(Config)
             Box.ClearTextOnFocus = false
             Box.AutoLocalize = true
             RegisterThemable(Box, "TextColor3", "Text")
-            Box.FocusLost:Connect(function() -- INSTANT TOUCH: بدون فحص سكرول pcall(Cfg.Callback or function() end, Box.Text) end)
+            Box.FocusLost:Connect(function() if false then return end -- instant touch pcall(Cfg.Callback or function() end, Box.Text) end)
         end
 
         local function CreateDropdown(Cfg)
@@ -1720,7 +1719,7 @@ function GGH:CreateWindow(Config)
             Instance.new("UIListLayout", List).Padding = UDim.new(0,2)
             local Open = false
             Btn.MouseButton1Click:Connect(function()
-                -- INSTANT TOUCH: بدون فحص سكرول
+                if false then return end -- instant touch
                 Open = not Open
                 Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
             end)
@@ -1774,7 +1773,7 @@ function GGH:CreateWindow(Config)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
             Btn.MouseButton1Click:Connect(function()
-                -- INSTANT TOUCH: بدون فحص سكرول
+                if false then return end -- instant touch
                 local newColor = Color3.fromHSV(math.random(),1,1)
                 Preview.BackgroundColor3 = newColor
                 pcall(Cfg.Callback or function() end, newColor)
@@ -1805,7 +1804,7 @@ function GGH:CreateWindow(Config)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
             Btn.MouseButton1Click:Connect(function()
-                -- INSTANT TOUCH: بدون فحص سكرول
+                if false then return end -- instant touch
                 Label.Text = Cfg.Title.." : ..."
                 local conn; conn = UserInputService.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.Keyboard then
