@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.8.5 AUTO SIZE + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.8.6 AUTO SIZE + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -34,8 +34,12 @@ local function Stroke(p,color,thick)
     return s
 end
 
-local function Tween(o,props,dur)
-    TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
+local function Tween(o,props,dur, style)
+    -- سلس بدون تقطيع - Expo Out
+    TweenService:Create(o, TweenInfo.new(dur or 0.32, style or Enum.EasingStyle.Expo, Enum.EasingDirection.Out), props):Play()
+end
+local function SmoothTween(o,props,dur)
+    TweenService:Create(o, TweenInfo.new(dur or 0.4, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), props):Play()
 end
 
 local Themes = {
@@ -46,9 +50,9 @@ local Themes = {
         ElementBg = Color3.fromRGB(32,32,40),
         ElementBg2 = Color3.fromRGB(42,42,52),
         Text = Color3.fromRGB(255,255,255),
-        SubText = Color3.fromRGB(180,180,190),
-        SectionText = Color3.fromRGB(140,140,150),
-        ParagraphText = Color3.fromRGB(220,220,230),
+        SubText = Color3.fromRGB(170,170,180),
+        SectionText = Color3.fromRGB(120,120,130),
+        ParagraphText = Color3.fromRGB(230,230,235),
         Accent = Color3.fromRGB(90,70,255),
         Stroke = Color3.fromRGB(55,55,65),
         StrokeLight = Color3.fromRGB(70,70,80),
@@ -61,10 +65,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(14,20,33),
         ElementBg = Color3.fromRGB(20,30,55),
         ElementBg2 = Color3.fromRGB(28,42,75),
-        Text = Color3.fromRGB(220,235,255),
-        SubText = Color3.fromRGB(120,150,190),
-        SectionText = Color3.fromRGB(90,120,160),
-        ParagraphText = Color3.fromRGB(180,200,230),
+        Text = Color3.fromRGB(235,245,255),
+        SubText = Color3.fromRGB(150,180,210),
+        SectionText = Color3.fromRGB(110,140,180),
+        ParagraphText = Color3.fromRGB(200,220,245),
         Accent = Color3.fromRGB(60,130,255),
         Stroke = Color3.fromRGB(30,50,90),
         StrokeLight = Color3.fromRGB(50,80,130),
@@ -77,10 +81,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(24,14,16),
         ElementBg = Color3.fromRGB(40,22,26),
         ElementBg2 = Color3.fromRGB(55,30,36),
-        Text = Color3.fromRGB(255,230,235),
-        SubText = Color3.fromRGB(200,140,150),
-        SectionText = Color3.fromRGB(180,100,110),
-        ParagraphText = Color3.fromRGB(240,200,210),
+        Text = Color3.fromRGB(255,235,240),
+        SubText = Color3.fromRGB(220,160,170),
+        SectionText = Color3.fromRGB(190,110,120),
+        ParagraphText = Color3.fromRGB(245,210,215),
         Accent = Color3.fromRGB(220,50,70),
         Stroke = Color3.fromRGB(70,35,40),
         StrokeLight = Color3.fromRGB(100,50,60),
@@ -93,10 +97,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(14,22,16),
         ElementBg = Color3.fromRGB(22,38,26),
         ElementBg2 = Color3.fromRGB(32,52,38),
-        Text = Color3.fromRGB(220,255,225),
-        SubText = Color3.fromRGB(130,190,140),
-        SectionText = Color3.fromRGB(100,160,110),
-        ParagraphText = Color3.fromRGB(190,230,200),
+        Text = Color3.fromRGB(230,255,235),
+        SubText = Color3.fromRGB(160,200,170),
+        SectionText = Color3.fromRGB(120,170,130),
+        ParagraphText = Color3.fromRGB(200,235,210),
         Accent = Color3.fromRGB(60,200,90),
         Stroke = Color3.fromRGB(35,70,45),
         StrokeLight = Color3.fromRGB(55,100,65),
@@ -109,10 +113,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(22,16,30),
         ElementBg = Color3.fromRGB(38,28,52),
         ElementBg2 = Color3.fromRGB(52,38,72),
-        Text = Color3.fromRGB(240,230,255),
-        SubText = Color3.fromRGB(170,150,200),
-        SectionText = Color3.fromRGB(140,120,170),
-        ParagraphText = Color3.fromRGB(210,200,235),
+        Text = Color3.fromRGB(245,235,255),
+        SubText = Color3.fromRGB(180,160,210),
+        SectionText = Color3.fromRGB(150,130,180),
+        ParagraphText = Color3.fromRGB(215,205,240),
         Accent = Color3.fromRGB(150,80,255),
         Stroke = Color3.fromRGB(60,45,80),
         StrokeLight = Color3.fromRGB(90,65,120),
@@ -125,10 +129,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(12,12,20),
         ElementBg = Color3.fromRGB(20,20,35),
         ElementBg2 = Color3.fromRGB(30,30,50),
-        Text = Color3.fromRGB(0,255,255),
-        SubText = Color3.fromRGB(0,200,200),
-        SectionText = Color3.fromRGB(255,0,255),
-        ParagraphText = Color3.fromRGB(180,255,255),
+        Text = Color3.fromRGB(180,255,255),
+        SubText = Color3.fromRGB(120,200,220),
+        SectionText = Color3.fromRGB(255,120,255),
+        ParagraphText = Color3.fromRGB(200,255,255),
         Accent = Color3.fromRGB(255,0,128),
         Stroke = Color3.fromRGB(0,255,255),
         StrokeLight = Color3.fromRGB(255,0,255),
@@ -141,10 +145,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(10,24,32),
         ElementBg = Color3.fromRGB(16,42,58),
         ElementBg2 = Color3.fromRGB(22,58,78),
-        Text = Color3.fromRGB(200,245,255),
-        SubText = Color3.fromRGB(100,180,210),
-        SectionText = Color3.fromRGB(80,150,180),
-        ParagraphText = Color3.fromRGB(170,220,240),
+        Text = Color3.fromRGB(210,245,255),
+        SubText = Color3.fromRGB(130,190,210),
+        SectionText = Color3.fromRGB(100,160,190),
+        ParagraphText = Color3.fromRGB(180,225,245),
         Accent = Color3.fromRGB(0,200,220),
         Stroke = Color3.fromRGB(20,80,100),
         StrokeLight = Color3.fromRGB(30,110,140),
@@ -157,10 +161,10 @@ local Themes = {
         TabListBg = Color3.fromRGB(28,20,14),
         ElementBg = Color3.fromRGB(48,34,22),
         ElementBg2 = Color3.fromRGB(66,48,32),
-        Text = Color3.fromRGB(255,240,220),
-        SubText = Color3.fromRGB(220,180,130),
-        SectionText = Color3.fromRGB(200,150,90),
-        ParagraphText = Color3.fromRGB(255,220,180),
+        Text = Color3.fromRGB(255,245,230),
+        SubText = Color3.fromRGB(220,190,150),
+        SectionText = Color3.fromRGB(200,160,110),
+        ParagraphText = Color3.fromRGB(255,230,200),
         Accent = Color3.fromRGB(255,140,40),
         Stroke = Color3.fromRGB(80,55,35),
         StrokeLight = Color3.fromRGB(120,80,50),
@@ -168,19 +172,19 @@ local Themes = {
         CloseText = Color3.fromRGB(255,100,80),
     },
     ["Monochrome"] = {
-        MainBg = Color3.fromRGB(18,18,18),
-        HeaderBg = Color3.fromRGB(30,30,30),
-        TabListBg = Color3.fromRGB(24,24,24),
-        ElementBg = Color3.fromRGB(38,38,38),
-        ElementBg2 = Color3.fromRGB(50,50,50),
-        Text = Color3.fromRGB(255,255,255),
-        SubText = Color3.fromRGB(180,180,180),
-        SectionText = Color3.fromRGB(150,150,150),
-        ParagraphText = Color3.fromRGB(220,220,220),
-        Accent = Color3.fromRGB(255,255,255),
-        Stroke = Color3.fromRGB(60,60,60),
-        StrokeLight = Color3.fromRGB(80,80,80),
-        CloseBg = Color3.fromRGB(60,60,60),
+        MainBg = Color3.fromRGB(245,245,245),
+        HeaderBg = Color3.fromRGB(230,230,230),
+        TabListBg = Color3.fromRGB(235,235,235),
+        ElementBg = Color3.fromRGB(255,255,255),
+        ElementBg2 = Color3.fromRGB(220,220,220),
+        Text = Color3.fromRGB(15,15,15),
+        SubText = Color3.fromRGB(80,80,80),
+        SectionText = Color3.fromRGB(100,100,100),
+        ParagraphText = Color3.fromRGB(30,30,30),
+        Accent = Color3.fromRGB(50,50,50),
+        Stroke = Color3.fromRGB(200,200,200),
+        StrokeLight = Color3.fromRGB(180,180,180),
+        CloseBg = Color3.fromRGB(220,50,50),
         CloseText = Color3.fromRGB(255,255,255),
     },
     ["Toxic Green"] = {
@@ -189,16 +193,41 @@ local Themes = {
         TabListBg = Color3.fromRGB(14,22,14),
         ElementBg = Color3.fromRGB(22,38,22),
         ElementBg2 = Color3.fromRGB(32,55,32),
-        Text = Color3.fromRGB(200,255,200),
-        SubText = Color3.fromRGB(120,220,120),
-        SectionText = Color3.fromRGB(90,200,90),
-        ParagraphText = Color3.fromRGB(180,255,180),
+        Text = Color3.fromRGB(210,255,210),
+        SubText = Color3.fromRGB(150,220,150),
+        SectionText = Color3.fromRGB(110,200,110),
+        ParagraphText = Color3.fromRGB(190,255,190),
         Accent = Color3.fromRGB(120,255,60),
         Stroke = Color3.fromRGB(40,80,40),
         StrokeLight = Color3.fromRGB(60,120,60),
         CloseBg = Color3.fromRGB(70,40,30),
         CloseText = Color3.fromRGB(255,130,80),
     },
+    ["Light"] = {
+        MainBg = Color3.fromRGB(250,250,252),
+        HeaderBg = Color3.fromRGB(240,240,245),
+        TabListBg = Color3.fromRGB(245,245,248),
+        ElementBg = Color3.fromRGB(255,255,255),
+        ElementBg2 = Color3.fromRGB(235,235,240),
+        Text = Color3.fromRGB(25,25,30),
+        SubText = Color3.fromRGB(100,100,110),
+        SectionText = Color3.fromRGB(120,120,130),
+        ParagraphText = Color3.fromRGB(40,40,50),
+        Accent = Color3.fromRGB(90,70,255),
+        Stroke = Color3.fromRGB(220,220,225),
+        StrokeLight = Color3.fromRGB(200,200,210),
+        CloseBg = Color3.fromRGB(255,80,80),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+}
+
+-- 50 EMOJIS READY
+GGH.Emojis = {
+    "✅", "❌", "⚠️", "🔥", "💀", "👑", "⭐", "💎", "🎯", "🚀",
+    "🔍", "⚙️", "🎮", "🖼️", "📋", "💾", "🔓", "🔒", "⚡", "💥",
+    "🎨", "🌟", "💡", "🔔", "📢", "❤️", "💚", "💙", "💜", "🧡",
+    "🟢", "🔴", "🟡", "🔵", "🟣", "⚫", "⚪", "🟠", "🎃", "👻",
+    "🤖", "👾", "🦾", "🧠", "👁️", "🛡️", "⚔️", "🏆", "💰", "🎁"
 }
 
 function GGH:CreateWindow(Config)
@@ -444,7 +473,29 @@ function GGH:CreateWindow(Config)
             timerLbl.TextColor3 = Colors.TextSecondary
             timerLbl.TextSize = 10
             timerLbl.Font = Enum.Font.Gotham
-            local function checkKey(k) for _, v in ipairs(correctKeys) do if k==v then return true end end return false end
+            -- Enhanced Key System - يدعم كل الانظمة
+        local function checkKey(k)
+            -- يدعم مفاتيح متعددة
+            for _, v in ipairs(correctKeys) do
+                if k==v then return true end
+                -- يدعم نجمة * كـ wildcard
+                if v:find("%*") then
+                    local pattern = v:gsub("%*", ".*")
+                    if k:match("^"..pattern.."$") then return true end
+                end
+            end
+            return false
+        end
+        -- يدعم رابط يجيب المفاتيح من النت
+        local remoteKeys = {}
+        if Config.KeyLink and type(Config.KeyLink)=="string" and Config.KeyLink:match("https://") and Config.RemoteKeyCheck then
+            pcall(function()
+                local urlContent = game:HttpGet(Config.KeyLink)
+                for key in urlContent:gmatch("[^\n]+") do
+                    table.insert(remoteKeys, key:gsub("%s+", ""))
+                end
+            end)
+        end
             local function doVerify()
                 local k = textBox.Text
                 if k=="" then status.Text="Please enter an access key" status.TextColor3=Colors.Error return end
@@ -488,7 +539,7 @@ function GGH:CreateWindow(Config)
         if not success then return nil end
     end
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or ("v1.8.5 FIXED ["..autoName.."]")
+    local SubTitle = Config.SubTitle or ("v1.8.6 FIXED ["..autoName.."]")
     local DefaultTheme = Config.Theme or "Monochrome"
     if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
     local CurrentTheme = Themes[DefaultTheme]
@@ -521,13 +572,16 @@ function GGH:CreateWindow(Config)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
-    -- 5 AUTO SIZES BY DEVICE
+    -- 7 AUTO SIZES BY DEVICE - كل الاحجام
     local SizePresets = {
-        ["Tiny"]   = {W=420, H=280}, -- very small phones
-        ["Small"]  = {W=460, H=320}, -- normal phones (default now)
-        ["Medium"] = {W=520, H=360}, -- tablet
-        ["Large"]  = {W=600, H=400}, -- desktop
-        ["Huge"]   = {W=680, H=460}, -- large screens
+        ["ExtraSmall"] = {W=380, H=260}, -- XS
+        ["Tiny"]       = {W=420, H=280}, -- very small phones
+        ["Small"]      = {W=460, H=320}, -- normal phones (default)
+        ["Medium"]     = {W=520, H=360}, -- tablet
+        ["Large"]      = {W=600, H=400}, -- desktop
+        ["ExtraLarge"] = {W=680, H=460}, -- large screens
+        ["Huge"]       = {W=780, H=520}, -- huge
+        ["Full"]       = {W=900, H=600}, -- full
     }
     local function DetectDevicePreset()
         local cam = workspace.CurrentCamera
