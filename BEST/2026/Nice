@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.9.3 - FLOAT CUSTOM + ENGLISH + AUTO TRANSLATE - SCROLL ORIGINAL + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.9.4 - KEY SYSTEM PRO - FLOAT CUSTOM + ENGLISH + AUTO TRANSLATE - SCROLL ORIGINAL + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -225,319 +225,251 @@ local Themes = {
 
 function GGH:CreateWindow(Config)
     Config = Config or {}
-    if Config.KeySystem or Config.KeySystemEnabled then
+    
+if Config.KeySystem or Config.KeySystemEnabled or Config.UseKeySystem then
         local Players = game:GetService("Players")
         local HttpService = game:GetService("HttpService")
         local Player = Players.LocalPlayer
         local PlayerGui = Player:WaitForChild("PlayerGui")
-        local correctKeys = Config.Key or Config.CorrectKey or "GGH-1234"
-        if type(correctKeys) ~= "table" then correctKeys = {correctKeys} end
-        local getLink = Config.GetKeyLink or Config.KeyLink or "https://linkvertise.com"
-        local discLink = Config.DiscordLink or "https://discord.gg"
-        local kTitle = Config.Title or "GGH Library"
-        local useHWID = Config.KeyHWID or Config.HWID or Config.HWIDLock or false
-        local useExpire = Config.KeyExpiration or Config.Expiration or Config.KeyExpires or false
-        local duration = Config.KeyDuration or Config.Duration or 86400
-        local saveFolder = "GGH_Keys"
-        local function getHWID()
-            local hwid = "UNKNOWN"
-            local ok, res = pcall(function() return gethwid and gethwid() or "" end)
-            if ok and res and res ~= "" then hwid = res
-            else
-                local ok2, res2 = pcall(function() return game:GetService("RbxAnalyticsService"):GetClientId() end)
-                if ok2 and res2 ~= "" then hwid = res2
-                else hwid = tostring(Player.UserId).."-"..tostring(Player.AccountAge)
+        
+        -- Developer Config - English Only, No HWID display
+        local validKeys = Config.Keys or Config.Key or Config.CorrectKeys or {"GGH-1234"}
+        if type(validKeys) ~= "table" then validKeys = {validKeys} end
+        local getKeyLink = Config.GetKeyLink or Config.KeyLink or Config.GetKeyURL or "https://linkvertise.com"
+        local discordLink = Config.DiscordLink or Config.ServerLink or Config.InviteLink or "https://discord.gg"
+        local apiUrl = Config.KeyApiUrl or Config.ApiUrl or Config.ValidateUrl or nil
+        local keyMethod = Config.KeyMethod or "local" -- local, api, both
+        local saveKeyEnabled = Config.SaveKey ~= false
+        local saveFileName = Config.KeyFileName or Config.SaveFileName or "GGH_Key.txt"
+        local windowTitle = Config.KeyTitle or Config.Title or "GGH Library"
+
+        -- API Validation Function
+        local function validateViaApi(inputKey)
+            if not apiUrl then return false end
+            local success, result = pcall(function()
+                local url = apiUrl:gsub("{key}", inputKey):gsub("{KEY}", inputKey)
+                if not url:find("key=") and not url:find(inputKey) then
+                    url = url .. (url:find("?") and "&" or "?") .. "key=" .. inputKey
+                end
+                local response = game:HttpGet(url)
+                -- Support JSON {"valid":true} or plain text "true" or contains key
+                if response:lower():find("true") or response:lower():find("valid") or response:lower():find("success") then
+                    return true
+                end
+                local ok, json = pcall(function() return HttpService:JSONDecode(response) end)
+                if ok and json then
+                    if json.valid == true or json.success == true or json.status == "valid" then
+                        return true
+                    end
+                end
+                return false
+            end)
+            return success and result == true
+        end
+
+        -- Local Validation
+        local function validateLocal(inputKey)
+            for _, k in ipairs(validKeys) do
+                if tostring(k):lower() == tostring(inputKey):lower() then
+                    return true
                 end
             end
-            return hwid
+            return false
         end
+
+        -- Main Validation (supports all methods)
+        local function validateKey(inputKey)
+            inputKey = tostring(inputKey):gsub("^%s+",""):gsub("%s+$","")
+            if inputKey == "" then return false end
+            
+            if keyMethod == "api" then
+                return validateViaApi(inputKey)
+            elseif keyMethod == "both" or keyMethod == "api+local" then
+                return validateLocal(inputKey) or validateViaApi(inputKey)
+            else
+                -- Default: check API first if provided, then local
+                if apiUrl and apiUrl ~= "" then
+                    if validateViaApi(inputKey) then return true end
+                end
+                return validateLocal(inputKey)
+            end
+        end
+
+        -- Save / Load Key (simple, no HWID)
         local function loadSavedKey()
-            if not (isfolder and isfile and readfile) then return nil end
-            if not isfolder(saveFolder) then return nil end
-            local hwid = getHWID()
-            for _, key in ipairs(correctKeys) do
-                local path = saveFolder.."/"..key:gsub("[^%w]", "_")..".json"
-                if isfile(path) then
-                    local ok, content = pcall(function() return readfile(path) end)
-                    if ok and content then
-                        local data = {}
-                        pcall(function() data = HttpService:JSONDecode(content) end)
-                        if useHWID and data.hwid and data.hwid ~= hwid then
-                        else
-                            if useExpire and data.timestamp then
-                                local elapsed = os.time() - data.timestamp
-                                if elapsed > duration then
-                                    pcall(function() delfile(path) end)
-                                else
-                                    return {valid=true, key=key, remaining=duration - elapsed}
-                                end
-                            else
-                                return {valid=true, key=key}
-                            end
-                        end
-                    end
+            if not saveKeyEnabled then return nil end
+            if not (isfile and readfile) then return nil end
+            local ok, content = pcall(function() return readfile(saveFileName) end)
+            if ok and content and content ~= "" then
+                local key = content:gsub("^%s+",""):gsub("%s+$","")
+                if validateKey(key) then
+                    return key
                 end
             end
             return nil
         end
-        local function saveKey(key)
-            if not (writefile and isfolder) then return end
-            pcall(function()
-                if not isfolder(saveFolder) then makefolder(saveFolder) end
-                local data = {hwid = getHWID(), timestamp = os.time(), key = key}
-                local path = saveFolder.."/"..key:gsub("[^%w]", "_")..".json"
-                writefile(path, HttpService:JSONEncode(data))
-            end)
+
+        local function saveKeyFile(key)
+            if not saveKeyEnabled then return end
+            if not (writefile) then return end
+            pcall(function() writefile(saveFileName, tostring(key)) end)
         end
-        local saved = loadSavedKey()
-        local finished = false
-        local success = false
-        if saved and saved.valid then
-            finished = true
-            success = true
+
+        -- Check saved key first
+        local savedKey = loadSavedKey()
+        if savedKey and validateKey(savedKey) then
+            -- Valid saved key, continue to main UI
         else
-            local Colors = {
-                Background = Color3.fromRGB(18, 18, 22),
-                Surface = Color3.fromRGB(25, 25, 30),
-                Primary = Color3.fromRGB(45, 45, 50),
-                TextPrimary = Color3.fromRGB(220, 220, 225),
-                TextSecondary = Color3.fromRGB(140, 140, 150),
-                Success = Color3.fromRGB(25, 135, 84),
-                Error = Color3.fromRGB(180, 50, 50),
-                Discord = Color3.fromRGB(60, 70, 180),
-                GetKey = Color3.fromRGB(40, 140, 100),
-                Border = Color3.fromRGB(40, 40, 45),
-                NeonWhite = Color3.fromRGB(255, 255, 255),
-                NeonGlow = Color3.fromRGB(240, 248, 255)
-            }
-            local screenGui = Instance.new("ScreenGui")
-            screenGui.Name = "GGH_KeySystem"
-            screenGui.ResetOnSpawn = false
-            screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-            screenGui.DisplayOrder = 200
-            screenGui.Parent = PlayerGui
-            local backdrop = Instance.new("Frame")
-            backdrop.Size = UDim2.new(1,0,1,0)
-            backdrop.BackgroundColor3 = Color3.fromRGB(0,0,0)
-            backdrop.BackgroundTransparency = 0.2
-            backdrop.BorderSizePixel = 0
-            backdrop.Parent = screenGui
-            local container = Instance.new("Frame")
-            container.Size = UDim2.new(0,420,0,540)
-            container.Position = UDim2.new(0.5,-210,0.5,-270)
-            container.BackgroundColor3 = Colors.Background
-            container.BorderSizePixel = 0
-            container.Parent = screenGui
-            Instance.new("UICorner", container).CornerRadius = UDim.new(0,20)
-            local border = Instance.new("Frame")
-            border.Size = UDim2.new(1,6,1,6)
-            border.Position = UDim2.new(0,-3,0,-3)
-            border.BackgroundTransparency = 1
-            border.Parent = container
-            Instance.new("UICorner", border).CornerRadius = UDim.new(0,23)
-            local bStroke = Instance.new("UIStroke", border)
-            bStroke.Color = Colors.NeonWhite
-            bStroke.Thickness = 2
-            bStroke.Transparency = 0.3
-            local grad = Instance.new("UIGradient", bStroke)
-            grad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Colors.NeonWhite), ColorSequenceKeypoint.new(0.5, Colors.NeonGlow), ColorSequenceKeypoint.new(1, Colors.NeonWhite)}
-            grad.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0,0.9), NumberSequenceKeypoint.new(0.2,0.1), NumberSequenceKeypoint.new(0.8,0.1), NumberSequenceKeypoint.new(1,0.9)}
-            task.spawn(function() while screenGui.Parent do local tw = TweenService:Create(grad, TweenInfo.new(4, Enum.EasingStyle.Linear), {Rotation = grad.Rotation + 360}) tw:Play() tw.Completed:Wait() end end)
-            local iconCont = Instance.new("Frame", container)
-            iconCont.Size = UDim2.new(0,56,0,56)
-            iconCont.Position = UDim2.new(0.5,-28,0,24)
-            iconCont.BackgroundColor3 = Colors.Primary
-            iconCont.BorderSizePixel = 0
-            Instance.new("UICorner", iconCont).CornerRadius = UDim.new(0,14)
-            local icon = Instance.new("ImageLabel", iconCont)
-            icon.Size = UDim2.new(0.8,0,0.8,0)
-            icon.Position = UDim2.new(0.1,0,0.1,0)
-            icon.BackgroundTransparency = 1
-            icon.Image = "rbxassetid://95233466475324"
-            icon.ImageColor3 = Colors.NeonWhite
-            icon.ScaleType = Enum.ScaleType.Fit
-            local titleLbl = Instance.new("TextLabel", container)
-            titleLbl.Size = UDim2.new(1,-32,0,32)
-            titleLbl.Position = UDim2.new(0,16,0,90)
-            titleLbl.BackgroundTransparency = 1
-            titleLbl.Text = kTitle.." - Key System"
-            titleLbl.TextColor3 = Colors.TextPrimary
-            titleLbl.TextSize = 20
-            titleLbl.Font = Enum.Font.GothamBold
-            local sub = Instance.new("TextLabel", container)
-            sub.Size = UDim2.new(1,-32,0,30)
-            sub.Position = UDim2.new(0,16,0,120)
-            sub.BackgroundTransparency = 1
-            sub.Text = "Enter your access key to continue"
-            sub.TextColor3 = Colors.TextSecondary
-            sub.TextSize = 14
-            sub.Font = Enum.Font.Gotham
-            local infoText = ""
-            if useHWID then infoText = infoText.."HWID Lock: ON  " end
-            if useExpire then infoText = infoText.."Expires: "..math.floor(duration/3600).."h "..math.floor((duration%3600)/60).."m" end
-            if infoText == "" then infoText = "Key System Enabled" end
-            local infoLbl = Instance.new("TextLabel", container)
-            infoLbl.Size = UDim2.new(1,-32,0,20)
-            infoLbl.Position = UDim2.new(0,16,0,148)
-            infoLbl.BackgroundTransparency = 1
-            infoLbl.Text = infoText
-            infoLbl.TextColor3 = Color3.fromRGB(100,180,255)
-            infoLbl.TextSize = 11
-            infoLbl.Font = Enum.Font.Gotham
-            local inputCont = Instance.new("Frame", container)
-            inputCont.Size = UDim2.new(1,-64,0,52)
-            inputCont.Position = UDim2.new(0,32,0,175)
-            inputCont.BackgroundColor3 = Colors.Surface
-            inputCont.BorderSizePixel = 0
-            Instance.new("UICorner", inputCont).CornerRadius = UDim.new(0,12)
-            local textBox = Instance.new("TextBox", inputCont)
-            textBox.Size = UDim2.new(1,-24,1,0)
-            textBox.Position = UDim2.new(0,12,0,0)
-            textBox.BackgroundTransparency = 1
-            textBox.Text = ""
-            textBox.PlaceholderText = "Enter key here"
-            textBox.TextColor3 = Colors.TextPrimary
-            textBox.PlaceholderColor3 = Colors.TextSecondary
-            textBox.TextSize = 16
-            textBox.Font = Enum.Font.Gotham
-            textBox.TextXAlignment = Enum.TextXAlignment.Left
-            textBox.ClearTextOnFocus = false
-            local status = Instance.new("TextLabel", container)
-            status.Size = UDim2.new(1,-32,0,30)
-            status.Position = UDim2.new(0,16,0,235)
-            status.BackgroundTransparency = 1
-            status.Text = ""
-            status.TextColor3 = Colors.Error
-            status.TextSize = 13
-            status.Font = Enum.Font.Gotham
-            status.TextWrapped = true
-            local verifyBtn = Instance.new("TextButton", container)
-            verifyBtn.Size = UDim2.new(1,-64,0,48)
-            verifyBtn.Position = UDim2.new(0,32,0,275)
-            verifyBtn.BackgroundColor3 = Colors.Primary
-            verifyBtn.BorderSizePixel = 0
-            verifyBtn.Text = "Verify Access Key"
-            verifyBtn.TextColor3 = Colors.TextPrimary
-            verifyBtn.TextSize = 16
-            verifyBtn.Font = Enum.Font.GothamMedium
-            Instance.new("UICorner", verifyBtn).CornerRadius = UDim.new(0,12)
-            local btnCont = Instance.new("Frame", container)
-            btnCont.Size = UDim2.new(1,-64,0,48)
-            btnCont.Position = UDim2.new(0,32,0,335)
-            btnCont.BackgroundTransparency = 1
-            local getKeyBtn = Instance.new("TextButton", btnCont)
-            getKeyBtn.Size = UDim2.new(0.48,0,1,0)
-            getKeyBtn.BackgroundColor3 = Colors.GetKey
-            getKeyBtn.BorderSizePixel = 0
-            getKeyBtn.Text = "Get Key"
-            getKeyBtn.TextColor3 = Colors.TextPrimary
-            getKeyBtn.TextSize = 14
-            getKeyBtn.Font = Enum.Font.GothamMedium
-            Instance.new("UICorner", getKeyBtn).CornerRadius = UDim.new(0,10)
-            local discBtn = Instance.new("TextButton", btnCont)
-            discBtn.Size = UDim2.new(0.48,0,1,0)
-            discBtn.Position = UDim2.new(0.52,0,0,0)
-            discBtn.BackgroundColor3 = Colors.Discord
-            discBtn.BorderSizePixel = 0
-            discBtn.Text = "Discord"
-            discBtn.TextColor3 = Colors.TextPrimary
-            discBtn.TextSize = 14
-            discBtn.Font = Enum.Font.GothamMedium
-            Instance.new("UICorner", discBtn).CornerRadius = UDim.new(0,10)
-            local hwidLbl = Instance.new("TextLabel", container)
-            hwidLbl.Size = UDim2.new(1,-32,0,20)
-            hwidLbl.Position = UDim2.new(0,16,0,395)
-            hwidLbl.BackgroundTransparency = 1
-            hwidLbl.Text = "HWID: "..getHWID():sub(1,32).."... (Click to copy)"
-            hwidLbl.TextColor3 = Colors.TextSecondary
-            hwidLbl.TextSize = 10
-            hwidLbl.Font = Enum.Font.Code
-            hwidLbl.TextWrapped = true
-            local hwidBtn = Instance.new("TextButton", container)
-            hwidBtn.Size = UDim2.new(1,-64,0,30)
-            hwidBtn.Position = UDim2.new(0,32,0,395)
-            hwidBtn.BackgroundTransparency = 1
-            hwidBtn.Text = ""
-            local timerLbl = Instance.new("TextLabel", container)
-            timerLbl.Size = UDim2.new(1,-32,0,20)
-            timerLbl.Position = UDim2.new(0,16,0,420)
-            timerLbl.BackgroundTransparency = 1
-            timerLbl.Text = useExpire and "Key will expire after "..duration.." seconds" or "Key never expires"
-            timerLbl.TextColor3 = Colors.TextSecondary
-            timerLbl.TextSize = 10
-            timerLbl.Font = Enum.Font.Gotham
-            local function checkKey(k) for _, v in ipairs(correctKeys) do if k==v then return true end end return false end
-            local function doVerify()
-                local k = textBox.Text
-                if k=="" then status.Text="Please enter an access key" status.TextColor3=Colors.Error return end
-                if checkKey(k) then
-                    if useHWID then
-                        local existingPath = saveFolder.."/"..k:gsub("[^%w]", "_")..".json"
-                        if isfile and isfile(existingPath) then
-                            local ok, content = pcall(function() return readfile(existingPath) end)
-                            if ok and content then
-                                local data = {}
-                                pcall(function() data = HttpService:JSONDecode(content) end)
-                                if data.hwid and data.hwid ~= getHWID() then
-                                    status.Text="HWID Mismatch! Key bound to another device." status.TextColor3=Colors.Error
-                                    return
-                                end
-                            end
-                        end
-                    end
-                    status.Text="Key correct! Loading..." status.TextColor3=Colors.Success
-                    saveKey(k)
-                    TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size=UDim2.new(0,0,0,0)}):Play()
-                    task.wait(0.35)
-                    screenGui:Destroy()
-                    success=true finished=true
-                else
-                    status.Text="Wrong key! Please try again." status.TextColor3=Colors.Error
-                    local orig=container.Position
-                    for i=1,6 do container.Position=orig+UDim2.new(0,(i%2==0 and 6 or -6),0,0) task.wait(0.05) end
-                    container.Position=orig
-                end
+            -- Show Key UI - Minimal, English Only, No HWID
+            local KeyGui = Instance.new("ScreenGui", PlayerGui)
+            KeyGui.Name = "GGH_KeySystem"
+            KeyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+            KeyGui.ResetOnSpawn = false
+
+            local KeyFrame = Instance.new("Frame", KeyGui)
+            KeyFrame.Size = UDim2.new(0,340,0,220)
+            KeyFrame.Position = UDim2.new(0.5,-170,0.5,-110)
+            KeyFrame.BackgroundColor3 = Color3.fromRGB(18,18,22)
+            KeyFrame.BorderSizePixel = 0
+            Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0,12)
+            local ks = Instance.new("UIStroke", KeyFrame)
+            ks.Color = Color3.fromRGB(0,0,0)
+            ks.Thickness = 1.5
+            ks.Transparency = 0.3
+
+            local Title = Instance.new("TextLabel", KeyFrame)
+            Title.Size = UDim2.new(1,0,0,40)
+            Title.BackgroundTransparency = 1
+            Title.Text = windowTitle.." - Key System"
+            Title.Font = Enum.Font.GothamBold
+            Title.TextSize = 14
+            Title.TextColor3 = Color3.fromRGB(255,255,255)
+            Title.AutoLocalize = true
+            local tStroke = Instance.new("UIStroke", Title)
+            tStroke.Color = Color3.fromRGB(0,0,0)
+            tStroke.Thickness = 1
+            tStroke.Transparency = 0.4
+
+            local InputBox = Instance.new("TextBox", KeyFrame)
+            InputBox.Size = UDim2.new(1,-20,0,38)
+            InputBox.Position = UDim2.new(0,10,0,50)
+            InputBox.BackgroundColor3 = Color3.fromRGB(30,30,36)
+            InputBox.PlaceholderText = "Enter Key"
+            InputBox.Text = ""
+            InputBox.Font = Enum.Font.Gotham
+            InputBox.TextSize = 13
+            InputBox.TextColor3 = Color3.fromRGB(255,255,255)
+            InputBox.PlaceholderColor3 = Color3.fromRGB(120,120,120)
+            Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0,8)
+            local iStroke = Instance.new("UIStroke", InputBox)
+            iStroke.Color = Color3.fromRGB(0,0,0)
+            iStroke.Thickness = 1
+
+            local Submit = Instance.new("TextButton", KeyFrame)
+            Submit.Size = UDim2.new(1,-20,0,36)
+            Submit.Position = UDim2.new(0,10,0,95)
+            Submit.BackgroundColor3 = Color3.fromRGB(90,70,255)
+            Submit.Text = "Submit"
+            Submit.Font = Enum.Font.GothamBold
+            Submit.TextSize = 13
+            Submit.TextColor3 = Color3.fromRGB(255,255,255)
+            Submit.AutoLocalize = true
+            Instance.new("UICorner", Submit).CornerRadius = UDim.new(0,8)
+            local sStroke = Instance.new("UIStroke", Submit)
+            sStroke.Color = Color3.fromRGB(0,0,0)
+            sStroke.Thickness = 1
+            local sTextStroke = Instance.new("UIStroke", Submit)
+            sTextStroke.Color = Color3.fromRGB(0,0,0)
+            sTextStroke.Thickness = 0.8
+
+            local GetKeyBtn = Instance.new("TextButton", KeyFrame)
+            GetKeyBtn.Size = UDim2.new(0.5,-15,0,32)
+            GetKeyBtn.Position = UDim2.new(0,10,0,140)
+            GetKeyBtn.BackgroundColor3 = Color3.fromRGB(40,40,46)
+            GetKeyBtn.Text = "Get Key"
+            GetKeyBtn.Font = Enum.Font.GothamMedium
+            GetKeyBtn.TextSize = 12
+            GetKeyBtn.TextColor3 = Color3.fromRGB(220,220,220)
+            GetKeyBtn.AutoLocalize = true
+            Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0,8)
+            Instance.new("UIStroke", GetKeyBtn).Color = Color3.fromRGB(0,0,0)
+
+            local DiscordBtn = Instance.new("TextButton", KeyFrame)
+            DiscordBtn.Size = UDim2.new(0.5,-15,0,32)
+            DiscordBtn.Position = UDim2.new(0.5,5,0,140)
+            DiscordBtn.BackgroundColor3 = Color3.fromRGB(40,40,46)
+            DiscordBtn.Text = "Discord / Link"
+            DiscordBtn.Font = Enum.Font.GothamMedium
+            DiscordBtn.TextSize = 12
+            DiscordBtn.TextColor3 = Color3.fromRGB(220,220,220)
+            DiscordBtn.AutoLocalize = true
+            Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0,8)
+            Instance.new("UIStroke", DiscordBtn).Color = Color3.fromRGB(0,0,0)
+
+            local Status = Instance.new("TextLabel", KeyFrame)
+            Status.Size = UDim2.new(1,-20,0,20)
+            Status.Position = UDim2.new(0,10,0,180)
+            Status.BackgroundTransparency = 1
+            Status.Text = ""
+            Status.Font = Enum.Font.Gotham
+            Status.TextSize = 11
+            Status.TextColor3 = Color3.fromRGB(255,80,80)
+            Status.AutoLocalize = true
+
+            local function copyToClipboard(text)
+                if setclipboard then pcall(function() setclipboard(text) end) end
+                Status.TextColor3 = Color3.fromRGB(80,255,120)
+                Status.Text = "Copied!"
+                task.wait(1.5)
+                Status.Text = ""
             end
-            verifyBtn.MouseButton1Click:Connect(doVerify)
-            textBox.FocusLost:Connect(function(enter) if enter then doVerify() end end)
-            getKeyBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(getLink) end status.Text="Get Key link copied!" status.TextColor3=Colors.Success end)
-            discBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(discLink) end status.Text="Discord link copied!" status.TextColor3=Colors.Success end)
-            hwidBtn.MouseButton1Click:Connect(function() if setclipboard then setclipboard(getHWID()) end status.Text="HWID copied!" status.TextColor3=Colors.Success end)
-            container.Size=UDim2.new(0,0,0,0)
-            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size=UDim2.new(0,420,0,540)}):Play()
-            repeat task.wait(0.1) until finished
+
+            GetKeyBtn.MouseButton1Click:Connect(function()
+                copyToClipboard(getKeyLink)
+                if getKeyLink:find("http") then
+                    Status.TextColor3 = Color3.fromRGB(120,180,255)
+                    Status.Text = "Link Copied!"
+                    task.wait(1)
+                    Status.Text = ""
+                end
+            end)
+
+            DiscordBtn.MouseButton1Click:Connect(function()
+                copyToClipboard(discordLink)
+                Status.TextColor3 = Color3.fromRGB(120,180,255)
+                Status.Text = "Link Copied!"
+                task.wait(1)
+                Status.Text = ""
+            end)
+
+            local finished = false
+            Submit.MouseButton1Click:Connect(function()
+                local input = InputBox.Text
+                if input == "" then
+                    Status.TextColor3 = Color3.fromRGB(255,80,80)
+                    Status.Text = "Please enter a key"
+                    return
+                end
+                Submit.Text = "Checking..."
+                local valid = validateKey(input)
+                if valid then
+                    Status.TextColor3 = Color3.fromRGB(80,255,120)
+                    Status.Text = "Valid! Loading..."
+                    saveKeyFile(input)
+                    task.wait(0.5)
+                    finished = true
+                    KeyGui:Destroy()
+                else
+                    Status.TextColor3 = Color3.fromRGB(255,80,80)
+                    Status.Text = "Invalid Key"
+                    Submit.Text = "Submit"
+                end
+            end)
+
+            repeat task.wait() until finished
         end
-        if not success then return nil end
     end
-    local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or ("v1.8.5 FIXED ["..autoName.."]")
-    local DefaultTheme = Config.Theme or "Monochrome"
-    if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
-    local CurrentTheme = Themes[DefaultTheme]
-    
-    -- AUTO TEXT COLOR: اذا الثيم فاتح -> خط داكن، اذا داكن -> خط فاتح
-    local function GetLuminance(c)
-        return 0.299*c.R + 0.587*c.G + 0.114*c.B
-    end
-    local function AutoTextColors(theme)
-        local lum = GetLuminance(theme.MainBg)
-        if lum > 0.5 then
-            -- ثيم فاتح -> خط داكن
-            theme.Text = Color3.fromRGB(20,20,25)
-            theme.SubText = Color3.fromRGB(80,80,85)
-            theme.SectionText = Color3.fromRGB(100,100,105)
-            theme.ParagraphText = Color3.fromRGB(40,40,45)
-        else
-            -- ثيم داكن -> خط فاتح
-            theme.Text = Color3.fromRGB(240,240,245)
-            theme.SubText = Color3.fromRGB(180,180,190)
-            theme.SectionText = Color3.fromRGB(150,150,160)
-            theme.ParagraphText = Color3.fromRGB(220,220,230)
-        end
-        return theme
-    end
-    CurrentTheme = AutoTextColors(CurrentTheme)
-    -- Apply auto to all themes when selected later
+
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "GGH_Library"
     ScreenGui.ResetOnSpawn = false
