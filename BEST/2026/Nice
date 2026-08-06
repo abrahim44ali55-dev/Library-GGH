@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.9.1 - BLACK STROKE + MULTI FIX - SCROLL ORIGINAL + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.9.3 - FLOAT CUSTOM + ENGLISH + AUTO TRANSLATE - SCROLL ORIGINAL + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -43,6 +43,16 @@ local function AddTextStroke(txtObj)
     st.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
     st.LineJoinMode = Enum.LineJoinMode.Round
     return st
+end
+
+local function AddBlackBorder(frame, thick, trans)
+    if not frame then return end
+    local s = Instance.new("UIStroke", frame)
+    s.Color = Color3.fromRGB(0,0,0)
+    s.Thickness = thick or 1
+    s.Transparency = trans or 0.6
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    return s
 end
 
 
@@ -1286,7 +1296,7 @@ function GGH:CreateWindow(Config)
         end
         ThemeOpen = not ThemeOpen 
         if ThemeOpen then
-            -- FIXED: ما يكبر النافذة، يطلع بنفس الحجم المحدد
+            -- FIXED: ما يكبر النافذة، يطلع بنفس الحجم الselected
             ThemeDropdown.Visible = true
             ThemeDropdown.Size = UDim2.new(0,200,0,0)
             local maxH = math.clamp(Main.AbsoluteSize.Y - 80, 150, 360)
@@ -1405,6 +1415,8 @@ function GGH:CreateWindow(Config)
             TabButton.Text = Name
         end)
         RegisterThemable(TabButton, "BackgroundColor3", "ElementBg")
+    AddBlackBorder(TabButton, 1, 0.7)
+    AddTextStroke(TabButton)
         local TabPage = Instance.new("ScrollingFrame", Container)
         TabPage.Name = Name.."Page"
         TabPage.Size = UDim2.new(1,0,1,0)
@@ -1685,9 +1697,9 @@ local function CreateDropdown(Cfg)
 
     local function GetDisplayText()
         if isMulti then
-            if #Selected == 0 then return Cfg.Title.." : (لا شيء)"
+            if #Selected == 0 then return Cfg.Title.." : (None)"
             elseif #Selected == 1 then return Cfg.Title.." : "..Selected[1]
-            else return Cfg.Title.." : "..#Selected.." محدد ("..table.concat(Selected, ", "):sub(1,20)..")"
+            else return Cfg.Title.." : "..#Selected.." selected ("..table.concat(Selected, ", "):sub(1,20)..")"
             end
         else
             return Cfg.Title.." : "..tostring(Selected)
@@ -1749,6 +1761,7 @@ local function CreateDropdown(Cfg)
         O.TextColor3 = CurrentTheme.Text
         O.AutoLocalize = true
         Corner(O, 6)
+        AddBlackBorder(O, 0.8, 0.8)
         RegisterThemable(O, "BackgroundColor3", "ElementBg2")
         AddTextStroke(O)
         O:SetAttribute("OptName", opt)
@@ -1974,7 +1987,7 @@ local function CreateColorpicker(Cfg)
                 InputBox.Size = UDim2.new(1,-12,0,32)
                 InputBox.Position = UDim2.new(0,6,0,6)
                 InputBox.BackgroundColor3 = CurrentTheme.ElementBg2
-                InputBox.PlaceholderText = Cfg.Placeholder or "حط كود او رابط الصورة هنا"
+                InputBox.PlaceholderText = Cfg.Placeholder or "Paste image asset ID or link here"
                 InputBox.Text = Cfg.DefaultText or ""
                 InputBox.TextColor3 = CurrentTheme.Text
                 InputBox.PlaceholderColor3 = CurrentTheme.SubText
@@ -1999,7 +2012,7 @@ local function CreateColorpicker(Cfg)
                 ShowBtn.Size = UDim2.new(1,-12,0,28)
                 ShowBtn.Position = UDim2.new(0,6,0,258)
                 ShowBtn.BackgroundColor3 = CurrentTheme.Accent
-                ShowBtn.Text = "عرض الصورة"
+                ShowBtn.Text = "Show Image"
                 ShowBtn.TextColor3 = Color3.new(1,1,1)
                 ShowBtn.Font = Enum.Font.GothamBold
                 ShowBtn.TextSize = 12
