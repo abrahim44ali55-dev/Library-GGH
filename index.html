@@ -1,1 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<!-- هذا يسمح لاي سكربت من اي موقع يطلب الصفحة -->
+<meta http-equiv="Access-Control-Allow-Origin" content="*">
+</head>
+<body>
+<script>
+// ===== حط نصك هنا فقط =====
+const RAW_TEXT = `هذا هو النص الخام الي راح يظهر
+تكدر تخلي بيه اكواد، مفاتيح، json، اي شي
+السطر الثاني
+السطر الثالث`;
+// ===========================
 
+// يحول الصفحة الى نص خام حقيقي
+document.open('text/plain', 'replace');
+document.write(RAW_TEXT);
+document.close();
+</script>
+</body>
+</html>
