@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.8.7 AUTO SIZE + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.8.8 AUTO SIZE + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -539,7 +539,7 @@ function GGH:CreateWindow(Config)
         if not success then return nil end
     end
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or ("v1.8.7 FIXED ["..autoName.."]")
+    local SubTitle = Config.SubTitle or ("v1.8.8 FIXED ["..autoName.."]")
     local DefaultTheme = Config.Theme or "Monochrome"
     if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
     local CurrentTheme = Themes[DefaultTheme]
@@ -1541,7 +1541,7 @@ function GGH:CreateWindow(Config)
             RegisterThemable(st, "Stroke", "StrokeLight")
             AddSearch(Btn, Cfg.Title, "Button", Name)
             Btn.MouseButton1Click:Connect(function()
-                if IsScrolling then return end
+                -- INSTANT TOUCH: بدون فحص سكرول
                 Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.1)
                 task.wait(0.1)
                 Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.1)
@@ -1583,7 +1583,7 @@ function GGH:CreateWindow(Config)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
             local function OnToggle()
-                if IsScrolling then return end
+                -- INSTANT TOUCH: بدون فحص سكرول
                 State = not State
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
@@ -1692,7 +1692,7 @@ function GGH:CreateWindow(Config)
             Box.ClearTextOnFocus = false
             Box.AutoLocalize = true
             RegisterThemable(Box, "TextColor3", "Text")
-            Box.FocusLost:Connect(function() if IsScrolling then return end pcall(Cfg.Callback or function() end, Box.Text) end)
+            Box.FocusLost:Connect(function() -- INSTANT TOUCH: بدون فحص سكرول pcall(Cfg.Callback or function() end, Box.Text) end)
         end
 
         local function CreateDropdown(Cfg)
@@ -1720,7 +1720,7 @@ function GGH:CreateWindow(Config)
             Instance.new("UIListLayout", List).Padding = UDim.new(0,2)
             local Open = false
             Btn.MouseButton1Click:Connect(function()
-                if IsScrolling then return end
+                -- INSTANT TOUCH: بدون فحص سكرول
                 Open = not Open
                 Tween(Frame, {Size = Open and UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6) or UDim2.new(1,-4,0,38)}, 0.2)
             end)
@@ -1774,7 +1774,7 @@ function GGH:CreateWindow(Config)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
             Btn.MouseButton1Click:Connect(function()
-                if IsScrolling then return end
+                -- INSTANT TOUCH: بدون فحص سكرول
                 local newColor = Color3.fromHSV(math.random(),1,1)
                 Preview.BackgroundColor3 = newColor
                 pcall(Cfg.Callback or function() end, newColor)
@@ -1805,7 +1805,7 @@ function GGH:CreateWindow(Config)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
             Btn.MouseButton1Click:Connect(function()
-                if IsScrolling then return end
+                -- INSTANT TOUCH: بدون فحص سكرول
                 Label.Text = Cfg.Title.." : ..."
                 local conn; conn = UserInputService.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.Keyboard then
