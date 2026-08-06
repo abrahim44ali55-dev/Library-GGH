@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.8.1 FIXED - ADD API EDITION
+    GGH Library v1.8.2 AUTO SIZE + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -488,7 +488,7 @@ function GGH:CreateWindow(Config)
         if not success then return nil end
     end
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or "v1.8.1 FIXED"
+    local SubTitle = Config.SubTitle or ("v1.8.2 FIXED ["..autoName.."]")
     local DefaultTheme = Config.Theme or "Dark"
     if not Themes[DefaultTheme] then DefaultTheme = "Dark" end
     local CurrentTheme = Themes[DefaultTheme]
@@ -497,10 +497,49 @@ function GGH:CreateWindow(Config)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
+    -- 5 AUTO SIZES BY DEVICE
+    local SizePresets = {
+        ["Tiny"]   = {W=420, H=280}, -- very small phones
+        ["Small"]  = {W=460, H=320}, -- normal phones (default now)
+        ["Medium"] = {W=520, H=360}, -- tablet
+        ["Large"]  = {W=600, H=400}, -- desktop
+        ["Huge"]   = {W=680, H=460}, -- large screens
+    }
+    local function DetectDevicePreset()
+        local cam = workspace.CurrentCamera
+        local vp = cam and cam.ViewportSize or Vector2.new(1920,1080)
+        local isTouch = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+        local isSmallTouch = UserInputService.TouchEnabled
+        if vp.X < 500 or vp.Y < 500 then
+            return SizePresets.Tiny, "Tiny"
+        elseif vp.X < 700 or isTouch then
+            return SizePresets.Small, "Small"
+        elseif vp.X < 1100 or isSmallTouch then
+            return SizePresets.Medium, "Medium"
+        elseif vp.X < 1600 then
+            return SizePresets.Large, "Large"
+        else
+            return SizePresets.Huge, "Huge"
+        end
+    end
+
+    local autoPreset, autoName = DetectDevicePreset()
+    local finalW = Config.Width or autoPreset.W
+    local finalH = Config.Height or autoPreset.H
+    -- Force smaller default if user used old 560x400
+    if not Config.Width and not Config.Height then
+        -- user didnt set size, use auto (which is now 460x320 on mobile)
+    end
+    if Config.SizePreset and SizePresets[Config.SizePreset] then
+        finalW = SizePresets[Config.SizePreset].W
+        finalH = SizePresets[Config.SizePreset].H
+        autoName = Config.SizePreset
+    end
+
     local Main = Instance.new("Frame")
     Main.Name = "Main"
-    Main.Size = UDim2.new(0, Config.Width or 560, 0, Config.Height or 380)
-    Main.Position = UDim2.new(0.5, -(Config.Width or 560)/2, 0.5, -(Config.Height or 380)/2)
+    Main.Size = UDim2.new(0, finalW, 0, finalH)
+    Main.Position = UDim2.new(0.5, -finalW/2, 0.5, -finalH/2)
     Main.BackgroundColor3 = CurrentTheme.MainBg
     Main.BackgroundTransparency = Config.Transparency or Config.BackgroundTransparency or 0
     Main.BorderSizePixel = 0
@@ -543,6 +582,8 @@ function GGH:CreateWindow(Config)
     end
     Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateHeader)
     task.spawn(function() task.wait(0.5) UpdateHeader() end)
+    -- expose presets
+    GGH.SizePresets = SizePresets
     local AccentLine = Instance.new("Frame", Header)
     AccentLine.Size = UDim2.new(1,0,0,1)
     AccentLine.Position = UDim2.new(0,0,1,0)
@@ -1015,16 +1056,16 @@ function GGH:CreateWindow(Config)
         if FloatingIcon then FloatingIcon:Destroy() end
         FloatingIcon = Instance.new("TextButton", ScreenGui)
         FloatingIcon.Name = "FloatingIcon"
-        FloatingIcon.Size = UDim2.new(0,54,0,54)
-        FloatingIcon.Position = UDim2.new(0.5,-27,0,30)
+        FloatingIcon.Size = UDim2.new(0,40,0,40)
+        FloatingIcon.Position = UDim2.new(0.5,-20,0,15)
         FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
         FloatingIcon.Text = "G"
         FloatingIcon.Font = Enum.Font.GothamBold
-        FloatingIcon.TextSize = 22
+        FloatingIcon.TextSize = 16
         FloatingIcon.TextColor3 = Color3.new(1,1,1)
         FloatingIcon.ZIndex = 200
         FloatingIcon.AutoButtonColor = false
-        Corner(FloatingIcon, 27)
+        Corner(FloatingIcon, 20)
         Stroke(FloatingIcon, Color3.new(1,1,1), 1).Transparency = 0.5
         
         local dragging = false
@@ -1058,6 +1099,19 @@ function GGH:CreateWindow(Config)
             if hasDragged then return end
             Main.Visible = not Main.Visible
             if Main.Visible then
+                -- FIX: always restore to base size, not enlarged size
+                if originalSizeBeforeExtra then
+                    savedSize = originalSizeBeforeExtra
+                    originalSizeBeforeExtra = nil
+                    SearchOpen = false
+                    ThemeOpen = false
+                    SearchBar.Visible = false
+                    ThemeDropdown.Visible = false
+                    TabList.Position = UDim2.new(0,8,0,58)
+                    TabList.Size = UDim2.new(0,140,1,-64)
+                    Container.Position = UDim2.new(0,152,0,58)
+                    Container.Size = UDim2.new(1,-160,1,-64)
+                end
                 if minimized then
                     minimized = false
                     HeaderFix.Visible = true
@@ -1065,9 +1119,9 @@ function GGH:CreateWindow(Config)
                     Container.Visible = true
                     MinBtn.Visible = true
                     MaxBtn.Visible = false
-                    Main.Size = savedSize
                     UpdateResizeGrip()
                 end
+                Main.Size = savedSize
                 Tween(Main, {Size = savedSize}, 0.22)
             end
         end)
