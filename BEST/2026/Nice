@@ -1,5 +1,5 @@
 --[[
-    GGH Library v1.8.4 AUTO SIZE + SMALL FLOAT - ADD API EDITION
+    GGH Library v1.8.5 AUTO SIZE + SMALL FLOAT - ADD API EDITION
     Fixed:
     1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
     2- ResizeGrip visible when minimized -> Fixed (hides correctly)
@@ -488,10 +488,34 @@ function GGH:CreateWindow(Config)
         if not success then return nil end
     end
     local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or ("v1.8.4 FIXED ["..autoName.."]")
-    local DefaultTheme = Config.Theme or "Dark"
-    if not Themes[DefaultTheme] then DefaultTheme = "Dark" end
+    local SubTitle = Config.SubTitle or ("v1.8.5 FIXED ["..autoName.."]")
+    local DefaultTheme = Config.Theme or "Monochrome"
+    if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
     local CurrentTheme = Themes[DefaultTheme]
+    
+    -- AUTO TEXT COLOR: اذا الثيم فاتح -> خط داكن، اذا داكن -> خط فاتح
+    local function GetLuminance(c)
+        return 0.299*c.R + 0.587*c.G + 0.114*c.B
+    end
+    local function AutoTextColors(theme)
+        local lum = GetLuminance(theme.MainBg)
+        if lum > 0.5 then
+            -- ثيم فاتح -> خط داكن
+            theme.Text = Color3.fromRGB(20,20,25)
+            theme.SubText = Color3.fromRGB(80,80,85)
+            theme.SectionText = Color3.fromRGB(100,100,105)
+            theme.ParagraphText = Color3.fromRGB(40,40,45)
+        else
+            -- ثيم داكن -> خط فاتح
+            theme.Text = Color3.fromRGB(240,240,245)
+            theme.SubText = Color3.fromRGB(180,180,190)
+            theme.SectionText = Color3.fromRGB(150,150,160)
+            theme.ParagraphText = Color3.fromRGB(220,220,230)
+        end
+        return theme
+    end
+    CurrentTheme = AutoTextColors(CurrentTheme)
+    -- Apply auto to all themes when selected later
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "GGH_Library"
     ScreenGui.ResetOnSpawn = false
@@ -659,6 +683,11 @@ function GGH:CreateWindow(Config)
     ControlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ControlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     
+    -- CONFIG: المطور يكدر يلغي ازرار ما يريدها (الا التصغير والاكس ما ينلغي)
+    local showSearch = Config.ShowSearch ~= false and Config.ShowSearchButton ~= false and Config.SearchButton ~= false
+    local showSettings = Config.ShowSettings ~= false and Config.ShowSettingsButton ~= false and Config.SettingsButton ~= false
+    local showFloat = Config.ShowFloat ~= false and Config.ShowFloatButton ~= false and Config.FloatButton ~= false
+
     local function CreateCtrlButton(name, text, bg)
         local btn = Instance.new("TextButton", Controls)
         btn.Name = name
@@ -676,22 +705,44 @@ function GGH:CreateWindow(Config)
         return btn
     end
     
-    local SearchBtn = CreateCtrlButton("SearchBtn", "🔍", CurrentTheme.ElementBg2)
-    SearchBtn.LayoutOrder = 1
-    local ThemeBtn = CreateCtrlButton("ThemeBtn", "⚙", CurrentTheme.ElementBg2)
-    ThemeBtn.LayoutOrder = 2
-    local MinBtn = CreateCtrlButton("MinBtn", "-", CurrentTheme.ElementBg2)
+    local SearchBtn, ThemeBtn, FloatBtn
+    local MinBtn, MaxBtn, CloseBtn
+    local order = 1
+
+    if showSearch then
+        SearchBtn = CreateCtrlButton("SearchBtn", "🔍", CurrentTheme.ElementBg2)
+        SearchBtn.LayoutOrder = order; order+=1
+    end
+    if showSettings then
+        ThemeBtn = CreateCtrlButton("ThemeBtn", "⚙", CurrentTheme.ElementBg2)
+        ThemeBtn.LayoutOrder = order; order+=1
+    end
+    -- التصغير والاكس ما ينلغي ابدا
+    MinBtn = CreateCtrlButton("MinBtn", "-", CurrentTheme.ElementBg2)
     MinBtn.TextSize = 20
-    MinBtn.LayoutOrder = 3
-    local MaxBtn = CreateCtrlButton("MaxBtn", "+", CurrentTheme.ElementBg2)
+    MinBtn.LayoutOrder = order; order+=1
+    MaxBtn = CreateCtrlButton("MaxBtn", "+", CurrentTheme.ElementBg2)
     MaxBtn.TextSize = 20
-    MaxBtn.LayoutOrder = 4
+    MaxBtn.LayoutOrder = order; order+=1
     MaxBtn.Visible = false
-    local FloatBtn = CreateCtrlButton("FloatBtn", "◉", CurrentTheme.ElementBg2)
-    FloatBtn.LayoutOrder = 5
-    local CloseBtn = CreateCtrlButton("CloseBtn", "X", CurrentTheme.CloseBg)
-    CloseBtn.LayoutOrder = 6
+    if showFloat then
+        FloatBtn = CreateCtrlButton("FloatBtn", "◉", CurrentTheme.ElementBg2)
+        FloatBtn.LayoutOrder = order; order+=1
+    end
+    CloseBtn = CreateCtrlButton("CloseBtn", "X", CurrentTheme.CloseBg)
+    CloseBtn.LayoutOrder = order; order+=1
     CloseBtn.TextSize = 13
+
+    -- Adjust Controls width based on visible buttons
+    local visibleCount = 0
+    if showSearch then visibleCount+=1 end
+    if showSettings then visibleCount+=1 end
+    visibleCount+=1 -- Min
+    visibleCount+=1 -- Close
+    if showFloat then visibleCount+=1 end
+    local totalW = visibleCount*32 + (visibleCount-1)*6
+    Controls.Size = UDim2.new(0, totalW, 0, 32)
+    Controls.Position = UDim2.new(1, -totalW - 8, 0.5, -16)
 
     local SearchBar = Instance.new("Frame", Main)
     SearchBar.Name = "SearchBar"
@@ -1021,6 +1072,20 @@ function GGH:CreateWindow(Config)
     local function ApplyTheme(themeName)
         local theme = Themes[themeName]
         if not theme then return end
+        -- Auto text color for selected theme
+        local function GetLum(c) return 0.299*c.R + 0.587*c.G + 0.114*c.B end
+        local lum = GetLum(theme.MainBg)
+        if lum > 0.5 then
+            theme.Text = Color3.fromRGB(20,20,25)
+            theme.SubText = Color3.fromRGB(80,80,85)
+            theme.SectionText = Color3.fromRGB(100,100,105)
+            theme.ParagraphText = Color3.fromRGB(40,40,45)
+        else
+            theme.Text = Color3.fromRGB(240,240,245)
+            theme.SubText = Color3.fromRGB(180,180,190)
+            theme.SectionText = Color3.fromRGB(150,150,160)
+            theme.ParagraphText = Color3.fromRGB(220,220,230)
+        end
         CurrentTheme = theme
         Tween(Main, {BackgroundColor3 = theme.MainBg}, 0.25)
         Tween(Header, {BackgroundColor3 = theme.HeaderBg}, 0.25)
@@ -1031,15 +1096,13 @@ function GGH:CreateWindow(Config)
         MainStroke.Color = theme.Stroke
         TitleLabel.TextColor3 = theme.Text
         SubLabel.TextColor3 = theme.SubText
-        SearchBtn.BackgroundColor3 = theme.ElementBg2
-        SearchBtn.TextColor3 = theme.Text
-        ThemeBtn.BackgroundColor3 = theme.ElementBg2
-        ThemeBtn.TextColor3 = theme.Text
+        if SearchBtn then SearchBtn.BackgroundColor3 = theme.ElementBg2; SearchBtn.TextColor3 = theme.Text end
+        if ThemeBtn then ThemeBtn.BackgroundColor3 = theme.ElementBg2; ThemeBtn.TextColor3 = theme.Text end
         MinBtn.BackgroundColor3 = theme.ElementBg2
         MinBtn.TextColor3 = theme.Text
         MaxBtn.BackgroundColor3 = theme.ElementBg2
         MaxBtn.TextColor3 = theme.Text
-        FloatBtn.BackgroundColor3 = floatEnabled and theme.Accent or theme.ElementBg2
+        if FloatBtn then FloatBtn.BackgroundColor3 = floatEnabled and theme.Accent or theme.ElementBg2 end
         CloseBtn.BackgroundColor3 = theme.CloseBg
         CloseBtn.TextColor3 = theme.CloseText
         SearchBar.BackgroundColor3 = theme.ElementBg
@@ -1160,7 +1223,7 @@ function GGH:CreateWindow(Config)
         end)
     end
 
-    FloatBtn.MouseButton1Click:Connect(function()
+    if FloatBtn then FloatBtn.MouseButton1Click:Connect(function()
         floatEnabled = not floatEnabled
         if floatEnabled then
             Tween(FloatBtn, {BackgroundColor3 = CurrentTheme.Accent}, 0.2)
@@ -1171,7 +1234,7 @@ function GGH:CreateWindow(Config)
             FloatBtn.TextColor3 = CurrentTheme.Text
             if FloatingIcon then FloatingIcon:Destroy() FloatingIcon=nil end
         end
-    end)
+    end) end
 
     -- Smart enlarge functions
     local function ExpandWindow(extraH)
@@ -1191,7 +1254,7 @@ function GGH:CreateWindow(Config)
         end
     end
 
-    ThemeBtn.MouseButton1Click:Connect(function() 
+    if ThemeBtn then ThemeBtn.MouseButton1Click:Connect(function()  
         EnsureUnminimizedForPopup()
         if SearchOpen then
             SearchOpen = false
@@ -1213,7 +1276,7 @@ function GGH:CreateWindow(Config)
             task.wait(0.25)
             ThemeDropdown.Visible = false
         end
-    end)
+    end) end
 
     for name, th in pairs(Themes) do
         local Btn = Instance.new("TextButton", ThemeList)
@@ -1273,7 +1336,7 @@ function GGH:CreateWindow(Config)
             Tween(Container, {Position = UDim2.new(0,152,0,58), Size = UDim2.new(1,-160,1,-64)}, 0.2)
         end
     end
-    SearchBtn.MouseButton1Click:Connect(ToggleSearch)
+    if SearchBtn then SearchBtn.MouseButton1Click:Connect(ToggleSearch) end
     SearchClose.MouseButton1Click:Connect(ToggleSearch)
     SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local query = SearchBox.Text:lower()
