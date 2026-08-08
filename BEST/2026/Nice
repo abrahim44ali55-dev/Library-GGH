@@ -1,13 +1,3 @@
-
---[[
-    GGH Library v1.9.3 - FLOAT CUSTOM + ENGLISH + AUTO TRANSLATE - SCROLL ORIGINAL + SMALL FLOAT - ADD API EDITION
-    Fixed:
-    1- CloseBtn outside -> Fixed with UIListLayout + bigger Controls
-    2- ResizeGrip visible when minimized -> Fixed (hides correctly)
-    3- Float button not working -> Fixed (proper drag + click logic)
-    4- Search/Settings enlarge -> Fixed (smart expand without breaking)
-]]
-
 local GGH = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -1478,6 +1468,10 @@ function GGH:CreateWindow(Config)
             Line.BackgroundColor3 = CurrentTheme.Stroke
             Line.BackgroundTransparency = 0.5
             RegisterThemable(Line, "BackgroundColor3", "Stroke")
+            local CreateSectionAPI = {}
+            function CreateSectionAPI:Refresh(newCfg) return CreateSectionAPI end
+            return CreateSectionAPI
+
         end
 
         local function CreateParagraph(Cfg)
@@ -1502,6 +1496,10 @@ function GGH:CreateWindow(Config)
             T.TextColor3 = CurrentTheme.ParagraphText
             T.AutoLocalize = true
             RegisterThemable(T, "TextColor3", "ParagraphText")
+            local CreateParagraphAPI = {}
+            function CreateParagraphAPI:Refresh(newCfg) return CreateParagraphAPI end
+            return CreateParagraphAPI
+
         end
 
         local function CreateButton(Cfg)
@@ -1520,6 +1518,16 @@ function GGH:CreateWindow(Config)
             RegisterThemable(Btn, "TextColor3", "Text")
             RegisterThemable(st, "Stroke", "StrokeLight")
             AddSearch(Btn, Cfg.Title, "Button", Name)
+            local ButtonAPI = {}
+            function ButtonAPI:Refresh(newCfg)
+                if newCfg then
+                    if newCfg.Title then Btn.Text = newCfg.Title; Cfg.Title = newCfg.Title end
+                    if newCfg.Callback then Cfg.Callback = newCfg.Callback end
+                end
+                return ButtonAPI
+            end
+            function ButtonAPI:SetTitle(t) Btn.Text = t return ButtonAPI end
+            function ButtonAPI:Fire() pcall(Cfg.Callback) return ButtonAPI end
             Btn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
                 Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.1)
@@ -1527,6 +1535,7 @@ function GGH:CreateWindow(Config)
                 Tween(Btn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.1)
                 pcall(Cfg.Callback)
             end)
+            return ButtonAPI
         end
 
         local function CreateToggle(Cfg)
@@ -1562,6 +1571,25 @@ function GGH:CreateWindow(Config)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
+            local ToggleAPI = {}
+            function ToggleAPI:SetValue(v)
+                State = v
+                Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
+                Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
+                pcall(function() Cfg.Callback(State) end)
+                return ToggleAPI
+            end
+            function ToggleAPI:GetValue() return State end
+            function ToggleAPI:Refresh(newCfg)
+                if newCfg then
+                    if newCfg.Title then Title.Text = newCfg.Title end
+                    if newCfg.Default ~= nil then self:SetValue(newCfg.Default) end
+                end
+                return ToggleAPI
+            end
+            function ToggleAPI:Set(v) return self:SetValue(v) end
+            function ToggleAPI:Get() return self:GetValue() end
+
             Btn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
                 State = not State
@@ -1569,6 +1597,7 @@ function GGH:CreateWindow(Config)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
                 pcall(function() Cfg.Callback(State) end)
             end)
+            return ToggleAPI
         end
 
         local function CreateSlider(Cfg)
@@ -1649,6 +1678,27 @@ function GGH:CreateWindow(Config)
             UserInputService.InputEnded:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
             end)
+            local SliderAPI = {}
+            function SliderAPI:SetValue(v)
+                Value = math.clamp(v, Cfg.Min, Cfg.Max)
+                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
+                Fill.Size = UDim2.new(rel,0,1,0)
+                Circle.Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)
+                Label.Text = Cfg.Title.." : "..Value
+                pcall(Cfg.Callback or function() end, Value)
+                return SliderAPI
+            end
+            function SliderAPI:GetValue() return Value end
+            function SliderAPI:Refresh(newCfg)
+                if newCfg then
+                    if newCfg.Min then Cfg.Min = newCfg.Min end
+                    if newCfg.Max then Cfg.Max = newCfg.Max end
+                    if newCfg.Title then Label.Text = newCfg.Title.." : "..Value; Cfg.Title = newCfg.Title end
+                    if newCfg.Default then self:SetValue(newCfg.Default) end
+                end
+                return SliderAPI
+            end
+            return SliderAPI
         end
 
         local function CreateInput(Cfg)
@@ -1672,17 +1722,32 @@ function GGH:CreateWindow(Config)
             Box.ClearTextOnFocus = false
             Box.AutoLocalize = true
             RegisterThemable(Box, "TextColor3", "Text")
+            local InputAPI = {}
+            function InputAPI:SetValue(t) Box.Text = t return InputAPI end
+            function InputAPI:GetValue() return Box.Text end
+            function InputAPI:Refresh(newCfg)
+                if newCfg then
+                    if newCfg.Placeholder then Box.PlaceholderText = newCfg.Placeholder end
+                    if newCfg.Default then Box.Text = newCfg.Default end
+                    if newCfg.Title then Cfg.Title = newCfg.Title end
+                end
+                return InputAPI
+            end
+            function InputAPI:Set(t) return self:SetValue(t) end
+            function InputAPI:Get() return self:GetValue() end
             Box.FocusLost:Connect(function() if IsScrolling then return end pcall(Cfg.Callback or function() end, Box.Text) end)
+            return InputAPI
         end
 
         
 
+
 local function CreateDropdown(Cfg)
     local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
+    Cfg.Options = Cfg.Options or {}
     local Selected = Cfg.Default or Cfg.Options[1]
     if isMulti then
         if type(Selected) ~= "table" then Selected = {Selected} end
-        -- filter invalid
         local valid = {}
         for _, v in ipairs(Selected) do for _, o in ipairs(Cfg.Options) do if v==o then table.insert(valid,v) break end end end
         Selected = valid
@@ -1752,7 +1817,7 @@ local function CreateDropdown(Cfg)
         Btn.Text = GetDisplayText()
     end
 
-    for _, opt in ipairs(Cfg.Options) do
+    local function CreateOptionButton(opt)
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,0,0,28)
         O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
@@ -1783,8 +1848,75 @@ local function CreateDropdown(Cfg)
                 pcall(Cfg.Callback or function() end, Selected)
             end
         end)
+        return O
     end
+
+    for _, opt in ipairs(Cfg.Options) do
+        CreateOptionButton(opt)
+    end
+
+    -- [[ REFRESH API START - FULL SUPPORT ]]
+    local DropdownAPI = {}
+    function DropdownAPI:Refresh(newOptions)
+        if newOptions and type(newOptions) == "table" then
+            Cfg.Options = newOptions
+        end
+        -- clear old buttons
+        for _, child in ipairs(List:GetChildren()) do
+            if child:IsA("TextButton") then child:Destroy() end
+        end
+        -- validate Selected against new options
+        if not isMulti then
+            local stillExists = false
+            for _, o in ipairs(Cfg.Options) do if o == Selected then stillExists = true break end end
+            if not stillExists then Selected = Cfg.Options[1] end
+        else
+            local newSel = {}
+            for _, s in ipairs(Selected) do for _, o in ipairs(Cfg.Options) do if s==o then table.insert(newSel,s) break end end end
+            Selected = newSel
+        end
+        -- rebuild
+        List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
+        for _, opt in ipairs(Cfg.Options) do CreateOptionButton(opt) end
+        RefreshOptions()
+        if Open then
+            Tween(Frame, {Size = UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6)}, 0.2)
+        end
+        return DropdownAPI
+    end
+    function DropdownAPI:SetOptions(newOptions) return self:Refresh(newOptions) end
+    function DropdownAPI:Set(option)
+        if isMulti then
+            if type(option) == "table" then Selected = option else Selected = {option} end
+        else
+            Selected = option
+        end
+        RefreshOptions()
+        pcall(Cfg.Callback or function() end, Selected)
+        return DropdownAPI
+    end
+    function DropdownAPI:Get() return Selected end
+    function DropdownAPI:Clear()
+        if isMulti then Selected = {} else Selected = nil end
+        RefreshOptions()
+        return DropdownAPI
+    end
+    function DropdownAPI:AddOption(opt)
+        table.insert(Cfg.Options, opt)
+        self:Refresh()
+        return DropdownAPI
+    end
+    function DropdownAPI:RemoveOption(opt)
+        for i,o in ipairs(Cfg.Options) do if o==opt then table.remove(Cfg.Options,i) break end end
+        self:Refresh()
+        return DropdownAPI
+    end
+    DropdownAPI.Refresh = DropdownAPI.Refresh
+    -- [[ REFRESH API END ]]
+
+    return DropdownAPI
 end
+
 
 local function CreateColorpicker(Cfg)
             local Color = Cfg.Default or CurrentTheme.Accent
@@ -1820,6 +1952,10 @@ local function CreateColorpicker(Cfg)
                 Preview.BackgroundColor3 = newColor
                 pcall(Cfg.Callback or function() end, newColor)
             end)
+            local CreateColorpickerAPI = {}
+            function CreateColorpickerAPI:Refresh(newCfg) return CreateColorpickerAPI end
+            return CreateColorpickerAPI
+
         end
 
         local function CreateKeybind(Cfg)
@@ -1857,6 +1993,10 @@ local function CreateColorpicker(Cfg)
                     end
                 end)
             end)
+            local CreateKeybindAPI = {}
+            function CreateKeybindAPI:Refresh(newCfg) return CreateKeybindAPI end
+            return CreateKeybindAPI
+
         end
 
         local function CreateCode(Cfg)
@@ -1878,6 +2018,10 @@ local function CreateColorpicker(Cfg)
             CodeLabel.TextYAlignment = Enum.TextYAlignment.Top
             CodeLabel.TextWrapped = true
             RegisterThemable(CodeLabel, "TextColor3", "Accent")
+            local CreateCodeAPI = {}
+            function CreateCodeAPI:Refresh(newCfg) return CreateCodeAPI end
+            return CreateCodeAPI
+
         end
 
         local function CreateLabel(Cfg)
@@ -1899,6 +2043,10 @@ local function CreateColorpicker(Cfg)
             Label.TextWrapped = true
             Label.AutoLocalize = Cfg.AutoLocalize ~= false
             RegisterThemable(Label, "TextColor3", "Text")
+            local CreateLabelAPI = {}
+            function CreateLabelAPI:Refresh(newCfg) return CreateLabelAPI end
+            return CreateLabelAPI
+
         end
 
         local function CreateSeparator(Cfg)
@@ -1934,6 +2082,10 @@ local function CreateColorpicker(Cfg)
                 local Pad = Instance.new("UIPadding", Text)
                 Pad.PaddingLeft = UDim.new(0,8) Pad.PaddingRight = UDim.new(0,8)
             end
+            local CreateSeparatorAPI = {}
+            function CreateSeparatorAPI:Refresh(newCfg) return CreateSeparatorAPI end
+            return CreateSeparatorAPI
+
         end
 
         local function CreateImage(Cfg)
@@ -2042,25 +2194,54 @@ if true then
 end
 
 local Elements = {}
+        -- Global Refresh Registry for all elements
+        local AllElements = {}
+        local function RegisterElement(api, typeName, cfg)
+            if api and type(api)=="table" then
+                api.Type = typeName
+                api.Config = cfg
+                table.insert(AllElements, api)
+            end
+            return api
+        end
+
         function Elements:Add(Type, Cfg)
             Cfg = Cfg or {}
             Type = string.lower(tostring(Type))
-            if Type == "section" then CreateSection(Cfg)
-            elseif Type == "paragraph" then CreateParagraph(Cfg)
-            elseif Type == "button" then CreateButton(Cfg)
-            elseif Type == "toggle" then CreateToggle(Cfg)
-            elseif Type == "slider" then CreateSlider(Cfg)
-            elseif Type == "input" then CreateInput(Cfg)
-            elseif Type == "dropdown" then CreateDropdown(Cfg)
-            elseif Type == "colorpicker" or Type == "color" then CreateColorpicker(Cfg)
-            elseif Type == "keybind" or Type == "key" then CreateKeybind(Cfg)
-            elseif Type == "code" then CreateCode(Cfg)
-            elseif Type == "label" then CreateLabel(Cfg)
-            elseif Type == "separator" or Type == "line" or Type == "divider" then CreateSeparator(Cfg)
-            elseif Type == "image" or Type == "img" or Type == "logo" then CreateImage(Cfg)
+            local api = nil
+            if Type == "section" then api = CreateSection(Cfg)
+            elseif Type == "paragraph" then api = CreateParagraph(Cfg)
+            elseif Type == "button" then api = CreateButton(Cfg)
+            elseif Type == "toggle" then api = CreateToggle(Cfg)
+            elseif Type == "slider" then api = CreateSlider(Cfg)
+            elseif Type == "input" then api = CreateInput(Cfg)
+            elseif Type == "dropdown" then api = CreateDropdown(Cfg)
+            elseif Type == "colorpicker" or Type == "color" then api = CreateColorpicker(Cfg)
+            elseif Type == "keybind" or Type == "key" then api = CreateKeybind(Cfg)
+            elseif Type == "code" then api = CreateCode(Cfg)
+            elseif Type == "label" then api = CreateLabel(Cfg)
+            elseif Type == "separator" or Type == "line" or Type == "divider" then api = CreateSeparator(Cfg)
+            elseif Type == "image" or Type == "img" or Type == "logo" then api = CreateImage(Cfg)
             else warn("[GGH Library v1.8.1] Unknown Add type: "..tostring(Type))
             end
+            -- auto add Refresh if not exists (generic)
+            if api and type(api)=="table" and not api.Refresh then
+                function api:Refresh(newCfg)
+                    if newCfg and type(newCfg)=="table" then
+                        for k,v in pairs(newCfg) do Cfg[k]=v end
+                    end
+                    return api
+                end
+            end
+            return RegisterElement(api, Type, Cfg)
         end
+
+        function Elements:RefreshAll()
+            for _, el in ipairs(AllElements) do
+                if el and el.Refresh then pcall(function() el:Refresh() end) end
+            end
+        end
+        function Elements:GetAll() return AllElements end
         function Elements:Section(Cfg) return self:Add("Section", Cfg) end
         function Elements:Paragraph(Cfg) return self:Add("Paragraph", Cfg) end
         function Elements:Button(Cfg) return self:Add("Button", Cfg) end
