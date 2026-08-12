@@ -506,20 +506,18 @@ function GGH:CreateWindow(Config)
     if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
     local CurrentTheme = Themes[DefaultTheme]
     
-    -- AUTO TEXT COLOR: اذا الثيم فاتح -> خط داكن، اذا داكن -> خط فاتح
+    -- AUTO TEXT COLOR
     local function GetLuminance(c)
         return 0.299*c.R + 0.587*c.G + 0.114*c.B
     end
     local function AutoTextColors(theme)
         local lum = GetLuminance(theme.MainBg)
         if lum > 0.5 then
-            -- ثيم فاتح -> خط داكن
             theme.Text = Color3.fromRGB(20,20,25)
             theme.SubText = Color3.fromRGB(80,80,85)
             theme.SectionText = Color3.fromRGB(100,100,105)
             theme.ParagraphText = Color3.fromRGB(40,40,45)
         else
-            -- ثيم داكن -> خط فاتح
             theme.Text = Color3.fromRGB(240,240,245)
             theme.SubText = Color3.fromRGB(180,180,190)
             theme.SectionText = Color3.fromRGB(150,150,160)
@@ -528,19 +526,17 @@ function GGH:CreateWindow(Config)
         return theme
     end
     CurrentTheme = AutoTextColors(CurrentTheme)
-    -- Apply auto to all themes when selected later
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "GGH_Library"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
-    -- 5 AUTO SIZES BY DEVICE
     local SizePresets = {
-        ["Tiny"]   = {W=420, H=280}, -- very small phones
-        ["Small"]  = {W=460, H=320}, -- normal phones (default now)
-        ["Medium"] = {W=520, H=360}, -- tablet
-        ["Large"]  = {W=600, H=400}, -- desktop
-        ["Huge"]   = {W=680, H=460}, -- large screens
+        ["Tiny"]   = {W=420, H=280},
+        ["Small"]  = {W=460, H=320},
+        ["Medium"] = {W=520, H=360},
+        ["Large"]  = {W=600, H=400},
+        ["Huge"]   = {W=680, H=460},
     }
     local function DetectDevicePreset()
         local cam = workspace.CurrentCamera
@@ -563,10 +559,6 @@ function GGH:CreateWindow(Config)
     local autoPreset, autoName = DetectDevicePreset()
     local finalW = Config.Width or autoPreset.W
     local finalH = Config.Height or autoPreset.H
-    -- Force smaller default if user used old 560x400
-    if not Config.Width and not Config.Height then
-        -- user didnt set size, use auto (which is now 460x320 on mobile)
-    end
     if Config.SizePreset and SizePresets[Config.SizePreset] then
         finalW = SizePresets[Config.SizePreset].W
         finalH = SizePresets[Config.SizePreset].H
@@ -583,7 +575,6 @@ function GGH:CreateWindow(Config)
     Main.ClipsDescendants = true
     Main.Parent = ScreenGui
     Corner(Main, 18)
-    -- BACKGROUND IMAGE OPTIONAL (from developer)
     if Config.BackgroundImage or Config.Background or Config.BgImage then
         local bgSrc = Config.BackgroundImage or Config.Background or Config.BgImage
         local function extractId(text)
@@ -609,7 +600,6 @@ function GGH:CreateWindow(Config)
         BgImage.ScaleType = Config.BgScaleType or Enum.ScaleType.Crop
         BgImage.ZIndex = 0
         Corner(BgImage, 18)
-        -- make main slightly transparent to see image
         if not Config.BackgroundTransparency then
             Main.BackgroundTransparency = 0.1
         end
@@ -651,7 +641,6 @@ function GGH:CreateWindow(Config)
     end
     Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateHeader)
     task.spawn(function() task.wait(0.5) UpdateHeader() end)
-    -- expose presets
     GGH.SizePresets = SizePresets
     local AccentLine = Instance.new("Frame", Header)
     AccentLine.Size = UDim2.new(1,0,0,1)
@@ -683,7 +672,6 @@ function GGH:CreateWindow(Config)
     SubLabel.ZIndex = 4
     SubLabel.AutoLocalize = true AddTextStroke(SubLabel)
     
-    -- FIX 1: Controls with UIListLayout so X never goes outside
     local Controls = Instance.new("Frame", Header)
     Controls.Size = UDim2.new(0,200,0,32)
     Controls.Position = UDim2.new(1,-208,0.5,-16)
@@ -696,7 +684,6 @@ function GGH:CreateWindow(Config)
     ControlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ControlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     
-    -- CONFIG: المطور يكدر يلغي ازرار ما يريدها (الا التصغير والاكس ما ينلغي)
     local showSearch = true
     local showSettings = true
     local showFloat = true
@@ -730,7 +717,6 @@ function GGH:CreateWindow(Config)
         ThemeBtn = CreateCtrlButton("ThemeBtn", "⚙", CurrentTheme.ElementBg2)
         ThemeBtn.LayoutOrder = order; order+=1
     end
-    -- التصغير والاكس ما ينلغي ابدا
     MinBtn = CreateCtrlButton("MinBtn", "-", CurrentTheme.ElementBg2)
     MinBtn.TextSize = 20
     MinBtn.LayoutOrder = order; order+=1
@@ -746,12 +732,11 @@ function GGH:CreateWindow(Config)
     CloseBtn.LayoutOrder = order; order+=1
     CloseBtn.TextSize = 13
 
-    -- Adjust Controls width based on visible buttons
     local visibleCount = 0
     if showSearch then visibleCount+=1 end
     if showSettings then visibleCount+=1 end
-    visibleCount+=1 -- Min
-    visibleCount+=1 -- Close
+    visibleCount+=1
+    visibleCount+=1
     if showFloat then visibleCount+=1 end
     local totalW = visibleCount*32 + (visibleCount-1)*6
     Controls.Size = UDim2.new(0, totalW, 0, 32)
@@ -991,15 +976,13 @@ function GGH:CreateWindow(Config)
 
     local minimized = false
     local savedSize = Main.Size
-    local baseSize = Main.Size -- original size before any enlarge
+    local baseSize = Main.Size
 
     local function UpdateResizeGrip()
-        -- يطلع بس وهي مكبرة (مو بالتصغير)
         if minimized then
             ResizeGrip.Visible = false
             return
         end
-        -- اذا النافذة اكبر من الحجم الاساسي او على الاقل 500 عرض -> اظهره
         ResizeGrip.Visible = true
     end
     Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateResizeGrip)
@@ -1029,7 +1012,6 @@ function GGH:CreateWindow(Config)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then resizing = false end
     end)
 
-    -- MIN / MAX LOGIC - FIX 2
     MinBtn.MouseButton1Click:Connect(function()
         if not minimized then
             minimized = true
@@ -1091,7 +1073,6 @@ function GGH:CreateWindow(Config)
     local function ApplyTheme(themeName)
         local theme = Themes[themeName]
         if not theme then return end
-        -- Auto text color for selected theme
         local function GetLum(c) return 0.299*c.R + 0.587*c.G + 0.114*c.B end
         local lum = GetLum(theme.MainBg)
         if lum > 0.5 then
@@ -1146,7 +1127,6 @@ function GGH:CreateWindow(Config)
         end
     end
 
-    -- FIX 3 & 4: FLOAT + SEARCH/SETTINGS ENLARGE LOGIC
     local ThemeOpen = false
     local SearchOpen = false
     local originalSizeBeforeExtra = nil
@@ -1215,7 +1195,6 @@ function GGH:CreateWindow(Config)
             ConfirmFrame.Visible = false
             Main.Visible = not Main.Visible
             if Main.Visible then
-                -- FIX: always restore to base size, not enlarged size
                 if originalSizeBeforeExtra then
                     savedSize = originalSizeBeforeExtra
                     originalSizeBeforeExtra = nil
@@ -1256,7 +1235,6 @@ function GGH:CreateWindow(Config)
         end
     end) end
 
-    -- Smart enlarge functions
     local function ExpandWindow(extraH)
         if originalSizeBeforeExtra == nil then
             originalSizeBeforeExtra = Main.Size
@@ -1287,7 +1265,6 @@ function GGH:CreateWindow(Config)
         end
         ThemeOpen = not ThemeOpen 
         if ThemeOpen then
-            -- FIXED: ما يكبر النافذة، يطلع بنفس الحجم الselected
             ThemeDropdown.Visible = true
             ThemeDropdown.Size = UDim2.new(0,200,0,0)
             local maxH = math.clamp(Main.AbsoluteSize.Y - 80, 150, 360)
@@ -1338,7 +1315,6 @@ function GGH:CreateWindow(Config)
         end
         SearchOpen = not SearchOpen
         if SearchOpen then
-            -- FIXED: ما يكبر النافذة، بس يطلع شريط البحث بنفس الحجم
             SearchBar.Visible = true
             SearchBar.Size = UDim2.new(1,-16,0,0)
             Tween(SearchBar, {Size = UDim2.new(1,-16,0,42)}, 0.25)
@@ -1437,8 +1413,6 @@ function GGH:CreateWindow(Config)
         end)
         if FirstTab then FirstTab = false TabPage.Visible = true TabButton.BackgroundColor3 = CurrentTheme.Accent TabButton.TextColor3 = Color3.fromRGB(255,255,255) end
         table.insert(Tabs, {Button = TabButton, Page = TabPage})
-
-    -- bottom spacer removed - keep original scroll working
 
         local function CreateSection(Cfg)
             local SecFrame = Instance.new("Frame", TabPage)
@@ -1739,9 +1713,7 @@ function GGH:CreateWindow(Config)
             return InputAPI
         end
 
-        
-
-
+-- [FIXED DROPDOWN: 7 items + scroll]
 local function CreateDropdown(Cfg)
     local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
     Cfg.Options = Cfg.Options or {}
@@ -1752,6 +1724,9 @@ local function CreateDropdown(Cfg)
         for _, v in ipairs(Selected) do for _, o in ipairs(Cfg.Options) do if v==o then table.insert(valid,v) break end end end
         Selected = valid
     end
+
+    local MAX_VISIBLE = 7
+    local OPT_H = 30
 
     local Frame = Instance.new("Frame", TabPage)
     Frame.Size = UDim2.new(1,-4,0,38)
@@ -1784,19 +1759,52 @@ local function CreateDropdown(Cfg)
     RegisterThemable(Btn, "TextColor3", "Text")
     AddTextStroke(Btn)
 
-    local List = Instance.new("Frame", Frame)
+    -- SCROLLING LIST - FIXED
+    local List = Instance.new("ScrollingFrame", Frame)
+    List.Name = "DropdownList"
     List.Position = UDim2.new(0,0,0,38)
-    List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
+    List.Size = UDim2.new(1,0,0,0)
     List.BackgroundTransparency = 1
+    List.BorderSizePixel = 0
+    List.CanvasSize = UDim2.new(0,0,0,0)
+    List.ScrollBarThickness = 4
+    List.ScrollBarImageColor3 = CurrentTheme.Accent
+    List.ScrollingDirection = Enum.ScrollingDirection.Y
+    List.ClipsDescendants = true
+    RegisterThemable(List, "ScrollBar", "Accent")
+
     local ll = Instance.new("UIListLayout", List)
     ll.Padding = UDim.new(0,2)
+    ll.SortOrder = Enum.SortOrder.LayoutOrder
 
     local Open = false
+
+    local function GetListHeight()
+        local count = #Cfg.Options
+        local visible = math.min(count, MAX_VISIBLE)
+        return visible * (OPT_H + 2)
+    end
+
+    local function UpdateListSize()
+        local count = #Cfg.Options
+        List.CanvasSize = UDim2.new(0,0,0, count * (OPT_H + 2))
+        if Open then
+            local h = GetListHeight()
+            List.Size = UDim2.new(1,0,0,h)
+            Tween(Frame, {Size = UDim2.new(1,-4,0, 38 + h + 6)}, 0.2)
+        end
+    end
+
     Btn.MouseButton1Click:Connect(function()
         if IsScrolling then return end
         Open = not Open
-        local targetH = Open and (38 + #Cfg.Options*30 + 6) or 38
-        Tween(Frame, {Size = UDim2.new(1,-4,0,targetH)}, 0.2)
+        if Open then
+            local h = GetListHeight()
+            List.Size = UDim2.new(1,0,0,h)
+            Tween(Frame, {Size = UDim2.new(1,-4,0, 38 + h + 6)}, 0.2)
+        else
+            Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
+        end
     end)
 
     local function IsSelected(opt)
@@ -1819,7 +1827,7 @@ local function CreateDropdown(Cfg)
 
     local function CreateOptionButton(opt)
         local O = Instance.new("TextButton", List)
-        O.Size = UDim2.new(1,0,0,28)
+        O.Size = UDim2.new(1,-4,0,28)
         O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
         O.Text = (IsSelected(opt) and "✓ " or "")..opt
         O.Font = Enum.Font.Gotham
@@ -1854,18 +1862,16 @@ local function CreateDropdown(Cfg)
     for _, opt in ipairs(Cfg.Options) do
         CreateOptionButton(opt)
     end
+    List.CanvasSize = UDim2.new(0,0,0, #Cfg.Options * (OPT_H + 2))
 
-    -- [[ REFRESH API START - FULL SUPPORT ]]
     local DropdownAPI = {}
     function DropdownAPI:Refresh(newOptions)
         if newOptions and type(newOptions) == "table" then
             Cfg.Options = newOptions
         end
-        -- clear old buttons
         for _, child in ipairs(List:GetChildren()) do
             if child:IsA("TextButton") then child:Destroy() end
         end
-        -- validate Selected against new options
         if not isMulti then
             local stillExists = false
             for _, o in ipairs(Cfg.Options) do if o == Selected then stillExists = true break end end
@@ -1875,12 +1881,13 @@ local function CreateDropdown(Cfg)
             for _, s in ipairs(Selected) do for _, o in ipairs(Cfg.Options) do if s==o then table.insert(newSel,s) break end end end
             Selected = newSel
         end
-        -- rebuild
-        List.Size = UDim2.new(1,0,0,#Cfg.Options*30)
         for _, opt in ipairs(Cfg.Options) do CreateOptionButton(opt) end
+        List.CanvasSize = UDim2.new(0,0,0, #Cfg.Options * (OPT_H + 2))
         RefreshOptions()
         if Open then
-            Tween(Frame, {Size = UDim2.new(1,-4,0,38 + #Cfg.Options*30 + 6)}, 0.2)
+            local h = GetListHeight()
+            List.Size = UDim2.new(1,0,0,h)
+            Tween(Frame, {Size = UDim2.new(1,-4,0, 38 + h + 6)}, 0.2)
         end
         return DropdownAPI
     end
@@ -1911,8 +1918,6 @@ local function CreateDropdown(Cfg)
         self:Refresh()
         return DropdownAPI
     end
-    DropdownAPI.Refresh = DropdownAPI.Refresh
-    -- [[ REFRESH API END ]]
 
     return DropdownAPI
 end
@@ -2188,13 +2193,10 @@ local function CreateColorpicker(Cfg)
             end
         end
 
-        -- FIX: Alias for AddTab (some scripts use AddTab)
 if true then
-    -- will be defined after Window created, placeholder
 end
 
 local Elements = {}
-        -- Global Refresh Registry for all elements
         local AllElements = {}
         local function RegisterElement(api, typeName, cfg)
             if api and type(api)=="table" then
@@ -2224,7 +2226,6 @@ local Elements = {}
             elseif Type == "image" or Type == "img" or Type == "logo" then api = CreateImage(Cfg)
             else warn("[GGH Library v1.8.1] Unknown Add type: "..tostring(Type))
             end
-            -- auto add Refresh if not exists (generic)
             if api and type(api)=="table" and not api.Refresh then
                 function api:Refresh(newCfg)
                     if newCfg and type(newCfg)=="table" then
@@ -2275,12 +2276,6 @@ function Window:SetSizePreset(presetName)
     return Window
 end
 
--- ============================================================================
--- GGH Library v2.0 - ULTIMATE KEY SYSTEM EDITION - FULL ENGLISH
--- Supports: Custom Keys, API, Pastebin Raw, GitHub Raw, Discord, HWID (Optional)
--- No sensitive info leak - Minimal UI - Developer Defined Keys
--- ============================================================================
-
 function GGH:GetHWID()
     local hwid = "UNKNOWN"
     pcall(function()
@@ -2312,7 +2307,6 @@ function GGH:MakeKeySystem(Config)
     local ThemeName = Config.Theme or "Dark"
     local CurrentTheme = Themes[ThemeName] or Themes["Dark"]
 
-    -- Executor request wrapper
     local function HttpGet(url)
         local success, result = pcall(function()
             if syn and syn.request then
@@ -2333,12 +2327,10 @@ function GGH:MakeKeySystem(Config)
         return nil
     end
 
-    -- Secure key validation - NO LEAK
     local function ValidateKey(inputKey)
         if not inputKey or inputKey == "" then return false, "Empty key" end
         inputKey = tostring(inputKey):gsub("^%s+", ""):gsub("%s+$", "")
 
-        -- Method 1: Custom Developer Keys
         if #CustomKeys > 0 then
             for _, k in pairs(CustomKeys) do
                 if tostring(k) == inputKey then
@@ -2347,7 +2339,6 @@ function GGH:MakeKeySystem(Config)
             end
         end
 
-        -- Method 2: API Validation
         if APIUrl and APIUrl ~= "" then
             local url = APIUrl:gsub("{key}", inputKey):gsub("%%s", inputKey):gsub("{KEY}", inputKey)
             if not url:find(inputKey) then
@@ -2357,7 +2348,6 @@ function GGH:MakeKeySystem(Config)
             if body then
                 local lower = string.lower(body)
                 if lower:find('"valid"%s*:%s*true') or lower:find('"success"%s*:%s*true') or lower:find('true') and #body < 50 then
-                    -- Try JSON decode
                     local ok, decoded = pcall(function() return game:GetService("HttpService"):JSONDecode(body) end)
                     if ok and decoded then
                         if decoded.valid == true or decoded.success == true or decoded.Valid == true or decoded.status == "valid" then
@@ -2372,7 +2362,6 @@ function GGH:MakeKeySystem(Config)
             end
         end
 
-        -- Method 3: Raw URL / Pastebin / GitHub Raw
         if RawUrl and RawUrl ~= "" then
             local body = HttpGet(RawUrl)
             if body then
@@ -2384,7 +2373,6 @@ function GGH:MakeKeySystem(Config)
             end
         end
 
-        -- Method 4: HWID Check (Optional)
         if UseHWID then
             local currentHwid = GGH:GetHWID()
             if #HWIDList > 0 then
@@ -2396,17 +2384,13 @@ function GGH:MakeKeySystem(Config)
             end
         end
 
-        -- If no validation method set, allow any non-empty key (dev can set CustomKeys to enforce)
         if #CustomKeys == 0 and (APIUrl == "" or not APIUrl) and (RawUrl == "" or not RawUrl) and not UseHWID then
-            -- If developer didn't set any method but provided callback, we treat as valid to let dev handle custom logic outside
-            -- But default: require at least 4 chars
             if #inputKey >= 3 then return true end
         end
 
         return false, "Invalid key"
     end
 
-    -- Build UI
     local GuiParent = GetGuiParent()
     if GuiParent:FindFirstChild("GGH_KeySystem") then GuiParent:FindFirstChild("GGH_KeySystem"):Destroy() end
 
@@ -2518,7 +2502,6 @@ function GGH:MakeKeySystem(Config)
     local GetKeyBtn = CreateBottomBtn("Get Key", UDim2.new(0,0,0,0), UDim2.new(0.5,-4,1,0))
     local DiscordBtn = CreateBottomBtn("Copy Server", UDim2.new(0.5,4,0,0), UDim2.new(0.5,-4,1,0))
 
-    -- Auto load saved key
     pcall(function()
         if SaveKey and isfile and isfile(FileName) then
             local saved = readfile(FileName)
@@ -2561,7 +2544,6 @@ function GGH:MakeKeySystem(Config)
         else
             SetStatus("Invalid Key! Please try again.", Color3.fromRGB(255,80,80))
             OnFail(err)
-            -- shake
             local orig = Main.Position
             for i=1,3 do
                 Tween(Main, {Position = orig + UDim2.new(0,5,0,0)}, 0.05)
@@ -2592,14 +2574,12 @@ function GGH:MakeKeySystem(Config)
         end
     end)
 
-    -- Hover effects
     SubmitBtn.MouseEnter:Connect(function() Tween(SubmitBtn, {BackgroundColor3 = Color3.fromRGB(CurrentTheme.Accent.R*255+20, CurrentTheme.Accent.G*255+20, CurrentTheme.Accent.B*255+20)}, 0.15) end)
     SubmitBtn.MouseLeave:Connect(function() Tween(SubmitBtn, {BackgroundColor3 = CurrentTheme.Accent}, 0.15) end)
 
     return ScreenGui
 end
 
--- Alias for easier use
 GGH.CreateKey = GGH.MakeKeySystem
 GGH.KeySystem = GGH.MakeKeySystem
 GGH.AddKeySystem = GGH.MakeKeySystem
