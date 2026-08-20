@@ -1542,8 +1542,29 @@ function GGH:CreateWindow(Config)
             end
             ClampFrameToScreen(Main, ScreenGui)
         end
-        ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScreenSizeMain)
-        task.spawn(function() task.wait(0.2) updateScreenSizeMain() end)
+        local function ApplyResponsiveSize()
+            local vp = ScreenGui.AbsoluteSize
+            if vp.X < 100 or vp.Y < 100 then return end
+            -- الحجم المناسب حسب قياس الشاشة - 85% عرض و 80% ارتفاع كحد اقصى
+            local maxW = math.clamp(vp.X * 0.88, 340, 620)
+            local maxH = math.clamp(vp.Y * 0.78, 300, 500)
+            local curSize = Main.AbsoluteSize
+            -- اذا الحجم الحالي اكبر من الشاشة، صغره تلقائيا
+            if curSize.X > vp.X - 20 or curSize.Y > vp.Y - 80 then
+                Main.Size = UDim2.fromOffset(math.min(curSize.X, maxW), math.min(curSize.Y, maxH))
+            end
+            ClampFrameToScreen(Main, ScreenGui)
+        end
+
+        local oldUpdate = updateScreenSizeMain
+        local function newUpdateWrapper()
+            oldUpdate()
+            ApplyResponsiveSize()
+        end
+        ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(newUpdateWrapper)
+        task.spawn(function() task.wait(0.2) newUpdateWrapper() end)
+        -- اول مرة نحسب حجم مناسب
+        ApplyResponsiveSize()
 
         local function StartDrag(input)
             if ScreenGui:FindFirstChild("GGH_ColorPicker_Overlay") then return end
@@ -1564,8 +1585,8 @@ function GGH:CreateWindow(Config)
                     local newY = startPos.Y.Offset + delta.Y
                     local viewportSize = ScreenGui.AbsoluteSize
                     local frameSize = Main.AbsoluteSize
-                    local clampedX = math.clamp(newX, 0, viewportSize.X - frameSize.X)
-                    local clampedY = math.clamp(newY, 0, viewportSize.Y - frameSize.Y)
+                    local clampedX = math.clamp(newX, -20, viewportSize.X - frameSize.X + 20)
+                    local clampedY = math.clamp(newY, -36, viewportSize.Y - frameSize.Y + 20)
                     Main.Position = UDim2.fromOffset(clampedX, clampedY)
                 end
             end
