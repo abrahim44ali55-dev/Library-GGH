@@ -1235,6 +1235,7 @@ function GGH:CreateWindow(Config)
     SearchBar.Size = UDim2.new(1,-16,0,0)
     SearchBar.Position = UDim2.new(0,8,0,56)
     SearchBar.BackgroundColor3 = CurrentTheme.ElementBg
+    SearchBar.BackgroundTransparency = ElementTrans
     SearchBar.Visible = false
     SearchBar.ZIndex = 90
     SearchBar.ClipsDescendants = true
@@ -1270,6 +1271,7 @@ function GGH:CreateWindow(Config)
     ThemeDropdown.Size = UDim2.new(0,200,0,0)
     ThemeDropdown.Position = UDim2.new(1,-208,0,56)
     ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
+    ThemeDropdown.BackgroundTransparency = WindowTrans
     ThemeDropdown.Visible = false
     ThemeDropdown.ZIndex = 100
     ThemeDropdown.ClipsDescendants = true
@@ -1370,6 +1372,7 @@ function GGH:CreateWindow(Config)
     ConfirmBox.Size = UDim2.new(0,300,0,160)
     ConfirmBox.Position = UDim2.new(0.5,-150,0.5,-80)
     ConfirmBox.BackgroundColor3 = CurrentTheme.ElementBg
+    ConfirmBox.BackgroundTransparency = ElementTrans
     ConfirmBox.ZIndex = 201
     Corner(ConfirmBox, 14)
     Stroke(ConfirmBox, CurrentTheme.Stroke, 1)
@@ -1425,6 +1428,7 @@ function GGH:CreateWindow(Config)
         local DRAG_THRESHOLD = 8
         local dragObjects = {Header, TitleLabel, SubLabel, HeaderFix}
         local function StartDrag(input)
+            if ScreenGui:FindFirstChild("GGH_ColorPicker_Overlay") then return end
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 potentialDrag = true
                 dragging = false
@@ -1524,11 +1528,10 @@ function GGH:CreateWindow(Config)
         if minimized then
             minimized = false
             HeaderFix.Visible = true
-            Tween(Main, {Size = savedSize}, 0.25)
-            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
-            task.wait(0.12)
             TabList.Visible = true
             Container.Visible = true
+            Tween(Main, {Size = savedSize}, 0.25)
+            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
             MaxBtn.Visible = false
             MinBtn.Visible = true
             task.wait(0.15)
@@ -1539,13 +1542,13 @@ function GGH:CreateWindow(Config)
         if minimized then
             minimized = false
             HeaderFix.Visible = true
-            Tween(Main, {Size = savedSize}, 0.25)
-            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
             TabList.Visible = true
             Container.Visible = true
             MaxBtn.Visible = false
             MinBtn.Visible = true
-            task.wait(0.27)
+            Tween(Main, {Size = savedSize}, 0.25)
+            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
+            task.wait(0.05)
             UpdateResizeGrip()
             ConfirmFrame.Size = savedSize
             ConfirmFrame.Position = Main.Position
@@ -2037,7 +2040,7 @@ function GGH:CreateWindow(Config)
             Corner(Circle, 8)
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,1,0)
-            Btn.BackgroundTransparency = 1
+            Btn.BackgroundTransparency = ElementTrans
             Btn.Text = ""
             local ToggleAPI = {}
             function ToggleAPI:SetValue(v)
@@ -2418,15 +2421,18 @@ end
 
 
 
+
 local function CreateColorpicker(Cfg)
             Cfg.Title = Cfg.Title or Cfg.Name or "Colorpicker"
             Cfg.Default = Cfg.Default or Cfg.Color or CurrentTheme.Accent
-            Cfg.Mode = Cfg.Mode or Cfg.ColorMode or (Cfg.DeveloperColors and "Both" or "Player")
+            Cfg.Mode = Cfg.Mode or Cfg.ColorMode or "Player"
+            if Cfg.Mode=="Both" then Cfg.Mode="Player" end
             Cfg.DeveloperColors = Cfg.DeveloperColors or Cfg.DevColors or Cfg.Palette or {}
-            Cfg.AllowPlayerPick = Cfg.AllowPlayerPick == nil and true or Cfg.AllowPlayerPick
             Cfg.Callback = Cfg.Callback or Cfg.OnChanged or function() end
             local Color = Cfg.Default
             local Hue,Sat,Vib = Color3.toHSV(Color)
+            if Sat==0 then Sat=0 end
+            if Vib==0 then Vib=0 end
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
@@ -2455,13 +2461,14 @@ local function CreateColorpicker(Cfg)
             local DevContainer = nil
             local function Fire(c)
                 Color = c
-                Hue,Sat,Vib = Color3.toHSV(c)
                 PreviewBtn.BackgroundColor3 = c
                 pcall(Cfg.Callback, c)
             end
             local AdvancedGui = nil
+            local isPicking = false
             local function OpenAdvancedPicker()
                 if AdvancedGui and AdvancedGui.Parent then AdvancedGui:Destroy() end
+                isPicking = true
                 local ov = Instance.new("Frame", ScreenGui)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
@@ -2566,32 +2573,60 @@ local function CreateColorpicker(Cfg)
                 ex.ZIndex = 303
                 Corner(ex, 10)
                 local function toHex(c) return "#"..c:ToHex() end
-                local function update()
-                    svFrame.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
-                    Color = Color3.fromHSV(Hue,Sat,Vib)
-                    svMarker.BackgroundColor3 = Color
-                    hueMarker.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
-                    preview.BackgroundColor3 = Color
-                    hexBox.Text = toHex(Color)
-                    svMarker.Position = UDim2.new(Sat,0,1-Vib,0)
-                    hueMarker.Position = UDim2.new(0.5,0,Hue,0)
-                    PreviewBtn.BackgroundColor3 = Color
-                    Fire(Color)
+                local curSat = Sat
+                local curVib = Vib
+                local curHue = Hue
+                local function updateSV()
+                    svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                    local c = Color3.fromHSV(curHue,curSat,curVib)
+                    Color = c
+                    svMarker.BackgroundColor3 = c
+                    preview.BackgroundColor3 = c
+                    hexBox.Text = toHex(c)
+                    svMarker.Position = UDim2.new(curSat,0,1-curVib,0)
+                    PreviewBtn.BackgroundColor3 = c
+                    Fire(c)
+                end
+                local function updateHue()
+                    curHue = Hue
+                    svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                    hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                    local c = Color3.fromHSV(curHue,curSat,curVib)
+                    Color = c
+                    svMarker.BackgroundColor3 = c
+                    preview.BackgroundColor3 = c
+                    hexBox.Text = toHex(c)
+                    hueMarker.Position = UDim2.new(0.5,0,curHue,0)
+                    PreviewBtn.BackgroundColor3 = c
+                    Fire(c)
                 end
                 local draggingMode = nil
                 local function UpdateSatVib(pos)
                     local p = svFrame.AbsolutePosition
                     local s = svFrame.AbsoluteSize
-                    Sat = math.clamp((pos.X-p.X)/s.X,0,1)
-                    Vib = 1-math.clamp((pos.Y-p.Y)/s.Y,0,1)
-                    update()
+                    if s.X==0 or s.Y==0 then return end
+                    curSat = math.clamp((pos.X-p.X)/s.X,0,1)
+                    curVib = 1-math.clamp((pos.Y-p.Y)/s.Y,0,1)
+                    Sat = curSat
+                    Vib = curVib
+                    updateSV()
                 end
                 local function UpdateHue(pos)
                     local p = hueBar.AbsolutePosition
                     local s = hueBar.AbsoluteSize
-                    Hue = math.clamp((pos.Y-p.Y)/s.Y,0,1)
-                    update()
+                    if s.Y==0 then return end
+                    curHue = math.clamp((pos.Y-p.Y)/s.Y,0,1)
+                    Hue = curHue
+                    updateHue()
                 end
+                Hue,Sat,Vib = Color3.toHSV(Color)
+                curHue,curSat,curVib = Hue,Sat,Vib
+                svMarker.Position = UDim2.new(curSat,0,1-curVib,0)
+                hueMarker.Position = UDim2.new(0.5,0,curHue,0)
+                svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                preview.BackgroundColor3 = Color
+                hexBox.Text = toHex(Color)
                 svFrame.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then draggingMode="SatVib" UpdateSatVib(i.Position) end end)
                 svFrame.InputChanged:Connect(function(i) if (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) and draggingMode=="SatVib" then UpdateSatVib(i.Position) end end)
                 hueBar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then draggingMode="Hue" UpdateHue(i.Position) end end)
@@ -2603,23 +2638,38 @@ local function CreateColorpicker(Cfg)
                         local txt = hexBox.Text:gsub("%s","")
                         if txt:sub(1,1)=="#" then
                             local ok,col = pcall(Color3.fromHex, txt)
-                            if ok and col then Hue,Sat,Vib = Color3.toHSV(col) update() return end
+                            if ok and col then
+                                local h,s,v = Color3.toHSV(col)
+                                curHue,curSat,curVib = h,s,v
+                                Hue,Sat,Vib = h,s,v
+                                svMarker.Position = UDim2.new(curSat,0,1-curVib,0)
+                                hueMarker.Position = UDim2.new(0.5,0,curHue,0)
+                                svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                                hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                                preview.BackgroundColor3 = col
+                                PreviewBtn.BackgroundColor3 = col
+                                Fire(col)
+                                return
+                            end
                         end
                         local num = tonumber(txt:gsub("°",""))
                         if num then
-                            if num>1 and num<=360 then Hue = num/360 else Hue = math.clamp(num,0,1) end
-                            update()
-                        else
-                            update()
+                            if num>1 and num<=360 then curHue = num/360 else curHue = math.clamp(num,0,1) end
+                            Hue = curHue
+                            updateHue()
                         end
                     end
                 end)
-                ex.MouseButton1Click:Connect(function() ov:Destroy() AdvancedGui=nil end)
-                done.MouseButton1Click:Connect(function() ov:Destroy() AdvancedGui=nil end)
-                update()
+                local function closePicker()
+                    isPicking=false
+                    ov:Destroy()
+                    AdvancedGui=nil
+                end
+                ex.MouseButton1Click:Connect(closePicker)
+                done.MouseButton1Click:Connect(closePicker)
                 AdvancedGui = ov
             end
-            if Cfg.Mode=="Developer" or Cfg.Mode=="Both" then
+            if Cfg.Mode=="Developer" then
                 if #Cfg.DeveloperColors>0 then
                     DevContainer = Instance.new("Frame", TabPage)
                     DevContainer.Size = UDim2.new(1,-4,0, 50)
@@ -2636,6 +2686,7 @@ local function CreateColorpicker(Cfg)
                         local b = Instance.new("TextButton", DevContainer)
                         b.Size = UDim2.new(0,28,0,28)
                         b.BackgroundColor3 = col
+                        b.BackgroundTransparency = 0
                         b.Text = ""
                         Corner(b, 6)
                         Stroke(b, CurrentTheme.Stroke, 1)
@@ -2647,7 +2698,7 @@ local function CreateColorpicker(Cfg)
                 if Cfg.Mode=="Developer" then
                     if #Cfg.DeveloperColors>0 then
                         local idx = 1
-                        for i,c in ipairs(Cfg.DeveloperColors) do if c:ToHex()==Color:ToHex() then idx=i+1 end end
+                        for i,c in ipairs(Cfg.DeveloperColors) do if c:ToHex()==Color:ToHex() then idx=i+1 break end end
                         if idx>#Cfg.DeveloperColors then idx=1 end
                         Fire(Cfg.DeveloperColors[idx])
                     end
@@ -2655,23 +2706,11 @@ local function CreateColorpicker(Cfg)
                     OpenAdvancedPicker()
                 end
             end)
-            if Cfg.Mode=="Both" then
-                local BothCustomBtn = Instance.new("TextButton", Frame)
-                BothCustomBtn.Size = UDim2.new(0,60,0,22)
-                BothCustomBtn.Position = UDim2.new(1,-134,0.5,-11)
-                BothCustomBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-                BothCustomBtn.BackgroundTransparency = ElementTrans
-                BothCustomBtn.Text = "Custom"
-                BothCustomBtn.Font = Enum.Font.GothamBold
-                BothCustomBtn.TextSize = 12
-                BothCustomBtn.TextColor3 = CurrentTheme.Text
-                Corner(BothCustomBtn, 6)
-                BothCustomBtn.MouseButton1Click:Connect(function() OpenAdvancedPicker() end)
-            end
             local function Set(c)
                 if typeof(c)=="string" then local ok,col=pcall(Color3.fromHex,c) if ok then c=col end end
                 Color=c
-                Hue,Sat,Vib=Color3.toHSV(c)
+                local h,s,v = Color3.toHSV(c)
+                Hue,Sat,Vib = h,s,v
                 PreviewBtn.BackgroundColor3=c
             end
             return {
@@ -2707,7 +2746,7 @@ local function CreateColorpicker(Cfg)
             RegisterThemable(Label, "TextColor3", "Text")
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,1,0)
-            Btn.BackgroundTransparency = 1
+            Btn.BackgroundTransparency = ElementTrans
             Btn.Text = ""
             Btn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
