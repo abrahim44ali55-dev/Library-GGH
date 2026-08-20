@@ -983,32 +983,6 @@ function GGH:CreateWindow(Config)
         end
         if not success then return nil end
     end
-    local Title = Config.Title or "GGH Library"
-    local SubTitle = Config.SubTitle or ("v1.8.5 FIXED ["..autoName.."]")
-    local DefaultTheme = Config.Theme or "Monochrome"
-    if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
-    local CurrentTheme = Themes[DefaultTheme]
-    
-    -- AUTO TEXT COLOR
-    local function GetLuminance(c)
-        return 0.299*c.R + 0.587*c.G + 0.114*c.B
-    end
-    local function AutoTextColors(theme)
-        local lum = GetLuminance(theme.MainBg)
-        if lum > 0.5 then
-            theme.Text = Color3.fromRGB(20,20,25)
-            theme.SubText = Color3.fromRGB(80,80,85)
-            theme.SectionText = Color3.fromRGB(100,100,105)
-            theme.ParagraphText = Color3.fromRGB(40,40,45)
-        else
-            theme.Text = Color3.fromRGB(240,240,245)
-            theme.SubText = Color3.fromRGB(180,180,190)
-            theme.SectionText = Color3.fromRGB(150,150,160)
-            theme.ParagraphText = Color3.fromRGB(220,220,230)
-        end
-        return theme
-    end
-    CurrentTheme = AutoTextColors(CurrentTheme)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "GGH_Library"
     ScreenGui.ResetOnSpawn = false
@@ -1050,6 +1024,31 @@ function GGH:CreateWindow(Config)
         finalH = SizePresets[Config.SizePreset].H
         autoName = Config.SizePreset
     end
+
+    local Title = Config.Title or "GGH Library"
+    local SubTitle = Config.SubTitle or ("v1.8.5 FIXED ["..autoName.."]")
+    local DefaultTheme = Config.Theme or "Monochrome"
+    if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
+    local CurrentTheme = Themes[DefaultTheme]
+    local function GetLuminance(c)
+        return 0.299*c.R + 0.587*c.G + 0.114*c.B
+    end
+    local function AutoTextColors(theme)
+        local lum = GetLuminance(theme.MainBg)
+        if lum > 0.5 then
+            theme.Text = Color3.fromRGB(20,20,25)
+            theme.SubText = Color3.fromRGB(80,80,85)
+            theme.SectionText = Color3.fromRGB(100,100,105)
+            theme.ParagraphText = Color3.fromRGB(40,40,45)
+        else
+            theme.Text = Color3.fromRGB(240,240,245)
+            theme.SubText = Color3.fromRGB(180,180,190)
+            theme.SectionText = Color3.fromRGB(150,150,160)
+            theme.ParagraphText = Color3.fromRGB(220,220,230)
+        end
+        return theme
+    end
+    CurrentTheme = AutoTextColors(CurrentTheme)
 
     local Main = Instance.new("Frame")
     Main.Name = "Main"
