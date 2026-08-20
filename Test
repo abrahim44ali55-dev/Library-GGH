@@ -1014,24 +1014,24 @@ function GGH:CreateWindow(Config)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
     local SizePresets = {
-        ["Tiny"]   = {W=340, H=220},
-        ["Small"]  = {W=400, H=260},
-        ["Medium"] = {W=480, H=320},
-        ["Large"]  = {W=540, H=360},
-        ["Huge"]   = {W=620, H=420},
+        ["Tiny"]   = {W=420, H=280},
+        ["Small"]  = {W=460, H=320},
+        ["Medium"] = {W=520, H=360},
+        ["Large"]  = {W=600, H=400},
+        ["Huge"]   = {W=680, H=460},
     }
     local function DetectDevicePreset()
         local cam = workspace.CurrentCamera
         local vp = cam and cam.ViewportSize or Vector2.new(1920,1080)
         local isTouch = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
         local isSmallTouch = UserInputService.TouchEnabled
-        if vp.X < 480 or vp.Y < 320 then
+        if vp.X < 500 or vp.Y < 500 then
             return SizePresets.Tiny, "Tiny"
-        elseif vp.X < 640 or isTouch then
+        elseif vp.X < 700 or isTouch then
             return SizePresets.Small, "Small"
-        elseif vp.X < 900 or isSmallTouch then
+        elseif vp.X < 1100 or isSmallTouch then
             return SizePresets.Medium, "Medium"
-        elseif vp.X < 1280 then
+        elseif vp.X < 1600 then
             return SizePresets.Large, "Large"
         else
             return SizePresets.Huge, "Huge"
@@ -1235,7 +1235,6 @@ function GGH:CreateWindow(Config)
     SearchBar.Size = UDim2.new(1,-16,0,0)
     SearchBar.Position = UDim2.new(0,8,0,56)
     SearchBar.BackgroundColor3 = CurrentTheme.ElementBg
-    SearchBar.BackgroundTransparency = ElementTrans
     SearchBar.Visible = false
     SearchBar.ZIndex = 90
     SearchBar.ClipsDescendants = true
@@ -1271,7 +1270,6 @@ function GGH:CreateWindow(Config)
     ThemeDropdown.Size = UDim2.new(0,200,0,0)
     ThemeDropdown.Position = UDim2.new(1,-208,0,56)
     ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
-    ThemeDropdown.BackgroundTransparency = WindowTrans
     ThemeDropdown.Visible = false
     ThemeDropdown.ZIndex = 100
     ThemeDropdown.ClipsDescendants = true
@@ -1372,7 +1370,6 @@ function GGH:CreateWindow(Config)
     ConfirmBox.Size = UDim2.new(0,300,0,160)
     ConfirmBox.Position = UDim2.new(0.5,-150,0.5,-80)
     ConfirmBox.BackgroundColor3 = CurrentTheme.ElementBg
-    ConfirmBox.BackgroundTransparency = ElementTrans
     ConfirmBox.ZIndex = 201
     Corner(ConfirmBox, 14)
     Stroke(ConfirmBox, CurrentTheme.Stroke, 1)
@@ -1442,13 +1439,7 @@ function GGH:CreateWindow(Config)
                 local delta = input.Position - dragStart
                 if not dragging and delta.Magnitude >= DRAG_THRESHOLD then dragging = true end
                 if dragging then
-                    local cam = workspace.CurrentCamera
-                    local vp = cam and cam.ViewportSize or Vector2.new(1920,1080)
-                    local newX = startPos.X.Offset + delta.X
-                    local newY = startPos.Y.Offset + delta.Y
-                    newX = math.clamp(newX, 0, vp.X - Main.AbsoluteSize.X)
-                    newY = math.clamp(newY, 0, vp.Y - Main.AbsoluteSize.Y)
-                    Main.Position = UDim2.new(startPos.X.Scale, newX, startPos.Y.Scale, newY)
+                    Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                 end
             end
         end)
@@ -1548,13 +1539,13 @@ function GGH:CreateWindow(Config)
         if minimized then
             minimized = false
             HeaderFix.Visible = true
+            Tween(Main, {Size = savedSize}, 0.25)
+            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
             TabList.Visible = true
             Container.Visible = true
             MaxBtn.Visible = false
             MinBtn.Visible = true
-            Tween(Main, {Size = savedSize}, 0.25)
-            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
-            task.wait(0.05)
+            task.wait(0.27)
             UpdateResizeGrip()
             ConfirmFrame.Size = savedSize
             ConfirmFrame.Position = Main.Position
@@ -1651,7 +1642,7 @@ function GGH:CreateWindow(Config)
         FloatingIcon = Instance.new("TextButton", ScreenGui)
         FloatingIcon.Name = "FloatingIcon"
         FloatingIcon.Size = UDim2.new(0,40,0,40)
-        local vp=workspace.CurrentCamera.ViewportSize FloatingIcon.Position = UDim2.new(0.5,-20,0,15)
+        FloatingIcon.Position = UDim2.new(0.5,-20,0,15)
         FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
         FloatingIcon.Text = "G"
         FloatingIcon.Font = Enum.Font.GothamBold
@@ -1672,14 +1663,14 @@ function GGH:CreateWindow(Config)
                 dragging = true
                 hasDragged = false
                 dragStartPos = input.Position
-                startGuiPos = local vp=workspace.CurrentCamera.ViewportSize FloatingIcon.Position
+                startGuiPos = FloatingIcon.Position
             end
         end)
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStartPos
                 if delta.Magnitude > 5 then hasDragged = true end
-                local vp=workspace.CurrentCamera.ViewportSize FloatingIcon.Position = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
+                FloatingIcon.Position = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
@@ -2437,8 +2428,6 @@ local function CreateColorpicker(Cfg)
             Cfg.Callback = Cfg.Callback or Cfg.OnChanged or function() end
             local Color = Cfg.Default
             local Hue,Sat,Vib = Color3.toHSV(Color)
-            if Sat==0 then Sat=0 end
-            if Vib==0 then Vib=0 end
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
@@ -2471,10 +2460,8 @@ local function CreateColorpicker(Cfg)
                 pcall(Cfg.Callback, c)
             end
             local AdvancedGui = nil
-            local isPicking = false
             local function OpenAdvancedPicker()
                 if AdvancedGui and AdvancedGui.Parent then AdvancedGui:Destroy() end
-                isPicking = true
                 local ov = Instance.new("Frame", ScreenGui)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
@@ -2483,9 +2470,6 @@ local function CreateColorpicker(Cfg)
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
-                local function blockInput() return Enum.ContextActionResult.Sink end
-                local CAS = game:GetService("ContextActionService")
-                pcall(function() CAS:BindAction("GGH_BlockMove", blockInput, false, Enum.UserInputType.Touch, Enum.KeyCode.W, Enum.KeyCode.A, Enum.KeyCode.S, Enum.KeyCode.D, Enum.KeyCode.Space) end)
                 local main = Instance.new("Frame", ov)
                 main.AnchorPoint = Vector2.new(0.5,0.5)
                 main.Position = UDim2.new(0.5,0,0.5,0)
@@ -2515,6 +2499,7 @@ local function CreateColorpicker(Cfg)
                 svFrame.ZIndex = 303
                 svFrame.ClipsDescendants = true
                 Corner(svFrame, 10)
+                svFrame.Active = true
                 local svMarker = Instance.new("Frame", svFrame)
                 svMarker.AnchorPoint = Vector2.new(0.5,0.5)
                 svMarker.Size = UDim2.new(0,14,0,14)
@@ -2526,6 +2511,7 @@ local function CreateColorpicker(Cfg)
                 hueBar.Size = UDim2.new(0,20,0,220)
                 hueBar.ZIndex = 303
                 Corner(hueBar, 1)
+                hueBar.Active = true
                 local grad = Instance.new("UIGradient", hueBar)
                 grad.Rotation = 90
                 local colors = {}
@@ -2615,6 +2601,7 @@ local function CreateColorpicker(Cfg)
                     Fire(c)
                 end
                 local draggingMode = nil
+                local origScroll = TabPage.ScrollingEnabled
                 local function UpdateSatVib(pos)
                     local p = svFrame.AbsolutePosition
                     local s = svFrame.AbsoluteSize
@@ -2641,16 +2628,12 @@ local function CreateColorpicker(Cfg)
                 hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
                 preview.BackgroundColor3 = Color
                 hexBox.Text = toHex(Color)
-                svFrame.Active = true
-                hueBar.Active = true
-                local origScrollEnabled = TabPage.ScrollingEnabled
-                local function setScroll(v) TabPage.ScrollingEnabled = v end
-                svFrame.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then setScroll(false) draggingMode="SatVib" UpdateSatVib(i.Position) end end)
+                svFrame.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then TabPage.ScrollingEnabled=false draggingMode="SatVib" UpdateSatVib(i.Position) end end)
                 svFrame.InputChanged:Connect(function(i) if (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) and draggingMode=="SatVib" then UpdateSatVib(i.Position) end end)
-                hueBar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then draggingMode="Hue" UpdateHue(i.Position) end end)
+                hueBar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then TabPage.ScrollingEnabled=false draggingMode="Hue" UpdateHue(i.Position) end end)
                 hueBar.InputChanged:Connect(function(i) if (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) and draggingMode=="Hue" then UpdateHue(i.Position) end end)
                 UserInputService.InputChanged:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then if draggingMode=="SatVib" then UpdateSatVib(i.Position) elseif draggingMode=="Hue" then UpdateHue(i.Position) end end end)
-                UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then draggingMode=nil setScroll(origScrollEnabled) end end)
+                UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then draggingMode=nil TabPage.ScrollingEnabled=origScroll end end)
                 hexBox.FocusLost:Connect(function(enter)
                     if enter then
                         local txt = hexBox.Text:gsub("%s","")
@@ -2679,14 +2662,12 @@ local function CreateColorpicker(Cfg)
                     end
                 end)
                 local function closePicker()
-                    isPicking=false
-                    pcall(function() game:GetService("ContextActionService"):UnbindAction("GGH_BlockMove") end)
+                    TabPage.ScrollingEnabled=origScroll
                     ov:Destroy()
                     AdvancedGui=nil
                 end
                 ex.MouseButton1Click:Connect(closePicker)
                 done.MouseButton1Click:Connect(closePicker)
-                ov.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 and i.UserInputType~=nil then end end)
                 AdvancedGui = ov
             end
             if Cfg.Mode=="Developer" then
