@@ -10,7 +10,17 @@ local function GetGuiParent()
     return CoreGui
 end
 
-local function Corner(p,r)
+
+    local function MakeTranslatable(textObj)
+        if textObj:IsA("TextLabel") or textObj:IsA("TextButton") or textObj:IsA("TextBox") then
+            textObj.AutoLocalize = true
+            pcall(function() textObj.RichText = false end)
+        end
+        return textObj
+    end
+
+
+    local function Corner(p,r)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, r or 8)
     c.Parent = p
@@ -1045,7 +1055,64 @@ function GGH:CreateWindow(Config)
         finalW = SizePresets[Config.SizePreset].W
         finalH = SizePresets[Config.SizePreset].H
         autoName = Config.SizePreset
+   
+
+    local function GetViewportSize()
+        local cam = workspace.CurrentCamera
+        if cam then return cam.ViewportSize else return Vector2.new(1920,1080) end
     end
+
+    local function ClampFrameInsideScreen(frame, padding)
+        padding = padding or 8
+        local vp = GetViewportSize()
+        local absPos = frame.AbsolutePosition
+        local absSize = frame.AbsoluteSize
+        if absSize.X == 0 or absSize.Y == 0 then return end
+        local minX = padding
+        local minY = padding
+        local maxX = vp.X - absSize.X - padding
+        local maxY = vp.Y - absSize.Y - padding
+        if maxX < minX then maxX = minX end
+        if maxY < minY then maxY = minY end
+        local curX = frame.Position.X.Offset
+        local curY = frame.Position.Y.Offset
+        local newX = math.clamp(curX, minX, maxX)
+        local newY = math.clamp(curY, minY, maxY)
+        if newX ~= curX or newY ~= curY then
+            frame.Position = UDim2.new(frame.Position.X.Scale, newX, frame.Position.Y.Scale, newY)
+        end
+        return newX, newY
+    end
+
+    local function PreventWindowOutsideScreen(mainFrame, floatingIcon)
+        local function enforce()
+            ClampFrameInsideScreen(mainFrame, 4)
+            if floatingIcon and floatingIcon.Parent then
+                ClampFrameInsideScreen(floatingIcon, 4)
+            end
+        end
+        task.spawn(function()
+            while mainFrame.Parent do
+                enforce()
+                task.wait(0.2)
+            end
+        end)
+        workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+            enforce()
+        end)
+        return enforce
+    end
+
+    local function SafeSetPosition(frame, xScale, xOffset, yScale, yOffset)
+        local vp = GetViewportSize()
+        local size = frame.AbsoluteSize
+        if size.X == 0 then size = Vector2.new(frame.Size.X.Offset, frame.Size.Y.Offset) end
+        local clampedX = math.clamp(xOffset, 0, math.max(0, vp.X - size.X - 8))
+        local clampedY = math.clamp(yOffset, 0, math.max(0, vp.Y - size.Y - 8))
+        frame.Position = UDim2.new(xScale, clampedX, yScale, clampedY)
+    end
+
+ end
 
     local Main = Instance.new("Frame")
     Main.Name = "Main"
@@ -1062,6 +1129,7 @@ function GGH:CreateWindow(Config)
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
     Main.Parent = ScreenGui
+    task.spawn(function() task.wait(0.1) ClampFrameInsideScreen(Main, 4) PreventWindowOutsideScreen(Main, nil) end)
     Corner(Main, 18)
     if Config.BackgroundImage or Config.Background or Config.BgImage then
         local bgSrc = Config.BackgroundImage or Config.Background or Config.BgImage
@@ -2016,6 +2084,7 @@ function GGH:CreateWindow(Config)
             AddSearch(Frame, Cfg.Title, "Toggle", Name)
             local Title = Instance.new("TextLabel", Frame)
             Title.Text = Cfg.Title
+            Title.AutoLocalize = true
             Title.Size = UDim2.new(1,-54,1,0)
             Title.Position = UDim2.new(0,12,0,0)
             Title.BackgroundTransparency = 1
@@ -2051,6 +2120,7 @@ function GGH:CreateWindow(Config)
             function ToggleAPI:Refresh(newCfg)
                 if newCfg then
                     if newCfg.Title then Title.Text = newCfg.Title end
+            Title.AutoLocalize = true
                     if newCfg.Default ~= nil then self:SetValue(newCfg.Default) end
                 end
                 return ToggleAPI
@@ -2440,6 +2510,7 @@ local function CreateColorpicker(Cfg)
             Title.Position = UDim2.new(0,12,0,0)
             Title.BackgroundTransparency = 1
             Title.Text = Cfg.Title
+            Title.AutoLocalize = true
             Title.Font = Enum.Font.GothamMedium
             Title.TextSize = 13
             Title.TextColor3 = CurrentTheme.Text
@@ -2510,7 +2581,7 @@ local function CreateColorpicker(Cfg)
                 Corner(svMarker, 1)
                 Stroke(svMarker, Color3.new(1,1,1), 2)
                 local hueBar = Instance.new("Frame", cont)
-                hueBar.Size = UDim2.new(0,18,0,220)
+                hueBar.Size = UDim2.new(0,28,0,220)
                 hueBar.ZIndex = 303
                 Corner(hueBar, 1)
                 hueBar.Active = true
@@ -2949,6 +3020,7 @@ local function CreateColorpicker(Cfg)
                 Title.Position = UDim2.new(0,6,1,-20)
                 Title.BackgroundTransparency = 1
                 Title.Text = Cfg.Title
+            Title.AutoLocalize = true
                 Title.Font = Enum.Font.GothamMedium
                 Title.TextSize = 12
                 Title.TextColor3 = CurrentTheme.Text
