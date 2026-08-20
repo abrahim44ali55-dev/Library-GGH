@@ -61,6 +61,44 @@ local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
+-- ===== نظام منع الخروج من الشاشة - نفس طريقة الزر العائم =====
+local function ClampFrameToScreen(frame, gui)
+    if not frame or not gui then return end
+    local viewport = gui.AbsoluteSize
+    if viewport.X <= 10 or viewport.Y <= 10 then return end
+    local fSize = frame.AbsoluteSize
+    if fSize.X <= 0 then return end
+    local fPos = frame.Position
+    local newX, newY
+    if fPos.X.Scale == 0 and fPos.Y.Scale == 0 then
+        newX = math.clamp(fPos.X.Offset, 0, viewport.X - fSize.X)
+        newY = math.clamp(fPos.Y.Offset, 0, viewport.Y - fSize.Y)
+        frame.Position = UDim2.fromOffset(newX, newY)
+    else
+        -- للـ Scale نحول لـ Offset مع Clamp
+        local absX = fPos.X.Scale * viewport.X + fPos.X.Offset
+        local absY = fPos.Y.Scale * viewport.Y + fPos.Y.Offset
+        absX = math.clamp(absX, 0, viewport.X - fSize.X)
+        absY = math.clamp(absY, 0, viewport.Y - fSize.Y)
+        frame.Position = UDim2.fromOffset(absX, absY)
+    end
+end
+
+local function GetSafePickerPosition(anchorBtn, pickerSize, screenGui)
+    local vp = screenGui.AbsoluteSize
+    local btnPos = anchorBtn.AbsolutePosition
+    local btnSize = anchorBtn.AbsoluteSize
+    local pW, pH = pickerSize.X, pickerSize.Y
+    local x = btnPos.X + btnSize.X + 10
+    local y = btnPos.Y
+    if x + pW > vp.X - 5 then x = btnPos.X - pW - 10 end
+    if y + pH > vp.Y - 5 then y = vp.Y - pH - 10 end
+    x = math.clamp(x, 5, vp.X - pW - 5)
+    y = math.clamp(y, 5, vp.Y - pH - 5)
+    return UDim2.fromOffset(x, y)
+end
+
+
 local Themes = {
     ["Dark"] = {
         MainBg = Color3.fromRGB(18,18,22),
@@ -1502,6 +1540,7 @@ function GGH:CreateWindow(Config)
             if clampedX ~= currentPos.X.Offset or clampedY ~= currentPos.Y.Offset then
                 Main.Position = UDim2.fromOffset(clampedX, clampedY)
             end
+            ClampFrameToScreen(Main, ScreenGui)
         end
         ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScreenSizeMain)
         task.spawn(function() task.wait(0.2) updateScreenSizeMain() end)
@@ -1521,7 +1560,13 @@ function GGH:CreateWindow(Config)
                 local delta = input.Position - dragStart
                 if not dragging and delta.Magnitude >= DRAG_THRESHOLD then dragging = true end
                 if dragging then
-                    Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                    local newX = startPos.X.Offset + delta.X
+                    local newY = startPos.Y.Offset + delta.Y
+                    local viewportSize = ScreenGui.AbsoluteSize
+                    local frameSize = Main.AbsoluteSize
+                    local clampedX = math.clamp(newX, 0, viewportSize.X - frameSize.X)
+                    local clampedY = math.clamp(newY, 0, viewportSize.Y - frameSize.Y)
+                    Main.Position = UDim2.fromOffset(clampedX, clampedY)
                 end
             end
         end)
@@ -2569,11 +2614,31 @@ local function CreateColorpicker(Cfg)
                 local function clampPicker()
                     local vp = ov.AbsoluteSize
                     local sz = main.AbsoluteSize
-                    if sz.X==0 then return end
+                    if sz.X==0 or vp.X<=10 then return end
+                    -- نضمن الحجم ما يطلع اكبر من الشاشة
+                    local maxW = math.clamp(vp.X - 20, 200, 600)
+                    local maxH = math.clamp(vp.Y - 20, 200, 340)
+                    if sz.X > maxW or sz.Y > maxH then
+                        main.Size = UDim2.fromOffset(math.min(sz.X, maxW), math.min(sz.Y, maxH))
+                        sz = main.AbsoluteSize
+                    end
                     local pos = main.Position
-                    local cx = math.clamp(pos.X.Offset, 0, vp.X - sz.X)
-                    local cy = math.clamp(pos.Y.Offset, 0, vp.Y - sz.Y)
-                    if pos.X.Scale==0.5 then main.Position = UDim2.new(0.5,0,0.5,0) else main.Position = UDim2.fromOffset(cx,cy) end
+                    -- اذا بالوسط نحسب حدوده
+                    if pos.X.Scale==0.5 then
+                        -- الوسط آمن، بس نتأكد الحجم
+                        main.Position = UDim2.new(0.5,0,0.5,0)
+                        -- بعد الوسط نعمل clamp اضافي
+                        task.wait()
+                        local absPos = main.AbsolutePosition
+                        local cx = math.clamp(absPos.X, 5, vp.X - sz.X - 5)
+                        local cy = math.clamp(absPos.Y, 5, vp.Y - sz.Y - 5)
+                        main.Position = UDim2.fromOffset(cx, cy)
+                        main.AnchorPoint = Vector2.new(0,0)
+                    else
+                        local cx = math.clamp(pos.X.Offset, 5, vp.X - sz.X - 5)
+                        local cy = math.clamp(pos.Y.Offset, 5, vp.Y - sz.Y - 5)
+                        main.Position = UDim2.fromOffset(cx,cy)
+                    end
                 end
                 ov:GetPropertyChangedSignal("AbsoluteSize"):Connect(clampPicker)
                 main.ZIndex = 301
