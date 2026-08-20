@@ -10,7 +10,17 @@ local function GetGuiParent()
     return CoreGui
 end
 
-local function Corner(p,r)
+
+    local function MakeTranslatable(textObj)
+        if textObj:IsA("TextLabel") or textObj:IsA("TextButton") or textObj:IsA("TextBox") then
+            textObj.AutoLocalize = true
+            pcall(function() textObj.RichText = false end)
+        end
+        return textObj
+    end
+
+
+    local function Corner(p,r)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, r or 8)
     c.Parent = p
@@ -50,6 +60,44 @@ end
 local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
+
+-- ===== نظام منع الخروج من الشاشة - نفس طريقة الزر العائم =====
+local function ClampFrameToScreen(frame, gui)
+    if not frame or not gui then return end
+    local viewport = gui.AbsoluteSize
+    if viewport.X <= 10 or viewport.Y <= 10 then return end
+    local fSize = frame.AbsoluteSize
+    if fSize.X <= 0 then return end
+    local fPos = frame.Position
+    local newX, newY
+    if fPos.X.Scale == 0 and fPos.Y.Scale == 0 then
+        newX = math.clamp(fPos.X.Offset, 0, viewport.X - fSize.X)
+        newY = math.clamp(fPos.Y.Offset, 0, viewport.Y - fSize.Y)
+        frame.Position = UDim2.fromOffset(newX, newY)
+    else
+        -- للـ Scale نحول لـ Offset مع Clamp
+        local absX = fPos.X.Scale * viewport.X + fPos.X.Offset
+        local absY = fPos.Y.Scale * viewport.Y + fPos.Y.Offset
+        absX = math.clamp(absX, 0, viewport.X - fSize.X)
+        absY = math.clamp(absY, 0, viewport.Y - fSize.Y)
+        frame.Position = UDim2.fromOffset(absX, absY)
+    end
+end
+
+local function GetSafePickerPosition(anchorBtn, pickerSize, screenGui)
+    local vp = screenGui.AbsoluteSize
+    local btnPos = anchorBtn.AbsolutePosition
+    local btnSize = anchorBtn.AbsoluteSize
+    local pW, pH = pickerSize.X, pickerSize.Y
+    local x = btnPos.X + btnSize.X + 10
+    local y = btnPos.Y
+    if x + pW > vp.X - 5 then x = btnPos.X - pW - 10 end
+    if y + pH > vp.Y - 5 then y = vp.Y - pH - 10 end
+    x = math.clamp(x, 5, vp.X - pW - 5)
+    y = math.clamp(y, 5, vp.Y - pH - 5)
+    return UDim2.fromOffset(x, y)
+end
+
 
 local Themes = {
     ["Dark"] = {
@@ -1045,17 +1093,81 @@ function GGH:CreateWindow(Config)
         finalW = SizePresets[Config.SizePreset].W
         finalH = SizePresets[Config.SizePreset].H
         autoName = Config.SizePreset
+   
+
+    local function GetViewportSize()
+        local cam = workspace.CurrentCamera
+        if cam then return cam.ViewportSize else return Vector2.new(1920,1080) end
     end
+
+    local function ClampFrameInsideScreen(frame, padding)
+        padding = padding or 8
+        local vp = GetViewportSize()
+        local absPos = frame.AbsolutePosition
+        local absSize = frame.AbsoluteSize
+        if absSize.X == 0 or absSize.Y == 0 then return end
+        local minX = padding
+        local minY = padding
+        local maxX = vp.X - absSize.X - padding
+        local maxY = vp.Y - absSize.Y - padding
+        if maxX < minX then maxX = minX end
+        if maxY < minY then maxY = minY end
+        local curX = frame.Position.X.Offset
+        local curY = frame.Position.Y.Offset
+        local newX = math.clamp(curX, minX, maxX)
+        local newY = math.clamp(curY, minY, maxY)
+        if newX ~= curX or newY ~= curY then
+            frame.Position = UDim2.new(frame.Position.X.Scale, newX, frame.Position.Y.Scale, newY)
+        end
+        return newX, newY
+    end
+
+    local function PreventWindowOutsideScreen(mainFrame, floatingIcon)
+        local function enforce()
+            ClampFrameInsideScreen(mainFrame, 4)
+            if floatingIcon and floatingIcon.Parent then
+                ClampFrameInsideScreen(floatingIcon, 4)
+            end
+        end
+        task.spawn(function()
+            while mainFrame.Parent do
+                enforce()
+                task.wait(0.2)
+            end
+        end)
+        workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+            enforce()
+        end)
+        return enforce
+    end
+
+    local function SafeSetPosition(frame, xScale, xOffset, yScale, yOffset)
+        local vp = GetViewportSize()
+        local size = frame.AbsoluteSize
+        if size.X == 0 then size = Vector2.new(frame.Size.X.Offset, frame.Size.Y.Offset) end
+        local clampedX = math.clamp(xOffset, 0, math.max(0, vp.X - size.X - 8))
+        local clampedY = math.clamp(yOffset, 0, math.max(0, vp.Y - size.Y - 8))
+        frame.Position = UDim2.new(xScale, clampedX, yScale, clampedY)
+    end
+
+ end
 
     local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Size = UDim2.new(0, finalW, 0, finalH)
     Main.Position = UDim2.new(0.5, -finalW/2, 0.5, -finalH/2)
     Main.BackgroundColor3 = CurrentTheme.MainBg
-    Main.BackgroundTransparency = Config.Transparency or Config.BackgroundTransparency or 0
+    local WindowTrans = Config.WindowTransparency or Config.WindowTrans or Config.Transparency or Config.BackgroundTransparency or 0.1
+    local ElementTrans = Config.ElementTransparency or Config.ElementTrans or Config.ElementsTransparency or 0.05
+    if WindowTrans > 1 then WindowTrans = WindowTrans/100 end
+    if ElementTrans > 1 then ElementTrans = ElementTrans/100 end
+    WindowTrans = math.clamp(WindowTrans,0,0.7)
+    ElementTrans = math.clamp(ElementTrans,0,0.7)
+    Main.BackgroundTransparency = WindowTrans
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
     Main.Parent = ScreenGui
+    task.spawn(function() task.wait(0.1) ClampFrameInsideScreen(Main, 4) PreventWindowOutsideScreen(Main, nil) end)
     Corner(Main, 18)
     if Config.BackgroundImage or Config.Background or Config.BgImage then
         local bgSrc = Config.BackgroundImage or Config.Background or Config.BgImage
@@ -1094,7 +1206,7 @@ function GGH:CreateWindow(Config)
     Header.Name = "Header"
     Header.Size = UDim2.new(1,0,0,52)
     Header.BackgroundColor3 = CurrentTheme.HeaderBg
-    Header.BackgroundTransparency = 0
+    Header.BackgroundTransparency = WindowTrans
     Header.BorderSizePixel = 0
     Header.ZIndex = 20
     Corner(Header, 18)
@@ -1103,7 +1215,7 @@ function GGH:CreateWindow(Config)
     HeaderFix.Size = UDim2.new(1,0,0,18)
     HeaderFix.Position = UDim2.new(0,0,1,-9)
     HeaderFix.BackgroundColor3 = CurrentTheme.HeaderBg
-    HeaderFix.BackgroundTransparency = 0
+    HeaderFix.BackgroundTransparency = WindowTrans
     HeaderFix.BorderSizePixel = 0
     HeaderFix.ZIndex = 19
     local function UpdateHeader()
@@ -1317,16 +1429,18 @@ function GGH:CreateWindow(Config)
         local num = tonumber(TransBox.Text) or 0
         num = math.clamp(num, 0, 100)
         local rel = num/100
-        Main.BackgroundTransparency = rel*0.7
-        Header.BackgroundTransparency = rel*0.7
-        HeaderFix.BackgroundTransparency = rel*0.7
+        WindowTrans = rel*0.7
+        Main.BackgroundTransparency = WindowTrans
+        Header.BackgroundTransparency = WindowTrans
+        HeaderFix.BackgroundTransparency = WindowTrans
+        TabList.BackgroundTransparency = WindowTrans
     end)
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,140,1,-64)
     TabList.Position = UDim2.new(0,8,0,58)
     TabList.BackgroundColor3 = CurrentTheme.TabListBg
-    TabList.BackgroundTransparency = 0
+    TabList.BackgroundTransparency = WindowTrans
     TabList.BorderSizePixel = 0
     TabList.CanvasSize = UDim2.new(0,0,0,0)
     TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -1416,7 +1530,44 @@ function GGH:CreateWindow(Config)
         local dragStart, startPos
         local DRAG_THRESHOLD = 8
         local dragObjects = {Header, TitleLabel, SubLabel, HeaderFix}
+        local function updateScreenSizeMain()
+            local viewportSize = ScreenGui.AbsoluteSize
+            local currentPos = Main.Position
+            local buttonSize = Main.AbsoluteSize
+            if buttonSize.X == 0 then return end
+            local clampedX = math.clamp(currentPos.X.Offset, 0, viewportSize.X - buttonSize.X)
+            local clampedY = math.clamp(currentPos.Y.Offset, 0, viewportSize.Y - buttonSize.Y)
+            if clampedX ~= currentPos.X.Offset or clampedY ~= currentPos.Y.Offset then
+                Main.Position = UDim2.fromOffset(clampedX, clampedY)
+            end
+            ClampFrameToScreen(Main, ScreenGui)
+        end
+        local function ApplyResponsiveSize()
+            local vp = ScreenGui.AbsoluteSize
+            if vp.X < 100 or vp.Y < 100 then return end
+            -- الحجم المناسب حسب قياس الشاشة - 85% عرض و 80% ارتفاع كحد اقصى
+            local maxW = math.clamp(vp.X * 0.88, 340, 620)
+            local maxH = math.clamp(vp.Y * 0.78, 300, 500)
+            local curSize = Main.AbsoluteSize
+            -- اذا الحجم الحالي اكبر من الشاشة، صغره تلقائيا
+            if curSize.X > vp.X - 20 or curSize.Y > vp.Y - 80 then
+                Main.Size = UDim2.fromOffset(math.min(curSize.X, maxW), math.min(curSize.Y, maxH))
+            end
+            ClampFrameToScreen(Main, ScreenGui)
+        end
+
+        local oldUpdate = updateScreenSizeMain
+        local function newUpdateWrapper()
+            oldUpdate()
+            ApplyResponsiveSize()
+        end
+        ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(newUpdateWrapper)
+        task.spawn(function() task.wait(0.2) newUpdateWrapper() end)
+        -- اول مرة نحسب حجم مناسب
+        ApplyResponsiveSize()
+
         local function StartDrag(input)
+            if ScreenGui:FindFirstChild("GGH_ColorPicker_Overlay") then return end
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 potentialDrag = true
                 dragging = false
@@ -1430,7 +1581,13 @@ function GGH:CreateWindow(Config)
                 local delta = input.Position - dragStart
                 if not dragging and delta.Magnitude >= DRAG_THRESHOLD then dragging = true end
                 if dragging then
-                    Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                    local newX = startPos.X.Offset + delta.X
+                    local newY = startPos.Y.Offset + delta.Y
+                    local viewportSize = ScreenGui.AbsoluteSize
+                    local frameSize = Main.AbsoluteSize
+                    local clampedX = math.clamp(newX, -20, viewportSize.X - frameSize.X + 20)
+                    local clampedY = math.clamp(newY, -36, viewportSize.Y - frameSize.Y + 20)
+                    Main.Position = UDim2.fromOffset(clampedX, clampedY)
                 end
             end
         end)
@@ -1516,11 +1673,10 @@ function GGH:CreateWindow(Config)
         if minimized then
             minimized = false
             HeaderFix.Visible = true
-            Tween(Main, {Size = savedSize}, 0.25)
-            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
-            task.wait(0.12)
             TabList.Visible = true
             Container.Visible = true
+            Tween(Main, {Size = savedSize}, 0.25)
+            Tween(ConfirmFrame, {Size = savedSize}, 0.25)
             MaxBtn.Visible = false
             MinBtn.Visible = true
             task.wait(0.15)
@@ -1782,7 +1938,11 @@ function GGH:CreateWindow(Config)
         end)
     end
     local Window = {}
+
     local Tabs = {}
+    local WindowAPI_Trans_W = WindowTrans
+    local WindowAPI_Trans_E = ElementTrans
+
     local FirstTab = true
     local AllSearchElements = {}
     local function AddSearch(frame, title, typ, tabName) table.insert(AllSearchElements, {Frame=frame, Title=title:lower(), Type=typ:lower(), Tab=tabName:lower()}) end
@@ -2004,6 +2164,7 @@ function GGH:CreateWindow(Config)
             AddSearch(Frame, Cfg.Title, "Toggle", Name)
             local Title = Instance.new("TextLabel", Frame)
             Title.Text = Cfg.Title
+            Title.AutoLocalize = true
             Title.Size = UDim2.new(1,-54,1,0)
             Title.Position = UDim2.new(0,12,0,0)
             Title.BackgroundTransparency = 1
@@ -2039,6 +2200,7 @@ function GGH:CreateWindow(Config)
             function ToggleAPI:Refresh(newCfg)
                 if newCfg then
                     if newCfg.Title then Title.Text = newCfg.Title end
+            Title.AutoLocalize = true
                     if newCfg.Default ~= nil then self:SetValue(newCfg.Default) end
                 end
                 return ToggleAPI
@@ -2405,44 +2567,346 @@ local function CreateDropdown(Cfg)
 end
 
 
+
+
 local function CreateColorpicker(Cfg)
-            local Color = Cfg.Default or CurrentTheme.Accent
+            Cfg.Title = Cfg.Title or Cfg.Name or "Colorpicker"
+            Cfg.Default = Cfg.Default or Cfg.Color or CurrentTheme.Accent
+            Cfg.Mode = Cfg.Mode or Cfg.ColorMode or "Player"
+            if Cfg.Mode=="Both" then Cfg.Mode="Player" end
+            Cfg.DeveloperColors = Cfg.DeveloperColors or Cfg.DevColors or Cfg.Palette or {}
+            Cfg.Callback = Cfg.Callback or Cfg.OnChanged or function() end
+            local Color = Cfg.Default
+            local Hue,Sat,Vib = Color3.toHSV(Color)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
-            Corner(Frame, 9)
-            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
-            AddSearch(Frame, Cfg.Title, "Colorpicker", Name)
-            local Label = Instance.new("TextLabel", Frame)
-            Label.Text = Cfg.Title
-            Label.Size = UDim2.new(1,-60,1,0)
-            Label.Position = UDim2.new(0,10,0,0)
-            Label.BackgroundTransparency = 1
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Font = Enum.Font.GothamMedium
-            Label.TextSize = 12
-            Label.TextColor3 = CurrentTheme.Text
-            Label.AutoLocalize = true
-            RegisterThemable(Label, "TextColor3", "Text")
-            local Preview = Instance.new("Frame", Frame)
-            Preview.Size = UDim2.new(0,28,0,20)
-            Preview.Position = UDim2.new(1,-38,0.5,-10)
-            Preview.BackgroundColor3 = Color
-            Corner(Preview, 6)
-            local Btn = Instance.new("TextButton", Frame)
-            Btn.Size = UDim2.new(1,0,1,0)
-            Btn.BackgroundTransparency = 1
-            Btn.Text = ""
-            Btn.MouseButton1Click:Connect(function()
-                if IsScrolling then return end
-                local newColor = Color3.fromHSV(math.random(),1,1)
-                Preview.BackgroundColor3 = newColor
-                pcall(Cfg.Callback or function() end, newColor)
+            Frame.BackgroundTransparency = ElementTrans
+            Frame.BorderSizePixel = 0
+            Corner(Frame, 10)
+            Stroke(Frame, CurrentTheme.Stroke, 1)
+            local Title = Instance.new("TextLabel", Frame)
+            Title.Size = UDim2.new(1,-90,1,0)
+            Title.Position = UDim2.new(0,12,0,0)
+            Title.BackgroundTransparency = 1
+            Title.Text = Cfg.Title
+            Title.AutoLocalize = true
+            Title.Font = Enum.Font.GothamMedium
+            Title.TextSize = 13
+            Title.TextColor3 = CurrentTheme.Text
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            AddTextStroke(Title)
+            local PreviewBtn = Instance.new("TextButton", Frame)
+            PreviewBtn.Size = UDim2.new(0,56,0,22)
+            PreviewBtn.Position = UDim2.new(1,-66,0.5,-11)
+            PreviewBtn.BackgroundColor3 = Color
+            PreviewBtn.Text = ""
+            PreviewBtn.AutoButtonColor = false
+            Corner(PreviewBtn, 6)
+            Stroke(PreviewBtn, CurrentTheme.StrokeLight, 1)
+            local DevContainer = nil
+            local function Fire(c)
+                Color = c
+                PreviewBtn.BackgroundColor3 = c
+                pcall(Cfg.Callback, c)
+            end
+            local AdvancedGui = nil
+            local function OpenAdvancedPicker()
+                if AdvancedGui and AdvancedGui.Parent then AdvancedGui:Destroy() end
+                local ov = Instance.new("Frame", ScreenGui)
+                ov.Name = "GGH_ColorPicker_Overlay"
+                ov.Size = UDim2.new(1,0,1,0)
+                ov.BackgroundColor3 = Color3.new(0,0,0)
+                ov.BackgroundTransparency = 1
+                ov.ZIndex = 300
+                ov.BorderSizePixel = 0
+                ov.Active = true
+                local main = Instance.new("Frame", ov)
+                main.AnchorPoint = Vector2.new(0.5,0.5)
+                main.Position = UDim2.new(0.5,0,0.5,0)
+                local baseW = Main.AbsoluteSize.X
+                local baseH = Main.AbsoluteSize.Y
+                local pickerW = math.clamp(baseW*0.95, 360, 600)
+                local pickerH = math.clamp(baseH*0.85, 240, 340)
+                main.Size = UDim2.new(0,pickerW,0,pickerH)
+                main.BackgroundColor3 = Color3.fromRGB(28,28,32)
+                main.BackgroundTransparency = 0
+                main.ClipsDescendants = false
+                local function clampPicker()
+                    local vp = ov.AbsoluteSize
+                    local sz = main.AbsoluteSize
+                    if sz.X==0 or vp.X<=10 then return end
+                    -- نضمن الحجم ما يطلع اكبر من الشاشة
+                    local maxW = math.clamp(vp.X - 20, 200, 600)
+                    local maxH = math.clamp(vp.Y - 20, 200, 340)
+                    if sz.X > maxW or sz.Y > maxH then
+                        main.Size = UDim2.fromOffset(math.min(sz.X, maxW), math.min(sz.Y, maxH))
+                        sz = main.AbsoluteSize
+                    end
+                    local pos = main.Position
+                    -- اذا بالوسط نحسب حدوده
+                    if pos.X.Scale==0.5 then
+                        -- الوسط آمن، بس نتأكد الحجم
+                        main.Position = UDim2.new(0.5,0,0.5,0)
+                        -- بعد الوسط نعمل clamp اضافي
+                        task.wait()
+                        local absPos = main.AbsolutePosition
+                        local cx = math.clamp(absPos.X, 5, vp.X - sz.X - 5)
+                        local cy = math.clamp(absPos.Y, 5, vp.Y - sz.Y - 5)
+                        main.Position = UDim2.fromOffset(cx, cy)
+                        main.AnchorPoint = Vector2.new(0,0)
+                    else
+                        local cx = math.clamp(pos.X.Offset, 5, vp.X - sz.X - 5)
+                        local cy = math.clamp(pos.Y.Offset, 5, vp.Y - sz.Y - 5)
+                        main.Position = UDim2.fromOffset(cx,cy)
+                    end
+                end
+                ov:GetPropertyChangedSignal("AbsoluteSize"):Connect(clampPicker)
+                main.ZIndex = 301
+                Corner(main, 16)
+                Stroke(main, CurrentTheme.Stroke, 2)
+                local cont = Instance.new("Frame", main)
+                cont.Size = UDim2.new(1,-20,1,-20)
+                cont.Position = UDim2.new(0,10,0,10)
+                cont.BackgroundTransparency = 1
+                cont.ClipsDescendants = false
+                cont.ZIndex = 302
+                local layout = Instance.new("UIListLayout", cont)
+                layout.FillDirection = Enum.FillDirection.Horizontal
+                layout.Padding = UDim.new(0,12)
+                layout.VerticalAlignment = Enum.VerticalAlignment.Center
+                local svFrame = Instance.new("ImageLabel", cont)
+                svFrame.Size = UDim2.new(0,220,0,220)
+                svFrame.Image = "rbxassetid://4155801252"
+                svFrame.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
+                svFrame.ZIndex = 303
+                svFrame.ClipsDescendants = true
+                Corner(svFrame, 10)
+                svFrame.Active = true
+                local svMarker = Instance.new("Frame", svFrame)
+                svMarker.AnchorPoint = Vector2.new(0.5,0.5)
+                svMarker.Size = UDim2.new(0,14,0,14)
+                svMarker.BackgroundColor3 = Color
+                svMarker.ZIndex = 310
+                Corner(svMarker, 1)
+                Stroke(svMarker, Color3.new(1,1,1), 2)
+                local hueBar = Instance.new("Frame", cont)
+                hueBar.Size = UDim2.new(0,36,0,220)
+                hueBar.ZIndex = 303
+                Corner(hueBar, 1)
+                hueBar.Active = true
+                local grad = Instance.new("UIGradient", hueBar)
+                grad.Rotation = 90
+                local colors = {}
+                for i=0,1,0.1 do table.insert(colors, ColorSequenceKeypoint.new(i, Color3.fromHSV(i,1,1))) end
+                grad.Color = ColorSequence.new(colors)
+                local hueMarker = Instance.new("Frame", hueBar)
+                hueMarker.AnchorPoint = Vector2.new(0.5,0.5)
+                hueMarker.Size = UDim2.new(0,22,0,6)
+                hueMarker.BackgroundColor3 = Color3.new(1,1,1)
+                hueMarker.ZIndex = 310
+                Corner(hueMarker, 3)
+                Stroke(hueMarker, Color3.new(0,0,0), 1)
+                local right = Instance.new("Frame", cont)
+                right.Size = UDim2.new(0,260,0,220)
+                right.BackgroundColor3 = Color3.fromRGB(40,41,48)
+                right.BackgroundTransparency = ElementTrans
+                right.ZIndex = 302
+                Corner(right, 12)
+                local rLayout = Instance.new("UIListLayout", right)
+                rLayout.FillDirection = Enum.FillDirection.Vertical
+                rLayout.Padding = UDim.new(0,10)
+                rLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+                rLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+                local preview = Instance.new("Frame", right)
+                preview.Size = UDim2.new(1,-20,0,70)
+                preview.ZIndex = 303
+                Corner(preview, 10)
+                Stroke(preview, CurrentTheme.Stroke, 1)
+                local hexBox = Instance.new("TextBox", preview)
+                hexBox.Size = UDim2.new(1,0,1,0)
+                hexBox.BackgroundTransparency = 1
+                hexBox.Font = Enum.Font.GothamBold
+                hexBox.TextSize = 14
+                hexBox.TextColor3 = Color3.new(1,1,1)
+                hexBox.TextStrokeTransparency = 0.3
+                hexBox.ClearTextOnFocus = false
+                hexBox.ZIndex = 304
+                local btns = Instance.new("Frame", right)
+                btns.Size = UDim2.new(1,-20,0,36)
+                btns.BackgroundTransparency = 1
+                btns.ZIndex = 302
+                local bLay = Instance.new("UIListLayout", btns)
+                bLay.FillDirection = Enum.FillDirection.Horizontal
+                bLay.Padding = UDim.new(0,10)
+                local done = Instance.new("TextButton", btns)
+                done.Size = UDim2.new(0.5,-5,1,0)
+                done.BackgroundColor3 = CurrentTheme.Accent
+                done.Text = "Done"
+                done.Font = Enum.Font.GothamBold
+                done.TextColor3 = Color3.new(1,1,1)
+                done.ZIndex = 303
+                Corner(done, 10)
+                local ex = Instance.new("TextButton", btns)
+                ex.Size = UDim2.new(0.5,-5,1,0)
+                ex.BackgroundColor3 = Color3.fromRGB(60,61,70)
+                ex.Text = "Exit"
+                ex.Font = Enum.Font.GothamBold
+                ex.TextColor3 = Color3.new(1,1,1)
+                ex.ZIndex = 303
+                Corner(ex, 10)
+                local function toHex(c) return "#"..c:ToHex() end
+                local curSat = Sat
+                local curVib = Vib
+                local curHue = Hue
+                local function updateSV()
+                    svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                    local c = Color3.fromHSV(curHue,curSat,curVib)
+                    Color = c
+                    svMarker.BackgroundColor3 = c
+                    preview.BackgroundColor3 = c
+                    hexBox.Text = toHex(c)
+                    svMarker.Position = UDim2.new(curSat,0,1-curVib,0)
+                    PreviewBtn.BackgroundColor3 = c
+                    Fire(c)
+                end
+                local function updateHue()
+                    curHue = Hue
+                    svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                    hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                    local c = Color3.fromHSV(curHue,curSat,curVib)
+                    Color = c
+                    svMarker.BackgroundColor3 = c
+                    preview.BackgroundColor3 = c
+                    hexBox.Text = toHex(c)
+                    hueMarker.Position = UDim2.new(0.5,0,curHue,0)
+                    PreviewBtn.BackgroundColor3 = c
+                    Fire(c)
+                end
+                local draggingMode = nil
+                local origScroll = TabPage.ScrollingEnabled
+                local function UpdateSatVib(pos)
+                    local p = svFrame.AbsolutePosition
+                    local s = svFrame.AbsoluteSize
+                    if s.X==0 or s.Y==0 then return end
+                    curSat = math.clamp((pos.X-p.X)/s.X,0,1)
+                    curVib = 1-math.clamp((pos.Y-p.Y)/s.Y,0,1)
+                    Sat = curSat
+                    Vib = curVib
+                    updateSV()
+                end
+                local function UpdateHue(pos)
+                    local p = hueBar.AbsolutePosition
+                    local s = hueBar.AbsoluteSize
+                    if s.Y==0 then return end
+                    curHue = math.clamp((pos.Y-p.Y)/s.Y,0,1)
+                    Hue = curHue
+                    updateHue()
+                end
+                Hue,Sat,Vib = Color3.toHSV(Color)
+                curHue,curSat,curVib = Hue,Sat,Vib
+                svMarker.Position = UDim2.new(curSat,0,1-curVib,0)
+                hueMarker.Position = UDim2.new(0.5,0,curHue,0)
+                svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                preview.BackgroundColor3 = Color
+                hexBox.Text = toHex(Color)
+                svFrame.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then TabPage.ScrollingEnabled=false draggingMode="SatVib" UpdateSatVib(i.Position) end end)
+                svFrame.InputChanged:Connect(function(i) if (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) and draggingMode=="SatVib" then UpdateSatVib(i.Position) end end)
+                hueBar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then TabPage.ScrollingEnabled=false draggingMode="Hue" UpdateHue(i.Position) end end)
+                hueBar.InputChanged:Connect(function(i) if (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) and draggingMode=="Hue" then UpdateHue(i.Position) end end)
+                UserInputService.InputChanged:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then if draggingMode=="SatVib" then UpdateSatVib(i.Position) elseif draggingMode=="Hue" then UpdateHue(i.Position) end end end)
+                UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then draggingMode=nil TabPage.ScrollingEnabled=origScroll end end)
+                hexBox.FocusLost:Connect(function(enter)
+                    if enter then
+                        local txt = hexBox.Text:gsub("%s","")
+                        if txt:sub(1,1)=="#" then
+                            local ok,col = pcall(Color3.fromHex, txt)
+                            if ok and col then
+                                local h,s,v = Color3.toHSV(col)
+                                curHue,curSat,curVib = h,s,v
+                                Hue,Sat,Vib = h,s,v
+                                svMarker.Position = UDim2.new(curSat,0,1-curVib,0)
+                                hueMarker.Position = UDim2.new(0.5,0,curHue,0)
+                                svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                                hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
+                                preview.BackgroundColor3 = col
+                                PreviewBtn.BackgroundColor3 = col
+                                Fire(col)
+                                return
+                            end
+                        end
+                        local num = tonumber(txt:gsub("°",""))
+                        if num then
+                            if num>1 and num<=360 then curHue = num/360 else curHue = math.clamp(num,0,1) end
+                            Hue = curHue
+                            updateHue()
+                        end
+                    end
+                end)
+                local function closePicker()
+                    TabPage.ScrollingEnabled=origScroll
+                    ov:Destroy()
+                    AdvancedGui=nil
+                end
+                ex.MouseButton1Click:Connect(closePicker)
+                done.MouseButton1Click:Connect(closePicker)
+                AdvancedGui = ov
+            end
+            if Cfg.Mode=="Developer" then
+                if #Cfg.DeveloperColors>0 then
+                    DevContainer = Instance.new("Frame", TabPage)
+                    DevContainer.Size = UDim2.new(1,-4,0, 50)
+                    DevContainer.BackgroundColor3 = CurrentTheme.TabListBg
+                    DevContainer.BackgroundTransparency = ElementTrans
+                    DevContainer.BorderSizePixel = 0
+                    Corner(DevContainer, 8)
+                    local grid = Instance.new("UIGridLayout", DevContainer)
+                    grid.CellSize = UDim2.new(0,28,0,28)
+                    grid.CellPadding = UDim2.new(0,6,0,6)
+                    local pad = Instance.new("UIPadding", DevContainer)
+                    pad.PaddingTop = UDim.new(0,6) pad.PaddingLeft = UDim.new(0,6) pad.PaddingRight = UDim.new(0,6) pad.PaddingBottom = UDim.new(0,6)
+                    for _,col in ipairs(Cfg.DeveloperColors) do
+                        local b = Instance.new("TextButton", DevContainer)
+                        b.Size = UDim2.new(0,28,0,28)
+                        b.BackgroundColor3 = col
+                        b.BackgroundTransparency = 0
+                        b.Text = ""
+                        Corner(b, 6)
+                        Stroke(b, CurrentTheme.Stroke, 1)
+                        b.MouseButton1Click:Connect(function() Fire(col) end)
+                    end
+                end
+            end
+            PreviewBtn.MouseButton1Click:Connect(function()
+                if Cfg.Mode=="Developer" then
+                    if #Cfg.DeveloperColors>0 then
+                        local idx = 1
+                        for i,c in ipairs(Cfg.DeveloperColors) do if c:ToHex()==Color:ToHex() then idx=i+1 break end end
+                        if idx>#Cfg.DeveloperColors then idx=1 end
+                        Fire(Cfg.DeveloperColors[idx])
+                    end
+                else
+                    OpenAdvancedPicker()
+                end
             end)
-            local CreateColorpickerAPI = {}
-            function CreateColorpickerAPI:Refresh(newCfg) return CreateColorpickerAPI end
-            return CreateColorpickerAPI
-
+            local function Set(c)
+                if typeof(c)=="string" then local ok,col=pcall(Color3.fromHex,c) if ok then c=col end end
+                Color=c
+                local h,s,v = Color3.toHSV(c)
+                Hue,Sat,Vib = h,s,v
+                PreviewBtn.BackgroundColor3=c
+            end
+            return {
+                Frame=Frame,
+                Set=function(self,c) Set(c) Fire(c) end,
+                SetValue=function(self,c) Set(c) Fire(c) end,
+                Get=function() return Color end,
+                GetValue=function() return Color end,
+                SetVisible=function(self,v) Frame.Visible=v if DevContainer then DevContainer.Visible=v end end,
+                Destroy=function() Frame:Destroy() if DevContainer then DevContainer:Destroy() end if AdvancedGui then AdvancedGui:Destroy() end end,
+                Update=function(self,newCfg) if newCfg.Title then Title.Text=newCfg.Title end if newCfg.Default then Set(newCfg.Default) end if newCfg.DeveloperColors then Cfg.DeveloperColors=newCfg.DeveloperColors end end
+            }
         end
 
         local function CreateKeybind(Cfg)
@@ -2666,6 +3130,7 @@ local function CreateColorpicker(Cfg)
                 Title.Position = UDim2.new(0,6,1,-20)
                 Title.BackgroundTransparency = 1
                 Title.Text = Cfg.Title
+            Title.AutoLocalize = true
                 Title.Font = Enum.Font.GothamMedium
                 Title.TextSize = 12
                 Title.TextColor3 = CurrentTheme.Text
@@ -2755,7 +3220,69 @@ function Window:SetSizePreset(presetName)
             Tween(Main, {Size = newSize}, 0.3)
         end
     end
-    return Window
+
+    function Window:SetTransparency(winT, elemT)
+        if winT then
+            if winT>1 then winT=winT/100 end
+            WindowAPI_Trans_W = math.clamp(winT,0,0.7)
+            Main.BackgroundTransparency = WindowAPI_Trans_W
+            Header.BackgroundTransparency = WindowAPI_Trans_W
+            HeaderFix.BackgroundTransparency = WindowAPI_Trans_W
+            TabList.BackgroundTransparency = WindowAPI_Trans_W
+        end
+        if elemT then
+            if elemT>1 then elemT=elemT/100 end
+            WindowAPI_Trans_E = math.clamp(elemT,0,0.7)
+            for _,b in ipairs(TabList:GetChildren()) do if b:IsA("TextButton") then b.BackgroundTransparency = WindowAPI_Trans_E end end
+            for _,page in ipairs(Container:GetChildren()) do
+                if page:IsA("ScrollingFrame") then
+                    for _,v in ipairs(page:GetDescendants()) do
+                        if v:IsA("Frame") or v:IsA("TextButton") then
+                            if v.BackgroundColor3==CurrentTheme.ElementBg or v.BackgroundColor3==CurrentTheme.ElementBg2 or v.BackgroundColor3==CurrentTheme.TabListBg then
+                                v.BackgroundTransparency = WindowAPI_Trans_E
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    function Window:Update(newCfg)
+        newCfg = newCfg or {}
+        if newCfg.Title then TitleLabel.Text = newCfg.Title end
+        if newCfg.SubTitle then SubLabel.Text = newCfg.SubTitle end
+        if newCfg.WindowTransparency or newCfg.ElementTransparency or newCfg.WindowTrans or newCfg.ElementTrans then
+            self:SetTransparency(newCfg.WindowTransparency or newCfg.WindowTrans, newCfg.ElementTransparency or newCfg.ElementTrans)
+        end
+        if newCfg.Theme and Themes[newCfg.Theme] then
+            CurrentTheme = Themes[newCfg.Theme]
+            local function GetLum(c) return 0.299*c.R+0.587*c.G+0.114*c.B end
+            local lum = GetLum(CurrentTheme.MainBg)
+            if lum>0.5 then CurrentTheme.Text=Color3.fromRGB(20,20,25) CurrentTheme.SubText=Color3.fromRGB(80,80,85) else CurrentTheme.Text=Color3.fromRGB(240,240,245) CurrentTheme.SubText=Color3.fromRGB(180,180,190) end
+            Main.BackgroundColor3 = CurrentTheme.MainBg
+            Header.BackgroundColor3 = CurrentTheme.HeaderBg
+            HeaderFix.BackgroundColor3 = CurrentTheme.HeaderBg
+            TabList.BackgroundColor3 = CurrentTheme.TabListBg
+            TitleLabel.TextColor3 = CurrentTheme.Text
+            SubLabel.TextColor3 = CurrentTheme.SubText
+        end
+    end
+    function Window:Refresh() self:Update({}) end
+    function Window:ClearAllTabs()
+        for _,b in ipairs(TabList:GetChildren()) do if b:IsA("TextButton") then b:Destroy() end end
+        for _,p in ipairs(Container:GetChildren()) do if p:IsA("ScrollingFrame") then p:Destroy() end end
+        table.clear(Tabs)
+    end
+    function Window:RemoveTab(name)
+        if Tabs[name] then
+            Tabs[name].Button:Destroy()
+            Tabs[name].Page:Destroy()
+            Tabs[name]=nil
+        end
+    end
+    function Window:GetTab(name) return Tabs[name] end
+
+        return Window
 end
 
 function GGH:GetHWID()
