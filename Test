@@ -2466,7 +2466,7 @@ local function CreateColorpicker(Cfg)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
                 ov.BackgroundColor3 = Color3.new(0,0,0)
-                ov.BackgroundTransparency = 0.35
+                ov.BackgroundTransparency = 0.1
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
@@ -2479,7 +2479,7 @@ local function CreateColorpicker(Cfg)
                 local pickerH = math.clamp(baseH*0.75, 200, 320)
                 main.Size = UDim2.new(0,pickerW,0,pickerH)
                 main.BackgroundColor3 = Color3.fromRGB(28,28,32)
-                main.BackgroundTransparency = WindowTrans
+                main.BackgroundTransparency = 0
                 main.ZIndex = 301
                 Corner(main, 16)
                 Stroke(main, CurrentTheme.Stroke, 2)
@@ -2487,13 +2487,14 @@ local function CreateColorpicker(Cfg)
                 cont.Size = UDim2.new(1,-20,1,-20)
                 cont.Position = UDim2.new(0,10,0,10)
                 cont.BackgroundTransparency = 1
+                cont.ClipsDescendants = true
                 cont.ZIndex = 302
                 local layout = Instance.new("UIListLayout", cont)
                 layout.FillDirection = Enum.FillDirection.Horizontal
                 layout.Padding = UDim.new(0,12)
                 layout.VerticalAlignment = Enum.VerticalAlignment.Center
                 local svFrame = Instance.new("ImageLabel", cont)
-                svFrame.Size = UDim2.new(0,220,0,220)
+                svFrame.Size = UDim2.new(0,200,0,200)
                 svFrame.Image = "rbxassetid://4155801252"
                 svFrame.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
                 svFrame.ZIndex = 303
@@ -2508,7 +2509,7 @@ local function CreateColorpicker(Cfg)
                 Corner(svMarker, 1)
                 Stroke(svMarker, Color3.new(1,1,1), 2)
                 local hueBar = Instance.new("Frame", cont)
-                hueBar.Size = UDim2.new(0,20,0,220)
+                hueBar.Size = UDim2.new(0,18,0,200)
                 hueBar.ZIndex = 303
                 Corner(hueBar, 1)
                 hueBar.Active = true
@@ -2519,13 +2520,13 @@ local function CreateColorpicker(Cfg)
                 grad.Color = ColorSequence.new(colors)
                 local hueMarker = Instance.new("Frame", hueBar)
                 hueMarker.AnchorPoint = Vector2.new(0.5,0.5)
-                hueMarker.Size = UDim2.new(0,18,0,8)
+                hueMarker.Size = UDim2.new(0,22,0,6)
                 hueMarker.BackgroundColor3 = Color3.new(1,1,1)
                 hueMarker.ZIndex = 310
-                Corner(hueMarker, 4)
+                Corner(hueMarker, 3)
                 Stroke(hueMarker, Color3.new(0,0,0), 1)
                 local right = Instance.new("Frame", cont)
-                right.Size = UDim2.new(0,260,0,220)
+                right.Size = UDim2.new(0,240,0,200)
                 right.BackgroundColor3 = Color3.fromRGB(40,41,48)
                 right.BackgroundTransparency = ElementTrans
                 right.ZIndex = 302
