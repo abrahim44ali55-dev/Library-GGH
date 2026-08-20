@@ -1492,6 +1492,20 @@ function GGH:CreateWindow(Config)
         local dragStart, startPos
         local DRAG_THRESHOLD = 8
         local dragObjects = {Header, TitleLabel, SubLabel, HeaderFix}
+        local function updateScreenSizeMain()
+            local viewportSize = ScreenGui.AbsoluteSize
+            local currentPos = Main.Position
+            local buttonSize = Main.AbsoluteSize
+            if buttonSize.X == 0 then return end
+            local clampedX = math.clamp(currentPos.X.Offset, 0, viewportSize.X - buttonSize.X)
+            local clampedY = math.clamp(currentPos.Y.Offset, 0, viewportSize.Y - buttonSize.Y)
+            if clampedX ~= currentPos.X.Offset or clampedY ~= currentPos.Y.Offset then
+                Main.Position = UDim2.fromOffset(clampedX, clampedY)
+            end
+        end
+        ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScreenSizeMain)
+        task.spawn(function() task.wait(0.2) updateScreenSizeMain() end)
+
         local function StartDrag(input)
             if ScreenGui:FindFirstChild("GGH_ColorPicker_Overlay") then return end
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -2552,6 +2566,16 @@ local function CreateColorpicker(Cfg)
                 main.BackgroundColor3 = Color3.fromRGB(28,28,32)
                 main.BackgroundTransparency = 0
                 main.ClipsDescendants = false
+                local function clampPicker()
+                    local vp = ov.AbsoluteSize
+                    local sz = main.AbsoluteSize
+                    if sz.X==0 then return end
+                    local pos = main.Position
+                    local cx = math.clamp(pos.X.Offset, 0, vp.X - sz.X)
+                    local cy = math.clamp(pos.Y.Offset, 0, vp.Y - sz.Y)
+                    if pos.X.Scale==0.5 then main.Position = UDim2.new(0.5,0,0.5,0) else main.Position = UDim2.fromOffset(cx,cy) end
+                end
+                ov:GetPropertyChangedSignal("AbsoluteSize"):Connect(clampPicker)
                 main.ZIndex = 301
                 Corner(main, 16)
                 Stroke(main, CurrentTheme.Stroke, 2)
@@ -2581,7 +2605,7 @@ local function CreateColorpicker(Cfg)
                 Corner(svMarker, 1)
                 Stroke(svMarker, Color3.new(1,1,1), 2)
                 local hueBar = Instance.new("Frame", cont)
-                hueBar.Size = UDim2.new(0,28,0,220)
+                hueBar.Size = UDim2.new(0,36,0,220)
                 hueBar.ZIndex = 303
                 Corner(hueBar, 1)
                 hueBar.Active = true
