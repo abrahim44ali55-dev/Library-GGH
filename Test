@@ -2466,7 +2466,7 @@ local function CreateColorpicker(Cfg)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
                 ov.BackgroundColor3 = Color3.new(0,0,0)
-                ov.BackgroundTransparency = 0.1
+                ov.BackgroundTransparency = 1
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
@@ -2475,11 +2475,12 @@ local function CreateColorpicker(Cfg)
                 main.Position = UDim2.new(0.5,0,0.5,0)
                 local baseW = Main.AbsoluteSize.X
                 local baseH = Main.AbsoluteSize.Y
-                local pickerW = math.clamp(baseW*0.92, 320, 560)
-                local pickerH = math.clamp(baseH*0.75, 200, 320)
+                local pickerW = math.clamp(baseW*0.95, 360, 600)
+                local pickerH = math.clamp(baseH*0.85, 240, 340)
                 main.Size = UDim2.new(0,pickerW,0,pickerH)
                 main.BackgroundColor3 = Color3.fromRGB(28,28,32)
                 main.BackgroundTransparency = 0
+                main.ClipsDescendants = false
                 main.ZIndex = 301
                 Corner(main, 16)
                 Stroke(main, CurrentTheme.Stroke, 2)
@@ -2487,14 +2488,14 @@ local function CreateColorpicker(Cfg)
                 cont.Size = UDim2.new(1,-20,1,-20)
                 cont.Position = UDim2.new(0,10,0,10)
                 cont.BackgroundTransparency = 1
-                cont.ClipsDescendants = true
+                cont.ClipsDescendants = false
                 cont.ZIndex = 302
                 local layout = Instance.new("UIListLayout", cont)
                 layout.FillDirection = Enum.FillDirection.Horizontal
                 layout.Padding = UDim.new(0,12)
                 layout.VerticalAlignment = Enum.VerticalAlignment.Center
                 local svFrame = Instance.new("ImageLabel", cont)
-                svFrame.Size = UDim2.new(0,200,0,200)
+                svFrame.Size = UDim2.new(0,220,0,220)
                 svFrame.Image = "rbxassetid://4155801252"
                 svFrame.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
                 svFrame.ZIndex = 303
@@ -2509,7 +2510,7 @@ local function CreateColorpicker(Cfg)
                 Corner(svMarker, 1)
                 Stroke(svMarker, Color3.new(1,1,1), 2)
                 local hueBar = Instance.new("Frame", cont)
-                hueBar.Size = UDim2.new(0,18,0,200)
+                hueBar.Size = UDim2.new(0,18,0,220)
                 hueBar.ZIndex = 303
                 Corner(hueBar, 1)
                 hueBar.Active = true
@@ -2526,7 +2527,7 @@ local function CreateColorpicker(Cfg)
                 Corner(hueMarker, 3)
                 Stroke(hueMarker, Color3.new(0,0,0), 1)
                 local right = Instance.new("Frame", cont)
-                right.Size = UDim2.new(0,240,0,200)
+                right.Size = UDim2.new(0,260,0,220)
                 right.BackgroundColor3 = Color3.fromRGB(40,41,48)
                 right.BackgroundTransparency = ElementTrans
                 right.ZIndex = 302
