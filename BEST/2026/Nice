@@ -61,7 +61,7 @@ local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
--- ===== نظام منع الخروج من الشاشة - نفس طريقة الزر العائم =====
+-- ===== ظ†ط¸ط§ظ… ظ…ظ†ط¹ ط§ظ„ط®ط±ظˆط¬ ظ…ظ† ط§ظ„ط´ط§ط´ط© - ظ†ظپط³ ط·ط±ظٹظ‚ط© ط§ظ„ط²ط± ط§ظ„ط¹ط§ط¦ظ… =====
 local function ClampFrameToScreen(frame, gui)
     if not frame or not gui then return end
     local viewport = gui.AbsoluteSize
@@ -75,7 +75,7 @@ local function ClampFrameToScreen(frame, gui)
         newY = math.clamp(fPos.Y.Offset, 0, viewport.Y - fSize.Y)
         frame.Position = UDim2.fromOffset(newX, newY)
     else
-        -- للـ Scale نحول لـ Offset مع Clamp
+        -- ظ„ظ„ظ€ Scale ظ†ط­ظˆظ„ ظ„ظ€ Offset ظ…ط¹ Clamp
         local absX = fPos.X.Scale * viewport.X + fPos.X.Offset
         local absY = fPos.Y.Scale * viewport.Y + fPos.Y.Offset
         absX = math.clamp(absX, 0, viewport.X - fSize.X)
@@ -98,39 +98,6 @@ local function GetSafePickerPosition(anchorBtn, pickerSize, screenGui)
     return UDim2.fromOffset(x, y)
 end
 
-
-
-local function NormalizeConfig(Cfg, defaultKey)
-    if not Cfg then return {} end
-    if type(Cfg) == "string" then
-        local t = {}
-        t[defaultKey or "Title"] = Cfg
-        return t
-    end
-    if type(Cfg) == "table" then
-        -- support array style {"Something"}
-        if Cfg[1] ~= nil and Cfg.Title == nil and Cfg.Name == nil and Cfg.Text == nil then
-            local t = {}
-            t[defaultKey or "Title"] = Cfg[1]
-            -- copy other keys if any
-            for k,v in pairs(Cfg) do
-                if type(k) ~= "number" then t[k]=v end
-            end
-            return t
-        end
-        -- support {Title="x"} already fine, also support {Name="x"}
-        if Cfg.Title == nil and Cfg.Name ~= nil then Cfg.Title = Cfg.Name end
-        if Cfg.Title == nil and Cfg.Text ~= nil then Cfg.Title = Cfg.Text end
-        return Cfg
-    end
-    return {}
-end
-
-local function NormalizeOptions(Options)
-    if not Options then return {} end
-    if type(Options) == "table" and Options[1] ~= nil then return Options end
-    return {}
-end
 
 local Themes = {
     ["Dark"] = {
@@ -1337,11 +1304,11 @@ function GGH:CreateWindow(Config)
     local order = 1
 
     if showSearch then
-        SearchBtn = CreateCtrlButton("SearchBtn", "🔍", CurrentTheme.ElementBg2)
+        SearchBtn = CreateCtrlButton("SearchBtn", "ًں”چ", CurrentTheme.ElementBg2)
         SearchBtn.LayoutOrder = order; order+=1
     end
     if showSettings then
-        ThemeBtn = CreateCtrlButton("ThemeBtn", "⚙", CurrentTheme.ElementBg2)
+        ThemeBtn = CreateCtrlButton("ThemeBtn", "âڑ™", CurrentTheme.ElementBg2)
         ThemeBtn.LayoutOrder = order; order+=1
     end
     MinBtn = CreateCtrlButton("MinBtn", "-", CurrentTheme.ElementBg2)
@@ -1352,7 +1319,7 @@ function GGH:CreateWindow(Config)
     MaxBtn.LayoutOrder = order; order+=1
     MaxBtn.Visible = false
     if showFloat then
-        FloatBtn = CreateCtrlButton("FloatBtn", "◉", CurrentTheme.ElementBg2)
+        FloatBtn = CreateCtrlButton("FloatBtn", "â—‰", CurrentTheme.ElementBg2)
         FloatBtn.LayoutOrder = order; order+=1
     end
     CloseBtn = CreateCtrlButton("CloseBtn", "X", CurrentTheme.CloseBg)
@@ -1578,11 +1545,11 @@ function GGH:CreateWindow(Config)
         local function ApplyResponsiveSize()
             local vp = ScreenGui.AbsoluteSize
             if vp.X < 100 or vp.Y < 100 then return end
-            -- الحجم المناسب حسب قياس الشاشة - 85% عرض و 80% ارتفاع كحد اقصى
+            -- ط§ظ„ط­ط¬ظ… ط§ظ„ظ…ظ†ط§ط³ط¨ ط­ط³ط¨ ظ‚ظٹط§ط³ ط§ظ„ط´ط§ط´ط© - 85% ط¹ط±ط¶ ظˆ 80% ط§ط±طھظپط§ط¹ ظƒط­ط¯ ط§ظ‚طµظ‰
             local maxW = math.clamp(vp.X * 0.88, 340, 620)
             local maxH = math.clamp(vp.Y * 0.78, 300, 500)
             local curSize = Main.AbsoluteSize
-            -- اذا الحجم الحالي اكبر من الشاشة، صغره تلقائيا
+            -- ط§ط°ط§ ط§ظ„ط­ط¬ظ… ط§ظ„ط­ط§ظ„ظٹ ط§ظƒط¨ط± ظ…ظ† ط§ظ„ط´ط§ط´ط©طŒ طµط؛ط±ظ‡ طھظ„ظ‚ط§ط¦ظٹط§
             if curSize.X > vp.X - 20 or curSize.Y > vp.Y - 80 then
                 Main.Size = UDim2.fromOffset(math.min(curSize.X, maxW), math.min(curSize.Y, maxH))
             end
@@ -1596,7 +1563,7 @@ function GGH:CreateWindow(Config)
         end
         ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(newUpdateWrapper)
         task.spawn(function() task.wait(0.2) newUpdateWrapper() end)
-        -- اول مرة نحسب حجم مناسب
+        -- ط§ظˆظ„ ظ…ط±ط© ظ†ط­ط³ط¨ ط­ط¬ظ… ظ…ظ†ط§ط³ط¨
         ApplyResponsiveSize()
 
         local function StartDrag(input)
@@ -2493,10 +2460,10 @@ local function CreateDropdown(Cfg)
     local function RefreshOptions()
         for _, child in ipairs(List:GetChildren()) do
             if child:IsA("TextButton") then
-                local name = child:GetAttribute("OptName") or child.Text:gsub("✓ ","")
+                local name = child:GetAttribute("OptName") or child.Text:gsub("âœ“ ","")
                 local sel = IsSelected(name)
                 child.BackgroundColor3 = sel and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                child.Text = (sel and "✓ " or "")..name
+                child.Text = (sel and "âœ“ " or "")..name
             end
         end
         Btn.Text = GetDisplayText()
@@ -2506,7 +2473,7 @@ local function CreateDropdown(Cfg)
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,-4,0,28)
         O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-        O.Text = (IsSelected(opt) and "✓ " or "")..opt
+        O.Text = (IsSelected(opt) and "âœ“ " or "")..opt
         O.Font = Enum.Font.Gotham
         O.TextSize = 11
         O.TextColor3 = CurrentTheme.Text
@@ -2669,7 +2636,7 @@ local function CreateColorpicker(Cfg)
                     local vp = ov.AbsoluteSize
                     local sz = main.AbsoluteSize
                     if sz.X==0 or vp.X<=10 then return end
-                    -- نضمن الحجم ما يطلع اكبر من الشاشة
+                    -- ظ†ط¶ظ…ظ† ط§ظ„ط­ط¬ظ… ظ…ط§ ظٹط·ظ„ط¹ ط§ظƒط¨ط± ظ…ظ† ط§ظ„ط´ط§ط´ط©
                     local maxW = math.clamp(vp.X - 20, 200, 600)
                     local maxH = math.clamp(vp.Y - 20, 200, 340)
                     if sz.X > maxW or sz.Y > maxH then
@@ -2677,11 +2644,11 @@ local function CreateColorpicker(Cfg)
                         sz = main.AbsoluteSize
                     end
                     local pos = main.Position
-                    -- اذا بالوسط نحسب حدوده
+                    -- ط§ط°ط§ ط¨ط§ظ„ظˆط³ط· ظ†ط­ط³ط¨ ط­ط¯ظˆط¯ظ‡
                     if pos.X.Scale==0.5 then
-                        -- الوسط آمن، بس نتأكد الحجم
+                        -- ط§ظ„ظˆط³ط· ط¢ظ…ظ†طŒ ط¨ط³ ظ†طھط£ظƒط¯ ط§ظ„ط­ط¬ظ…
                         main.Position = UDim2.new(0.5,0,0.5,0)
-                        -- بعد الوسط نعمل clamp اضافي
+                        -- ط¨ط¹ط¯ ط§ظ„ظˆط³ط· ظ†ط¹ظ…ظ„ clamp ط§ط¶ط§ظپظٹ
                         task.wait()
                         local absPos = main.AbsolutePosition
                         local cx = math.clamp(absPos.X, 5, vp.X - sz.X - 5)
@@ -2869,7 +2836,7 @@ local function CreateColorpicker(Cfg)
                                 return
                             end
                         end
-                        local num = tonumber(txt:gsub("°",""))
+                        local num = tonumber(txt:gsub("آ°",""))
                         if num then
                             if num>1 and num<=360 then curHue = num/360 else curHue = math.clamp(num,0,1) end
                             Hue = curHue
@@ -3223,73 +3190,19 @@ local Elements = {}
             end
         end
         function Elements:GetAll() return AllElements end
-        -- Original API
-        function Elements:Section(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Section", Cfg) end
-        function Elements:Paragraph(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Paragraph", Cfg) end
-        function Elements:Button(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Button", Cfg) end
-        function Elements:Toggle(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Toggle", Cfg) end
-        function Elements:Slider(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Slider", Cfg) end
-        function Elements:Input(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Input", Cfg) end
-        function Elements:Dropdown(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Dropdown", Cfg) end
-        function Elements:Colorpicker(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Colorpicker", Cfg) end
-        function Elements:Keybind(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Keybind", Cfg) end
-        function Elements:Code(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Code", Cfg) end
-        function Elements:Label(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Label", Cfg) end
-        function Elements:Separator(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Separator", Cfg) end
-        function Elements:Image(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Image", Cfg) end
-
-        -- Aliases for Redz / WindUI / Tab1 compatibility
-        Elements.AddSection = Elements.Section
-        Elements.CreateSection = Elements.Section
-        Elements.AddParagrah = Elements.Paragraph
-        Elements.AddParagraph = Elements.Paragraph
-        Elements.CreateParagraph = Elements.Paragraph
-
-        Elements.AddButton = Elements.Button
-        Elements.CreateButton = Elements.Button
-        Elements.NewButton = Elements.Button
-        Elements.AddToggle = Elements.Toggle
-        Elements.CreateToggle = Elements.Toggle
-        Elements.NewToggle = Elements.Toggle
-        Elements.AddSlider = Elements.Slider
-        Elements.CreateSlider = Elements.Slider
-        Elements.AddInput = Elements.Input
-        Elements.CreateInput = Elements.Input
-        Elements.AddTextbox = Elements.Input
-        Elements.AddDropdown = Elements.Dropdown
-        Elements.CreateDropdown = Elements.Dropdown
-        Elements.AddColorpicker = Elements.Colorpicker
-        Elements.CreateColorpicker = Elements.Colorpicker
-        Elements.AddColorPicker = Elements.Colorpicker
-        Elements.ColorPicker = Elements.Colorpicker
-        Elements.AddKeybind = Elements.Keybind
-        Elements.CreateKeybind = Elements.Keybind
-        Elements.AddLabel = Elements.Label
-        Elements.CreateLabel = Elements.Label
-        Elements.AddSeperator = Elements.Separator
-        Elements.AddSeparator = Elements.Separator
-
-        -- Support lower case direct calls like Tab:section etc via metatable
-        setmetatable(Elements, {
-            __index = function(t,k)
-                local lk = string.lower(k)
-                if lk == "addsection" or lk == "section" or lk == "createsection" then return rawget(t,"Section") end
-                if lk == "addbutton" or lk == "button" or lk == "createbutton" then return rawget(t,"Button") end
-                if lk == "addtoggle" or lk == "toggle" or lk == "createtoggle" then return rawget(t,"Toggle") end
-                if lk == "addslider" or lk == "slider" then return rawget(t,"Slider") end
-                if lk == "adddropdown" or lk == "dropdown" then return rawget(t,"Dropdown") end
-                if lk == "addcolorpicker" or lk == "colorpicker" or lk == "color" then return rawget(t,"Colorpicker") end
-                if lk == "addinput" or lk == "input" or lk == "textbox" then return rawget(t,"Input") end
-                if lk == "addlabel" or lk == "label" then return rawget(t,"Label") end
-                if lk == "addparagraph" or lk == "paragraph" then return rawget(t,"Paragraph") end
-                if lk == "addkeybind" or lk == "keybind" then return rawget(t,"Keybind") end
-                if lk == "addcode" or lk == "code" then return rawget(t,"Code") end
-                if lk == "addseparator" or lk == "separator" then return rawget(t,"Separator") end
-                if lk == "addimage" or lk == "image" then return rawget(t,"Image") end
-                return rawget(t,k)
-            end
-        })
-
+        function Elements:Section(Cfg) return self:Add("Section", Cfg) end
+        function Elements:Paragraph(Cfg) return self:Add("Paragraph", Cfg) end
+        function Elements:Button(Cfg) return self:Add("Button", Cfg) end
+        function Elements:Toggle(Cfg) return self:Add("Toggle", Cfg) end
+        function Elements:Slider(Cfg) return self:Add("Slider", Cfg) end
+        function Elements:Input(Cfg) return self:Add("Input", Cfg) end
+        function Elements:Dropdown(Cfg) return self:Add("Dropdown", Cfg) end
+        function Elements:Colorpicker(Cfg) return self:Add("Colorpicker", Cfg) end
+        function Elements:Keybind(Cfg) return self:Add("Keybind", Cfg) end
+        function Elements:Code(Cfg) return self:Add("Code", Cfg) end
+        function Elements:Label(Cfg) return self:Add("Label", Cfg) end
+        function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
+        function Elements:Image(Cfg) return self:Add("Image", Cfg) end
         return Elements
     end
     function Window:AddTab(Cfg)
@@ -3368,68 +3281,6 @@ function Window:SetSizePreset(presetName)
         end
     end
     function Window:GetTab(name) return Tabs[name] end
-
-
-    -- === GGH EXTENDED API - Multi Syntax + Theme Changer + Destroy ===
-    function Window:SetTheme(themeName)
-        if Themes[themeName] then
-            ApplyTheme(themeName)
-            return true
-        end
-        return false
-    end
-    function Window:ChangeTheme(themeName) return self:SetTheme(themeName) end
-    function Window:SetThemeDropdown() return self:SetTheme(themeName) end
-
-    function Window:Destroy()
-        pcall(function()
-            -- disable all toggles
-            for _, t in pairs(Tabs) do
-                if t.Page then
-                    for _, child in ipairs(t.Page:GetDescendants()) do
-                        if child:IsA("Frame") and child.Name == "ToggleCircle" then
-                            -- attempt to turn off visual
-                        end
-                    end
-                end
-            end
-            if ScreenGui then ScreenGui:Destroy() end
-        end)
-    end
-    function Window:Close() return self:Destroy() end
-    function Window:Unload() return self:Destroy() end
-    function Window:Delete() return self:Destroy() end
-    function Window:Remove() return self:Destroy() end
-    -- Dropdown that changes theme automatically
-    function Window:CreateThemeDropdown(Cfg)
-        Cfg = Cfg or {}
-        Cfg = NormalizeConfig(Cfg,"Title")
-        Cfg.Title = Cfg.Title or "Theme Picker"
-        local themeNames = {}
-        for name,_ in pairs(Themes) do table.insert(themeNames, name) end
-        table.sort(themeNames)
-        Cfg.Options = themeNames
-        Cfg.Default = Cfg.Default or CurrentTheme and "Dark" or themeNames[1]
-        local oldCb = Cfg.Callback
-        Cfg.Callback = function(v)
-            local themeToApply = v
-            if type(v) == "table" then themeToApply = v[1] end
-            self:SetTheme(themeToApply)
-            if oldCb then pcall(oldCb, v) end
-        end
-        -- Create in first tab if exists
-        local firstTab = nil
-        for _,t in pairs(Tabs) do firstTab = t; break end
-        if firstTab and firstTab.Page then
-            -- use generic dropdown creation via first tab's Add? fallback to global
-            -- We'll create a standalone dropdown in first tab
-            local TabAPI = firstTab
-            -- TabAPI is the Tab object? Actually Tabs stores Button/Page, not Elements
-            -- So we directly use CreateDropdown from closure? We'll call self:CreateThemeDropdown via Window? Simplify: return config for developer to use manually
-            return Cfg
-        end
-        return Cfg
-    end
 
         return Window
 end
@@ -3741,82 +3592,5 @@ end
 GGH.CreateKey = GGH.MakeKeySystem
 GGH.KeySystem = GGH.MakeKeySystem
 GGH.AddKeySystem = GGH.MakeKeySystem
-
--- Multi-syntax Window creators - DO NOT mention source, keep name GGH
-GGH.MakeWindow = GGH.CreateWindow
-GGH.Create = GGH.CreateWindow
-GGH.NewWindow = GGH.CreateWindow
-GGH.Window = GGH.CreateWindow
-GGH.CreateUI = GGH.CreateWindow
-GGH.MakeUI = GGH.CreateWindow
-
--- Theme control at GGH level
-function GGH:SetTheme(themeName)
-    -- will be overridden per window but keep global
-    if Themes and Themes[themeName] then
-        -- store as default
-        return true
-    end
-    return false
-end
-function GGH:Destroy()
-    pcall(function()
-        for _, gui in ipairs(GetGuiParent():GetChildren()) do
-            if gui.Name == "GGH_Library" or gui.Name == "GGH_KeySystem" then gui:Destroy() end
-        end
-        local plr = game:GetService("Players").LocalPlayer
-        if plr then
-            local pg = plr:FindFirstChild("PlayerGui")
-            if pg then
-                for _, gui in ipairs(pg:GetChildren()) do
-                    if gui.Name == "GGH_Library" or gui.Name == "GGH_KeySystem" then gui:Destroy() end
-                end
-            end
-        end
-    end)
-end
-GGH.Close = GGH.Destroy
-GGH.Unload = GGH.Destroy
-GGH.Delete = GGH.Destroy
-GGH.Remove = GGH.Destroy
-
--- Compatibility globals so old scripts using redzlib / WindUI still work but internally GGH
-pcall(function()
-    getgenv().GGH = GGH
-    getgenv().redzlib = GGH
-    getgenv().WindUI = GGH
-    getgenv().RedzLib = GGH
-    getgenv().WindUI = GGH
-    -- Also for require style
-    if not getgenv().redz then getgenv().redz = GGH end
-end)
-
--- Extra Tab alias: Tab:AddSection({"Section"}) etc already handled via Elements metatable
--- Also make Window support both :CreateTab and :AddTab and :Tab and :MakeTab
--- Patch via metatable on Window prototype would need runtime, but we alias in CreateWindow return above via __index fallback
--- To ensure Window also has multi-syntax for tabs, we wrap the returned Window with metatable
-local _origCreateWindow = GGH.CreateWindow
-GGH.CreateWindow = function(self, Config)
-    local win = _origCreateWindow(self, Config)
-    -- add tab aliases
-    win.AddTab = win.CreateTab
-    win.MakeTab = win.CreateTab
-    win.NewTab = win.CreateTab
-    win.Tab = win.CreateTab
-    win.CreateTabAsync = win.CreateTab
-    setmetatable(win, {
-        __index = function(t,k)
-            local lk = string.lower(tostring(k))
-            if lk == "addtab" or lk == "maketab" or lk == "newtab" or lk == "tab" or lk == "createtab" then return rawget(t,"CreateTab") end
-            if lk == "settheme" or lk == "changetheme" or lk == "set_theme" then return rawget(t,"SetTheme") end
-            if lk == "destroy" or lk == "close" or lk == "unload" or lk == "delete" or lk == "remove" then return rawget(t,"Destroy") end
-            if lk == "setsizepreset" then return rawget(t,"SetSizePreset") end
-            if lk == "settransparency" then return rawget(t,"SetTransparency") end
-            return rawget(t,k)
-        end
-    })
-    return win
-end
-GGH.MakeWindow = GGH.CreateWindow
 
 return GGH
