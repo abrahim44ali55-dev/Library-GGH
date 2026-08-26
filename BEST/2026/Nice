@@ -61,7 +61,7 @@ local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
--- ===== ظ†ط¸ط§ظ… ظ…ظ†ط¹ ط§ظ„ط®ط±ظˆط¬ ظ…ظ† ط§ظ„ط´ط§ط´ط© - ظ†ظپط³ ط·ط±ظٹظ‚ط© ط§ظ„ط²ط± ط§ظ„ط¹ط§ط¦ظ… =====
+-- ===== نظام منع الخروج من الشاشة - نفس طريقة الزر العائم =====
 local function ClampFrameToScreen(frame, gui)
     if not frame or not gui then return end
     local viewport = gui.AbsoluteSize
@@ -75,7 +75,7 @@ local function ClampFrameToScreen(frame, gui)
         newY = math.clamp(fPos.Y.Offset, 0, viewport.Y - fSize.Y)
         frame.Position = UDim2.fromOffset(newX, newY)
     else
-        -- ظ„ظ„ظ€ Scale ظ†ط­ظˆظ„ ظ„ظ€ Offset ظ…ط¹ Clamp
+        -- للـ Scale نحول لـ Offset مع Clamp
         local absX = fPos.X.Scale * viewport.X + fPos.X.Offset
         local absY = fPos.Y.Scale * viewport.Y + fPos.Y.Offset
         absX = math.clamp(absX, 0, viewport.X - fSize.X)
@@ -1281,6 +1281,17 @@ function GGH:CreateWindow(Config)
     local showSearch = true
     local showSettings = true
     local showFloat = true
+    if Config.HideButtons then
+        for _, v in ipairs(Config.HideButtons) do
+            local lv = string.lower(tostring(v))
+            if lv == "search" then showSearch = false end
+            if lv == "theme" or lv == "settings" then showSettings = false end
+            if lv == "float" or lv == "floating" then showFloat = false end
+        end
+    end
+    if Config.DisableSearchButton then showSearch = false end
+    if Config.DisableThemeButton then showSettings = false end
+    if Config.DisableFloatButton then showFloat = false end
 
     local function CreateCtrlButton(name, text, bg)
         local btn = Instance.new("TextButton", Controls)
@@ -1304,11 +1315,11 @@ function GGH:CreateWindow(Config)
     local order = 1
 
     if showSearch then
-        SearchBtn = CreateCtrlButton("SearchBtn", "ًں”چ", CurrentTheme.ElementBg2)
+        SearchBtn = CreateCtrlButton("SearchBtn", "🔍", CurrentTheme.ElementBg2)
         SearchBtn.LayoutOrder = order; order+=1
     end
     if showSettings then
-        ThemeBtn = CreateCtrlButton("ThemeBtn", "âڑ™", CurrentTheme.ElementBg2)
+        ThemeBtn = CreateCtrlButton("ThemeBtn", "⚙", CurrentTheme.ElementBg2)
         ThemeBtn.LayoutOrder = order; order+=1
     end
     MinBtn = CreateCtrlButton("MinBtn", "-", CurrentTheme.ElementBg2)
@@ -1319,7 +1330,7 @@ function GGH:CreateWindow(Config)
     MaxBtn.LayoutOrder = order; order+=1
     MaxBtn.Visible = false
     if showFloat then
-        FloatBtn = CreateCtrlButton("FloatBtn", "â—‰", CurrentTheme.ElementBg2)
+        FloatBtn = CreateCtrlButton("FloatBtn", "◉", CurrentTheme.ElementBg2)
         FloatBtn.LayoutOrder = order; order+=1
     end
     CloseBtn = CreateCtrlButton("CloseBtn", "X", CurrentTheme.CloseBg)
@@ -1371,16 +1382,18 @@ function GGH:CreateWindow(Config)
     SearchClose.TextColor3 = CurrentTheme.Text
     SearchClose.ZIndex = 91
     Corner(SearchClose, 7)
+    -- ===== NEW: ThemeDropdown مرتب نفس ستايل المكتبة + بدون شفافية + توجل حفظ =====
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
-    ThemeDropdown.Size = UDim2.new(0,200,0,0)
-    ThemeDropdown.Position = UDim2.new(1,-208,0,56)
+    ThemeDropdown.Size = UDim2.new(0,220,0,0)
+    ThemeDropdown.Position = UDim2.new(1,-228,0,56)
     ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
     ThemeDropdown.Visible = false
     ThemeDropdown.ZIndex = 100
     ThemeDropdown.ClipsDescendants = true
     Corner(ThemeDropdown, 12)
     Stroke(ThemeDropdown, CurrentTheme.Stroke, 1)
+
     local ThemeList = Instance.new("ScrollingFrame", ThemeDropdown)
     ThemeList.Size = UDim2.new(1,-8,1,-8)
     ThemeList.Position = UDim2.new(0,4,0,4)
@@ -1397,44 +1410,63 @@ function GGH:CreateWindow(Config)
     TL.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP = Instance.new("UIPadding", ThemeList)
     TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
+
+    -- Header مرتب
     local ThemeHeader = Instance.new("TextLabel", ThemeList)
-    ThemeHeader.Size = UDim2.new(1,0,0,18)
+    ThemeHeader.Size = UDim2.new(1,0,0,20)
     ThemeHeader.BackgroundTransparency = 1
-    ThemeHeader.Text = "THEMES"
+    ThemeHeader.Text = "SETTINGS"
     ThemeHeader.Font = Enum.Font.GothamBold
-    ThemeHeader.TextSize = 10
-    ThemeHeader.TextColor3 = CurrentTheme.SubText
+    ThemeHeader.TextSize = 11
+    ThemeHeader.TextColor3 = CurrentTheme.Text
     ThemeHeader.TextXAlignment = Enum.TextXAlignment.Left
     ThemeHeader.LayoutOrder = -100
-    local TransLabel = Instance.new("TextLabel", ThemeList)
-    TransLabel.Size = UDim2.new(1,0,0,14)
-    TransLabel.BackgroundTransparency = 1
-    TransLabel.Text = "TRANSPARENCY (0-100)"
-    TransLabel.Font = Enum.Font.GothamBold
-    TransLabel.TextSize = 9
-    TransLabel.TextColor3 = CurrentTheme.SubText
-    TransLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TransLabel.LayoutOrder = -20
-    local TransBox = Instance.new("TextBox", ThemeList)
-    TransBox.Size = UDim2.new(1,0,0,26)
-    TransBox.BackgroundColor3 = CurrentTheme.ElementBg2
-    TransBox.PlaceholderText = "0-100"
-    TransBox.Text = "0"
-    TransBox.Font = Enum.Font.Gotham
-    TransBox.TextSize = 11
-    TransBox.TextColor3 = CurrentTheme.Text
-    TransBox.LayoutOrder = -19
-    Corner(TransBox, 6)
-    TransBox.FocusLost:Connect(function()
-        local num = tonumber(TransBox.Text) or 0
-        num = math.clamp(num, 0, 100)
-        local rel = num/100
-        WindowTrans = rel*0.7
-        Main.BackgroundTransparency = WindowTrans
-        Header.BackgroundTransparency = WindowTrans
-        HeaderFix.BackgroundTransparency = WindowTrans
-        TabList.BackgroundTransparency = WindowTrans
-    end)
+    AddTextStroke(ThemeHeader)
+
+    -- ===== توجل حفظ الاعدادات - يظهر اول شي =====
+    local SaveToggleFrame = Instance.new("Frame", ThemeList)
+    SaveToggleFrame.Size = UDim2.new(1,0,0,38)
+    SaveToggleFrame.BackgroundColor3 = CurrentTheme.ElementBg2
+    SaveToggleFrame.LayoutOrder = -90
+    Corner(SaveToggleFrame, 8)
+    Stroke(SaveToggleFrame, CurrentTheme.Stroke, 1)
+
+    local SaveTitle = Instance.new("TextLabel", SaveToggleFrame)
+    SaveTitle.Size = UDim2.new(1,-56,1,0)
+    SaveTitle.Position = UDim2.new(0,10,0,0)
+    SaveTitle.BackgroundTransparency = 1
+    SaveTitle.Text = "Save Settings"
+    SaveTitle.Font = Enum.Font.GothamMedium
+    SaveTitle.TextSize = 12
+    SaveTitle.TextColor3 = CurrentTheme.Text
+    SaveTitle.TextXAlignment = Enum.TextXAlignment.Left
+    AddTextStroke(SaveTitle)
+
+    local SaveToggleBg = Instance.new("Frame", SaveToggleFrame)
+    SaveToggleBg.Size = UDim2.new(0,44,0,22)
+    SaveToggleBg.Position = UDim2.new(1,-50,0.5,-11)
+    SaveToggleBg.BackgroundColor3 = CurrentTheme.ElementBg
+    Corner(SaveToggleBg, 11)
+
+    local SaveCircle = Instance.new("Frame", SaveToggleBg)
+    SaveCircle.Size = UDim2.new(0,16,0,16)
+    SaveCircle.Position = UDim2.new(0,3,0.5,-8)
+    SaveCircle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Corner(SaveCircle, 8)
+
+    local SaveToggleBtn = Instance.new("TextButton", SaveToggleFrame)
+    SaveToggleBtn.Size = UDim2.new(1,0,1,0)
+    SaveToggleBtn.BackgroundTransparency = 1
+    SaveToggleBtn.Text = ""
+
+    -- سطر فاصل
+    local Sep1 = Instance.new("Frame", ThemeList)
+    Sep1.Size = UDim2.new(1,0,0,1)
+    Sep1.BackgroundColor3 = CurrentTheme.Stroke
+    Sep1.BackgroundTransparency = 0.5
+    Sep1.LayoutOrder = -85
+
+    -- ملاحظة: التحكم بالشفافية انشال - بس المطور يحدده من Config.WindowTransparency
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,140,1,-64)
@@ -1545,11 +1577,11 @@ function GGH:CreateWindow(Config)
         local function ApplyResponsiveSize()
             local vp = ScreenGui.AbsoluteSize
             if vp.X < 100 or vp.Y < 100 then return end
-            -- ط§ظ„ط­ط¬ظ… ط§ظ„ظ…ظ†ط§ط³ط¨ ط­ط³ط¨ ظ‚ظٹط§ط³ ط§ظ„ط´ط§ط´ط© - 85% ط¹ط±ط¶ ظˆ 80% ط§ط±طھظپط§ط¹ ظƒط­ط¯ ط§ظ‚طµظ‰
+            -- الحجم المناسب حسب قياس الشاشة - 85% عرض و 80% ارتفاع كحد اقصى
             local maxW = math.clamp(vp.X * 0.88, 340, 620)
             local maxH = math.clamp(vp.Y * 0.78, 300, 500)
             local curSize = Main.AbsoluteSize
-            -- ط§ط°ط§ ط§ظ„ط­ط¬ظ… ط§ظ„ط­ط§ظ„ظٹ ط§ظƒط¨ط± ظ…ظ† ط§ظ„ط´ط§ط´ط©طŒ طµط؛ط±ظ‡ طھظ„ظ‚ط§ط¦ظٹط§
+            -- اذا الحجم الحالي اكبر من الشاشة، صغره تلقائيا
             if curSize.X > vp.X - 20 or curSize.Y > vp.Y - 80 then
                 Main.Size = UDim2.fromOffset(math.min(curSize.X, maxW), math.min(curSize.Y, maxH))
             end
@@ -1563,7 +1595,7 @@ function GGH:CreateWindow(Config)
         end
         ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(newUpdateWrapper)
         task.spawn(function() task.wait(0.2) newUpdateWrapper() end)
-        -- ط§ظˆظ„ ظ…ط±ط© ظ†ط­ط³ط¨ ط­ط¬ظ… ظ…ظ†ط§ط³ط¨
+        -- اول مرة نحسب حجم مناسب
         ApplyResponsiveSize()
 
         local function StartDrag(input)
@@ -2460,10 +2492,10 @@ local function CreateDropdown(Cfg)
     local function RefreshOptions()
         for _, child in ipairs(List:GetChildren()) do
             if child:IsA("TextButton") then
-                local name = child:GetAttribute("OptName") or child.Text:gsub("âœ“ ","")
+                local name = child:GetAttribute("OptName") or child.Text:gsub("✓ ","")
                 local sel = IsSelected(name)
                 child.BackgroundColor3 = sel and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                child.Text = (sel and "âœ“ " or "")..name
+                child.Text = (sel and "✓ " or "")..name
             end
         end
         Btn.Text = GetDisplayText()
@@ -2473,7 +2505,7 @@ local function CreateDropdown(Cfg)
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,-4,0,28)
         O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-        O.Text = (IsSelected(opt) and "âœ“ " or "")..opt
+        O.Text = (IsSelected(opt) and "✓ " or "")..opt
         O.Font = Enum.Font.Gotham
         O.TextSize = 11
         O.TextColor3 = CurrentTheme.Text
@@ -2570,6 +2602,23 @@ end
 
 
 local function CreateColorpicker(Cfg)
+
+    -- Fix: Center color picker and make it bigger so colors not outside
+    local function CenterPicker(pickerFrame, screenGui)
+        local vp = screenGui.AbsoluteSize
+        if vp.X < 10 or vp.Y < 10 then
+            vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080)
+        end
+        local pSize = pickerFrame.AbsoluteSize
+        if pSize.X < 10 then pSize = Vector2.new(320, 280) end
+        -- Center
+        local x = (vp.X - pSize.X) / 2
+        local y = (vp.Y - pSize.Y) / 2
+        x = math.clamp(x, 10, vp.X - pSize.X - 10)
+        y = math.clamp(y, 10, vp.Y - pSize.Y - 10)
+        pickerFrame.Position = UDim2.fromOffset(x, y)
+    end
+
             Cfg.Title = Cfg.Title or Cfg.Name or "Colorpicker"
             Cfg.Default = Cfg.Default or Cfg.Color or CurrentTheme.Accent
             Cfg.Mode = Cfg.Mode or Cfg.ColorMode or "Player"
@@ -2617,17 +2666,17 @@ local function CreateColorpicker(Cfg)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
                 ov.BackgroundColor3 = Color3.new(0,0,0)
-                ov.BackgroundTransparency = 1
+                ov.BackgroundTransparency = 0.35 -- Background visible
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
                 local main = Instance.new("Frame", ov)
-                main.AnchorPoint = Vector2.new(0.5,0.5)
-                main.Position = UDim2.new(0.5,0,0.5,0)
+                main.AnchorPoint = Vector2.new(0.5,0.5) -- Centered
+                main.Position = UDim2.new(0.5,0,0.5,0) -- Centered fixed
                 local baseW = Main.AbsoluteSize.X
                 local baseH = Main.AbsoluteSize.Y
-                local pickerW = math.clamp(baseW*0.95, 360, 600)
-                local pickerH = math.clamp(baseH*0.85, 240, 340)
+                local pickerW = math.clamp(baseW*0.9, 320, 420) -- Fixed: no outside
+                local pickerH = math.clamp(baseH*0.75, 200, 280) -- Fixed: no outside
                 main.Size = UDim2.new(0,pickerW,0,pickerH)
                 main.BackgroundColor3 = Color3.fromRGB(28,28,32)
                 main.BackgroundTransparency = 0
@@ -2636,7 +2685,7 @@ local function CreateColorpicker(Cfg)
                     local vp = ov.AbsoluteSize
                     local sz = main.AbsoluteSize
                     if sz.X==0 or vp.X<=10 then return end
-                    -- ظ†ط¶ظ…ظ† ط§ظ„ط­ط¬ظ… ظ…ط§ ظٹط·ظ„ط¹ ط§ظƒط¨ط± ظ…ظ† ط§ظ„ط´ط§ط´ط©
+                    -- نضمن الحجم ما يطلع اكبر من الشاشة
                     local maxW = math.clamp(vp.X - 20, 200, 600)
                     local maxH = math.clamp(vp.Y - 20, 200, 340)
                     if sz.X > maxW or sz.Y > maxH then
@@ -2644,11 +2693,11 @@ local function CreateColorpicker(Cfg)
                         sz = main.AbsoluteSize
                     end
                     local pos = main.Position
-                    -- ط§ط°ط§ ط¨ط§ظ„ظˆط³ط· ظ†ط­ط³ط¨ ط­ط¯ظˆط¯ظ‡
+                    -- اذا بالوسط نحسب حدوده
                     if pos.X.Scale==0.5 then
-                        -- ط§ظ„ظˆط³ط· ط¢ظ…ظ†طŒ ط¨ط³ ظ†طھط£ظƒط¯ ط§ظ„ط­ط¬ظ…
-                        main.Position = UDim2.new(0.5,0,0.5,0)
-                        -- ط¨ط¹ط¯ ط§ظ„ظˆط³ط· ظ†ط¹ظ…ظ„ clamp ط§ط¶ط§ظپظٹ
+                        -- الوسط آمن، بس نتأكد الحجم
+                        main.Position = UDim2.new(0.5,0,0.5,0) -- Centered fixed
+                        -- بعد الوسط نعمل clamp اضافي
                         task.wait()
                         local absPos = main.AbsolutePosition
                         local cx = math.clamp(absPos.X, 5, vp.X - sz.X - 5)
@@ -2666,7 +2715,7 @@ local function CreateColorpicker(Cfg)
                 Corner(main, 16)
                 Stroke(main, CurrentTheme.Stroke, 2)
                 local cont = Instance.new("Frame", main)
-                cont.Size = UDim2.new(1,-20,1,-20)
+                cont.Size = UDim2.new(1,-20,1,-20) -- Fixed bigger to fit colors
                 cont.Position = UDim2.new(0,10,0,10)
                 cont.BackgroundTransparency = 1
                 cont.ClipsDescendants = false
@@ -2676,7 +2725,7 @@ local function CreateColorpicker(Cfg)
                 layout.Padding = UDim.new(0,12)
                 layout.VerticalAlignment = Enum.VerticalAlignment.Center
                 local svFrame = Instance.new("ImageLabel", cont)
-                svFrame.Size = UDim2.new(0,220,0,220)
+                svFrame.Size = UDim2.new(0,180,0,180) -- Fixed inside
                 svFrame.Image = "rbxassetid://4155801252"
                 svFrame.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
                 svFrame.ZIndex = 303
@@ -2708,7 +2757,8 @@ local function CreateColorpicker(Cfg)
                 Corner(hueMarker, 3)
                 Stroke(hueMarker, Color3.new(0,0,0), 1)
                 local right = Instance.new("Frame", cont)
-                right.Size = UDim2.new(0,260,0,220)
+                right.Size = UDim2.new(0,160,0,180) -- Inside, not outside
+ right.Position = UDim2.new(0,0,0,0)
                 right.BackgroundColor3 = Color3.fromRGB(40,41,48)
                 right.BackgroundTransparency = ElementTrans
                 right.ZIndex = 302
@@ -2836,7 +2886,7 @@ local function CreateColorpicker(Cfg)
                                 return
                             end
                         end
-                        local num = tonumber(txt:gsub("آ°",""))
+                        local num = tonumber(txt:gsub("°",""))
                         if num then
                             if num>1 and num<=360 then curHue = num/360 else curHue = math.clamp(num,0,1) end
                             Hue = curHue
@@ -3280,7 +3330,117 @@ function Window:SetSizePreset(presetName)
             Tabs[name]=nil
         end
     end
+
+    function Window:Destroy()
+        pcall(function() ScreenGui:Destroy() end)
+    end
+    function Window:Close() self:Destroy() end
+    function Window:Hide() Main.Visible = false end
+    function Window:Show() Main.Visible = true end
+    function Window:Toggle() Main.Visible = not Main.Visible end
+    function Window:HideButton(name)
+        local n = string.lower(tostring(name))
+        if n == "search" and SearchBtn then SearchBtn.Visible = false end
+        if (n == "theme" or n == "settings") and ThemeBtn then ThemeBtn.Visible = false end
+        if (n == "float" or n == "floating") and FloatBtn then FloatBtn.Visible = false end
+    end
+    function Window:ShowButton(name)
+        local n = string.lower(tostring(name))
+        if n == "search" and SearchBtn then SearchBtn.Visible = true end
+        if (n == "theme" or n == "settings") and ThemeBtn then ThemeBtn.Visible = true end
+        if (n == "float" or n == "floating") and FloatBtn then FloatBtn.Visible = true end
+    end
+    function Window:SetTheme(name)
+        if Themes[name] then ApplyTheme(name) SubLabel.Text = "Theme: "..name end
+    end
+    function Window:GetThemes()
+        local t = {}
+        for k,_ in pairs(Themes) do table.insert(t,k) end
+        table.sort(t)
+        return t
+    end
+    function Window:CreateThemeDropdown(Cfg)
+        Cfg = Cfg or {}
+        local targetPage = Cfg.Parent
+        if not targetPage or not targetPage:IsA("ScrollingFrame") then
+            for _, tb in pairs(Tabs) do if tb.Page then targetPage = tb.Page break end end
+        end
+        local themeNames = {}
+        for n,_ in pairs(Themes) do table.insert(themeNames, n) end
+        table.sort(themeNames)
+        local Frame = Instance.new("Frame", targetPage)
+        Frame.Size = UDim2.new(1,-4,0,38)
+        Frame.BackgroundColor3 = CurrentTheme.ElementBg
+        Frame.ClipsDescendants = true
+        Corner(Frame, 9)
+        local Btn = Instance.new("TextButton", Frame)
+        Btn.Size = UDim2.new(1,0,0,38)
+        Btn.BackgroundTransparency = 1
+        Btn.Text = (Cfg.Title or "Theme").." : Dark"
+        Btn.Font = Enum.Font.GothamMedium
+        Btn.TextSize = 12
+        Btn.TextColor3 = CurrentTheme.Text
+        local List = Instance.new("ScrollingFrame", Frame)
+        List.Position = UDim2.new(0,0,0,38)
+        List.Size = UDim2.new(1,0,0,0)
+        List.BackgroundTransparency = 1
+        List.CanvasSize = UDim2.new(0,0,0, #themeNames*32)
+        List.ScrollBarThickness = 3
+        List.ScrollBarImageColor3 = CurrentTheme.Accent
+        local ll = Instance.new("UIListLayout", List)
+        ll.Padding = UDim.new(0,2)
+        local Open = false
+        Btn.MouseButton1Click:Connect(function()
+            Open = not Open
+            if Open then
+                local h = math.clamp(#themeNames*30, 30, 180)
+                List.Size = UDim2.new(1,0,0,h)
+                Frame.Size = UDim2.new(1,-4,0, 38 + h + 6)
+            else
+                Frame.Size = UDim2.new(1,-4,0,38)
+            end
+        end)
+        for _, thName in ipairs(themeNames) do
+            local O = Instance.new("TextButton", List)
+            O.Size = UDim2.new(1,-4,0,28)
+            O.BackgroundColor3 = CurrentTheme.ElementBg2
+            O.Text = thName
+            O.Font = Enum.Font.Gotham
+            O.TextSize = 11
+            O.TextColor3 = CurrentTheme.Text
+            Corner(O, 6)
+            O.MouseButton1Click:Connect(function()
+                Window:SetTheme(thName)
+                Btn.Text = (Cfg.Title or "Theme").." : "..thName
+                Open = false
+                Frame.Size = UDim2.new(1,-4,0,38)
+                if Cfg.Callback then pcall(Cfg.Callback, thName) end
+            end)
+        end
+        return {}
+    end
+    function Window:CreateDestroyButton(Cfg)
+        Cfg = Cfg or {}
+        local targetPage = Cfg.Parent
+        if not targetPage or not targetPage:IsA("ScrollingFrame") then
+            for _, tb in pairs(Tabs) do if tb.Page then targetPage = tb.Page break end end
+        end
+        local Btn = Instance.new("TextButton", targetPage)
+        Btn.Size = UDim2.new(1,-4,0,34)
+        Btn.BackgroundColor3 = Color3.fromRGB(80,30,35)
+        Btn.Text = Cfg.Title or "Destroy UI"
+        Btn.Font = Enum.Font.GothamBold
+        Btn.TextSize = 13
+        Btn.TextColor3 = Color3.new(1,1,1)
+        Corner(Btn, 8)
+        Btn.MouseButton1Click:Connect(function()
+            if Cfg.Callback then pcall(Cfg.Callback) end
+            Window:Destroy()
+        end)
+        return Btn
+    end
     function Window:GetTab(name) return Tabs[name] end
+
 
         return Window
 end
