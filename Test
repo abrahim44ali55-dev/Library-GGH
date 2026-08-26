@@ -1278,9 +1278,61 @@ function GGH:CreateWindow(Config)
     ControlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ControlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     
+    -- ===== NEW: تحكم المطور بازرار الهيدر - يقدر يشيل اي زر بكيفه =====
+    local function ShouldHideButton(btnName)
+        local lists = {Config.HideButtons, Config.DisabledButtons, Config.RemoveButtons, Config.DisableButtons, Config.HiddenButtons}
+        for _, list in ipairs(lists) do
+            if type(list) == "table" then
+                for _, v in ipairs(list) do
+                    local lv = string.lower(tostring(v))
+                    if lv == string.lower(btnName) or lv == string.lower(btnName.."Btn") or lv == string.lower(btnName:gsub("Btn","")) then
+                        return true
+                    end
+                    -- اختصارات
+                    if (lv == "search" or lv == "searchbtn") and (btnName == "Search") then return true end
+                    if (lv == "theme" or lv == "settings" or lv == "themebtn" or lv == "setting" or lv == "settingsbtn") and (btnName == "Theme" or btnName == "Settings") then return true end
+                    if (lv == "float" or lv == "floating" or lv == "floatbtn" or lv == "floatingbtn" or lv == "floatbutton") and (btnName == "Float") then return true end
+                end
+            elseif type(list) == "string" then
+                local lv = string.lower(list)
+                if lv == string.lower(btnName) then return true end
+            end
+        end
+        return false
+    end
+
     local showSearch = true
     local showSettings = true
     local showFloat = true
+
+    -- طرق مختلفة يقدر المطور يشيل بيها الازرار
+    if Config.DisableSearchButton or Config.DisableSearch or Config.HideSearchButton or Config.RemoveSearchButton or Config.DisableSearchBtn then showSearch = false end
+    if Config.EnableSearchButton == false or Config.ShowSearchButton == false or Config.SearchButton == false then showSearch = false end
+    if Config.DisableThemeButton or Config.DisableSettings or Config.DisableTheme or Config.HideThemeButton or Config.RemoveThemeButton or Config.DisableThemeBtn or Config.HideSettings then showSettings = false end
+    if Config.EnableThemeButton == false or Config.ShowThemeButton == false or Config.ThemeButton == false or Config.SettingsButton == false or Config.ShowSettings == false then showSettings = false end
+    if Config.DisableFloatButton or Config.DisableFloatingButton or Config.DisableFloat or Config.HideFloatButton or Config.RemoveFloatButton or Config.DisableFloatBtn or Config.DisableFloating then showFloat = false end
+    if Config.EnableFloatButton == false or Config.ShowFloatButton == false or Config.FloatButton == false or Config.FloatingButton == false then showFloat = false end
+
+    if ShouldHideButton("Search") then showSearch = false end
+    if ShouldHideButton("Theme") or ShouldHideButton("Settings") then showSettings = false end
+    if ShouldHideButton("Float") then showFloat = false end
+
+    -- اذا المطور حدد فقط ازرار معينة يبقيها
+    if Config.KeepOnlyButtons or Config.OnlyButtons or Config.EnabledButtons then
+        local keep = Config.KeepOnlyButtons or Config.OnlyButtons or Config.EnabledButtons
+        if type(keep) == "table" then
+            local keepSearch, keepTheme, keepFloat = false, false, false
+            for _, v in ipairs(keep) do
+                local lv = string.lower(tostring(v))
+                if lv == "search" or lv == "searchbtn" then keepSearch = true end
+                if lv == "theme" or lv == "settings" or lv == "themebtn" or lv == "settingsbtn" then keepTheme = true end
+                if lv == "float" or lv == "floating" or lv == "floatbtn" or lv == "floatingbtn" then keepFloat = true end
+            end
+            showSearch = keepSearch
+            showSettings = keepTheme
+            showFloat = keepFloat
+        end
+    end
 
     local function CreateCtrlButton(name, text, bg)
         local btn = Instance.new("TextButton", Controls)
@@ -1456,6 +1508,7 @@ function GGH:CreateWindow(Config)
     Sep1.LayoutOrder = -85
 
     -- ملاحظة: التحكم بالشفافية انشال - بس المطور يحدده من Config.WindowTransparency
+
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,140,1,-64)
@@ -1871,13 +1924,14 @@ function GGH:CreateWindow(Config)
     end
 
 
+
     local ThemableElements = {}
+
 
     local function RegisterThemable(obj, prop, themeKey) table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey}) end
     local function ApplyTheme(themeName)
         local theme = Themes[themeName]
         if not theme then return end
-        CurrentThemeName = themeName
         local function GetLum(c) return 0.299*c.R + 0.587*c.G + 0.114*c.B end
         local lum = GetLum(theme.MainBg)
         if lum > 0.5 then
@@ -2071,86 +2125,37 @@ function GGH:CreateWindow(Config)
         ThemeOpen = not ThemeOpen 
         if ThemeOpen then
             ThemeDropdown.Visible = true
-            ThemeDropdown.Size = UDim2.new(0,220,0,0)
+            ThemeDropdown.Size = UDim2.new(0,200,0,0)
             local maxH = math.clamp(Main.AbsoluteSize.Y - 80, 150, 360)
-                Tween(ThemeDropdown, {Size = UDim2.new(0,220,0,maxH)}, 0.3)
+                Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,maxH)}, 0.3)
         else
-            Tween(ThemeDropdown, {Size = UDim2.new(0,220,0,0)}, 0.25)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,0)}, 0.25)
             task.wait(0.25)
             ThemeDropdown.Visible = false
         end
     end) end
 
-    -- ===== ثيمات بدروب داون نفس ستايل المكتبة - مرتب وحلو =====
-    local SortedThemes = {}
-    for name,_ in pairs(Themes) do table.insert(SortedThemes, name) end
-    table.sort(SortedThemes)
-
-    for _, name in ipairs(SortedThemes) do
-        local th = Themes[name]
+    for name, th in pairs(Themes) do
         local Btn = Instance.new("TextButton", ThemeList)
-        Btn.Size = UDim2.new(1,0,0,32)
+        Btn.Size = UDim2.new(1,0,0,28)
         Btn.BackgroundColor3 = th.ElementBg2
-        Btn.BackgroundTransparency = 0
         Btn.Text = name
         Btn.Font = Enum.Font.GothamMedium
-        Btn.TextSize = 12
+        Btn.TextSize = 11
         Btn.TextColor3 = th.Text
         Btn.ZIndex = 102
         Btn.AutoLocalize = true
-        Btn.AutoButtonColor = false
-        Corner(Btn, 8)
-        local s = Stroke(Btn, th.Accent, 1)
-        s.Transparency = 0.5
-        RegisterThemable(Btn, "BackgroundColor3", "ElementBg2")
-
-        -- علامة صح لو الثيم الحالي
-        if name == DefaultTheme then
-            Btn.Text = "✓ "..name
-            Btn.BackgroundColor3 = th.Accent
-            Btn.TextColor3 = Color3.new(1,1,1)
-        end
-
-        Btn.MouseEnter:Connect(function()
-            if name ~= CurrentThemeName then
-                Tween(Btn, {BackgroundColor3 = th.ElementBg}, 0.15)
-            end
-        end)
-        Btn.MouseLeave:Connect(function()
-            if name ~= CurrentThemeName then
-                Tween(Btn, {BackgroundColor3 = th.ElementBg2}, 0.15)
-            end
-        end)
-
+        Corner(Btn, 6)
+        Stroke(Btn, th.Accent, 1)
         Btn.MouseButton1Click:Connect(function() 
             ApplyTheme(name) 
-            CurrentThemeName = name
-            -- حدث كل الازرار
-            for _, child in ipairs(ThemeList:GetChildren()) do
-                if child:IsA("TextButton") and child ~= SaveToggleBtn then
-                    local tName = child.Text:gsub("✓ ","")
-                    if tName == name then
-                        child.Text = "✓ "..tName
-                        Tween(child, {BackgroundColor3 = Themes[tName].Accent}, 0.2)
-                        child.TextColor3 = Color3.new(1,1,1)
-                    else
-                        if Themes[tName] then
-                            child.Text = tName
-                            Tween(child, {BackgroundColor3 = Themes[tName].ElementBg2}, 0.2)
-                            child.TextColor3 = Themes[tName].Text
-                        end
-                    end
-                end
-            end
             ThemeDropdown.Visible = false 
             ThemeOpen = false 
             SubLabel.Text = "Theme: " .. name
-            if SaveSystem.Enabled then SaveSystem:Set("_Theme", name) end
+            RestoreWindowSize()
             if FloatingIcon then
                 FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
             end
-            -- صغر الدروب داون
-            Tween(ThemeDropdown, {Size = UDim2.new(0,220,0,0)}, 0.25)
         end)
     end
     local Window = {}
@@ -2167,7 +2172,7 @@ function GGH:CreateWindow(Config)
         EnsureUnminimizedForPopup()
         if ThemeOpen then
             ThemeOpen = false
-            Tween(ThemeDropdown, {Size = UDim2.new(0,220,0,0)}, 0.25)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,0)}, 0.25)
             task.wait(0.25)
             ThemeDropdown.Visible = false
         end
@@ -2410,10 +2415,6 @@ function GGH:CreateWindow(Config)
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
                 pcall(function() Cfg.Callback(State) end)
-                if SaveSystem.Enabled then
-                    local key = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
-                    SaveSystem:Set(key, State)
-                end
                 return ToggleAPI
             end
             function ToggleAPI:GetValue() return State end
@@ -2428,35 +2429,13 @@ function GGH:CreateWindow(Config)
             function ToggleAPI:Set(v) return self:SetValue(v) end
             function ToggleAPI:Get() return self:GetValue() end
 
-            local function SaveThisToggle()
-                if SaveSystem.Enabled then
-                    local key = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
-                    SaveSystem:Set(key, State)
-                end
-            end
-
             Btn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
                 State = not State
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
                 pcall(function() Cfg.Callback(State) end)
-                SaveThisToggle()
             end)
-
-            -- تسجيل للحفظ التلقائي
-            local saveKey = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
-            if SaveSystem.Enabled then
-                local saved = SaveSystem:Get(saveKey, nil)
-                if saved ~= nil then
-                    State = saved
-                    Bg.BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                    Circle.Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)
-                    task.spawn(function() task.wait(0.1) pcall(function() Cfg.Callback(State) end) end)
-                end
-            end
-            SaveSystem:Register(saveKey, ToggleAPI, State)
-
             return ToggleAPI
         end
 
@@ -2518,10 +2497,6 @@ function GGH:CreateWindow(Config)
                 Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
                 Label.Text = Cfg.Title.." : "..Value
                 pcall(Cfg.Callback or function() end, Value)
-                if SaveSystem.Enabled then
-                    local sKey = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
-                    SaveSystem:Set(sKey, Value)
-                end
             end
             task.spawn(function()
                 task.wait(0.05)
@@ -2550,10 +2525,6 @@ function GGH:CreateWindow(Config)
                 Circle.Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)
                 Label.Text = Cfg.Title.." : "..Value
                 pcall(Cfg.Callback or function() end, Value)
-                if SaveSystem.Enabled then
-                    local sKey = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
-                    SaveSystem:Set(sKey, Value)
-                end
                 return SliderAPI
             end
             function SliderAPI:GetValue() return Value end
@@ -3531,6 +3502,279 @@ function Window:SetSizePreset(presetName)
         end
     end
     function Window:GetTab(name) return Tabs[name] end
+
+
+    -- ===== NEW FEATURES: Theme Changer + Destroy UI + Button Control (by developer) =====
+    -- دالة تغيير الثيم - يقدر المطور يناديها من اي مكان
+    function Window:SetTheme(themeName)
+        if Themes[themeName] then
+            ApplyTheme(themeName)
+            SubLabel.Text = "Theme: " .. themeName
+            if FloatingIcon then
+                FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
+            end
+            return true
+        else
+            warn("[GGH] Theme not found: "..tostring(themeName))
+            return false
+        end
+    end
+    function Window:GetTheme() return CurrentTheme end
+    function Window:GetThemes()
+        local list = {}
+        for name,_ in pairs(Themes) do table.insert(list, name) end
+        table.sort(list)
+        return list
+    end
+    function Window:GetCurrentThemeName()
+        for name,th in pairs(Themes) do if th == CurrentTheme then return name end end
+        return "Unknown"
+    end
+
+    -- يطفي كلشي ويلغي الواجهة نهائياً
+    function Window:Destroy()
+        pcall(function()
+            if FloatingIcon then FloatingIcon:Destroy() end
+            if ConfirmFrame then ConfirmFrame:Destroy() end
+            Tween(Main, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2)
+            task.wait(0.22)
+            ScreenGui:Destroy()
+        end)
+    end
+    function Window:Close() self:Destroy() end
+    function Window:Remove() self:Destroy() end
+    function Window:Shutdown() self:Destroy() end
+    function Window:Unload() self:Destroy() end
+    function Window:Dispose() self:Destroy() end
+
+    function Window:Hide() Main.Visible = false ConfirmFrame.Visible = false end
+    function Window:Show() Main.Visible = true end
+    function Window:Toggle() Main.Visible = not Main.Visible end
+    function Window:Minimize()
+        if not minimized then
+            minimized = true
+            savedSize = Main.Size
+            HeaderFix.Visible = false
+            ThemeDropdown.Visible = false
+            SearchBar.Visible = false
+            Tween(Main, {Size = UDim2.new(0,savedSize.X.Offset,0,52)}, 0.22)
+            TabList.Visible = false
+            Container.Visible = false
+            MinBtn.Visible = false
+            MaxBtn.Visible = true
+            ResizeGrip.Visible = false
+        end
+    end
+    function Window:Maximize()
+        if minimized then
+            minimized = false
+            HeaderFix.Visible = true
+            TabList.Visible = true
+            Container.Visible = true
+            Tween(Main, {Size = savedSize}, 0.25)
+            MaxBtn.Visible = false
+            MinBtn.Visible = true
+        end
+    end
+
+    -- تحكم بالازرار - يقدر المطور يشيل/يرجع اي زر بكيفه
+    function Window:HideButton(btnName)
+        local n = string.lower(tostring(btnName))
+        if n == "search" or n == "searchbtn" then if SearchBtn then SearchBtn.Visible = false end showSearch = false end
+        if n == "theme" or n == "settings" or n == "themebtn" or n == "settingsbtn" then if ThemeBtn then ThemeBtn.Visible = false end showSettings = false end
+        if n == "float" or n == "floating" or n == "floatbtn" or n == "floatingbtn" then if FloatBtn then FloatBtn.Visible = false end showFloat = false end
+        -- اعادة حساب حجم الكنترول
+        local cnt = 0
+        if SearchBtn and SearchBtn.Visible then cnt+=1 end
+        if ThemeBtn and ThemeBtn.Visible then cnt+=1 end
+        cnt+=2 -- min/max
+        if FloatBtn and FloatBtn.Visible then cnt+=1 end
+        cnt+=1 -- close
+        local totalW = cnt*32 + (cnt-1)*6
+        Controls.Size = UDim2.new(0, totalW, 0, 32)
+        Controls.Position = UDim2.new(1, -totalW - 8, 0.5, -16)
+    end
+    function Window:ShowButton(btnName)
+        local n = string.lower(tostring(btnName))
+        if n == "search" or n == "searchbtn" then if SearchBtn then SearchBtn.Visible = true end showSearch = true end
+        if n == "theme" or n == "settings" or n == "themebtn" or n == "settingsbtn" then if ThemeBtn then ThemeBtn.Visible = true end showSettings = true end
+        if n == "float" or n == "floating" or n == "floatbtn" or n == "floatingbtn" then if FloatBtn then FloatBtn.Visible = true end showFloat = true end
+        local cnt = 0
+        if SearchBtn and SearchBtn.Visible then cnt+=1 end
+        if ThemeBtn and ThemeBtn.Visible then cnt+=1 end
+        cnt+=2
+        if FloatBtn and FloatBtn.Visible then cnt+=1 end
+        cnt+=1
+        local totalW = cnt*32 + (cnt-1)*6
+        Controls.Size = UDim2.new(0, totalW, 0, 32)
+        Controls.Position = UDim2.new(1, -totalW - 8, 0.5, -16)
+    end
+    function Window:RemoveButton(btnName) self:HideButton(btnName) end
+    function Window:DisableButton(btnName) self:HideButton(btnName) end
+    function Window:EnableButton(btnName) self:ShowButton(btnName) end
+    function Window:SetButtonVisible(btnName, visible)
+        if visible then self:ShowButton(btnName) else self:HideButton(btnName) end
+    end
+
+    -- ===== دروب داون يغير الثيم - المطور يقدر يسويه بكيفه =====
+    -- مثال: Window:CreateThemeDropdown({Title = "Theme", Parent = TabPage, Callback = function(theme) print(theme) end})
+    function Window:CreateThemeDropdown(Cfg)
+        Cfg = Cfg or {}
+        local parent = Cfg.Parent or Cfg.TabPage
+        local targetPage = nil
+        if parent and parent:IsA("ScrollingFrame") then targetPage = parent
+        else
+            -- اذا ما حدد Parent ناخذ اول تاب او Container الاول
+            for _, t in pairs(Tabs) do if t.Page then targetPage = t.Page break end end
+        end
+        if not targetPage then targetPage = Container:GetChildren()[1] end
+
+        local themeNames = {}
+        for name,_ in pairs(Themes) do table.insert(themeNames, name) end
+        table.sort(themeNames)
+
+        -- نستخدم نفس منطق CreateDropdown الاصلي بس مبسط للثيمات
+        local Frame = Instance.new("Frame", targetPage or TabPage)
+        Frame.Size = UDim2.new(1,-4,0,38)
+        Frame.BackgroundColor3 = CurrentTheme.ElementBg
+        Frame.ClipsDescendants = true
+        Corner(Frame, 9)
+        RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+
+        local Btn = Instance.new("TextButton", Frame)
+        Btn.Size = UDim2.new(1,0,0,38)
+        Btn.BackgroundTransparency = 1
+        Btn.Text = (Cfg.Title or "Theme").." : "..(self:GetCurrentThemeName())
+        Btn.Font = Enum.Font.GothamMedium
+        Btn.TextSize = 12
+        Btn.TextColor3 = CurrentTheme.Text
+        RegisterThemable(Btn, "TextColor3", "Text")
+
+        local List = Instance.new("ScrollingFrame", Frame)
+        List.Position = UDim2.new(0,0,0,38)
+        List.Size = UDim2.new(1,0,0,0)
+        List.BackgroundTransparency = 1
+        List.CanvasSize = UDim2.new(0,0,0, #themeNames * 32)
+        List.ScrollBarThickness = 4
+        List.ScrollBarImageColor3 = CurrentTheme.Accent
+        RegisterThemable(List, "ScrollBar", "Accent")
+
+        local ll = Instance.new("UIListLayout", List)
+        ll.Padding = UDim.new(0,2)
+
+        local Open = false
+        Btn.MouseButton1Click:Connect(function()
+            Open = not Open
+            if Open then
+                local h = math.clamp(#themeNames * 30, 30, 210)
+                List.Size = UDim2.new(1,0,0,h)
+                Tween(Frame, {Size = UDim2.new(1,-4,0, 38 + h + 6)}, 0.2)
+            else
+                Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
+            end
+        end)
+
+        for _, thName in ipairs(themeNames) do
+            local O = Instance.new("TextButton", List)
+            O.Size = UDim2.new(1,-4,0,28)
+            O.BackgroundColor3 = CurrentTheme.ElementBg2
+            O.Text = thName
+            O.Font = Enum.Font.Gotham
+            O.TextSize = 11
+            O.TextColor3 = CurrentTheme.Text
+            Corner(O, 6)
+            RegisterThemable(O, "BackgroundColor3", "ElementBg2")
+            O.MouseButton1Click:Connect(function()
+                self:SetTheme(thName)
+                Btn.Text = (Cfg.Title or "Theme").." : "..thName
+                Open = false
+                Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
+                if Cfg.Callback then pcall(Cfg.Callback, thName, Themes[thName]) end
+                if Cfg.OnChanged then pcall(Cfg.OnChanged, thName, Themes[thName]) end
+            end)
+        end
+
+        local api = {}
+        function api:Set(th) self:SetTheme(th) Btn.Text = (Cfg.Title or "Theme").." : "..th return api end
+        function api:Get() return Window:GetCurrentThemeName() end
+        return api
+    end
+
+    -- زر يغير الثيم - سايكل بين الثيمات
+    function Window:CreateThemeButton(Cfg)
+        Cfg = Cfg or {}
+        local parent = Cfg.Parent
+        local targetPage = nil
+        if parent and parent:IsA("ScrollingFrame") then targetPage = parent else for _, t in pairs(Tabs) do if t.Page then targetPage = t.Page break end end end
+        local themeNames = {}
+        for name,_ in pairs(Themes) do table.insert(themeNames, name) end
+        table.sort(themeNames)
+        local idx = 1
+        for i,n in ipairs(themeNames) do if n == self:GetCurrentThemeName() then idx = i break end end
+
+        local Btn = Instance.new("TextButton", targetPage)
+        Btn.Size = UDim2.new(1,-4,0,34)
+        Btn.BackgroundColor3 = CurrentTheme.ElementBg2
+        Btn.Text = Cfg.Title or "Change Theme: "..themeNames[idx]
+        Btn.Font = Enum.Font.GothamMedium
+        Btn.TextSize = 12
+        Btn.TextColor3 = CurrentTheme.Text
+        Corner(Btn, 8)
+        RegisterThemable(Btn, "BackgroundColor3", "ElementBg2")
+        Btn.MouseButton1Click:Connect(function()
+            idx = idx + 1
+            if idx > #themeNames then idx = 1 end
+            self:SetTheme(themeNames[idx])
+            Btn.Text = (Cfg.Title and Cfg.Title.." : " or "Theme: ")..themeNames[idx]
+            if Cfg.Callback then pcall(Cfg.Callback, themeNames[idx]) end
+        end)
+        local api = {}
+        function api:Set(th) Window:SetTheme(th) return api end
+        function api:Get() return Window:GetCurrentThemeName() end
+        function api:Fire() Btn.MouseButton1Click:Fire() end
+        return api
+    end
+
+    -- زر يطفي كلشي - المطور يقدر يخليه باي مكان
+    function Window:CreateDestroyButton(Cfg)
+        Cfg = Cfg or {}
+        local parent = Cfg.Parent
+        local targetPage = nil
+        if parent and parent:IsA("ScrollingFrame") then targetPage = parent else for _, t in pairs(Tabs) do if t.Page then targetPage = t.Page break end end end
+        local Btn = Instance.new("TextButton", targetPage)
+        Btn.Size = UDim2.new(1,-4,0,34)
+        Btn.BackgroundColor3 = Cfg.Color or CurrentTheme.CloseBg or Color3.fromRGB(80,30,35)
+        Btn.Text = Cfg.Title or Cfg.Text or "Destroy UI / Close All"
+        Btn.Font = Enum.Font.GothamBold
+        Btn.TextSize = 13
+        Btn.TextColor3 = Color3.new(1,1,1)
+        Corner(Btn, 8)
+        Btn.MouseButton1Click:Connect(function()
+            if Cfg.Callback then pcall(Cfg.Callback) end
+            self:Destroy()
+        end)
+        local api = {}
+        function api:SetTitle(t) Btn.Text = t return api end
+        function api:Fire() Btn.MouseButton1Click:Fire() return api end
+        function api:Destroy() Btn:Destroy() end
+        return api
+    end
+    function Window:CreateCloseButton(Cfg) return self:CreateDestroyButton(Cfg) end
+    function Window:CreateShutdownButton(Cfg) return self:CreateDestroyButton(Cfg) end
+    function Window:CreateUnloadButton(Cfg) return self:CreateDestroyButton(Cfg) end
+
+    -- للمطور يقدر يسوي زر دروب داون ثيم بكيفه - alias
+    function Window:CreateThemeChanger(Cfg) return self:CreateThemeDropdown(Cfg) end
+    function Window:CreateThemeCycle(Cfg) return self:CreateThemeButton(Cfg) end
+
+    -- دالة عامة لتغيير الثيم من برا - GGH level
+    GGH.Themes = Themes
+    GGH.SetTheme = function(_, name) return Window:SetTheme(name) end
+    GGH.GetThemes = function() return Window:GetThemes() end
+    GGH.DestroyUI = function() Window:Destroy() end
+    GGH.CloseUI = function() Window:Destroy() end
+    GGH.Unload = function() Window:Destroy() end
+    GGH.Shutdown = function() Window:Destroy() end
 
         return Window
 end
