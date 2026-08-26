@@ -2666,17 +2666,17 @@ local function CreateColorpicker(Cfg)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
                 ov.BackgroundColor3 = Color3.new(0,0,0)
-                ov.BackgroundTransparency = 1
+                ov.BackgroundTransparency = 0.35 -- Background visible
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
                 local main = Instance.new("Frame", ov)
-                main.AnchorPoint = Vector2.new(0.5,0.5)
-                main.Position = UDim2.new(0.5,0,0.5,0)
+                main.AnchorPoint = Vector2.new(0.5,0.5) -- Centered
+                main.Position = UDim2.new(0.5,0,0.5,0) -- Centered fixed
                 local baseW = Main.AbsoluteSize.X
                 local baseH = Main.AbsoluteSize.Y
-                local pickerW = math.clamp(baseW*0.95, 360, 600)
-                local pickerH = math.clamp(baseH*0.85, 240, 340)
+                local pickerW = math.clamp(baseW*0.9, 320, 420) -- Fixed: no outside
+                local pickerH = math.clamp(baseH*0.75, 200, 280) -- Fixed: no outside
                 main.Size = UDim2.new(0,pickerW,0,pickerH)
                 main.BackgroundColor3 = Color3.fromRGB(28,28,32)
                 main.BackgroundTransparency = 0
@@ -2696,7 +2696,7 @@ local function CreateColorpicker(Cfg)
                     -- اذا بالوسط نحسب حدوده
                     if pos.X.Scale==0.5 then
                         -- الوسط آمن، بس نتأكد الحجم
-                        main.Position = UDim2.new(0.5,0,0.5,0)
+                        main.Position = UDim2.new(0.5,0,0.5,0) -- Centered fixed
                         -- بعد الوسط نعمل clamp اضافي
                         task.wait()
                         local absPos = main.AbsolutePosition
@@ -2715,7 +2715,7 @@ local function CreateColorpicker(Cfg)
                 Corner(main, 16)
                 Stroke(main, CurrentTheme.Stroke, 2)
                 local cont = Instance.new("Frame", main)
-                cont.Size = UDim2.new(1,-20,1,-20)
+                cont.Size = UDim2.new(1,-20,1,-20) -- Fixed bigger to fit colors
                 cont.Position = UDim2.new(0,10,0,10)
                 cont.BackgroundTransparency = 1
                 cont.ClipsDescendants = false
@@ -2725,7 +2725,7 @@ local function CreateColorpicker(Cfg)
                 layout.Padding = UDim.new(0,12)
                 layout.VerticalAlignment = Enum.VerticalAlignment.Center
                 local svFrame = Instance.new("ImageLabel", cont)
-                svFrame.Size = UDim2.new(0,220,0,220)
+                svFrame.Size = UDim2.new(0,180,0,180) -- Fixed inside
                 svFrame.Image = "rbxassetid://4155801252"
                 svFrame.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
                 svFrame.ZIndex = 303
@@ -2757,7 +2757,8 @@ local function CreateColorpicker(Cfg)
                 Corner(hueMarker, 3)
                 Stroke(hueMarker, Color3.new(0,0,0), 1)
                 local right = Instance.new("Frame", cont)
-                right.Size = UDim2.new(0,200,0,200) -- Fixed: smaller to stay inside
+                right.Size = UDim2.new(0,160,0,180) -- Inside, not outside
+ right.Position = UDim2.new(0,0,0,0)
                 right.BackgroundColor3 = Color3.fromRGB(40,41,48)
                 right.BackgroundTransparency = ElementTrans
                 right.ZIndex = 302
