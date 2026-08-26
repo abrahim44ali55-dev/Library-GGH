@@ -20,26 +20,7 @@ end
     end
 
 
-    
--- === GGH COMPAT LAYER: normalize config (supports {"Title"} style) ===
-local function NormalizeConfig(cfg, fallbackKey)
-    cfg = cfg or {}
-    if type(cfg) ~= "table" then
-        return {[fallbackKey or "Title"]=tostring(cfg)}
-    end
-    -- if passed as array {"Section"} -> first value is title
-    if cfg[1] ~= nil and cfg.Title == nil and cfg.Name == nil and cfg.Text == nil then
-        cfg.Title = cfg[1]
-    end
-    if cfg[1] ~= nil and cfg.Text == nil and (fallbackKey=="Text" or fallbackKey=="Content") then
-        cfg.Text = cfg[1]
-    end
-    -- support Title as first arg for Section style {"Section"}
-    if cfg.Title == nil and cfg.Name ~= nil then cfg.Title = cfg.Name end
-    return cfg
-end
-
-local function Corner(p,r)
+    local function Corner(p,r)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, r or 8)
     c.Parent = p
@@ -2076,7 +2057,6 @@ function GGH:CreateWindow(Config)
         table.insert(Tabs, {Button = TabButton, Page = TabPage})
 
         local function CreateSection(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             local SecFrame = Instance.new("Frame", TabPage)
             SecFrame.Size = UDim2.new(1,-4,0,26)
             SecFrame.BackgroundTransparency = 1
@@ -2111,7 +2091,6 @@ function GGH:CreateWindow(Config)
         end
 
         local function CreateParagraph(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Text")
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,60)
             Frame.AutomaticSize = Enum.AutomaticSize.Y
@@ -2140,7 +2119,6 @@ function GGH:CreateWindow(Config)
         end
 
         local function CreateButton(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             local Btn = Instance.new("TextButton", TabPage)
             Btn.Size = UDim2.new(1,-4,0,34)
             Btn.BackgroundColor3 = CurrentTheme.ElementBg2
@@ -2177,7 +2155,6 @@ function GGH:CreateWindow(Config)
         end
 
         local function CreateToggle(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             local State = Cfg.Default or false
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,36)
@@ -2242,7 +2219,6 @@ function GGH:CreateWindow(Config)
         end
 
         local function CreateSlider(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             Cfg.Min = Cfg.Min or 0
             Cfg.Max = Cfg.Max or 100
             Cfg.Default = Cfg.Default or Cfg.Min
@@ -2344,7 +2320,6 @@ function GGH:CreateWindow(Config)
         end
 
         local function CreateInput(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
@@ -2384,7 +2359,6 @@ function GGH:CreateWindow(Config)
 
 -- [FIXED DROPDOWN: 7 items + scroll]
 local function CreateDropdown(Cfg)
-    Cfg = NormalizeConfig(Cfg, "Title")
     local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
     Cfg.Options = Cfg.Options or {}
     local Selected = Cfg.Default or Cfg.Options[1]
@@ -2596,7 +2570,6 @@ end
 
 
 local function CreateColorpicker(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             Cfg.Title = Cfg.Title or Cfg.Name or "Colorpicker"
             Cfg.Default = Cfg.Default or Cfg.Color or CurrentTheme.Accent
             Cfg.Mode = Cfg.Mode or Cfg.ColorMode or "Player"
@@ -2937,7 +2910,6 @@ local function CreateColorpicker(Cfg)
         end
 
         local function CreateKeybind(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             local Key = Cfg.Default or Enum.KeyCode.F
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
@@ -2979,7 +2951,6 @@ local function CreateColorpicker(Cfg)
         end
 
         local function CreateCode(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Code")
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,80)
             Frame.BackgroundColor3 = CurrentTheme.TabListBg
@@ -3005,7 +2976,6 @@ local function CreateColorpicker(Cfg)
         end
 
         local function CreateLabel(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Text")
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,24)
             Frame.AutomaticSize = Enum.AutomaticSize.Y
@@ -3031,7 +3001,6 @@ local function CreateColorpicker(Cfg)
         end
 
         local function CreateSeparator(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             Cfg = Cfg or {}
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,16)
@@ -3071,7 +3040,6 @@ local function CreateColorpicker(Cfg)
         end
 
         local function CreateImage(Cfg)
-            Cfg = NormalizeConfig(Cfg, "Title")
             Cfg = Cfg or {}
             local function extractId(text)
                 if not text then return nil end
@@ -3186,9 +3154,20 @@ local Elements = {}
             return api
         end
 
+
         function Elements:Add(Type, Cfg)
             Cfg = Cfg or {}
+            -- Support {"Title"} style
+            if type(Cfg)=="table" and Cfg[1]~=nil and Cfg.Title==nil and Cfg.Name==nil and Cfg.Text==nil then
+                if Type=="section" or Type=="label" or Type=="separator" or Type=="button" or Type=="toggle" or Type=="slider" or Type=="input" or Type=="dropdown" or Type=="colorpicker" or Type=="keybind" or Type=="code" or Type=="paragraph" or Type=="image" then
+                    Cfg.Title = Cfg[1]
+                end
+            end
+            if type(Cfg)=="table" and Cfg[1]~=nil and Cfg.Text==nil and (Type=="paragraph" or Type=="label") then
+                Cfg.Text = Cfg[1]
+            end
             Type = string.lower(tostring(Type))
+
             local api = nil
             if Type == "section" then api = CreateSection(Cfg)
             elseif Type == "paragraph" then api = CreateParagraph(Cfg)
@@ -3248,13 +3227,6 @@ local Elements = {}
         function Elements:AddSeparator(Cfg) return self:Add("Separator", Cfg) end
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
         function Elements:AddImage(Cfg) return self:Add("Image", Cfg) end
-        -- aliases for dot style without Add (support both cases)
-        Elements.CreateButton = Elements.Button
-        Elements.CreateToggle = Elements.Toggle
-        Elements.CreateSection = Elements.Section
-        Elements.CreateDropdown = Elements.Dropdown
-        Elements.NewButton = Elements.Button
-        Elements.NewSection = Elements.Section
         return Elements
     end
     function Window:AddTab(Cfg)
@@ -3344,36 +3316,18 @@ function Window:SetSizePreset(presetName)
     function Window:Destroy()
         pcall(function() ScreenGui:Destroy() end)
         pcall(function() if FloatingIcon then FloatingIcon:Destroy() end end)
-        -- disable all tracked elements (fire off callbacks if needed)
-        for _, t in pairs(Tabs) do
-            if t.Page then
-                for _, child in ipairs(t.Page:GetChildren()) do
-                    pcall(function() child.Visible = false end)
-                end
-            end
-        end
     end
     function Window:Close() self:Destroy() end
     function Window:ToggleUI(state)
-        if state == nil then
-            Main.Visible = not Main.Visible
-        else
-            Main.Visible = state
-        end
+        if state == nil then Main.Visible = not Main.Visible else Main.Visible = state end
     end
     function Window:CreateThemeDropdown(tabObj, cfg)
         cfg = cfg or {}
         cfg.Title = cfg.Title or "Theme Picker"
         cfg.Options = cfg.Options or {}
-        if #cfg.Options == 0 then
-            for k,_ in pairs(Themes) do table.insert(cfg.Options, k) end
-            table.sort(cfg.Options)
-        end
-        local originalCb = cfg.Callback
-        cfg.Callback = function(v)
-            self:SetTheme(v)
-            if originalCb then pcall(originalCb, v) end
-        end
+        if #cfg.Options == 0 then for k,_ in pairs(Themes) do table.insert(cfg.Options, k) end table.sort(cfg.Options) end
+        local orig = cfg.Callback
+        cfg.Callback = function(v) self:SetTheme(v) if orig then pcall(orig, v) end end
         return tabObj:Dropdown(cfg)
     end
 
@@ -3691,67 +3645,40 @@ GGH.KeySystem = GGH.MakeKeySystem
 GGH.AddKeySystem = GGH.MakeKeySystem
 
 
--- === GGH COMPAT: Support multiple library names and window creation syntaxes (5+ ways) ===
--- Way 1: GGH:CreateWindow({Title=""}) -- original
--- Way 2: GGH:MakeWindow({Title=""}) -- redzlib style
--- Way 3: GGH.CreateWindow({}) -- WindUI style with dot
--- Way 4: GGH:CreateWindow(Title, SubTitle) alternative?
--- Way 5: Window = GGH:Window({}) / GGH:Make({...})
-
+-- === GGH COMPAT LAYER - 5+ Methods Support ===
 GGH.MakeWindow = GGH.CreateWindow
 GGH.Create = GGH.CreateWindow
 GGH.Make = GGH.CreateWindow
 GGH.Window = GGH.CreateWindow
 GGH.NewWindow = GGH.CreateWindow
-
--- expose themes list
+GGH.ThemesList = {}
+for k,_ in pairs(Themes) do table.insert(GGH.ThemesList, k) end
+table.sort(GGH.ThemesList)
 GGH.Themes = Themes
-function GGH:GetThemes()
-    local list = {}
-    for k,_ in pairs(Themes) do table.insert(list, k) end
-    table.sort(list)
-    return list
-end
-function GGH:SetTheme(name)
-    -- global setter if window exists, will be overwritten per window
-    if Themes[name] then
-        -- try to find any open window and apply (last window wins)
-        return true
-    end
-    return false
-end
+function GGH:GetThemes() return self.ThemesList end
 function GGH:Destroy()
     for _, gui in ipairs(GetGuiParent():GetChildren()) do
-        if gui.Name == "GGH_Library" or gui.Name == "GGH_KeySystem" then
-            pcall(function() gui:Destroy() end)
-        end
+        if gui.Name == "GGH_Library" or gui.Name == "GGH_KeySystem" then pcall(function() gui:Destroy() end) end
     end
 end
 GGH.Close = GGH.Destroy
 GGH.Unload = GGH.Destroy
-
--- Global aliases for other library names (kept internal, library name stays GGH)
 if not rawget(getfenv(), "redzlib") then
-    rawget(getfenv(), "redzlib") = setmetatable({}, {
-        __index = function(_, k)
-            if k=="MakeWindow" or k=="Make" or k=="CreateWindow" or k=="Window" then
-                return function(_, cfg) return GGH:CreateWindow(cfg) end
-            end
-            return GGH[k]
+    rawget(getfenv(), "redzlib") = setmetatable({}, {__index = function(_, k)
+        if k=="MakeWindow" or k=="Make" or k=="CreateWindow" or k=="Window" then
+            return function(_, cfg) return GGH:CreateWindow(cfg) end
         end
-    })
+        return GGH[k]
+    end})
 end
 if not rawget(getfenv(), "WindUI") then
-    rawget(getfenv(), "WindUI") = setmetatable({}, {
-        __index = function(_, k)
-            if k=="CreateWindow" or k=="MakeWindow" or k=="NewWindow" then
-                return function(_, cfg) return GGH:CreateWindow(cfg) end
-            end
-            return GGH[k]
+    rawget(getfenv(), "WindUI") = setmetatable({}, {__index = function(_, k)
+        if k=="CreateWindow" or k=="MakeWindow" or k=="NewWindow" then
+            return function(_, cfg) return GGH:CreateWindow(cfg) end
         end
-    })
+        return GGH[k]
+    end})
 end
--- Also expose as globals for require style
 getfenv().GGH = GGH
 
 
