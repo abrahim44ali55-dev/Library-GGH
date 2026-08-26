@@ -99,39 +99,6 @@ local function GetSafePickerPosition(anchorBtn, pickerSize, screenGui)
 end
 
 
-
-local function NormalizeConfig(Cfg, defaultKey)
-    if not Cfg then return {} end
-    if type(Cfg) == "string" then
-        local t = {}
-        t[defaultKey or "Title"] = Cfg
-        return t
-    end
-    if type(Cfg) == "table" then
-        -- support array style {"Something"}
-        if Cfg[1] ~= nil and Cfg.Title == nil and Cfg.Name == nil and Cfg.Text == nil then
-            local t = {}
-            t[defaultKey or "Title"] = Cfg[1]
-            -- copy other keys if any
-            for k,v in pairs(Cfg) do
-                if type(k) ~= "number" then t[k]=v end
-            end
-            return t
-        end
-        -- support {Title="x"} already fine, also support {Name="x"}
-        if Cfg.Title == nil and Cfg.Name ~= nil then Cfg.Title = Cfg.Name end
-        if Cfg.Title == nil and Cfg.Text ~= nil then Cfg.Title = Cfg.Text end
-        return Cfg
-    end
-    return {}
-end
-
-local function NormalizeOptions(Options)
-    if not Options then return {} end
-    if type(Options) == "table" and Options[1] ~= nil then return Options end
-    return {}
-end
-
 local Themes = {
     ["Dark"] = {
         MainBg = Color3.fromRGB(18,18,22),
@@ -1404,16 +1371,18 @@ function GGH:CreateWindow(Config)
     SearchClose.TextColor3 = CurrentTheme.Text
     SearchClose.ZIndex = 91
     Corner(SearchClose, 7)
+    -- ===== NEW: ThemeDropdown مرتب نفس ستايل المكتبة + بدون شفافية + توجل حفظ =====
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
-    ThemeDropdown.Size = UDim2.new(0,200,0,0)
-    ThemeDropdown.Position = UDim2.new(1,-208,0,56)
+    ThemeDropdown.Size = UDim2.new(0,220,0,0)
+    ThemeDropdown.Position = UDim2.new(1,-228,0,56)
     ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
     ThemeDropdown.Visible = false
     ThemeDropdown.ZIndex = 100
     ThemeDropdown.ClipsDescendants = true
     Corner(ThemeDropdown, 12)
     Stroke(ThemeDropdown, CurrentTheme.Stroke, 1)
+
     local ThemeList = Instance.new("ScrollingFrame", ThemeDropdown)
     ThemeList.Size = UDim2.new(1,-8,1,-8)
     ThemeList.Position = UDim2.new(0,4,0,4)
@@ -1430,44 +1399,63 @@ function GGH:CreateWindow(Config)
     TL.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP = Instance.new("UIPadding", ThemeList)
     TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
+
+    -- Header مرتب
     local ThemeHeader = Instance.new("TextLabel", ThemeList)
-    ThemeHeader.Size = UDim2.new(1,0,0,18)
+    ThemeHeader.Size = UDim2.new(1,0,0,20)
     ThemeHeader.BackgroundTransparency = 1
     ThemeHeader.Text = "THEMES"
     ThemeHeader.Font = Enum.Font.GothamBold
-    ThemeHeader.TextSize = 10
-    ThemeHeader.TextColor3 = CurrentTheme.SubText
+    ThemeHeader.TextSize = 11
+    ThemeHeader.TextColor3 = CurrentTheme.Text
     ThemeHeader.TextXAlignment = Enum.TextXAlignment.Left
     ThemeHeader.LayoutOrder = -100
-    local TransLabel = Instance.new("TextLabel", ThemeList)
-    TransLabel.Size = UDim2.new(1,0,0,14)
-    TransLabel.BackgroundTransparency = 1
-    TransLabel.Text = "TRANSPARENCY (0-100)"
-    TransLabel.Font = Enum.Font.GothamBold
-    TransLabel.TextSize = 9
-    TransLabel.TextColor3 = CurrentTheme.SubText
-    TransLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TransLabel.LayoutOrder = -20
-    local TransBox = Instance.new("TextBox", ThemeList)
-    TransBox.Size = UDim2.new(1,0,0,26)
-    TransBox.BackgroundColor3 = CurrentTheme.ElementBg2
-    TransBox.PlaceholderText = "0-100"
-    TransBox.Text = "0"
-    TransBox.Font = Enum.Font.Gotham
-    TransBox.TextSize = 11
-    TransBox.TextColor3 = CurrentTheme.Text
-    TransBox.LayoutOrder = -19
-    Corner(TransBox, 6)
-    TransBox.FocusLost:Connect(function()
-        local num = tonumber(TransBox.Text) or 0
-        num = math.clamp(num, 0, 100)
-        local rel = num/100
-        WindowTrans = rel*0.7
-        Main.BackgroundTransparency = WindowTrans
-        Header.BackgroundTransparency = WindowTrans
-        HeaderFix.BackgroundTransparency = WindowTrans
-        TabList.BackgroundTransparency = WindowTrans
-    end)
+    AddTextStroke(ThemeHeader)
+
+    -- ===== توجل حفظ الاعدادات - يظهر اول شي =====
+    local SaveToggleFrame = Instance.new("Frame", ThemeList)
+    SaveToggleFrame.Size = UDim2.new(1,0,0,38)
+    SaveToggleFrame.BackgroundColor3 = CurrentTheme.ElementBg2
+    SaveToggleFrame.LayoutOrder = -90
+    Corner(SaveToggleFrame, 8)
+    Stroke(SaveToggleFrame, CurrentTheme.Stroke, 1)
+
+    local SaveTitle = Instance.new("TextLabel", SaveToggleFrame)
+    SaveTitle.Size = UDim2.new(1,-56,1,0)
+    SaveTitle.Position = UDim2.new(0,10,0,0)
+    SaveTitle.BackgroundTransparency = 1
+    SaveTitle.Text = "Save Settings"
+    SaveTitle.Font = Enum.Font.GothamMedium
+    SaveTitle.TextSize = 12
+    SaveTitle.TextColor3 = CurrentTheme.Text
+    SaveTitle.TextXAlignment = Enum.TextXAlignment.Left
+    AddTextStroke(SaveTitle)
+
+    local SaveToggleBg = Instance.new("Frame", SaveToggleFrame)
+    SaveToggleBg.Size = UDim2.new(0,44,0,22)
+    SaveToggleBg.Position = UDim2.new(1,-50,0.5,-11)
+    SaveToggleBg.BackgroundColor3 = CurrentTheme.ElementBg
+    Corner(SaveToggleBg, 11)
+
+    local SaveCircle = Instance.new("Frame", SaveToggleBg)
+    SaveCircle.Size = UDim2.new(0,16,0,16)
+    SaveCircle.Position = UDim2.new(0,3,0.5,-8)
+    SaveCircle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Corner(SaveCircle, 8)
+
+    local SaveToggleBtn = Instance.new("TextButton", SaveToggleFrame)
+    SaveToggleBtn.Size = UDim2.new(1,0,1,0)
+    SaveToggleBtn.BackgroundTransparency = 1
+    SaveToggleBtn.Text = ""
+
+    -- سطر فاصل
+    local Sep1 = Instance.new("Frame", ThemeList)
+    Sep1.Size = UDim2.new(1,0,0,1)
+    Sep1.BackgroundColor3 = CurrentTheme.Stroke
+    Sep1.BackgroundTransparency = 0.5
+    Sep1.LayoutOrder = -85
+
+    -- ملاحظة: التحكم بالشفافية انشال - بس المطور يحدده من Config.WindowTransparency
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,140,1,-64)
@@ -1739,11 +1727,157 @@ function GGH:CreateWindow(Config)
     end)
     NoBtn.MouseButton1Click:Connect(function() ConfirmFrame.Visible = false ConfirmFrame.Size = Main.Size end)
     YesBtn.MouseButton1Click:Connect(function() Tween(Main, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) Tween(ConfirmFrame, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) task.wait(0.25) ScreenGui:Destroy() end)
+
+    -- ===== NEW: نظام حفظ الاعدادات الشغال والحلو =====
+    local SaveSystem = {}
+    SaveSystem.Enabled = false
+    SaveSystem.FileName = Config.SaveFile or Config.SaveFileName or Config.ConfigName or ("GGH_"..Title:gsub("[^%w]","_")..".json")
+    SaveSystem.Folder = Config.SaveFolder or "GGH_Saves"
+    SaveSystem.Data = {}
+    SaveSystem.Elements = {} -- {key = api}
+
+    -- خدمات الحفظ
+    local HttpService = game:GetService("HttpService")
+    local function IsExploit()
+        return (writefile and readfile and isfile and makefolder and isfolder) ~= nil
+    end
+
+    function SaveSystem:Init()
+        if not IsExploit() then
+            SaveSystem.Enabled = false
+            return
+        end
+        pcall(function()
+            if not isfolder(SaveSystem.Folder) then makefolder(SaveSystem.Folder) end
+        end)
+        -- تحميل اذا موجود
+        pcall(function()
+            local path = SaveSystem.Folder.."/"..SaveSystem.FileName
+            if isfile(path) then
+                local content = readfile(path)
+                SaveSystem.Data = HttpService:JSONDecode(content)
+                if SaveSystem.Data._SaveEnabled ~= nil then
+                    SaveSystem.Enabled = SaveSystem.Data._SaveEnabled
+                end
+            end
+        end)
+    end
+
+    function SaveSystem:Save()
+        if not SaveSystem.Enabled then return end
+        if not IsExploit() then return end
+        pcall(function()
+            SaveSystem.Data._SaveEnabled = SaveSystem.Enabled
+            SaveSystem.Data._Theme = CurrentThemeName or DefaultTheme
+            local path = SaveSystem.Folder.."/"..SaveSystem.FileName
+            writefile(path, HttpService:JSONEncode(SaveSystem.Data))
+        end)
+    end
+
+    function SaveSystem:Load()
+        return SaveSystem.Data
+    end
+
+    function SaveSystem:Set(key, value)
+        if not SaveSystem.Enabled then return end
+        SaveSystem.Data[key] = value
+        SaveSystem:Save()
+    end
+
+    function SaveSystem:Get(key, default)
+        if SaveSystem.Data[key] ~= nil then return SaveSystem.Data[key] else return default end
+    end
+
+    function SaveSystem:Register(key, api, defaultValue)
+        SaveSystem.Elements[key] = {api=api, default=defaultValue}
+        -- لو محفوظ رجعه
+        if SaveSystem.Enabled and SaveSystem.Data[key] ~= nil then
+            task.spawn(function()
+                task.wait(0.1)
+                pcall(function()
+                    if api.SetValue then api:SetValue(SaveSystem.Data[key])
+                    elseif api.Set then api:Set(SaveSystem.Data[key]) end
+                end)
+            end)
+        end
+    end
+
+    function SaveSystem:Enable()
+        SaveSystem.Enabled = true
+        SaveSystem.Data._SaveEnabled = true
+        SaveSystem:Save()
+        -- احفظ كل الحالي
+        for k, v in pairs(SaveSystem.Elements) do
+            pcall(function()
+                local val = nil
+                if v.api.GetValue then val = v.api:GetValue()
+                elseif v.api.Get then val = v.api:Get()
+                end
+                if val ~= nil then SaveSystem.Data[k] = val end
+            end)
+        end
+        SaveSystem:Save()
+    end
+
+    function SaveSystem:Disable()
+        SaveSystem.Enabled = false
+        SaveSystem.Data._SaveEnabled = false
+        SaveSystem:Save()
+        -- ما نمسح الملف، بس نوقف الحفظ - المطور اذا يريد يمسح
+        if Config.DeleteOnDisableSave then
+            pcall(function()
+                local path = SaveSystem.Folder.."/"..SaveSystem.FileName
+                if isfile(path) then delfile(path) end
+            end)
+        end
+    end
+
+    SaveSystem:Init()
+    local CurrentThemeName = DefaultTheme
+
+    -- تحديث توجل الحفظ UI
+    task.spawn(function()
+        task.wait(0.2)
+        if SaveToggleBg and SaveCircle then
+            if SaveSystem.Enabled then
+                SaveToggleBg.BackgroundColor3 = CurrentTheme.Accent
+                SaveCircle.Position = UDim2.new(1,-19,0.5,-8)
+            else
+                SaveToggleBg.BackgroundColor3 = CurrentTheme.ElementBg
+                SaveCircle.Position = UDim2.new(0,3,0.5,-8)
+            end
+        end
+    end)
+
+    if SaveToggleBtn then
+        SaveToggleBtn.MouseButton1Click:Connect(function()
+            SaveSystem.Enabled = not SaveSystem.Enabled
+            if SaveSystem.Enabled then
+                Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.Accent}, 0.2)
+                Tween(SaveCircle, {Position = UDim2.new(1,-19,0.5,-8)}, 0.2)
+                SaveSystem:Enable()
+            else
+                Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.2)
+                Tween(SaveCircle, {Position = UDim2.new(0,3,0.5,-8)}, 0.2)
+                SaveSystem:Disable()
+            end
+        end)
+    end
+
+    -- لو المطور مفعل الحفظ من البداية
+    if Config.SaveSettings or Config.AutoSave or Config.SaveConfig or Config.SaveEnabled then
+        SaveSystem.Enabled = true
+        task.spawn(function() task.wait(0.3) SaveSystem:Enable() end)
+    end
+
+
     local ThemableElements = {}
+
     local function RegisterThemable(obj, prop, themeKey) table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey}) end
     local function ApplyTheme(themeName)
         local theme = Themes[themeName]
         if not theme then return end
+        CurrentThemeName = themeName
         local function GetLum(c) return 0.299*c.R + 0.587*c.G + 0.114*c.B end
         local lum = GetLum(theme.MainBg)
         if lum > 0.5 then
@@ -1937,37 +2071,86 @@ function GGH:CreateWindow(Config)
         ThemeOpen = not ThemeOpen 
         if ThemeOpen then
             ThemeDropdown.Visible = true
-            ThemeDropdown.Size = UDim2.new(0,200,0,0)
+            ThemeDropdown.Size = UDim2.new(0,220,0,0)
             local maxH = math.clamp(Main.AbsoluteSize.Y - 80, 150, 360)
-                Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,maxH)}, 0.3)
+                Tween(ThemeDropdown, {Size = UDim2.new(0,220,0,maxH)}, 0.3)
         else
-            Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,0)}, 0.25)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,220,0,0)}, 0.25)
             task.wait(0.25)
             ThemeDropdown.Visible = false
         end
     end) end
 
-    for name, th in pairs(Themes) do
+    -- ===== ثيمات بدروب داون نفس ستايل المكتبة - مرتب وحلو =====
+    local SortedThemes = {}
+    for name,_ in pairs(Themes) do table.insert(SortedThemes, name) end
+    table.sort(SortedThemes)
+
+    for _, name in ipairs(SortedThemes) do
+        local th = Themes[name]
         local Btn = Instance.new("TextButton", ThemeList)
-        Btn.Size = UDim2.new(1,0,0,28)
+        Btn.Size = UDim2.new(1,0,0,32)
         Btn.BackgroundColor3 = th.ElementBg2
+        Btn.BackgroundTransparency = 0
         Btn.Text = name
         Btn.Font = Enum.Font.GothamMedium
-        Btn.TextSize = 11
+        Btn.TextSize = 12
         Btn.TextColor3 = th.Text
         Btn.ZIndex = 102
         Btn.AutoLocalize = true
-        Corner(Btn, 6)
-        Stroke(Btn, th.Accent, 1)
+        Btn.AutoButtonColor = false
+        Corner(Btn, 8)
+        local s = Stroke(Btn, th.Accent, 1)
+        s.Transparency = 0.5
+        RegisterThemable(Btn, "BackgroundColor3", "ElementBg2")
+
+        -- علامة صح لو الثيم الحالي
+        if name == DefaultTheme then
+            Btn.Text = "✓ "..name
+            Btn.BackgroundColor3 = th.Accent
+            Btn.TextColor3 = Color3.new(1,1,1)
+        end
+
+        Btn.MouseEnter:Connect(function()
+            if name ~= CurrentThemeName then
+                Tween(Btn, {BackgroundColor3 = th.ElementBg}, 0.15)
+            end
+        end)
+        Btn.MouseLeave:Connect(function()
+            if name ~= CurrentThemeName then
+                Tween(Btn, {BackgroundColor3 = th.ElementBg2}, 0.15)
+            end
+        end)
+
         Btn.MouseButton1Click:Connect(function() 
             ApplyTheme(name) 
+            CurrentThemeName = name
+            -- حدث كل الازرار
+            for _, child in ipairs(ThemeList:GetChildren()) do
+                if child:IsA("TextButton") and child ~= SaveToggleBtn then
+                    local tName = child.Text:gsub("✓ ","")
+                    if tName == name then
+                        child.Text = "✓ "..tName
+                        Tween(child, {BackgroundColor3 = Themes[tName].Accent}, 0.2)
+                        child.TextColor3 = Color3.new(1,1,1)
+                    else
+                        if Themes[tName] then
+                            child.Text = tName
+                            Tween(child, {BackgroundColor3 = Themes[tName].ElementBg2}, 0.2)
+                            child.TextColor3 = Themes[tName].Text
+                        end
+                    end
+                end
+            end
             ThemeDropdown.Visible = false 
             ThemeOpen = false 
             SubLabel.Text = "Theme: " .. name
-            RestoreWindowSize()
+            if SaveSystem.Enabled then SaveSystem:Set("_Theme", name) end
             if FloatingIcon then
                 FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
             end
+            -- صغر الدروب داون
+            Tween(ThemeDropdown, {Size = UDim2.new(0,220,0,0)}, 0.25)
         end)
     end
     local Window = {}
@@ -1984,7 +2167,7 @@ function GGH:CreateWindow(Config)
         EnsureUnminimizedForPopup()
         if ThemeOpen then
             ThemeOpen = false
-            Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,0)}, 0.25)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,220,0,0)}, 0.25)
             task.wait(0.25)
             ThemeDropdown.Visible = false
         end
@@ -2227,6 +2410,10 @@ function GGH:CreateWindow(Config)
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
                 pcall(function() Cfg.Callback(State) end)
+                if SaveSystem.Enabled then
+                    local key = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
+                    SaveSystem:Set(key, State)
+                end
                 return ToggleAPI
             end
             function ToggleAPI:GetValue() return State end
@@ -2241,13 +2428,35 @@ function GGH:CreateWindow(Config)
             function ToggleAPI:Set(v) return self:SetValue(v) end
             function ToggleAPI:Get() return self:GetValue() end
 
+            local function SaveThisToggle()
+                if SaveSystem.Enabled then
+                    local key = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
+                    SaveSystem:Set(key, State)
+                end
+            end
+
             Btn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
                 State = not State
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
                 Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
                 pcall(function() Cfg.Callback(State) end)
+                SaveThisToggle()
             end)
+
+            -- تسجيل للحفظ التلقائي
+            local saveKey = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
+            if SaveSystem.Enabled then
+                local saved = SaveSystem:Get(saveKey, nil)
+                if saved ~= nil then
+                    State = saved
+                    Bg.BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2
+                    Circle.Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)
+                    task.spawn(function() task.wait(0.1) pcall(function() Cfg.Callback(State) end) end)
+                end
+            end
+            SaveSystem:Register(saveKey, ToggleAPI, State)
+
             return ToggleAPI
         end
 
@@ -2309,6 +2518,10 @@ function GGH:CreateWindow(Config)
                 Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
                 Label.Text = Cfg.Title.." : "..Value
                 pcall(Cfg.Callback or function() end, Value)
+                if SaveSystem.Enabled then
+                    local sKey = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
+                    SaveSystem:Set(sKey, Value)
+                end
             end
             task.spawn(function()
                 task.wait(0.05)
@@ -2337,6 +2550,10 @@ function GGH:CreateWindow(Config)
                 Circle.Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)
                 Label.Text = Cfg.Title.." : "..Value
                 pcall(Cfg.Callback or function() end, Value)
+                if SaveSystem.Enabled then
+                    local sKey = Cfg.SaveKey or Cfg.Flag or (Name.."_"..Cfg.Title)
+                    SaveSystem:Set(sKey, Value)
+                end
                 return SliderAPI
             end
             function SliderAPI:GetValue() return Value end
@@ -3223,73 +3440,19 @@ local Elements = {}
             end
         end
         function Elements:GetAll() return AllElements end
-        -- Original API
-        function Elements:Section(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Section", Cfg) end
-        function Elements:Paragraph(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Paragraph", Cfg) end
-        function Elements:Button(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Button", Cfg) end
-        function Elements:Toggle(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Toggle", Cfg) end
-        function Elements:Slider(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Slider", Cfg) end
-        function Elements:Input(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Input", Cfg) end
-        function Elements:Dropdown(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Dropdown", Cfg) end
-        function Elements:Colorpicker(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Colorpicker", Cfg) end
-        function Elements:Keybind(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Keybind", Cfg) end
-        function Elements:Code(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Code", Cfg) end
-        function Elements:Label(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Label", Cfg) end
-        function Elements:Separator(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Separator", Cfg) end
-        function Elements:Image(Cfg) Cfg = NormalizeConfig(Cfg,"Title") return self:Add("Image", Cfg) end
-
-        -- Aliases for Redz / WindUI / Tab1 compatibility
-        Elements.AddSection = Elements.Section
-        Elements.CreateSection = Elements.Section
-        Elements.AddParagrah = Elements.Paragraph
-        Elements.AddParagraph = Elements.Paragraph
-        Elements.CreateParagraph = Elements.Paragraph
-
-        Elements.AddButton = Elements.Button
-        Elements.CreateButton = Elements.Button
-        Elements.NewButton = Elements.Button
-        Elements.AddToggle = Elements.Toggle
-        Elements.CreateToggle = Elements.Toggle
-        Elements.NewToggle = Elements.Toggle
-        Elements.AddSlider = Elements.Slider
-        Elements.CreateSlider = Elements.Slider
-        Elements.AddInput = Elements.Input
-        Elements.CreateInput = Elements.Input
-        Elements.AddTextbox = Elements.Input
-        Elements.AddDropdown = Elements.Dropdown
-        Elements.CreateDropdown = Elements.Dropdown
-        Elements.AddColorpicker = Elements.Colorpicker
-        Elements.CreateColorpicker = Elements.Colorpicker
-        Elements.AddColorPicker = Elements.Colorpicker
-        Elements.ColorPicker = Elements.Colorpicker
-        Elements.AddKeybind = Elements.Keybind
-        Elements.CreateKeybind = Elements.Keybind
-        Elements.AddLabel = Elements.Label
-        Elements.CreateLabel = Elements.Label
-        Elements.AddSeperator = Elements.Separator
-        Elements.AddSeparator = Elements.Separator
-
-        -- Support lower case direct calls like Tab:section etc via metatable
-        setmetatable(Elements, {
-            __index = function(t,k)
-                local lk = string.lower(k)
-                if lk == "addsection" or lk == "section" or lk == "createsection" then return rawget(t,"Section") end
-                if lk == "addbutton" or lk == "button" or lk == "createbutton" then return rawget(t,"Button") end
-                if lk == "addtoggle" or lk == "toggle" or lk == "createtoggle" then return rawget(t,"Toggle") end
-                if lk == "addslider" or lk == "slider" then return rawget(t,"Slider") end
-                if lk == "adddropdown" or lk == "dropdown" then return rawget(t,"Dropdown") end
-                if lk == "addcolorpicker" or lk == "colorpicker" or lk == "color" then return rawget(t,"Colorpicker") end
-                if lk == "addinput" or lk == "input" or lk == "textbox" then return rawget(t,"Input") end
-                if lk == "addlabel" or lk == "label" then return rawget(t,"Label") end
-                if lk == "addparagraph" or lk == "paragraph" then return rawget(t,"Paragraph") end
-                if lk == "addkeybind" or lk == "keybind" then return rawget(t,"Keybind") end
-                if lk == "addcode" or lk == "code" then return rawget(t,"Code") end
-                if lk == "addseparator" or lk == "separator" then return rawget(t,"Separator") end
-                if lk == "addimage" or lk == "image" then return rawget(t,"Image") end
-                return rawget(t,k)
-            end
-        })
-
+        function Elements:Section(Cfg) return self:Add("Section", Cfg) end
+        function Elements:Paragraph(Cfg) return self:Add("Paragraph", Cfg) end
+        function Elements:Button(Cfg) return self:Add("Button", Cfg) end
+        function Elements:Toggle(Cfg) return self:Add("Toggle", Cfg) end
+        function Elements:Slider(Cfg) return self:Add("Slider", Cfg) end
+        function Elements:Input(Cfg) return self:Add("Input", Cfg) end
+        function Elements:Dropdown(Cfg) return self:Add("Dropdown", Cfg) end
+        function Elements:Colorpicker(Cfg) return self:Add("Colorpicker", Cfg) end
+        function Elements:Keybind(Cfg) return self:Add("Keybind", Cfg) end
+        function Elements:Code(Cfg) return self:Add("Code", Cfg) end
+        function Elements:Label(Cfg) return self:Add("Label", Cfg) end
+        function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
+        function Elements:Image(Cfg) return self:Add("Image", Cfg) end
         return Elements
     end
     function Window:AddTab(Cfg)
@@ -3368,68 +3531,6 @@ function Window:SetSizePreset(presetName)
         end
     end
     function Window:GetTab(name) return Tabs[name] end
-
-
-    -- === GGH EXTENDED API - Multi Syntax + Theme Changer + Destroy ===
-    function Window:SetTheme(themeName)
-        if Themes[themeName] then
-            ApplyTheme(themeName)
-            return true
-        end
-        return false
-    end
-    function Window:ChangeTheme(themeName) return self:SetTheme(themeName) end
-    function Window:SetThemeDropdown() return self:SetTheme(themeName) end
-
-    function Window:Destroy()
-        pcall(function()
-            -- disable all toggles
-            for _, t in pairs(Tabs) do
-                if t.Page then
-                    for _, child in ipairs(t.Page:GetDescendants()) do
-                        if child:IsA("Frame") and child.Name == "ToggleCircle" then
-                            -- attempt to turn off visual
-                        end
-                    end
-                end
-            end
-            if ScreenGui then ScreenGui:Destroy() end
-        end)
-    end
-    function Window:Close() return self:Destroy() end
-    function Window:Unload() return self:Destroy() end
-    function Window:Delete() return self:Destroy() end
-    function Window:Remove() return self:Destroy() end
-    -- Dropdown that changes theme automatically
-    function Window:CreateThemeDropdown(Cfg)
-        Cfg = Cfg or {}
-        Cfg = NormalizeConfig(Cfg,"Title")
-        Cfg.Title = Cfg.Title or "Theme Picker"
-        local themeNames = {}
-        for name,_ in pairs(Themes) do table.insert(themeNames, name) end
-        table.sort(themeNames)
-        Cfg.Options = themeNames
-        Cfg.Default = Cfg.Default or CurrentTheme and "Dark" or themeNames[1]
-        local oldCb = Cfg.Callback
-        Cfg.Callback = function(v)
-            local themeToApply = v
-            if type(v) == "table" then themeToApply = v[1] end
-            self:SetTheme(themeToApply)
-            if oldCb then pcall(oldCb, v) end
-        end
-        -- Create in first tab if exists
-        local firstTab = nil
-        for _,t in pairs(Tabs) do firstTab = t; break end
-        if firstTab and firstTab.Page then
-            -- use generic dropdown creation via first tab's Add? fallback to global
-            -- We'll create a standalone dropdown in first tab
-            local TabAPI = firstTab
-            -- TabAPI is the Tab object? Actually Tabs stores Button/Page, not Elements
-            -- So we directly use CreateDropdown from closure? We'll call self:CreateThemeDropdown via Window? Simplify: return config for developer to use manually
-            return Cfg
-        end
-        return Cfg
-    end
 
         return Window
 end
@@ -3741,82 +3842,5 @@ end
 GGH.CreateKey = GGH.MakeKeySystem
 GGH.KeySystem = GGH.MakeKeySystem
 GGH.AddKeySystem = GGH.MakeKeySystem
-
--- Multi-syntax Window creators - DO NOT mention source, keep name GGH
-GGH.MakeWindow = GGH.CreateWindow
-GGH.Create = GGH.CreateWindow
-GGH.NewWindow = GGH.CreateWindow
-GGH.Window = GGH.CreateWindow
-GGH.CreateUI = GGH.CreateWindow
-GGH.MakeUI = GGH.CreateWindow
-
--- Theme control at GGH level
-function GGH:SetTheme(themeName)
-    -- will be overridden per window but keep global
-    if Themes and Themes[themeName] then
-        -- store as default
-        return true
-    end
-    return false
-end
-function GGH:Destroy()
-    pcall(function()
-        for _, gui in ipairs(GetGuiParent():GetChildren()) do
-            if gui.Name == "GGH_Library" or gui.Name == "GGH_KeySystem" then gui:Destroy() end
-        end
-        local plr = game:GetService("Players").LocalPlayer
-        if plr then
-            local pg = plr:FindFirstChild("PlayerGui")
-            if pg then
-                for _, gui in ipairs(pg:GetChildren()) do
-                    if gui.Name == "GGH_Library" or gui.Name == "GGH_KeySystem" then gui:Destroy() end
-                end
-            end
-        end
-    end)
-end
-GGH.Close = GGH.Destroy
-GGH.Unload = GGH.Destroy
-GGH.Delete = GGH.Destroy
-GGH.Remove = GGH.Destroy
-
--- Compatibility globals so old scripts using redzlib / WindUI still work but internally GGH
-pcall(function()
-    getgenv().GGH = GGH
-    getgenv().redzlib = GGH
-    getgenv().WindUI = GGH
-    getgenv().RedzLib = GGH
-    getgenv().WindUI = GGH
-    -- Also for require style
-    if not getgenv().redz then getgenv().redz = GGH end
-end)
-
--- Extra Tab alias: Tab:AddSection({"Section"}) etc already handled via Elements metatable
--- Also make Window support both :CreateTab and :AddTab and :Tab and :MakeTab
--- Patch via metatable on Window prototype would need runtime, but we alias in CreateWindow return above via __index fallback
--- To ensure Window also has multi-syntax for tabs, we wrap the returned Window with metatable
-local _origCreateWindow = GGH.CreateWindow
-GGH.CreateWindow = function(self, Config)
-    local win = _origCreateWindow(self, Config)
-    -- add tab aliases
-    win.AddTab = win.CreateTab
-    win.MakeTab = win.CreateTab
-    win.NewTab = win.CreateTab
-    win.Tab = win.CreateTab
-    win.CreateTabAsync = win.CreateTab
-    setmetatable(win, {
-        __index = function(t,k)
-            local lk = string.lower(tostring(k))
-            if lk == "addtab" or lk == "maketab" or lk == "newtab" or lk == "tab" or lk == "createtab" then return rawget(t,"CreateTab") end
-            if lk == "settheme" or lk == "changetheme" or lk == "set_theme" then return rawget(t,"SetTheme") end
-            if lk == "destroy" or lk == "close" or lk == "unload" or lk == "delete" or lk == "remove" then return rawget(t,"Destroy") end
-            if lk == "setsizepreset" then return rawget(t,"SetSizePreset") end
-            if lk == "settransparency" then return rawget(t,"SetTransparency") end
-            return rawget(t,k)
-        end
-    })
-    return win
-end
-GGH.MakeWindow = GGH.CreateWindow
 
 return GGH
