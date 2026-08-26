@@ -1423,11 +1423,11 @@ function GGH:CreateWindow(Config)
     SearchClose.TextColor3 = CurrentTheme.Text
     SearchClose.ZIndex = 91
     Corner(SearchClose, 7)
-    -- ===== NEW: ThemeDropdown مرتب نفس ستايل المكتبة + بدون شفافية + توجل حفظ =====
+    -- ===== NEW: Settings Dropdown مرتب - اسمه Settings وبداخله ثيمات بدروب داون =====
     local ThemeDropdown = Instance.new("Frame", Main)
-    ThemeDropdown.Name = "ThemeDropdown"
-    ThemeDropdown.Size = UDim2.new(0,220,0,0)
-    ThemeDropdown.Position = UDim2.new(1,-228,0,56)
+    ThemeDropdown.Name = "SettingsDropdown"
+    ThemeDropdown.Size = UDim2.new(0,240,0,0)
+    ThemeDropdown.Position = UDim2.new(1,-248,0,56)
     ThemeDropdown.BackgroundColor3 = CurrentTheme.ElementBg
     ThemeDropdown.Visible = false
     ThemeDropdown.ZIndex = 100
@@ -1447,16 +1447,16 @@ function GGH:CreateWindow(Config)
     ThemeList.ClipsDescendants = true
     ThemeList.ScrollingDirection = Enum.ScrollingDirection.Y
     local TL = Instance.new("UIListLayout", ThemeList)
-    TL.Padding = UDim.new(0,6)
+    TL.Padding = UDim.new(0,8)
     TL.SortOrder = Enum.SortOrder.LayoutOrder
     local TLP = Instance.new("UIPadding", ThemeList)
     TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
 
-    -- Header مرتب
+    -- Header اسمه SETTINGS مو THEMES
     local ThemeHeader = Instance.new("TextLabel", ThemeList)
     ThemeHeader.Size = UDim2.new(1,0,0,20)
     ThemeHeader.BackgroundTransparency = 1
-    ThemeHeader.Text = "THEMES"
+    ThemeHeader.Text = "SETTINGS"
     ThemeHeader.Font = Enum.Font.GothamBold
     ThemeHeader.TextSize = 11
     ThemeHeader.TextColor3 = CurrentTheme.Text
@@ -1464,7 +1464,7 @@ function GGH:CreateWindow(Config)
     ThemeHeader.LayoutOrder = -100
     AddTextStroke(ThemeHeader)
 
-    -- ===== توجل حفظ الاعدادات - يظهر اول شي =====
+    -- ===== توجل حفظ الاعدادات =====
     local SaveToggleFrame = Instance.new("Frame", ThemeList)
     SaveToggleFrame.Size = UDim2.new(1,0,0,38)
     SaveToggleFrame.BackgroundColor3 = CurrentTheme.ElementBg2
@@ -1507,11 +1507,141 @@ function GGH:CreateWindow(Config)
     Sep1.BackgroundTransparency = 0.5
     Sep1.LayoutOrder = -85
 
+    -- ===== دروب داون الثيمات داخل الاعدادات - نفس ستايل المكتبة =====
+    local ThemeDropdownFrame = Instance.new("Frame", ThemeList)
+    ThemeDropdownFrame.Name = "ThemeDropdownInside"
+    ThemeDropdownFrame.Size = UDim2.new(1,0,0,38)
+    ThemeDropdownFrame.BackgroundColor3 = CurrentTheme.ElementBg2
+    ThemeDropdownFrame.LayoutOrder = -80
+    ThemeDropdownFrame.ClipsDescendants = true
+    Corner(ThemeDropdownFrame, 8)
+    Stroke(ThemeDropdownFrame, CurrentTheme.Stroke, 1)
+
+    local ThemeDropdownBtn = Instance.new("TextButton", ThemeDropdownFrame)
+    ThemeDropdownBtn.Size = UDim2.new(1,0,0,38)
+    ThemeDropdownBtn.BackgroundTransparency = 1
+    ThemeDropdownBtn.Text = "Theme : "..DefaultTheme
+    ThemeDropdownBtn.Font = Enum.Font.GothamMedium
+    ThemeDropdownBtn.TextSize = 12
+    ThemeDropdownBtn.TextColor3 = CurrentTheme.Text
+    ThemeDropdownBtn.TextXAlignment = Enum.TextXAlignment.Left
+    ThemeDropdownBtn.AutoLocalize = true
+    local pad = Instance.new("UIPadding", ThemeDropdownBtn)
+    pad.PaddingLeft = UDim.new(0,10)
+    AddTextStroke(ThemeDropdownBtn)
+
+    local ThemeDropdownArrow = Instance.new("TextLabel", ThemeDropdownFrame)
+    ThemeDropdownArrow.Size = UDim2.new(0,20,0,20)
+    ThemeDropdownArrow.Position = UDim2.new(1,-24,0.5,-10)
+    ThemeDropdownArrow.BackgroundTransparency = 1
+    ThemeDropdownArrow.Text = "▼"
+    ThemeDropdownArrow.Font = Enum.Font.GothamBold
+    ThemeDropdownArrow.TextSize = 10
+    ThemeDropdownArrow.TextColor3 = CurrentTheme.SubText
+
+    local ThemeDropdownList = Instance.new("ScrollingFrame", ThemeDropdownFrame)
+    ThemeDropdownList.Name = "ThemeListInside"
+    ThemeDropdownList.Position = UDim2.new(0,0,0,38)
+    ThemeDropdownList.Size = UDim2.new(1,0,0,0)
+    ThemeDropdownList.BackgroundTransparency = 1
+    ThemeDropdownList.CanvasSize = UDim2.new(0,0,0,0)
+    ThemeDropdownList.ScrollBarThickness = 3
+    ThemeDropdownList.ScrollBarImageColor3 = CurrentTheme.Accent
+    ThemeDropdownList.ScrollingDirection = Enum.ScrollingDirection.Y
+    ThemeDropdownList.ClipsDescendants = true
+    ThemeDropdownList.ZIndex = 102
+
+    local ThemeDropdownLayout = Instance.new("UIListLayout", ThemeDropdownList)
+    ThemeDropdownLayout.Padding = UDim.new(0,4)
+    ThemeDropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local ThemeDropdownPadding = Instance.new("UIPadding", ThemeDropdownList)
+    ThemeDropdownPadding.PaddingTop = UDim.new(0,4)
+    ThemeDropdownPadding.PaddingBottom = UDim.new(0,4)
+    ThemeDropdownPadding.PaddingLeft = UDim.new(0,4)
+    ThemeDropdownPadding.PaddingRight = UDim.new(0,4)
+
     -- ملاحظة: التحكم بالشفافية انشال - بس المطور يحدده من Config.WindowTransparency
 
-    local TabList = Instance.new("ScrollingFrame", Main)
-    TabList.Name = "TabList"
-    TabList.Size = UDim2.new(0,140,1,-64)
+    -- ===== ثيمات بداخل دروب داون الاعدادات - مرتب وحلو =====
+    local SortedThemes = {}
+    for name,_ in pairs(Themes) do table.insert(SortedThemes, name) end
+    table.sort(SortedThemes)
+
+    local ThemeDropdownOpen = false
+    local CurrentThemeLabel = DefaultTheme
+
+    local function UpdateThemeDropdownSize(open)
+        if open then
+            local count = #SortedThemes
+            local visible = math.min(count, 6)
+            local h = visible * 34 + 8
+            ThemeDropdownList.Size = UDim2.new(1,0,0,h)
+            Tween(ThemeDropdownFrame, {Size = UDim2.new(1,0,0, 38 + h + 6)}, 0.25)
+            local totalH = 38 + 1 + 38 + 8 + 38 + h + 20
+            Tween(ThemeDropdown, {Size = UDim2.new(0,240,0, math.clamp(totalH, 120, 350))}, 0.25)
+        else
+            Tween(ThemeDropdownFrame, {Size = UDim2.new(1,0,0,38)}, 0.25)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,240,0, 120)}, 0.25)
+            task.wait(0.1)
+            ThemeDropdownList.Size = UDim2.new(1,0,0,0)
+        end
+    end
+
+    ThemeDropdownBtn.MouseButton1Click:Connect(function()
+        ThemeDropdownOpen = not ThemeDropdownOpen
+        ThemeDropdownArrow.Text = ThemeDropdownOpen and "▲" or "▼"
+        UpdateThemeDropdownSize(ThemeDropdownOpen)
+    end)
+
+    for _, name in ipairs(SortedThemes) do
+        local th = Themes[name]
+        local Btn = Instance.new("TextButton", ThemeDropdownList)
+        Btn.Size = UDim2.new(1,0,0,30)
+        Btn.BackgroundColor3 = th.ElementBg2
+        Btn.Text = name
+        Btn.Font = Enum.Font.GothamMedium
+        Btn.TextSize = 11
+        Btn.TextColor3 = th.Text
+        Btn.ZIndex = 103
+        Corner(Btn, 6)
+        Stroke(Btn, th.Accent, 1).Transparency = 0.6
+        if name == DefaultTheme then
+            Btn.Text = "✓ "..name
+            Btn.BackgroundColor3 = th.Accent
+            Btn.TextColor3 = Color3.new(1,1,1)
+            ThemeDropdownBtn.Text = "Theme : "..name
+        end
+        Btn.MouseButton1Click:Connect(function() 
+            ApplyTheme(name) 
+            CurrentThemeName = name
+            ThemeDropdownBtn.Text = "Theme : "..name
+            for _, child in ipairs(ThemeDropdownList:GetChildren()) do
+                if child:IsA("TextButton") then
+                    local tName = child.Text:gsub("✓ ","")
+                    if tName == name then
+                        child.Text = "✓ "..tName
+                        child.BackgroundColor3 = Themes[tName].Accent
+                        child.TextColor3 = Color3.new(1,1,1)
+                    else
+                        if Themes[tName] then
+                            child.Text = tName
+                            child.BackgroundColor3 = Themes[tName].ElementBg2
+                            child.TextColor3 = Themes[tName].Text
+                        end
+                    end
+                end
+            end
+            ThemeDropdownOpen = false
+            ThemeDropdownArrow.Text = "▼"
+            UpdateThemeDropdownSize(false)
+            SubLabel.Text = "Theme: " .. name
+            if SaveSystem.Enabled then SaveSystem:Set("_Theme", name) end
+            if FloatingIcon then FloatingIcon.BackgroundColor3 = CurrentTheme.Accent end
+        end)
+    end
+    ThemeDropdownList.CanvasSize = UDim2.new(0,0,0, #SortedThemes * 34 + 10)
+(0,140,1,-64)
     TabList.Position = UDim2.new(0,8,0,58)
     TabList.BackgroundColor3 = CurrentTheme.TabListBg
     TabList.BackgroundTransparency = WindowTrans
@@ -1781,152 +1911,7 @@ function GGH:CreateWindow(Config)
     NoBtn.MouseButton1Click:Connect(function() ConfirmFrame.Visible = false ConfirmFrame.Size = Main.Size end)
     YesBtn.MouseButton1Click:Connect(function() Tween(Main, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) Tween(ConfirmFrame, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) task.wait(0.25) ScreenGui:Destroy() end)
 
-    -- ===== NEW: نظام حفظ الاعدادات الشغال والحلو =====
-    local SaveSystem = {}
-    SaveSystem.Enabled = false
-    SaveSystem.FileName = Config.SaveFile or Config.SaveFileName or Config.ConfigName or ("GGH_"..Title:gsub("[^%w]","_")..".json")
-    SaveSystem.Folder = Config.SaveFolder or "GGH_Saves"
-    SaveSystem.Data = {}
-    SaveSystem.Elements = {} -- {key = api}
-
-    -- خدمات الحفظ
-    local HttpService = game:GetService("HttpService")
-    local function IsExploit()
-        return (writefile and readfile and isfile and makefolder and isfolder) ~= nil
-    end
-
-    function SaveSystem:Init()
-        if not IsExploit() then
-            SaveSystem.Enabled = false
-            return
-        end
-        pcall(function()
-            if not isfolder(SaveSystem.Folder) then makefolder(SaveSystem.Folder) end
-        end)
-        -- تحميل اذا موجود
-        pcall(function()
-            local path = SaveSystem.Folder.."/"..SaveSystem.FileName
-            if isfile(path) then
-                local content = readfile(path)
-                SaveSystem.Data = HttpService:JSONDecode(content)
-                if SaveSystem.Data._SaveEnabled ~= nil then
-                    SaveSystem.Enabled = SaveSystem.Data._SaveEnabled
-                end
-            end
-        end)
-    end
-
-    function SaveSystem:Save()
-        if not SaveSystem.Enabled then return end
-        if not IsExploit() then return end
-        pcall(function()
-            SaveSystem.Data._SaveEnabled = SaveSystem.Enabled
-            SaveSystem.Data._Theme = CurrentThemeName or DefaultTheme
-            local path = SaveSystem.Folder.."/"..SaveSystem.FileName
-            writefile(path, HttpService:JSONEncode(SaveSystem.Data))
-        end)
-    end
-
-    function SaveSystem:Load()
-        return SaveSystem.Data
-    end
-
-    function SaveSystem:Set(key, value)
-        if not SaveSystem.Enabled then return end
-        SaveSystem.Data[key] = value
-        SaveSystem:Save()
-    end
-
-    function SaveSystem:Get(key, default)
-        if SaveSystem.Data[key] ~= nil then return SaveSystem.Data[key] else return default end
-    end
-
-    function SaveSystem:Register(key, api, defaultValue)
-        SaveSystem.Elements[key] = {api=api, default=defaultValue}
-        -- لو محفوظ رجعه
-        if SaveSystem.Enabled and SaveSystem.Data[key] ~= nil then
-            task.spawn(function()
-                task.wait(0.1)
-                pcall(function()
-                    if api.SetValue then api:SetValue(SaveSystem.Data[key])
-                    elseif api.Set then api:Set(SaveSystem.Data[key]) end
-                end)
-            end)
-        end
-    end
-
-    function SaveSystem:Enable()
-        SaveSystem.Enabled = true
-        SaveSystem.Data._SaveEnabled = true
-        SaveSystem:Save()
-        -- احفظ كل الحالي
-        for k, v in pairs(SaveSystem.Elements) do
-            pcall(function()
-                local val = nil
-                if v.api.GetValue then val = v.api:GetValue()
-                elseif v.api.Get then val = v.api:Get()
-                end
-                if val ~= nil then SaveSystem.Data[k] = val end
-            end)
-        end
-        SaveSystem:Save()
-    end
-
-    function SaveSystem:Disable()
-        SaveSystem.Enabled = false
-        SaveSystem.Data._SaveEnabled = false
-        SaveSystem:Save()
-        -- ما نمسح الملف، بس نوقف الحفظ - المطور اذا يريد يمسح
-        if Config.DeleteOnDisableSave then
-            pcall(function()
-                local path = SaveSystem.Folder.."/"..SaveSystem.FileName
-                if isfile(path) then delfile(path) end
-            end)
-        end
-    end
-
-    SaveSystem:Init()
-    local CurrentThemeName = DefaultTheme
-
-    -- تحديث توجل الحفظ UI
-    task.spawn(function()
-        task.wait(0.2)
-        if SaveToggleBg and SaveCircle then
-            if SaveSystem.Enabled then
-                SaveToggleBg.BackgroundColor3 = CurrentTheme.Accent
-                SaveCircle.Position = UDim2.new(1,-19,0.5,-8)
-            else
-                SaveToggleBg.BackgroundColor3 = CurrentTheme.ElementBg
-                SaveCircle.Position = UDim2.new(0,3,0.5,-8)
-            end
-        end
-    end)
-
-    if SaveToggleBtn then
-        SaveToggleBtn.MouseButton1Click:Connect(function()
-            SaveSystem.Enabled = not SaveSystem.Enabled
-            if SaveSystem.Enabled then
-                Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.Accent}, 0.2)
-                Tween(SaveCircle, {Position = UDim2.new(1,-19,0.5,-8)}, 0.2)
-                SaveSystem:Enable()
-            else
-                Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.2)
-                Tween(SaveCircle, {Position = UDim2.new(0,3,0.5,-8)}, 0.2)
-                SaveSystem:Disable()
-            end
-        end)
-    end
-
-    -- لو المطور مفعل الحفظ من البداية
-    if Config.SaveSettings or Config.AutoSave or Config.SaveConfig or Config.SaveEnabled then
-        SaveSystem.Enabled = true
-        task.spawn(function() task.wait(0.3) SaveSystem:Enable() end)
-    end
-
-
-
     local ThemableElements = {}
-
 
     local function RegisterThemable(obj, prop, themeKey) table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey}) end
     local function ApplyTheme(themeName)
@@ -2125,13 +2110,17 @@ function GGH:CreateWindow(Config)
         ThemeOpen = not ThemeOpen 
         if ThemeOpen then
             ThemeDropdown.Visible = true
-            ThemeDropdown.Size = UDim2.new(0,200,0,0)
-            local maxH = math.clamp(Main.AbsoluteSize.Y - 80, 150, 360)
-                Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,maxH)}, 0.3)
+            ThemeDropdown.Size = UDim2.new(0,240,0,0)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,240,0,120)}, 0.3)
+            ThemeDropdownOpen = false
+            ThemeDropdownFrame.Size = UDim2.new(1,0,0,38)
+            ThemeDropdownList.Size = UDim2.new(1,0,0,0)
+            ThemeDropdownArrow.Text = "▼"
         else
-            Tween(ThemeDropdown, {Size = UDim2.new(0,200,0,0)}, 0.25)
+            Tween(ThemeDropdown, {Size = UDim2.new(0,240,0,0)}, 0.25)
             task.wait(0.25)
             ThemeDropdown.Visible = false
+            ThemeDropdownOpen = false
         end
     end) end
 
