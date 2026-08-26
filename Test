@@ -1466,38 +1466,6 @@ function GGH:CreateWindow(Config)
     Sep1.BackgroundTransparency = 0.5
     Sep1.LayoutOrder = -85
 
-    -- Save toggle logic بسيط وشغال
-    local SaveEnabled = false
-    pcall(function()
-        if isfolder and not isfolder("GGH_Saves") then makefolder("GGH_Saves") end
-        if isfile and isfile("GGH_Saves/GGH_Save.json") then
-            local c = readfile("GGH_Saves/GGH_Save.json")
-            local d = game:GetService("HttpService"):JSONDecode(c)
-            SaveEnabled = d._SaveEnabled or false
-        end
-    end)
-    if SaveEnabled then
-        SaveToggleBg.BackgroundColor3 = CurrentTheme.Accent
-        SaveCircle.Position = UDim2.new(1,-19,0.5,-8)
-    end
-    SaveToggleBtn.MouseButton1Click:Connect(function()
-        SaveEnabled = not SaveEnabled
-        if SaveEnabled then
-            Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.Accent}, 0.2)
-            Tween(SaveCircle, {Position = UDim2.new(1,-19,0.5,-8)}, 0.2)
-        else
-            Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.2)
-            Tween(SaveCircle, {Position = UDim2.new(0,3,0.5,-8)}, 0.2)
-        end
-        pcall(function()
-            if not isfolder("GGH_Saves") then makefolder("GGH_Saves") end
-            writefile("GGH_Saves/GGH_Save.json", game:GetService("HttpService"):JSONEncode({_SaveEnabled = SaveEnabled}))
-        end)
-    end)
-
-
-
-
     -- ملاحظة: التحكم بالشفافية انشال - بس المطور يحدده من Config.WindowTransparency
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
@@ -1978,109 +1946,29 @@ function GGH:CreateWindow(Config)
         end
     end) end
 
-    -- ثيمات بدروب داون داخل SETTINGS - مرتب
-    local ThemeDropdownFrame = Instance.new("Frame", ThemeList)
-    ThemeDropdownFrame.Size = UDim2.new(1,0,0,38)
-    ThemeDropdownFrame.BackgroundColor3 = CurrentTheme.ElementBg2
-    ThemeDropdownFrame.LayoutOrder = 100
-    ThemeDropdownFrame.ClipsDescendants = true
-    Corner(ThemeDropdownFrame, 8)
-    Stroke(ThemeDropdownFrame, CurrentTheme.Stroke, 1)
-
-    local ThemeDropdownBtn = Instance.new("TextButton", ThemeDropdownFrame)
-    ThemeDropdownBtn.Size = UDim2.new(1,0,0,38)
-    ThemeDropdownBtn.BackgroundTransparency = 1
-    ThemeDropdownBtn.Text = "Theme : "..DefaultTheme
-    ThemeDropdownBtn.Font = Enum.Font.GothamMedium
-    ThemeDropdownBtn.TextSize = 12
-    ThemeDropdownBtn.TextColor3 = CurrentTheme.Text
-    ThemeDropdownBtn.TextXAlignment = Enum.TextXAlignment.Left
-    local pad = Instance.new("UIPadding", ThemeDropdownBtn)
-    pad.PaddingLeft = UDim.new(0,10)
-
-    local ThemeDropdownArrow = Instance.new("TextLabel", ThemeDropdownFrame)
-    ThemeDropdownArrow.Size = UDim2.new(0,20,0,20)
-    ThemeDropdownArrow.Position = UDim2.new(1,-24,0.5,-10)
-    ThemeDropdownArrow.BackgroundTransparency = 1
-    ThemeDropdownArrow.Text = "▼"
-    ThemeDropdownArrow.Font = Enum.Font.GothamBold
-    ThemeDropdownArrow.TextSize = 10
-    ThemeDropdownArrow.TextColor3 = CurrentTheme.SubText
-
-    local ThemeDropdownList = Instance.new("ScrollingFrame", ThemeDropdownFrame)
-    ThemeDropdownList.Position = UDim2.new(0,0,0,38)
-    ThemeDropdownList.Size = UDim2.new(1,0,0,0)
-    ThemeDropdownList.BackgroundTransparency = 1
-    ThemeDropdownList.CanvasSize = UDim2.new(0,0,0,0)
-    ThemeDropdownList.ScrollBarThickness = 3
-    ThemeDropdownList.ScrollBarImageColor3 = CurrentTheme.Accent
-    ThemeDropdownList.ScrollingDirection = Enum.ScrollingDirection.Y
-    ThemeDropdownList.ClipsDescendants = true
-    ThemeDropdownList.ZIndex = 102
-    local TDL = Instance.new("UIListLayout", ThemeDropdownList)
-    TDL.Padding = UDim.new(0,3)
-    local TDP = Instance.new("UIPadding", ThemeDropdownList)
-    TDP.PaddingTop = UDim.new(0,4)
-    TDP.PaddingBottom = UDim.new(0,4)
-    TDP.PaddingLeft = UDim.new(0,4)
-    TDP.PaddingRight = UDim.new(0,4)
-
-    local SortedThemes = {}
-    for n,_ in pairs(Themes) do table.insert(SortedThemes, n) end
-    table.sort(SortedThemes)
-
-    local ThemeOpen2 = false
-
-    ThemeDropdownBtn.MouseButton1Click:Connect(function()
-        ThemeOpen2 = not ThemeOpen2
-        ThemeDropdownArrow.Text = ThemeOpen2 and "▲" or "▼"
-        if ThemeOpen2 then
-            local h = math.min(#SortedThemes * 32 + 8, 200)
-            ThemeDropdownList.Size = UDim2.new(1,0,0,h)
-            ThemeDropdownFrame.Size = UDim2.new(1,0,0, 38 + h + 6)
-            ThemeDropdown.Size = UDim2.new(0,240,0, 120 + h)
-        else
-            ThemeDropdownList.Size = UDim2.new(1,0,0,0)
-            ThemeDropdownFrame.Size = UDim2.new(1,0,0,38)
-            ThemeDropdown.Size = UDim2.new(0,240,0,120)
-        end
-    end)
-
-    for _, thName in ipairs(SortedThemes) do
-        local Btn = Instance.new("TextButton", ThemeDropdownList)
+    for name, th in pairs(Themes) do
+        local Btn = Instance.new("TextButton", ThemeList)
         Btn.Size = UDim2.new(1,0,0,28)
-        Btn.BackgroundColor3 = CurrentTheme.ElementBg2
-        Btn.Text = thName
-        Btn.Font = Enum.Font.Gotham
+        Btn.BackgroundColor3 = th.ElementBg2
+        Btn.Text = name
+        Btn.Font = Enum.Font.GothamMedium
         Btn.TextSize = 11
-        Btn.TextColor3 = CurrentTheme.Text
+        Btn.TextColor3 = th.Text
+        Btn.ZIndex = 102
+        Btn.AutoLocalize = true
         Corner(Btn, 6)
-        if thName == DefaultTheme then
-            Btn.Text = "✓ "..thName
-            ThemeDropdownBtn.Text = "Theme : "..thName
-        end
-        Btn.MouseButton1Click:Connect(function()
-            ApplyTheme(thName)
-            ThemeDropdownBtn.Text = "Theme : "..thName
-            for _, c in ipairs(ThemeDropdownList:GetChildren()) do
-                if c:IsA("TextButton") then
-                    local tn = c.Text:gsub("✓ ","")
-                    if tn == thName then c.Text = "✓ "..tn else c.Text = tn end
-                end
+        Stroke(Btn, th.Accent, 1)
+        Btn.MouseButton1Click:Connect(function() 
+            ApplyTheme(name) 
+            ThemeDropdown.Visible = false 
+            ThemeOpen = false 
+            SubLabel.Text = "Theme: " .. name
+            RestoreWindowSize()
+            if FloatingIcon then
+                FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
             end
-            ThemeOpen2 = false
-            ThemeDropdownArrow.Text = "▼"
-            ThemeDropdownList.Size = UDim2.new(1,0,0,0)
-            ThemeDropdownFrame.Size = UDim2.new(1,0,0,38)
-            ThemeDropdown.Size = UDim2.new(0,240,0,120)
-            SubLabel.Text = "Theme: "..thName
-            if FloatingIcon then FloatingIcon.BackgroundColor3 = CurrentTheme.Accent end
-            ThemeDropdown.Visible = false
-            ThemeOpen = false
         end)
     end
-    ThemeDropdownList.CanvasSize = UDim2.new(0,0,0, #SortedThemes * 32 + 10)
-
     local Window = {}
 
     local Tabs = {}
@@ -2714,6 +2602,23 @@ end
 
 
 local function CreateColorpicker(Cfg)
+
+    -- Fix: Center color picker and make it bigger so colors not outside
+    local function CenterPicker(pickerFrame, screenGui)
+        local vp = screenGui.AbsoluteSize
+        if vp.X < 10 or vp.Y < 10 then
+            vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080)
+        end
+        local pSize = pickerFrame.AbsoluteSize
+        if pSize.X < 10 then pSize = Vector2.new(320, 280) end
+        -- Center
+        local x = (vp.X - pSize.X) / 2
+        local y = (vp.Y - pSize.Y) / 2
+        x = math.clamp(x, 10, vp.X - pSize.X - 10)
+        y = math.clamp(y, 10, vp.Y - pSize.Y - 10)
+        pickerFrame.Position = UDim2.fromOffset(x, y)
+    end
+
             Cfg.Title = Cfg.Title or Cfg.Name or "Colorpicker"
             Cfg.Default = Cfg.Default or Cfg.Color or CurrentTheme.Accent
             Cfg.Mode = Cfg.Mode or Cfg.ColorMode or "Player"
@@ -2852,7 +2757,7 @@ local function CreateColorpicker(Cfg)
                 Corner(hueMarker, 3)
                 Stroke(hueMarker, Color3.new(0,0,0), 1)
                 local right = Instance.new("Frame", cont)
-                right.Size = UDim2.new(0,260,0,220)
+                right.Size = UDim2.new(0,200,0,200) -- Fixed: smaller to stay inside
                 right.BackgroundColor3 = Color3.fromRGB(40,41,48)
                 right.BackgroundTransparency = ElementTrans
                 right.ZIndex = 302
