@@ -2657,7 +2657,7 @@ local function CreateColorpicker(Cfg)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
                 ov.BackgroundColor3 = Color3.new(0,0,0)
-                ov.BackgroundTransparency = 0.35 -- Background visible
+                ov.BackgroundTransparency = 1 -- بدون خلفية سودة
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
@@ -3212,6 +3212,7 @@ local Elements = {}
             elseif Type == "label" then api = CreateLabel(Cfg)
             elseif Type == "separator" or Type == "line" or Type == "divider" then api = CreateSeparator(Cfg)
             elseif Type == "image" or Type == "img" or Type == "logo" then api = CreateImage(Cfg)
+        elseif Type == "sliderinput" or Type == "slider_input" or Type == "inputslider" then api = CreateSliderInput(Cfg)
         elseif Type == "playerstat" or Type == "player" or Type == "stat" or Type == "playerstats" then api = CreatePlayerStat(Cfg)
             else warn("[GGH Library v1.8.1] Unknown Add type: "..tostring(Type))
             end
@@ -3245,6 +3246,8 @@ local Elements = {}
         function Elements:Label(Cfg) return self:Add("Label", Cfg) end
         function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
+    function Elements:SliderInput(Cfg) return self:Add("SliderInput", Cfg) end
+    function Elements:InputSlider(Cfg) return self:Add("SliderInput", Cfg) end
     function Elements:PlayerStat(Cfg) return self:Add("PlayerStat", Cfg) end
         return Elements
     end
