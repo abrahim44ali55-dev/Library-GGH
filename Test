@@ -87,7 +87,7 @@ local function AddPressLife(btn, baseColor, hoverColor)
         ripple.Size = UDim2.fromOffset(0,0)
         ripple.Position = UDim2.fromOffset(mp.X - bp.X, mp.Y - bp.Y)
         ripple.BackgroundColor3 = Color3.new(1,1,1)
-        ripple.BackgroundTransparency = 0.18.75
+        ripple.BackgroundTransparency = 0.75
         ripple.BorderSizePixel = 0
         ripple.ZIndex = btn.ZIndex + 1
         Instance.new("UICorner", ripple).CornerRadius = UDim.new(1,0)
@@ -3276,6 +3276,7 @@ local Elements = {}
             elseif Type == "label" then api = CreateLabel(Cfg)
             elseif Type == "separator" or Type == "line" or Type == "divider" then api = CreateSeparator(Cfg)
             elseif Type == "image" or Type == "img" or Type == "logo" then api = CreateImage(Cfg)
+        elseif Type == "playerstat" or Type == "player" or Type == "stat" then api = CreatePlayerStat(Cfg)
             else warn("[GGH Library v1.8.1] Unknown Add type: "..tostring(Type))
             end
             if api and type(api)=="table" and not api.Refresh then
@@ -3308,6 +3309,9 @@ local Elements = {}
         function Elements:Label(Cfg) return self:Add("Label", Cfg) end
         function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
+
+    function Elements:PlayerStat(Cfg) return self:Add("PlayerStat", Cfg) end
+    function Elements:Player(Cfg) return self:Add("PlayerStat", Cfg) end
         return Elements
     end
     function Window:AddTab(Cfg)
