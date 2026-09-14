@@ -1,14 +1,3 @@
--- GGH Library V3 FINAL - تم التعديل الكامل
--- التعديلات:
--- 1. تم تصليح خطأ 0.18.75 -> 0.75
--- 2. تم شيل الخلفية السودة للكولر بيكر: ov.BackgroundTransparency = 1
--- 3. تم تصليح الكولر بيكر يطلع برا: clampPicker جديد بالوسط
--- 4. تم تصليح الدائرة والزر ما يطلع برا: ClampFrameToScreen + FloatingIcon clamp
--- 5. تم تصغير التابات من 36px الى 30px + شفافية احلى
--- 6. تم اضافة عنصر جديد SliderInput (سلايدر + خانة كتابة) - CreateSliderInput
--- 7. تم اضافة عنصر جديد PlayerStat (ستات اللاعب مع فراغ) - CreatePlayerStat
--- 8. تم اضافة دعم PlayerStat و SliderInput في Elements:Add
-
 local GGH = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -72,18 +61,27 @@ local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
--- ===== نظام منع الخروج من الشاشة - نفس طريقة الزر العائم =====
+-- ===== ظ†ط¸ط§ظ… ظ…ظ†ط¹ ط§ظ„ط®ط±ظˆط¬ ظ…ظ† ط§ظ„ط´ط§ط´ط© - ظ†ظپط³ ط·ط±ظٹظ‚ط© ط§ظ„ط²ط± ط§ظ„ط¹ط§ط¦ظ… =====
 local function ClampFrameToScreen(frame, gui)
     if not frame or not gui then return end
     local viewport = gui.AbsoluteSize
     if viewport.X <= 10 or viewport.Y <= 10 then return end
     local fSize = frame.AbsoluteSize
     if fSize.X <= 0 then return end
-    local absX = frame.Position.X.Scale * viewport.X + frame.Position.X.Offset
-    local absY = frame.Position.Y.Scale * viewport.Y + frame.Position.Y.Offset
-    absX = math.clamp(absX, 4, viewport.X - fSize.X - 4)
-    absY = math.clamp(absY, 4, viewport.Y - fSize.Y - 4)
-    frame.Position = UDim2.fromOffset(absX, absY)
+    local fPos = frame.Position
+    local newX, newY
+    if fPos.X.Scale == 0 and fPos.Y.Scale == 0 then
+        newX = math.clamp(fPos.X.Offset, 0, viewport.X - fSize.X)
+        newY = math.clamp(fPos.Y.Offset, 0, viewport.Y - fSize.Y)
+        frame.Position = UDim2.fromOffset(newX, newY)
+    else
+        -- ظ„ظ„ظ€ Scale ظ†ط­ظˆظ„ ظ„ظ€ Offset ظ…ط¹ Clamp
+        local absX = fPos.X.Scale * viewport.X + fPos.X.Offset
+        local absY = fPos.Y.Scale * viewport.Y + fPos.Y.Offset
+        absX = math.clamp(absX, 0, viewport.X - fSize.X)
+        absY = math.clamp(absY, 0, viewport.Y - fSize.Y)
+        frame.Position = UDim2.fromOffset(absX, absY)
+    end
 end
 
 local function GetSafePickerPosition(anchorBtn, pickerSize, screenGui)
@@ -1317,11 +1315,11 @@ function GGH:CreateWindow(Config)
     local order = 1
 
     if showSearch then
-        SearchBtn = CreateCtrlButton("SearchBtn", "🔍", CurrentTheme.ElementBg2)
+        SearchBtn = CreateCtrlButton("SearchBtn", "ًں”چ", CurrentTheme.ElementBg2)
         SearchBtn.LayoutOrder = order; order+=1
     end
     if showSettings then
-        ThemeBtn = CreateCtrlButton("ThemeBtn", "⚙", CurrentTheme.ElementBg2)
+        ThemeBtn = CreateCtrlButton("ThemeBtn", "âڑ™", CurrentTheme.ElementBg2)
         ThemeBtn.LayoutOrder = order; order+=1
     end
     MinBtn = CreateCtrlButton("MinBtn", "-", CurrentTheme.ElementBg2)
@@ -1332,7 +1330,7 @@ function GGH:CreateWindow(Config)
     MaxBtn.LayoutOrder = order; order+=1
     MaxBtn.Visible = false
     if showFloat then
-        FloatBtn = CreateCtrlButton("FloatBtn", "◉", CurrentTheme.ElementBg2)
+        FloatBtn = CreateCtrlButton("FloatBtn", "â—‰", CurrentTheme.ElementBg2)
         FloatBtn.LayoutOrder = order; order+=1
     end
     CloseBtn = CreateCtrlButton("CloseBtn", "X", CurrentTheme.CloseBg)
@@ -1384,7 +1382,7 @@ function GGH:CreateWindow(Config)
     SearchClose.TextColor3 = CurrentTheme.Text
     SearchClose.ZIndex = 91
     Corner(SearchClose, 7)
-    -- ===== NEW: ThemeDropdown مرتب نفس ستايل المكتبة + بدون شفافية + توجل حفظ =====
+    -- ===== NEW: ThemeDropdown ظ…ط±طھط¨ ظ†ظپط³ ط³طھط§ظٹظ„ ط§ظ„ظ…ظƒطھط¨ط© + ط¨ط¯ظˆظ† ط´ظپط§ظپظٹط© + طھظˆط¬ظ„ ط­ظپط¸ =====
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
     ThemeDropdown.Size = UDim2.new(0,220,0,0)
@@ -1413,7 +1411,7 @@ function GGH:CreateWindow(Config)
     local TLP = Instance.new("UIPadding", ThemeList)
     TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
 
-    -- Header مرتب
+    -- Header ظ…ط±طھط¨
     local ThemeHeader = Instance.new("TextLabel", ThemeList)
     ThemeHeader.Size = UDim2.new(1,0,0,20)
     ThemeHeader.BackgroundTransparency = 1
@@ -1425,7 +1423,7 @@ function GGH:CreateWindow(Config)
     ThemeHeader.LayoutOrder = -100
     AddTextStroke(ThemeHeader)
 
-    -- ===== توجل حفظ الاعدادات - يظهر اول شي =====
+    -- ===== طھظˆط¬ظ„ ط­ظپط¸ ط§ظ„ط§ط¹ط¯ط§ط¯ط§طھ - ظٹط¸ظ‡ط± ط§ظˆظ„ ط´ظٹ =====
     local SaveToggleFrame = Instance.new("Frame", ThemeList)
     SaveToggleFrame.Size = UDim2.new(1,0,0,38)
     SaveToggleFrame.BackgroundColor3 = CurrentTheme.ElementBg2
@@ -1461,14 +1459,14 @@ function GGH:CreateWindow(Config)
     SaveToggleBtn.BackgroundTransparency = 1
     SaveToggleBtn.Text = ""
 
-    -- سطر فاصل
+    -- ط³ط·ط± ظپط§طµظ„
     local Sep1 = Instance.new("Frame", ThemeList)
     Sep1.Size = UDim2.new(1,0,0,1)
     Sep1.BackgroundColor3 = CurrentTheme.Stroke
     Sep1.BackgroundTransparency = 0.5
     Sep1.LayoutOrder = -85
 
-    -- ملاحظة: التحكم بالشفافية انشال - بس المطور يحدده من Config.WindowTransparency
+    -- ظ…ظ„ط§ط­ط¸ط©: ط§ظ„طھط­ظƒظ… ط¨ط§ظ„ط´ظپط§ظپظٹط© ط§ظ†ط´ط§ظ„ - ط¨ط³ ط§ظ„ظ…ط·ظˆط± ظٹط­ط¯ط¯ظ‡ ظ…ظ† Config.WindowTransparency
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,140,1,-64)
@@ -1579,11 +1577,11 @@ function GGH:CreateWindow(Config)
         local function ApplyResponsiveSize()
             local vp = ScreenGui.AbsoluteSize
             if vp.X < 100 or vp.Y < 100 then return end
-            -- الحجم المناسب حسب قياس الشاشة - 85% عرض و 80% ارتفاع كحد اقصى
+            -- ط§ظ„ط­ط¬ظ… ط§ظ„ظ…ظ†ط§ط³ط¨ ط­ط³ط¨ ظ‚ظٹط§ط³ ط§ظ„ط´ط§ط´ط© - 85% ط¹ط±ط¶ ظˆ 80% ط§ط±طھظپط§ط¹ ظƒط­ط¯ ط§ظ‚طµظ‰
             local maxW = math.clamp(vp.X * 0.88, 340, 620)
             local maxH = math.clamp(vp.Y * 0.78, 300, 500)
             local curSize = Main.AbsoluteSize
-            -- اذا الحجم الحالي اكبر من الشاشة، صغره تلقائيا
+            -- ط§ط°ط§ ط§ظ„ط­ط¬ظ… ط§ظ„ط­ط§ظ„ظٹ ط§ظƒط¨ط± ظ…ظ† ط§ظ„ط´ط§ط´ط©طŒ طµط؛ط±ظ‡ طھظ„ظ‚ط§ط¦ظٹط§
             if curSize.X > vp.X - 20 or curSize.Y > vp.Y - 80 then
                 Main.Size = UDim2.fromOffset(math.min(curSize.X, maxW), math.min(curSize.Y, maxH))
             end
@@ -1597,7 +1595,7 @@ function GGH:CreateWindow(Config)
         end
         ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(newUpdateWrapper)
         task.spawn(function() task.wait(0.2) newUpdateWrapper() end)
-        -- اول مرة نحسب حجم مناسب
+        -- ط§ظˆظ„ ظ…ط±ط© ظ†ط­ط³ط¨ ط­ط¬ظ… ظ…ظ†ط§ط³ط¨
         ApplyResponsiveSize()
 
         local function StartDrag(input)
@@ -1852,7 +1850,7 @@ function GGH:CreateWindow(Config)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStartPos
                 if delta.Magnitude > 5 then hasDragged = true end
-                do local newPos = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y) local vp = ScreenGui.AbsoluteSize local sz = FloatingIcon.AbsoluteSize if sz.X<5 then sz=Vector2.new(40,40) end local ax = newPos.X.Scale*vp.X+newPos.X.Offset local ay = newPos.Y.Scale*vp.Y+newPos.Y.Offset ax=math.clamp(ax,4,vp.X-sz.X-4) ay=math.clamp(ay,4,vp.Y-sz.Y-4) FloatingIcon.Position=UDim2.fromOffset(ax,ay) end
+                FloatingIcon.Position = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
@@ -2026,7 +2024,7 @@ function GGH:CreateWindow(Config)
     end)
     function Window:CreateTab(Name)
         local TabButton = Instance.new("TextButton", TabList)
-        TabButton.Size = UDim2.new(1,0,0,30)
+        TabButton.Size = UDim2.new(1,0,0,36)
         TabButton.BackgroundColor3 = CurrentTheme.ElementBg
         TabButton.BackgroundTransparency = 0
         TabButton.Text = Name
@@ -2494,10 +2492,10 @@ local function CreateDropdown(Cfg)
     local function RefreshOptions()
         for _, child in ipairs(List:GetChildren()) do
             if child:IsA("TextButton") then
-                local name = child:GetAttribute("OptName") or child.Text:gsub("✓ ","")
+                local name = child:GetAttribute("OptName") or child.Text:gsub("âœ“ ","")
                 local sel = IsSelected(name)
                 child.BackgroundColor3 = sel and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                child.Text = (sel and "✓ " or "")..name
+                child.Text = (sel and "âœ“ " or "")..name
             end
         end
         Btn.Text = GetDisplayText()
@@ -2507,7 +2505,7 @@ local function CreateDropdown(Cfg)
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,-4,0,28)
         O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-        O.Text = (IsSelected(opt) and "✓ " or "")..opt
+        O.Text = (IsSelected(opt) and "âœ“ " or "")..opt
         O.Font = Enum.Font.Gotham
         O.TextSize = 11
         O.TextColor3 = CurrentTheme.Text
@@ -2687,7 +2685,7 @@ local function CreateColorpicker(Cfg)
                     local vp = ov.AbsoluteSize
                     local sz = main.AbsoluteSize
                     if sz.X==0 or vp.X<=10 then return end
-                    -- نضمن الحجم ما يطلع اكبر من الشاشة
+                    -- ظ†ط¶ظ…ظ† ط§ظ„ط­ط¬ظ… ظ…ط§ ظٹط·ظ„ط¹ ط§ظƒط¨ط± ظ…ظ† ط§ظ„ط´ط§ط´ط©
                     local maxW = math.clamp(vp.X - 20, 200, 600)
                     local maxH = math.clamp(vp.Y - 20, 200, 340)
                     if sz.X > maxW or sz.Y > maxH then
@@ -2695,11 +2693,11 @@ local function CreateColorpicker(Cfg)
                         sz = main.AbsoluteSize
                     end
                     local pos = main.Position
-                    -- اذا بالوسط نحسب حدوده
+                    -- ط§ط°ط§ ط¨ط§ظ„ظˆط³ط· ظ†ط­ط³ط¨ ط­ط¯ظˆط¯ظ‡
                     if pos.X.Scale==0.5 then
-                        -- الوسط آمن، بس نتأكد الحجم
+                        -- ط§ظ„ظˆط³ط· ط¢ظ…ظ†طŒ ط¨ط³ ظ†طھط£ظƒط¯ ط§ظ„ط­ط¬ظ…
                         main.Position = UDim2.new(0.5,0,0.5,0) -- Centered fixed
-                        -- بعد الوسط نعمل clamp اضافي
+                        -- ط¨ط¹ط¯ ط§ظ„ظˆط³ط· ظ†ط¹ظ…ظ„ clamp ط§ط¶ط§ظپظٹ
                         task.wait()
                         local absPos = main.AbsolutePosition
                         local cx = math.clamp(absPos.X, 5, vp.X - sz.X - 5)
@@ -2888,7 +2886,7 @@ local function CreateColorpicker(Cfg)
                                 return
                             end
                         end
-                        local num = tonumber(txt:gsub("°",""))
+                        local num = tonumber(txt:gsub("آ°",""))
                         if num then
                             if num>1 and num<=360 then curHue = num/360 else curHue = math.clamp(num,0,1) end
                             Hue = curHue
@@ -3223,8 +3221,6 @@ local Elements = {}
             elseif Type == "label" then api = CreateLabel(Cfg)
             elseif Type == "separator" or Type == "line" or Type == "divider" then api = CreateSeparator(Cfg)
             elseif Type == "image" or Type == "img" or Type == "logo" then api = CreateImage(Cfg)
-        elseif Type == "sliderinput" or Type == "slider_input" or Type == "inputslider" then api = CreateSliderInput(Cfg)
-        elseif Type == "playerstat" or Type == "player" or Type == "stat" or Type == "playerstats" then api = CreatePlayerStat(Cfg)
             else warn("[GGH Library v1.8.1] Unknown Add type: "..tostring(Type))
             end
             if api and type(api)=="table" and not api.Refresh then
@@ -3257,9 +3253,6 @@ local Elements = {}
         function Elements:Label(Cfg) return self:Add("Label", Cfg) end
         function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
-    function Elements:SliderInput(Cfg) return self:Add("SliderInput", Cfg) end
-    function Elements:InputSlider(Cfg) return self:Add("SliderInput", Cfg) end
-    function Elements:PlayerStat(Cfg) return self:Add("PlayerStat", Cfg) end
         return Elements
     end
     function Window:AddTab(Cfg)
