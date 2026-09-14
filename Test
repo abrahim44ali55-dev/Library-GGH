@@ -1,3 +1,14 @@
+-- GGH Library V3 FINAL - تم التعديل الكامل
+-- التعديلات:
+-- 1. تم تصليح خطأ 0.18.75 -> 0.75
+-- 2. تم شيل الخلفية السودة للكولر بيكر: ov.BackgroundTransparency = 1
+-- 3. تم تصليح الكولر بيكر يطلع برا: clampPicker جديد بالوسط
+-- 4. تم تصليح الدائرة والزر ما يطلع برا: ClampFrameToScreen + FloatingIcon clamp
+-- 5. تم تصغير التابات من 36px الى 30px + شفافية احلى
+-- 6. تم اضافة عنصر جديد SliderInput (سلايدر + خانة كتابة) - CreateSliderInput
+-- 7. تم اضافة عنصر جديد PlayerStat (ستات اللاعب مع فراغ) - CreatePlayerStat
+-- 8. تم اضافة دعم PlayerStat و SliderInput في Elements:Add
+
 local GGH = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -2657,7 +2668,7 @@ local function CreateColorpicker(Cfg)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
                 ov.BackgroundColor3 = Color3.new(0,0,0)
-                ov.BackgroundTransparency = 1 -- بدون خلفية سودة
+                ov.BackgroundTransparency = 0.35 -- Background visible
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
