@@ -57,75 +57,23 @@ local function AddBlackBorder(frame, thick, trans)
 end
 
 
-local function Tween(o,props,dur,ease,dir)
-    local t = TweenService:Create(o, TweenInfo.new(dur or 0.22, ease or Enum.EasingStyle.Quint, dir or Enum.EasingDirection.Out), props)
-    t:Play()
-    return t
+local function Tween(o,props,dur)
+    TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
-
-local function AddPressLife(btn, baseColor, hoverColor)
-    if not btn or not btn:IsA("GuiObject") then return end
-    local originalSize = btn.Size
-    btn.ClipsDescendants = true
-    btn.MouseEnter:Connect(function()
-        if hoverColor then Tween(btn, {BackgroundColor3 = hoverColor}, 0.18, Enum.EasingStyle.Quad) end
-    end)
-    btn.MouseLeave:Connect(function()
-        if baseColor then Tween(btn, {BackgroundColor3 = baseColor}, 0.18, Enum.EasingStyle.Quad) end
-    end)
-    btn.MouseButton1Down:Connect(function()
-        Tween(btn, {Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, originalSize.Y.Scale, originalSize.Y.Offset - 1)}, 0.07, Enum.EasingStyle.Quad)
-    end)
-    btn.MouseButton1Up:Connect(function()
-        Tween(btn, {Size = originalSize}, 0.18, Enum.EasingStyle.Back)
-    end)
-    btn.MouseButton1Click:Connect(function()
-        local mp = UserInputService:GetMouseLocation()
-        local bp = btn.AbsolutePosition
-        local ripple = Instance.new("Frame")
-        ripple.Name = "Ripple"
-        ripple.Size = UDim2.fromOffset(0,0)
-        ripple.Position = UDim2.fromOffset(mp.X - bp.X, mp.Y - bp.Y)
-        ripple.BackgroundColor3 = Color3.new(1,1,1)
-        ripple.BackgroundTransparency = 0.75
-        ripple.BorderSizePixel = 0
-        ripple.ZIndex = btn.ZIndex + 1
-        Instance.new("UICorner", ripple).CornerRadius = UDim.new(1,0)
-        ripple.Parent = btn
-        local target = math.max(btn.AbsoluteSize.X, btn.AbsoluteSize.Y) * 2.3
-        Tween(ripple, {Size = UDim2.fromOffset(target,target), Position = UDim2.fromOffset(mp.X - bp.X - target/2, mp.Y - bp.Y - target/2), BackgroundTransparency = 1}, 0.48, Enum.EasingStyle.Quad)
-        game.Debris:AddItem(ripple, 0.52)
-    end)
-end
-
 
 -- ===== نظام منع الخروج من الشاشة - نفس طريقة الزر العائم =====
 local function ClampFrameToScreen(frame, gui)
     if not frame or not gui then return end
     local viewport = gui.AbsoluteSize
-    if viewport.X <= 20 or viewport.Y <= 20 then return end
+    if viewport.X <= 10 or viewport.Y <= 10 then return end
     local fSize = frame.AbsoluteSize
-    if fSize.X <= 2 or fSize.Y <= 2 then return end
+    if fSize.X <= 0 then return end
     local absX = frame.Position.X.Scale * viewport.X + frame.Position.X.Offset
     local absY = frame.Position.Y.Scale * viewport.Y + frame.Position.Y.Offset
     absX = math.clamp(absX, 4, viewport.X - fSize.X - 4)
     absY = math.clamp(absY, 4, viewport.Y - fSize.Y - 4)
     frame.Position = UDim2.fromOffset(absX, absY)
 end
-
-local function ClampFloatingPos(posUDim, screenGui, floatingIcon)
-    if not screenGui or not floatingIcon then return posUDim end
-    local vp = screenGui.AbsoluteSize
-    if vp.X < 20 or vp.Y < 20 then return posUDim end
-    local sz = floatingIcon.AbsoluteSize
-    if sz.X < 5 then sz = Vector2.new(44,44) end
-    local absX = posUDim.X.Scale * vp.X + posUDim.X.Offset
-    local absY = posUDim.Y.Scale * vp.Y + posUDim.Y.Offset
-    absX = math.clamp(absX, 4, vp.X - sz.X - 4)
-    absY = math.clamp(absY, 4, vp.Y - sz.Y - 4)
-    return UDim2.fromOffset(absX, absY)
-end
-
 
 local function GetSafePickerPosition(anchorBtn, pickerSize, screenGui)
     local vp = screenGui.AbsoluteSize
@@ -1864,8 +1812,8 @@ function GGH:CreateWindow(Config)
         if FloatingIcon then FloatingIcon:Destroy() end
         FloatingIcon = Instance.new("TextButton", ScreenGui)
         FloatingIcon.Name = "FloatingIcon"
-        FloatingIcon.Size = UDim2.new(0,44,0,44)
-        FloatingIcon.Position = UDim2.fromOffset(math.clamp(ScreenGui.AbsoluteSize.X*0.5 - 22, 6, ScreenGui.AbsoluteSize.X - 50), 14)
+        FloatingIcon.Size = UDim2.new(0,40,0,40)
+        FloatingIcon.Position = UDim2.new(0.5,-20,0,15)
         FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
         FloatingIcon.Text = "G"
         FloatingIcon.Font = Enum.Font.GothamBold
@@ -1873,7 +1821,7 @@ function GGH:CreateWindow(Config)
         FloatingIcon.TextColor3 = Color3.new(1,1,1)
         FloatingIcon.ZIndex = 200
         FloatingIcon.AutoButtonColor = false
-        Corner(FloatingIcon, 22)
+        Corner(FloatingIcon, 20)
         Stroke(FloatingIcon, Color3.new(1,1,1), 1).Transparency = 0.5
         
         local dragging = false
@@ -1893,7 +1841,7 @@ function GGH:CreateWindow(Config)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStartPos
                 if delta.Magnitude > 5 then hasDragged = true end
-                FloatingIcon.Position = ClampFloatingPos(UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y), ScreenGui, FloatingIcon)
+                do local newPos = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y) local vp = ScreenGui.AbsoluteSize local sz = FloatingIcon.AbsoluteSize if sz.X<5 then sz=Vector2.new(40,40) end local ax = newPos.X.Scale*vp.X+newPos.X.Offset local ay = newPos.Y.Scale*vp.Y+newPos.Y.Offset ax=math.clamp(ax,4,vp.X-sz.X-4) ay=math.clamp(ay,4,vp.Y-sz.Y-4) FloatingIcon.Position=UDim2.fromOffset(ax,ay) end
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
@@ -1903,18 +1851,6 @@ function GGH:CreateWindow(Config)
                 hasDragged = false
             end
         end)
-        ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-            if FloatingIcon then
-                FloatingIcon.Position = ClampFloatingPos(FloatingIcon.Position, ScreenGui, FloatingIcon)
-            end
-        end)
-        task.defer(function()
-            task.wait(0.05)
-            if FloatingIcon then
-                FloatingIcon.Position = ClampFloatingPos(FloatingIcon.Position, ScreenGui, FloatingIcon)
-            end
-        end)
-
         FloatingIcon.MouseButton1Click:Connect(function()
             if hasDragged then return end
             ConfirmFrame.Visible = false
@@ -2081,7 +2017,7 @@ function GGH:CreateWindow(Config)
         local TabButton = Instance.new("TextButton", TabList)
         TabButton.Size = UDim2.new(1,0,0,30)
         TabButton.BackgroundColor3 = CurrentTheme.ElementBg
-        TabButton.BackgroundTransparency = 0.55
+        TabButton.BackgroundTransparency = 0
         TabButton.Text = Name
         TabButton.TextTruncate = Enum.TextTruncate.AtEnd
         TabButton.TextWrapped = false
@@ -3276,7 +3212,7 @@ local Elements = {}
             elseif Type == "label" then api = CreateLabel(Cfg)
             elseif Type == "separator" or Type == "line" or Type == "divider" then api = CreateSeparator(Cfg)
             elseif Type == "image" or Type == "img" or Type == "logo" then api = CreateImage(Cfg)
-        elseif Type == "playerstat" or Type == "player" or Type == "stat" then api = CreatePlayerStat(Cfg)
+        elseif Type == "playerstat" or Type == "player" or Type == "stat" or Type == "playerstats" then api = CreatePlayerStat(Cfg)
             else warn("[GGH Library v1.8.1] Unknown Add type: "..tostring(Type))
             end
             if api and type(api)=="table" and not api.Refresh then
@@ -3309,9 +3245,7 @@ local Elements = {}
         function Elements:Label(Cfg) return self:Add("Label", Cfg) end
         function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
-
     function Elements:PlayerStat(Cfg) return self:Add("PlayerStat", Cfg) end
-    function Elements:Player(Cfg) return self:Add("PlayerStat", Cfg) end
         return Elements
     end
     function Window:AddTab(Cfg)
