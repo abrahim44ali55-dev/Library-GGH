@@ -1743,7 +1743,7 @@ function GGH:CreateWindow(Config)
     local function ApplyTheme(themeName)
         local theme = Themes[themeName]
         if not theme then return end
-        local function GetLum(c) return 0.299*c.R + 0.587*c.G + 0.114*c.B end
+        local function GetLum(c) return 0.299*c.R+0.587*c.G+0.114*c.B end
         local lum = GetLum(theme.MainBg)
         if lum > 0.5 then
             theme.Text = Color3.fromRGB(20,20,25)
@@ -1757,10 +1757,12 @@ function GGH:CreateWindow(Config)
             theme.ParagraphText = Color3.fromRGB(220,220,230)
         end
         CurrentTheme = theme
-        Tween(Main, {BackgroundColor3 = theme.MainBg}, 0.25)
-        Tween(Header, {BackgroundColor3 = theme.HeaderBg}, 0.25)
-        Tween(HeaderFix, {BackgroundColor3 = theme.HeaderBg}, 0.25)
-        Tween(TabList, {BackgroundColor3 = theme.TabListBg}, 0.25)
+        -- تحديث فوري وكامل لكل شي بدون انتظار
+        Main.BackgroundColor3 = theme.MainBg
+        Header.BackgroundColor3 = theme.HeaderBg
+        HeaderFix.BackgroundColor3 = theme.HeaderBg
+        TabList.BackgroundColor3 = theme.TabListBg
+        AccentLine.BackgroundColor3 = theme.Accent
         TabList.ScrollBarImageColor3 = theme.Accent
         ThemeList.ScrollBarImageColor3 = theme.Accent
         MainStroke.Color = theme.Stroke
@@ -1772,13 +1774,15 @@ function GGH:CreateWindow(Config)
         MinBtn.TextColor3 = theme.Text
         MaxBtn.BackgroundColor3 = theme.ElementBg2
         MaxBtn.TextColor3 = theme.Text
-        if FloatBtn then FloatBtn.BackgroundColor3 = floatEnabled and theme.Accent or theme.ElementBg2 end
+        if FloatBtn then FloatBtn.BackgroundColor3 = floatEnabled and theme.Accent or theme.ElementBg2; FloatBtn.TextColor3 = theme.Text end
         CloseBtn.BackgroundColor3 = theme.CloseBg
         CloseBtn.TextColor3 = theme.CloseText
         SearchBar.BackgroundColor3 = theme.ElementBg
         SBStroke.Color = theme.Accent
         SearchBox.TextColor3 = theme.Text
+        SearchBox.PlaceholderColor3 = theme.SubText
         SearchClose.BackgroundColor3 = theme.ElementBg2
+        SearchClose.TextColor3 = theme.Text
         ThemeDropdown.BackgroundColor3 = theme.ElementBg
         ConfirmBox.BackgroundColor3 = theme.ElementBg
         CT.TextColor3 = theme.Text
@@ -1786,12 +1790,43 @@ function GGH:CreateWindow(Config)
         YesBtn.BackgroundColor3 = theme.Accent
         NoBtn.BackgroundColor3 = theme.ElementBg2
         NoBtn.TextColor3 = theme.Text
+        -- حدث كل العناصر المسجلة فورا + توين خفيف
         for _, item in ipairs(ThemableElements) do
             if item.obj and item.obj.Parent then
-                if item.prop == "BackgroundColor3" then Tween(item.obj, {BackgroundColor3 = theme[item.key]}, 0.2)
-                elseif item.prop == "TextColor3" then item.obj.TextColor3 = theme[item.key]
-                elseif item.prop == "Stroke" then item.obj.Color = theme[item.key]
-                elseif item.prop == "ScrollBar" then item.obj.ScrollBarImageColor3 = theme.Accent
+                if item.prop == "BackgroundColor3" then
+                    item.obj.BackgroundColor3 = theme[item.key]
+                    Tween(item.obj, {BackgroundColor3 = theme[item.key]}, 0.15)
+                elseif item.prop == "TextColor3" then
+                    item.obj.TextColor3 = theme[item.key]
+                elseif item.prop == "Stroke" then
+                    item.obj.Color = theme[item.key]
+                elseif item.prop == "ScrollBar" then
+                    item.obj.ScrollBarImageColor3 = theme.Accent
+                end
+            end
+        end
+        -- حدث كل الفريمات داخل الصفحات بشكل مباشر (للعناصر اللي ما تسجلت)
+        for _, page in ipairs(Container:GetChildren()) do
+            if page:IsA("ScrollingFrame") then
+                for _, v in ipairs(page:GetDescendants()) do
+                    if v:IsA("Frame") then
+                        if v.BackgroundColor3 == CurrentTheme.ElementBg or v.BackgroundColor3 == CurrentTheme.ElementBg2 or v.BackgroundColor3 == CurrentTheme.TabListBg then
+                            -- لا نغير الاكسنت
+                        end
+                    end
+                end
+                page.ScrollBarImageColor3 = theme.Accent
+            end
+        end
+        -- حدث ازرار التابات
+        for _, t in pairs(Tabs) do
+            if t.Button then
+                if t.Page and t.Page.Visible then
+                    t.Button.BackgroundColor3 = theme.Accent
+                    t.Button.TextColor3 = Color3.fromRGB(255,255,255)
+                else
+                    t.Button.BackgroundColor3 = theme.ElementBg
+                    t.Button.TextColor3 = Color3.fromRGB(170,170,180)
                 end
             end
         end
@@ -2286,7 +2321,38 @@ function GGH:CreateWindow(Config)
             Cfg.Min = Cfg.Min or 0
             Cfg.Max = Cfg.Max or 100
             Cfg.Default = Cfg.Default or Cfg.Min
+            Cfg.Decimals = Cfg.Decimals or Cfg.Precision or Cfg.FloatPrecision or (Cfg.Float and 1 or 0)
+            if Cfg.Increment then
+                local s = tostring(Cfg.Increment)
+                if s:find("%.") then
+                    local parts = string.split(s, ".")
+                    local dec = parts[2] and #parts[2] or 0
+                    if dec > Cfg.Decimals then Cfg.Decimals = dec end
+                end
+            end
+            local isFloat = Cfg.Float or Cfg.Decimals > 0 or Cfg.Precision ~= nil or Cfg.AllowDecimals
+            local function FormatVal(v)
+                if isFloat then
+                    local dec = Cfg.Decimals
+                    if dec == 0 and Cfg.Precision == nil and Cfg.Float then dec = 1 end
+                    if Cfg.Precision then dec = Cfg.Precision end
+                    return string.format("%."..tostring(dec).."f", v)
+                else
+                    if Cfg.Integer or Cfg.Round then
+                        return tostring(math.floor(v+0.5))
+                    end
+                    return tostring(math.floor(v*100)/100):gsub("%.0+$",""):gsub("%.$","")
+                end
+            end
+            local function SnapValue(v)
+                if Cfg.Increment and Cfg.Increment > 0 then
+                    v = math.floor((v / Cfg.Increment)+0.5) * Cfg.Increment
+                    v = tonumber(string.format("%."..tostring(Cfg.Decimals+4).."f", v))
+                end
+                return v
+            end
             local Value = math.clamp(Cfg.Default, Cfg.Min, Cfg.Max)
+            Value = SnapValue(Value)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,58)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
@@ -2301,7 +2367,7 @@ function GGH:CreateWindow(Config)
             Label.Font = Enum.Font.GothamMedium
             Label.TextSize = 12
             Label.TextColor3 = CurrentTheme.Text
-            Label.Text = Cfg.Title.." : "..Value
+            Label.Text = Cfg.Title.." : "..FormatVal(Value)
             Label.AutoLocalize = true
             RegisterThemable(Label, "TextColor3", "Text")
             local Bar = Instance.new("Frame", Frame)
@@ -2335,10 +2401,17 @@ function GGH:CreateWindow(Config)
                 local barSize = Bar.AbsoluteSize.X
                 if barSize <= 0 then barSize = 200 end
                 local rel = math.clamp((inputX - barPos) / barSize, 0, 1)
-                Value = math.floor(Cfg.Min + (Cfg.Max - Cfg.Min) * rel)
+                local newVal = Cfg.Min + (Cfg.Max - Cfg.Min) * rel
+                newVal = SnapValue(newVal)
+                if not isFloat then
+                    if Cfg.Round or Cfg.Integer then
+                        newVal = math.floor(newVal+0.5)
+                    end
+                end
+                Value = math.clamp(newVal, Cfg.Min, Cfg.Max)
                 Fill.Size = UDim2.new(rel,0,1,0)
                 Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
-                Label.Text = Cfg.Title.." : "..Value
+                Label.Text = Cfg.Title.." : "..FormatVal(Value)
                 pcall(Cfg.Callback or function() end, Value)
             end
             task.spawn(function()
@@ -2362,11 +2435,12 @@ function GGH:CreateWindow(Config)
             end)
             local SliderAPI = {}
             function SliderAPI:SetValue(v)
-                Value = math.clamp(v, Cfg.Min, Cfg.Max)
+                v = SnapValue(math.clamp(v, Cfg.Min, Cfg.Max))
+                Value = v
                 local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
                 Fill.Size = UDim2.new(rel,0,1,0)
                 Circle.Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)
-                Label.Text = Cfg.Title.." : "..Value
+                Label.Text = Cfg.Title.." : "..FormatVal(Value)
                 pcall(Cfg.Callback or function() end, Value)
                 return SliderAPI
             end
@@ -2375,7 +2449,7 @@ function GGH:CreateWindow(Config)
                 if newCfg then
                     if newCfg.Min then Cfg.Min = newCfg.Min end
                     if newCfg.Max then Cfg.Max = newCfg.Max end
-                    if newCfg.Title then Label.Text = newCfg.Title.." : "..Value; Cfg.Title = newCfg.Title end
+                    if newCfg.Title then Label.Text = newCfg.Title.." : "..FormatVal(Value); Cfg.Title = newCfg.Title end
                     if newCfg.Default then self:SetValue(newCfg.Default) end
                 end
                 return SliderAPI
@@ -2694,11 +2768,12 @@ local function CreateColorpicker(Cfg)
             local AdvancedGui = nil
             local function OpenAdvancedPicker()
                 if AdvancedGui and AdvancedGui.Parent then AdvancedGui:Destroy() end
+                local originalColor = Color -- حفظ اللون الاصلي للرجوع عند Exit
                 local ov = Instance.new("Frame", ScreenGui)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
                 ov.BackgroundColor3 = Color3.new(0,0,0)
-                ov.BackgroundTransparency = 0.35 -- Background visible
+                ov.BackgroundTransparency = 1 -- مخفي حسب طلب المستخدم
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
@@ -2935,6 +3010,11 @@ local function CreateColorpicker(Cfg)
                     TabPage.ScrollingEnabled=origScroll
                     if apply then
                         Fire(Color)
+                    else
+                        -- Exit: ارجع اللون القديم
+                        Color = originalColor
+                        PreviewBtn.BackgroundColor3 = originalColor
+                        Hue,Sat,Vib = Color3.toHSV(originalColor)
                     end
                     ov:Destroy()
                     AdvancedGui=nil
@@ -3955,11 +4035,39 @@ end
         end
 
         -- ======= عنصر جديد 4: سلايدر مع خانة رقم =======
+                -- ======= عنصر جديد 4: سلايدر مع خانة رقم (يدعم عشري) =======
         local function CreateSliderWithInput(Cfg)
             Cfg.Min = Cfg.Min or 0
             Cfg.Max = Cfg.Max or 100
             Cfg.Default = Cfg.Default or Cfg.Min
+            Cfg.Decimals = Cfg.Decimals or Cfg.Precision or Cfg.FloatPrecision or (Cfg.Float and 2 or 0)
+            if Cfg.Increment then
+                local s = tostring(Cfg.Increment)
+                if s:find("%.") then
+                    local parts = string.split(s, ".")
+                    local dec = parts[2] and #parts[2] or 0
+                    if dec > Cfg.Decimals then Cfg.Decimals = dec end
+                end
+            end
+            local isFloat = Cfg.Float or Cfg.Decimals > 0 or Cfg.AllowDecimals or Cfg.Precision ~= nil
+            local function FormatVal(v)
+                if isFloat or Cfg.Decimals > 0 then
+                    local dec = Cfg.Decimals
+                    if dec == 0 and isFloat then dec = 2 end
+                    return string.format("%."..tostring(dec).."f", v)
+                else
+                    return tostring(math.floor(v*100)/100):gsub("%.0+$","")
+                end
+            end
+            local function SnapValue(v)
+                if Cfg.Increment and Cfg.Increment > 0 then
+                    v = math.floor((v / Cfg.Increment)+0.5) * Cfg.Increment
+                    v = tonumber(string.format("%."..tostring(Cfg.Decimals+4).."f", v))
+                end
+                return v
+            end
             local Value = math.clamp(Cfg.Default, Cfg.Min, Cfg.Max)
+            Value = SnapValue(Value)
 
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,58)
@@ -3984,7 +4092,7 @@ end
             NumberBox.Size = UDim2.new(0,70,0,20)
             NumberBox.Position = UDim2.new(1,-80,0,5)
             NumberBox.BackgroundColor3 = CurrentTheme.ElementBg2
-            NumberBox.Text = tostring(Value)
+            NumberBox.Text = FormatVal(Value)
             NumberBox.Font = Enum.Font.Gotham
             NumberBox.TextSize = 12
             NumberBox.TextColor3 = CurrentTheme.Text
@@ -4020,7 +4128,7 @@ end
             local dragging = false
 
             local function UpdateVisuals(newVal, tween)
-                newVal = math.clamp(newVal, Cfg.Min, Cfg.Max)
+                newVal = SnapValue(math.clamp(newVal, Cfg.Min, Cfg.Max))
                 Value = newVal
                 local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
                 if tween then
@@ -4030,8 +4138,8 @@ end
                     Fill.Size = UDim2.new(rel,0,1,0)
                     Circle.Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)
                 end
-                NumberBox.Text = tostring(math.floor(Value*100)/100)
-                TitleLabel.Text = (Cfg.Title or "Slider").." : "..NumberBox.Text
+                NumberBox.Text = FormatVal(Value)
+                TitleLabel.Text = (Cfg.Title or "Slider").." : "..FormatVal(Value)
                 pcall(Cfg.Callback or function() end, Value)
             end
 
@@ -4049,7 +4157,7 @@ end
                 if barSize <= 0 then barSize = 200 end
                 local rel = math.clamp((inputX - barPos)/barSize, 0, 1)
                 local newVal = Cfg.Min + (Cfg.Max - Cfg.Min)*rel
-                if Cfg.Round or Cfg.Integer then newVal = math.floor(newVal) end
+                newVal = SnapValue(newVal)
                 UpdateVisuals(newVal, false)
             end
 
@@ -4087,7 +4195,7 @@ end
                     if num then
                         UpdateVisuals(num, true)
                     else
-                        NumberBox.Text = tostring(Value)
+                        NumberBox.Text = FormatVal(Value)
                     end
                 end
             end)
