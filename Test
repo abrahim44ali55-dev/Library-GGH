@@ -1062,11 +1062,11 @@ function GGH:CreateWindow(Config)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.Parent = GetGuiParent()
     local SizePresets = {
-        ["Tiny"]   = {W=420, H=280},
-        ["Small"]  = {W=460, H=320},
-        ["Medium"] = {W=520, H=360},
-        ["Large"]  = {W=600, H=400},
-        ["Huge"]   = {W=680, H=460},
+        ["Tiny"]   = {W=360, H=260},
+        ["Small"]  = {W=400, H=300},
+        ["Medium"] = {W=460, H=340},
+        ["Large"]  = {W=520, H=380},
+        ["Huge"]   = {W=600, H=440},
     }
     local function DetectDevicePreset()
         local cam = workspace.CurrentCamera
@@ -1846,11 +1846,43 @@ function GGH:CreateWindow(Config)
                 startGuiPos = FloatingIcon.Position
             end
         end)
+        local function ClampMainFloat(pos)
+            local vp = ScreenGui.AbsoluteSize
+            if vp.X < 10 or vp.Y < 10 then
+                vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080)
+            end
+            local sz = FloatingIcon.AbsoluteSize
+            if sz.X < 10 then sz = Vector2.new(40,40) end
+            local x = pos.X.Offset
+            local y = pos.Y.Offset
+            x = math.clamp(x, 4, vp.X - sz.X - 4)
+            y = math.clamp(y, 4, vp.Y - sz.Y - 4)
+            return UDim2.fromOffset(x, y)
+        end
         UserInputService.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStartPos
                 if delta.Magnitude > 5 then hasDragged = true end
-                FloatingIcon.Position = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
+                local rawPos = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
+                FloatingIcon.Position = ClampMainFloat(rawPos)
+            end
+        end)
+        -- loop حماية اضافية
+        task.spawn(function()
+            while FloatingIcon and FloatingIcon.Parent do
+                local vp = ScreenGui.AbsoluteSize
+                if vp.X > 10 then
+                    local sz = FloatingIcon.AbsoluteSize
+                    if sz.X > 10 then
+                        local absPos = FloatingIcon.AbsolutePosition
+                        local clampedX = math.clamp(absPos.X, 4, vp.X - sz.X - 4)
+                        local clampedY = math.clamp(absPos.Y, 4, vp.Y - sz.Y - 4)
+                        if absPos.X ~= clampedX or absPos.Y ~= clampedY then
+                            FloatingIcon.Position = UDim2.fromOffset(clampedX, clampedY)
+                        end
+                    end
+                end
+                task.wait(0.2)
             end
         end)
         UserInputService.InputEnded:Connect(function(input)
@@ -2809,7 +2841,7 @@ local function CreateColorpicker(Cfg)
                 local curSat = Sat
                 local curVib = Vib
                 local curHue = Hue
-                local function updateSV()
+                local function updateSV(noFire)
                     svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
                     local c = Color3.fromHSV(curHue,curSat,curVib)
                     Color = c
@@ -2817,10 +2849,13 @@ local function CreateColorpicker(Cfg)
                     preview.BackgroundColor3 = c
                     hexBox.Text = toHex(c)
                     svMarker.Position = UDim2.new(curSat,0,1-curVib,0)
+                    -- Preview فقط، ما ننفذ Fire الا عند Done
                     PreviewBtn.BackgroundColor3 = c
-                    Fire(c)
+                    if not noFire then
+                        -- معاينة فقط بدون استدعاء الكولباك النهائي
+                    end
                 end
-                local function updateHue()
+                local function updateHue(noFire)
                     curHue = Hue
                     svFrame.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
                     hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
@@ -2831,7 +2866,6 @@ local function CreateColorpicker(Cfg)
                     hexBox.Text = toHex(c)
                     hueMarker.Position = UDim2.new(0.5,0,curHue,0)
                     PreviewBtn.BackgroundColor3 = c
-                    Fire(c)
                 end
                 local draggingMode = nil
                 local origScroll = TabPage.ScrollingEnabled
@@ -2882,7 +2916,10 @@ local function CreateColorpicker(Cfg)
                                 hueMarker.BackgroundColor3 = Color3.fromHSV(curHue,1,1)
                                 preview.BackgroundColor3 = col
                                 PreviewBtn.BackgroundColor3 = col
-                                Fire(col)
+                                Color = col
+                                local h2,s2,v2 = Color3.toHSV(col)
+                                curHue,curSat,curVib = h2,s2,v2
+                                Hue,Sat,Vib = h2,s2,v2
                                 return
                             end
                         end
@@ -2894,13 +2931,16 @@ local function CreateColorpicker(Cfg)
                         end
                     end
                 end)
-                local function closePicker()
+                local function closePicker(apply)
                     TabPage.ScrollingEnabled=origScroll
+                    if apply then
+                        Fire(Color)
+                    end
                     ov:Destroy()
                     AdvancedGui=nil
                 end
-                ex.MouseButton1Click:Connect(closePicker)
-                done.MouseButton1Click:Connect(closePicker)
+                ex.MouseButton1Click:Connect(function() closePicker(false) end)
+                done.MouseButton1Click:Connect(function() closePicker(true) end)
                 AdvancedGui = ov
             end
             if Cfg.Mode=="Developer" then
@@ -3442,7 +3482,8 @@ local function CreateColorpicker(Cfg)
 
             local StatsContainer = Instance.new("Frame", Frame)
             StatsContainer.Name = "StatsContainer"
-            StatsContainer.Size = UDim2.new(1,-12,0, totalStats * 32)
+            StatsContainer.Size = UDim2.new(1,-12,0,0)
+            StatsContainer.AutomaticSize = Enum.AutomaticSize.Y
             StatsContainer.Position = UDim2.new(0,6,0,70)
             StatsContainer.BackgroundTransparency = 1
             local sLayout = Instance.new("UIListLayout", StatsContainer)
@@ -3486,36 +3527,47 @@ local function CreateColorpicker(Cfg)
                 local cfg = statCfg
                 local row = Instance.new("Frame", StatsContainer)
                 row.Size = UDim2.new(1,0,0,28)
+                row.AutomaticSize = Enum.AutomaticSize.Y
                 row.BackgroundColor3 = CurrentTheme.ElementBg2
                 row.BackgroundTransparency = 0.2
                 Corner(row, 8)
                 Stroke(row, CurrentTheme.Stroke, 1)
 
                 local left = Instance.new("TextLabel", row)
-                left.Size = UDim2.new(0.55,-8,1,0)
-                left.Position = UDim2.new(0,8,0,0)
+                left.Size = UDim2.new(0.35,-8,0,0)
+                left.AutomaticSize = Enum.AutomaticSize.Y
+                left.Position = UDim2.new(0,8,0,4)
                 left.BackgroundTransparency = 1
                 left.Text = cfg.Name or cfg.Title or ("Stat "..idx)
                 left.Font = Enum.Font.GothamMedium
                 left.TextSize = 12
                 left.TextColor3 = CurrentTheme.Text
                 left.TextXAlignment = Enum.TextXAlignment.Left
+                left.TextWrapped = true
                 left.AutoLocalize = true
                 RegisterThemable(left, "TextColor3", "Text")
 
                 local right = Instance.new("TextLabel", row)
-                right.Size = UDim2.new(0.45,-8,1,0)
-                right.Position = UDim2.new(0.55,4,0,0)
+                right.Size = UDim2.new(0.65,-12,0,0)
+                right.AutomaticSize = Enum.AutomaticSize.Y
+                right.Position = UDim2.new(0.35,4,0,4)
                 right.BackgroundTransparency = 1
                 right.Text = tostring(cfg.Value ~= nil and cfg.Value or cfg.Default or "0")
                 right.Font = Enum.Font.GothamBold
                 right.TextSize = 12
                 right.TextColor3 = CurrentTheme.ParagraphText
                 right.TextXAlignment = Enum.TextXAlignment.Right
+                right.TextWrapped = true
+                right.TextYAlignment = Enum.TextYAlignment.Top
                 right.AutoLocalize = false
                 RegisterThemable(right, "TextColor3", "ParagraphText")
 
-                return {row=row, valueLabel=right, cfg=cfg}
+                -- padding bottom
+                local pad = Instance.new("UIPadding", row)
+                pad.PaddingBottom = UDim.new(0,6)
+                pad.PaddingTop = UDim.new(0,6)
+
+                return {row=row, valueLabel=right, nameLabel=left, cfg=cfg}
             end
 
             for i, sCfg in ipairs(statsList) do
@@ -3656,6 +3708,406 @@ local function CreateColorpicker(Cfg)
 if true then
 end
 
+
+        -- ======= عنصر جديد 3: زر + توجل يصنع زر عائم =======
+        local function CreateFloatingButton(Cfg)
+            Cfg = Cfg or {}
+            local title = Cfg.Title or Cfg.Name or "Button"
+            local callback = Cfg.Callback or function() end
+            local floatEnabledDefault = Cfg.FloatDefault or Cfg.ToggleDefault or false
+            local floatDraggable = Cfg.FloatDraggable
+            if floatDraggable == nil then floatDraggable = true end
+            if Cfg.Draggable ~= nil then floatDraggable = Cfg.Draggable end
+            local floatText = Cfg.FloatText or Cfg.FloatName or title
+            local floatImage = Cfg.FloatImage or Cfg.FloatIcon or Cfg.Image or nil
+            local floatPosCfg = Cfg.FloatPosition or Cfg.Position or "Center"
+            local floatSize = Cfg.FloatSize or Vector2.new(50,50)
+            
+            local Frame = Instance.new("Frame", TabPage)
+            Frame.Size = UDim2.new(1,-4,0,38)
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
+            Corner(Frame, 9)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, title, "FloatingButton", Name)
+
+            local TitleLabel = Instance.new("TextLabel", Frame)
+            TitleLabel.Size = UDim2.new(1,-100,1,0)
+            TitleLabel.Position = UDim2.new(0,10,0,0)
+            TitleLabel.BackgroundTransparency = 1
+            TitleLabel.Text = title
+            TitleLabel.Font = Enum.Font.GothamMedium
+            TitleLabel.TextSize = 12
+            TitleLabel.TextColor3 = CurrentTheme.Text
+            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLabel.AutoLocalize = true
+            RegisterThemable(TitleLabel, "TextColor3", "Text")
+
+            local ToggleBg = Instance.new("Frame", Frame)
+            ToggleBg.Size = UDim2.new(0,38,0,20)
+            ToggleBg.Position = UDim2.new(1,-88,0.5,-10)
+            ToggleBg.BackgroundColor3 = floatEnabledDefault and CurrentTheme.Accent or CurrentTheme.ElementBg2
+            Corner(ToggleBg, 10)
+
+            local ToggleCircle = Instance.new("Frame", ToggleBg)
+            ToggleCircle.Size = UDim2.new(0,14,0,14)
+            ToggleCircle.Position = floatEnabledDefault and UDim2.new(1,-17,0.5,-7) or UDim2.new(0,3,0.5,-7)
+            ToggleCircle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            Corner(ToggleCircle, 7)
+
+            local ToggleBtn = Instance.new("TextButton", Frame)
+            ToggleBtn.Size = UDim2.new(0,38,0,20)
+            ToggleBtn.Position = ToggleBg.Position
+            ToggleBtn.BackgroundTransparency = 1
+            ToggleBtn.Text = ""
+
+            local MainBtn = Instance.new("TextButton", Frame)
+            MainBtn.Size = UDim2.new(0,44,0,24)
+            MainBtn.Position = UDim2.new(1,-42,0.5,-12)
+            MainBtn.BackgroundColor3 = CurrentTheme.ElementBg2
+            MainBtn.Text = "▶"
+            MainBtn.Font = Enum.Font.GothamBold
+            MainBtn.TextSize = 12
+            MainBtn.TextColor3 = CurrentTheme.Text
+            Corner(MainBtn, 7)
+            Stroke(MainBtn, CurrentTheme.StrokeLight, 1)
+
+            local floatingInstance = nil
+            local isFloatEnabled = floatEnabledDefault
+
+            local function GetViewport()
+                local vp = ScreenGui.AbsoluteSize
+                if vp.X < 10 then
+                    vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080)
+                end
+                return vp
+            end
+
+            local function ClampFloatPartial(pos, size)
+                local vp = GetViewport()
+                local minX = -size.X * 0.5
+                local maxX = vp.X - size.X * 0.5
+                local minY = -size.Y * 0.5
+                local maxY = vp.Y - size.Y * 0.5
+                local x = math.clamp(pos.X.Offset, minX, maxX)
+                local y = math.clamp(pos.Y.Offset, minY, maxY)
+                return UDim2.fromOffset(x, y)
+            end
+
+            local function ResolveFloatPosition()
+                if typeof(floatPosCfg) == "UDim2" then
+                    return floatPosCfg
+                elseif type(floatPosCfg) == "string" then
+                    local vp = GetViewport()
+                    local p = string.lower(floatPosCfg)
+                    if p == "center" or p == "middle" then
+                        return UDim2.fromOffset(vp.X/2 - floatSize.X/2, vp.Y/2 - floatSize.Y/2)
+                    elseif p == "top" then
+                        return UDim2.fromOffset(vp.X/2 - floatSize.X/2, 20)
+                    elseif p == "bottom" then
+                        return UDim2.fromOffset(vp.X/2 - floatSize.X/2, vp.Y - floatSize.Y - 20)
+                    elseif p == "topleft" then
+                        return UDim2.fromOffset(20, 20)
+                    elseif p == "topright" then
+                        return UDim2.fromOffset(vp.X - floatSize.X - 20, 20)
+                    else
+                        return UDim2.fromOffset(vp.X/2 - floatSize.X/2, vp.Y/2 - floatSize.Y/2)
+                    end
+                else
+                    local vp = GetViewport()
+                    return UDim2.fromOffset(vp.X/2 - floatSize.X/2, vp.Y/2 - floatSize.Y/2)
+                end
+            end
+
+            local function CreateFloat()
+                if floatingInstance then floatingInstance:Destroy() end
+                local btn
+                if floatImage and floatImage ~= "" then
+                    btn = Instance.new("ImageButton", ScreenGui)
+                    btn.Image = ResolveImageAsset(floatImage)
+                else
+                    btn = Instance.new("TextButton", ScreenGui)
+                    btn.Text = floatText
+                    btn.Font = Enum.Font.GothamBold
+                    btn.TextSize = 12
+                    btn.TextColor3 = Color3.new(1,1,1)
+                    btn.TextWrapped = true
+                end
+                btn.Name = "GGH_Float_"..title
+                btn.Size = UDim2.new(0, floatSize.X, 0, floatSize.Y)
+                btn.Position = ResolveFloatPosition()
+                btn.BackgroundColor3 = CurrentTheme.Accent
+                btn.ZIndex = 199
+                btn.AutoButtonColor = false
+                Corner(btn, 12)
+                Stroke(btn, Color3.new(1,1,1), 1).Transparency = 0.5
+                btn.Active = true
+
+                local dragging = false
+                local dragStart, startPos
+                local hasDragged = false
+
+                btn.InputBegan:Connect(function(input)
+                    if floatDraggable and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                        dragging = true
+                        hasDragged = false
+                        dragStart = input.Position
+                        startPos = btn.Position
+                    end
+                end)
+                UserInputService.InputChanged:Connect(function(input)
+                    if dragging and floatDraggable and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        local delta = input.Position - dragStart
+                        if delta.Magnitude > 4 then hasDragged = true end
+                        local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                        btn.Position = ClampFloatPartial(newPos, floatSize)
+                    end
+                end)
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        dragging = false
+                        task.wait(0.05)
+                        hasDragged = false
+                    end
+                end)
+
+                btn.MouseButton1Click:Connect(function()
+                    if hasDragged then return end
+                    pcall(callback)
+                end)
+
+                task.spawn(function()
+                    while btn and btn.Parent do
+                        local vp = GetViewport()
+                        local abs = btn.AbsolutePosition
+                        local sz = btn.AbsoluteSize
+                        if sz.X > 5 then
+                            local minX = -sz.X * 0.5
+                            local maxX = vp.X - sz.X * 0.5
+                            local minY = -sz.Y * 0.5
+                            local maxY = vp.Y - sz.Y * 0.5
+                            if abs.X < minX or abs.X > maxX or abs.Y < minY or abs.Y > maxY then
+                                local clampedX = math.clamp(abs.X, minX, maxX)
+                                local clampedY = math.clamp(abs.Y, minY, maxY)
+                                btn.Position = UDim2.fromOffset(clampedX, clampedY)
+                            end
+                        end
+                        task.wait(0.3)
+                    end
+                end)
+
+                floatingInstance = btn
+                return btn
+            end
+
+            local function RemoveFloat()
+                if floatingInstance then
+                    floatingInstance:Destroy()
+                    floatingInstance = nil
+                end
+            end
+
+            local function SetToggleState(state)
+                isFloatEnabled = state
+                if state then
+                    Tween(ToggleBg, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
+                    Tween(ToggleCircle, {Position = UDim2.new(1,-17,0.5,-7)}, 0.15)
+                    CreateFloat()
+                else
+                    Tween(ToggleBg, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.15)
+                    Tween(ToggleCircle, {Position = UDim2.new(0,3,0.5,-7)}, 0.15)
+                    RemoveFloat()
+                end
+            end
+
+            ToggleBtn.MouseButton1Click:Connect(function()
+                SetToggleState(not isFloatEnabled)
+            end)
+
+            MainBtn.MouseButton1Click:Connect(function()
+                Tween(MainBtn, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.08)
+                task.wait(0.08)
+                Tween(MainBtn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.08)
+                pcall(callback)
+            end)
+
+            if isFloatEnabled then
+                task.spawn(function() task.wait(0.2) CreateFloat() end)
+            end
+
+            local API = {}
+            function API:SetValue(v) SetToggleState(v) return API end
+            function API:GetValue() return isFloatEnabled end
+            function API:SetTitle(t) TitleLabel.Text = t return API end
+            function API:Fire() pcall(callback) return API end
+            function API:Destroy()
+                RemoveFloat()
+                Frame:Destroy()
+            end
+            function API:Refresh(newCfg)
+                if not newCfg then return API end
+                if newCfg.Title then TitleLabel.Text = newCfg.Title end
+                if newCfg.Callback then callback = newCfg.Callback end
+                if newCfg.FloatText then floatText = newCfg.FloatText if floatingInstance and floatingInstance:IsA("TextButton") then floatingInstance.Text = floatText end end
+                if newCfg.FloatImage and floatingInstance and floatingInstance:IsA("ImageButton") then floatingInstance.Image = ResolveImageAsset(newCfg.FloatImage) end
+                return API
+            end
+            return API
+        end
+
+        -- ======= عنصر جديد 4: سلايدر مع خانة رقم =======
+        local function CreateSliderWithInput(Cfg)
+            Cfg.Min = Cfg.Min or 0
+            Cfg.Max = Cfg.Max or 100
+            Cfg.Default = Cfg.Default or Cfg.Min
+            local Value = math.clamp(Cfg.Default, Cfg.Min, Cfg.Max)
+
+            local Frame = Instance.new("Frame", TabPage)
+            Frame.Size = UDim2.new(1,-4,0,58)
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
+            Corner(Frame, 9)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, Cfg.Title, "SliderInput", Name)
+
+            local TitleLabel = Instance.new("TextLabel", Frame)
+            TitleLabel.Size = UDim2.new(1,-90,0,18)
+            TitleLabel.Position = UDim2.new(0,10,0,6)
+            TitleLabel.BackgroundTransparency = 1
+            TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TitleLabel.Font = Enum.Font.GothamMedium
+            TitleLabel.TextSize = 12
+            TitleLabel.TextColor3 = CurrentTheme.Text
+            TitleLabel.Text = Cfg.Title or "Slider"
+            TitleLabel.AutoLocalize = true
+            RegisterThemable(TitleLabel, "TextColor3", "Text")
+
+            local NumberBox = Instance.new("TextBox", Frame)
+            NumberBox.Size = UDim2.new(0,70,0,20)
+            NumberBox.Position = UDim2.new(1,-80,0,5)
+            NumberBox.BackgroundColor3 = CurrentTheme.ElementBg2
+            NumberBox.Text = tostring(Value)
+            NumberBox.Font = Enum.Font.Gotham
+            NumberBox.TextSize = 12
+            NumberBox.TextColor3 = CurrentTheme.Text
+            NumberBox.PlaceholderColor3 = CurrentTheme.SubText
+            NumberBox.ClearTextOnFocus = false
+            Corner(NumberBox, 6)
+            Stroke(NumberBox, CurrentTheme.Stroke, 1)
+            RegisterThemable(NumberBox, "BackgroundColor3", "ElementBg2")
+
+            local Bar = Instance.new("Frame", Frame)
+            Bar.Size = UDim2.new(1,-90,0,8)
+            Bar.Position = UDim2.new(0,10,0,32)
+            Bar.BackgroundColor3 = CurrentTheme.ElementBg2
+            Corner(Bar, 4)
+            RegisterThemable(Bar, "BackgroundColor3", "ElementBg2")
+
+            local Fill = Instance.new("Frame", Bar)
+            Fill.Size = UDim2.new((Value - Cfg.Min) / math.max(1, Cfg.Max - Cfg.Min),0,1,0)
+            Fill.BackgroundColor3 = CurrentTheme.Accent
+            Corner(Fill, 4)
+            RegisterThemable(Fill, "BackgroundColor3", "Accent")
+
+            local Circle = Instance.new("Frame", Frame)
+            Circle.Size = UDim2.new(0,16,0,16)
+            Circle.AnchorPoint = Vector2.new(0.5,0.5)
+            Circle.Position = UDim2.new(0,10,0,36)
+            Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            Circle.ZIndex = 10
+            Corner(Circle, 8)
+            local S = Stroke(Circle, CurrentTheme.Accent, 2)
+            RegisterThemable(S, "Stroke", "Accent")
+
+            local dragging = false
+
+            local function UpdateVisuals(newVal, tween)
+                newVal = math.clamp(newVal, Cfg.Min, Cfg.Max)
+                Value = newVal
+                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
+                if tween then
+                    Tween(Fill, {Size = UDim2.new(rel,0,1,0)}, 0.15)
+                    Tween(Circle, {Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)}, 0.15)
+                else
+                    Fill.Size = UDim2.new(rel,0,1,0)
+                    Circle.Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)
+                end
+                NumberBox.Text = tostring(math.floor(Value*100)/100)
+                TitleLabel.Text = (Cfg.Title or "Slider").." : "..NumberBox.Text
+                pcall(Cfg.Callback or function() end, Value)
+            end
+
+            task.spawn(function()
+                task.wait(0.08)
+                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
+                local barSize = Bar.AbsoluteSize.X
+                if barSize <= 0 then barSize = 200 end
+                Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
+            end)
+
+            local function UpdateFromInputPos(inputX)
+                local barPos = Bar.AbsolutePosition.X
+                local barSize = Bar.AbsoluteSize.X
+                if barSize <= 0 then barSize = 200 end
+                local rel = math.clamp((inputX - barPos)/barSize, 0, 1)
+                local newVal = Cfg.Min + (Cfg.Max - Cfg.Min)*rel
+                if Cfg.Round or Cfg.Integer then newVal = math.floor(newVal) end
+                UpdateVisuals(newVal, false)
+            end
+
+            local DragArea = Instance.new("TextButton", Bar)
+            DragArea.Size = UDim2.new(1,0,2.5,0)
+            DragArea.Position = UDim2.new(0,0,0.5,-10)
+            DragArea.BackgroundTransparency = 1
+            DragArea.Text = ""
+
+            DragArea.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    UpdateFromInputPos(input.Position.X)
+                end
+            end)
+            Circle.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                end
+            end)
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    UpdateFromInputPos(input.Position.X)
+                end
+            end)
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
+                end
+            end)
+
+            NumberBox.FocusLost:Connect(function(enter)
+                if enter then
+                    local num = tonumber(NumberBox.Text)
+                    if num then
+                        UpdateVisuals(num, true)
+                    else
+                        NumberBox.Text = tostring(Value)
+                    end
+                end
+            end)
+
+            local API = {}
+            function API:SetValue(v) UpdateVisuals(v, true) return API end
+            function API:GetValue() return Value end
+            function API:Refresh(newCfg)
+                if newCfg then
+                    if newCfg.Min then Cfg.Min = newCfg.Min end
+                    if newCfg.Max then Cfg.Max = newCfg.Max end
+                    if newCfg.Title then Cfg.Title = newCfg.Title end
+                    if newCfg.Default then UpdateVisuals(newCfg.Default, true) end
+                end
+                return API
+            end
+            return API
+        end
+
+
 local Elements = {}
         local AllElements = {}
         local function RegisterElement(api, typeName, cfg)
@@ -3686,6 +4138,8 @@ local Elements = {}
             elseif Type == "image" or Type == "img" or Type == "logo" then api = CreateImage(Cfg)
             elseif Type == "linkbutton" or Type == "link" or Type == "social" or Type == "discord" or Type == "copylink" then api = CreateLinkButton(Cfg)
             elseif Type == "playerstats" or Type == "stats" or Type == "statlist" or Type == "player" then api = CreatePlayerStats(Cfg)
+            elseif Type == "floatbutton" or Type == "buttonfloat" or Type == "btnfloat" or Type == "floatingbutton" then api = CreateFloatingButton(Cfg)
+            elseif Type == "sliderinput" or Type == "sliderbox" or Type == "inputslider" then api = CreateSliderWithInput(Cfg)
             else warn("[GGH Library v1.8.1] Unknown Add type: "..tostring(Type))
             end
             if api and type(api)=="table" and not api.Refresh then
@@ -3725,6 +4179,11 @@ local Elements = {}
         function Elements:PlayerStats(Cfg) return self:Add("PlayerStats", Cfg) end
         function Elements:Stats(Cfg) return self:Add("PlayerStats", Cfg) end
         function Elements:StatList(Cfg) return self:Add("PlayerStats", Cfg) end
+        function Elements:FloatButton(Cfg) return self:Add("FloatButton", Cfg) end
+        function Elements:ButtonFloat(Cfg) return self:Add("FloatButton", Cfg) end
+        function Elements:FloatingButton(Cfg) return self:Add("FloatButton", Cfg) end
+        function Elements:SliderInput(Cfg) return self:Add("SliderInput", Cfg) end
+        function Elements:SliderBox(Cfg) return self:Add("SliderInput", Cfg) end
         return Elements
     end
     function Window:AddTab(Cfg)
