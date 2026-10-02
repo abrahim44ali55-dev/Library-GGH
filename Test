@@ -61,7 +61,7 @@ local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
--- ===== ظ†ط¸ط§ظ… ظ…ظ†ط¹ ط§ظ„ط®ط±ظˆط¬ ظ…ظ† ط§ظ„ط´ط§ط´ط© - ظ†ظپط³ ط·ط±ظٹظ‚ط© ط§ظ„ط²ط± ط§ظ„ط¹ط§ط¦ظ… =====
+-- ===== نظام منع الخروج من الشاشة - نفس طريقة الزر العائم =====
 local function ClampFrameToScreen(frame, gui)
     if not frame or not gui then return end
     local viewport = gui.AbsoluteSize
@@ -75,7 +75,7 @@ local function ClampFrameToScreen(frame, gui)
         newY = math.clamp(fPos.Y.Offset, 0, viewport.Y - fSize.Y)
         frame.Position = UDim2.fromOffset(newX, newY)
     else
-        -- ظ„ظ„ظ€ Scale ظ†ط­ظˆظ„ ظ„ظ€ Offset ظ…ط¹ Clamp
+        -- للـ Scale نحول لـ Offset مع Clamp
         local absX = fPos.X.Scale * viewport.X + fPos.X.Offset
         local absY = fPos.Y.Scale * viewport.Y + fPos.Y.Offset
         absX = math.clamp(absX, 0, viewport.X - fSize.X)
@@ -1315,11 +1315,11 @@ function GGH:CreateWindow(Config)
     local order = 1
 
     if showSearch then
-        SearchBtn = CreateCtrlButton("SearchBtn", "ًں”چ", CurrentTheme.ElementBg2)
+        SearchBtn = CreateCtrlButton("SearchBtn", "🔍", CurrentTheme.ElementBg2)
         SearchBtn.LayoutOrder = order; order+=1
     end
     if showSettings then
-        ThemeBtn = CreateCtrlButton("ThemeBtn", "âڑ™", CurrentTheme.ElementBg2)
+        ThemeBtn = CreateCtrlButton("ThemeBtn", "⚙", CurrentTheme.ElementBg2)
         ThemeBtn.LayoutOrder = order; order+=1
     end
     MinBtn = CreateCtrlButton("MinBtn", "-", CurrentTheme.ElementBg2)
@@ -1330,7 +1330,7 @@ function GGH:CreateWindow(Config)
     MaxBtn.LayoutOrder = order; order+=1
     MaxBtn.Visible = false
     if showFloat then
-        FloatBtn = CreateCtrlButton("FloatBtn", "â—‰", CurrentTheme.ElementBg2)
+        FloatBtn = CreateCtrlButton("FloatBtn", "◉", CurrentTheme.ElementBg2)
         FloatBtn.LayoutOrder = order; order+=1
     end
     CloseBtn = CreateCtrlButton("CloseBtn", "X", CurrentTheme.CloseBg)
@@ -1382,7 +1382,7 @@ function GGH:CreateWindow(Config)
     SearchClose.TextColor3 = CurrentTheme.Text
     SearchClose.ZIndex = 91
     Corner(SearchClose, 7)
-    -- ===== NEW: ThemeDropdown ظ…ط±طھط¨ ظ†ظپط³ ط³طھط§ظٹظ„ ط§ظ„ظ…ظƒطھط¨ط© + ط¨ط¯ظˆظ† ط´ظپط§ظپظٹط© + طھظˆط¬ظ„ ط­ظپط¸ =====
+    -- ===== NEW: ThemeDropdown مرتب نفس ستايل المكتبة + بدون شفافية + توجل حفظ =====
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
     ThemeDropdown.Size = UDim2.new(0,220,0,0)
@@ -1411,7 +1411,7 @@ function GGH:CreateWindow(Config)
     local TLP = Instance.new("UIPadding", ThemeList)
     TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
 
-    -- Header ظ…ط±طھط¨
+    -- Header مرتب
     local ThemeHeader = Instance.new("TextLabel", ThemeList)
     ThemeHeader.Size = UDim2.new(1,0,0,20)
     ThemeHeader.BackgroundTransparency = 1
@@ -1423,7 +1423,7 @@ function GGH:CreateWindow(Config)
     ThemeHeader.LayoutOrder = -100
     AddTextStroke(ThemeHeader)
 
-    -- ===== طھظˆط¬ظ„ ط­ظپط¸ ط§ظ„ط§ط¹ط¯ط§ط¯ط§طھ - ظٹط¸ظ‡ط± ط§ظˆظ„ ط´ظٹ =====
+    -- ===== توجل حفظ الاعدادات - يظهر اول شي =====
     local SaveToggleFrame = Instance.new("Frame", ThemeList)
     SaveToggleFrame.Size = UDim2.new(1,0,0,38)
     SaveToggleFrame.BackgroundColor3 = CurrentTheme.ElementBg2
@@ -1459,14 +1459,14 @@ function GGH:CreateWindow(Config)
     SaveToggleBtn.BackgroundTransparency = 1
     SaveToggleBtn.Text = ""
 
-    -- ط³ط·ط± ظپط§طµظ„
+    -- سطر فاصل
     local Sep1 = Instance.new("Frame", ThemeList)
     Sep1.Size = UDim2.new(1,0,0,1)
     Sep1.BackgroundColor3 = CurrentTheme.Stroke
     Sep1.BackgroundTransparency = 0.5
     Sep1.LayoutOrder = -85
 
-    -- ظ…ظ„ط§ط­ط¸ط©: ط§ظ„طھط­ظƒظ… ط¨ط§ظ„ط´ظپط§ظپظٹط© ط§ظ†ط´ط§ظ„ - ط¨ط³ ط§ظ„ظ…ط·ظˆط± ظٹط­ط¯ط¯ظ‡ ظ…ظ† Config.WindowTransparency
+    -- ملاحظة: التحكم بالشفافية انشال - بس المطور يحدده من Config.WindowTransparency
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,140,1,-64)
@@ -1577,11 +1577,11 @@ function GGH:CreateWindow(Config)
         local function ApplyResponsiveSize()
             local vp = ScreenGui.AbsoluteSize
             if vp.X < 100 or vp.Y < 100 then return end
-            -- ط§ظ„ط­ط¬ظ… ط§ظ„ظ…ظ†ط§ط³ط¨ ط­ط³ط¨ ظ‚ظٹط§ط³ ط§ظ„ط´ط§ط´ط© - 85% ط¹ط±ط¶ ظˆ 80% ط§ط±طھظپط§ط¹ ظƒط­ط¯ ط§ظ‚طµظ‰
+            -- الحجم المناسب حسب قياس الشاشة - 85% عرض و 80% ارتفاع كحد اقصى
             local maxW = math.clamp(vp.X * 0.88, 340, 620)
             local maxH = math.clamp(vp.Y * 0.78, 300, 500)
             local curSize = Main.AbsoluteSize
-            -- ط§ط°ط§ ط§ظ„ط­ط¬ظ… ط§ظ„ط­ط§ظ„ظٹ ط§ظƒط¨ط± ظ…ظ† ط§ظ„ط´ط§ط´ط©طŒ طµط؛ط±ظ‡ طھظ„ظ‚ط§ط¦ظٹط§
+            -- اذا الحجم الحالي اكبر من الشاشة، صغره تلقائيا
             if curSize.X > vp.X - 20 or curSize.Y > vp.Y - 80 then
                 Main.Size = UDim2.fromOffset(math.min(curSize.X, maxW), math.min(curSize.Y, maxH))
             end
@@ -1595,7 +1595,7 @@ function GGH:CreateWindow(Config)
         end
         ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(newUpdateWrapper)
         task.spawn(function() task.wait(0.2) newUpdateWrapper() end)
-        -- ط§ظˆظ„ ظ…ط±ط© ظ†ط­ط³ط¨ ط­ط¬ظ… ظ…ظ†ط§ط³ط¨
+        -- اول مرة نحسب حجم مناسب
         ApplyResponsiveSize()
 
         local function StartDrag(input)
@@ -2492,10 +2492,10 @@ local function CreateDropdown(Cfg)
     local function RefreshOptions()
         for _, child in ipairs(List:GetChildren()) do
             if child:IsA("TextButton") then
-                local name = child:GetAttribute("OptName") or child.Text:gsub("âœ“ ","")
+                local name = child:GetAttribute("OptName") or child.Text:gsub("✓ ","")
                 local sel = IsSelected(name)
                 child.BackgroundColor3 = sel and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                child.Text = (sel and "âœ“ " or "")..name
+                child.Text = (sel and "✓ " or "")..name
             end
         end
         Btn.Text = GetDisplayText()
@@ -2505,7 +2505,7 @@ local function CreateDropdown(Cfg)
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,-4,0,28)
         O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-        O.Text = (IsSelected(opt) and "âœ“ " or "")..opt
+        O.Text = (IsSelected(opt) and "✓ " or "")..opt
         O.Font = Enum.Font.Gotham
         O.TextSize = 11
         O.TextColor3 = CurrentTheme.Text
@@ -2685,7 +2685,7 @@ local function CreateColorpicker(Cfg)
                     local vp = ov.AbsoluteSize
                     local sz = main.AbsoluteSize
                     if sz.X==0 or vp.X<=10 then return end
-                    -- ظ†ط¶ظ…ظ† ط§ظ„ط­ط¬ظ… ظ…ط§ ظٹط·ظ„ط¹ ط§ظƒط¨ط± ظ…ظ† ط§ظ„ط´ط§ط´ط©
+                    -- نضمن الحجم ما يطلع اكبر من الشاشة
                     local maxW = math.clamp(vp.X - 20, 200, 600)
                     local maxH = math.clamp(vp.Y - 20, 200, 340)
                     if sz.X > maxW or sz.Y > maxH then
@@ -2693,11 +2693,11 @@ local function CreateColorpicker(Cfg)
                         sz = main.AbsoluteSize
                     end
                     local pos = main.Position
-                    -- ط§ط°ط§ ط¨ط§ظ„ظˆط³ط· ظ†ط­ط³ط¨ ط­ط¯ظˆط¯ظ‡
+                    -- اذا بالوسط نحسب حدوده
                     if pos.X.Scale==0.5 then
-                        -- ط§ظ„ظˆط³ط· ط¢ظ…ظ†طŒ ط¨ط³ ظ†طھط£ظƒط¯ ط§ظ„ط­ط¬ظ…
+                        -- الوسط آمن، بس نتأكد الحجم
                         main.Position = UDim2.new(0.5,0,0.5,0) -- Centered fixed
-                        -- ط¨ط¹ط¯ ط§ظ„ظˆط³ط· ظ†ط¹ظ…ظ„ clamp ط§ط¶ط§ظپظٹ
+                        -- بعد الوسط نعمل clamp اضافي
                         task.wait()
                         local absPos = main.AbsolutePosition
                         local cx = math.clamp(absPos.X, 5, vp.X - sz.X - 5)
@@ -2886,7 +2886,7 @@ local function CreateColorpicker(Cfg)
                                 return
                             end
                         end
-                        local num = tonumber(txt:gsub("آ°",""))
+                        local num = tonumber(txt:gsub("°",""))
                         if num then
                             if num>1 and num<=360 then curHue = num/360 else curHue = math.clamp(num,0,1) end
                             Hue = curHue
@@ -3089,6 +3089,33 @@ local function CreateColorpicker(Cfg)
 
         end
 
+        -- ======= Helper: يدعم رابط مباشر png/jpg و روبلوكس ايدي =======
+        local function IsUrlImage(str)
+            if not str then return false end
+            str = tostring(str):lower()
+            return str:match("^https?://") ~= nil
+        end
+
+        local function ResolveImageAsset(inputStr)
+            if not inputStr or inputStr == "" then return "" end
+            local s = tostring(inputStr)
+            -- اذا رابط مباشر png/jpg/webp/gif
+            if IsUrlImage(s) then
+                return s
+            end
+            -- اذا rbxassetid كامل
+            if s:match("rbxassetid://%d+") then
+                return s
+            end
+            -- استخرج الايدي
+            local id = s:match("id=(%d+)") or s:match("rbxassetid://(%d+)") or s:match("(%d+)")
+            if id then
+                return "rbxassetid://"..id
+            end
+            -- اذا رابط لكن بدون https ؟ جرب ارجاعه كما هو
+            return s
+        end
+
         local function CreateImage(Cfg)
             Cfg = Cfg or {}
             local function extractId(text)
@@ -3122,27 +3149,17 @@ local function CreateColorpicker(Cfg)
             ImageLabel.ScaleType = Cfg.ScaleType or Enum.ScaleType.Fit
             Corner(ImageLabel, 8)
 
-            local initialId = nil
-            if Cfg.Image then initialId = extractId(Cfg.Image) end
-            if Cfg.Url then initialId = extractId(Cfg.Url) end
-            if Cfg.Id then initialId = extractId(Cfg.Id) end
-            if Cfg.Default then initialId = extractId(Cfg.Default) end
-
-            if initialId then
-                ImageLabel.Image = "rbxassetid://"..initialId
-            elseif Cfg.Image and Cfg.Image:match("rbxasset") then
-                ImageLabel.Image = Cfg.Image
-            else
-                ImageLabel.Image = Cfg.Image or Cfg.Url or ""
-            end
+            -- يدعم رابط مباشر + روبلوكس ايدي
+            local rawImg = Cfg.Image or Cfg.Url or Cfg.Id or Cfg.Default or ""
+            ImageLabel.Image = ResolveImageAsset(rawImg)
 
             if useInput then
                 local InputBox = Instance.new("TextBox", Frame)
                 InputBox.Size = UDim2.new(1,-12,0,32)
                 InputBox.Position = UDim2.new(0,6,0,6)
                 InputBox.BackgroundColor3 = CurrentTheme.ElementBg2
-                InputBox.PlaceholderText = Cfg.Placeholder or "Paste image asset ID or link here"
-                InputBox.Text = Cfg.DefaultText or ""
+                InputBox.PlaceholderText = Cfg.Placeholder or "ID or https:// image.png/jpg"
+                InputBox.Text = Cfg.DefaultText or tostring(rawImg or "")
                 InputBox.TextColor3 = CurrentTheme.Text
                 InputBox.PlaceholderColor3 = CurrentTheme.SubText
                 InputBox.Font = Enum.Font.Gotham
@@ -3152,9 +3169,9 @@ local function CreateColorpicker(Cfg)
                 RegisterThemable(InputBox, "BackgroundColor3", "ElementBg2")
 
                 local function showImageFromInput()
-                    local id = extractId(InputBox.Text)
-                    if id and id ~= "" then
-                        ImageLabel.Image = "rbxassetid://"..id
+                    local txt = InputBox.Text
+                    if txt and txt ~= "" then
+                        ImageLabel.Image = ResolveImageAsset(txt)
                     end
                 end
 
@@ -3188,7 +3205,453 @@ local function CreateColorpicker(Cfg)
                 Title.AutoLocalize = true
                 RegisterThemable(Title, "TextColor3", "Text")
             end
+
+            local ImageAPI = {}
+            function ImageAPI:SetImage(newImg)
+                ImageLabel.Image = ResolveImageAsset(newImg)
+                return ImageAPI
+            end
+            function ImageAPI:Refresh(newCfg)
+                if newCfg and newCfg.Image then
+                    ImageLabel.Image = ResolveImageAsset(newCfg.Image)
+                end
+                return ImageAPI
+            end
+            return ImageAPI
         end
+
+        -- ======= عنصر جديد 1: زر رابط ينسخ (ديسكورد / يوتيوب / اي رابط) =======
+        local function CreateLinkButton(Cfg)
+            Cfg = Cfg or {}
+            local title = Cfg.Title or Cfg.Name or "Link"
+            local linkUrl = Cfg.Link or Cfg.Url or Cfg.Discord or Cfg.Youtube or Cfg.YouTube or ""
+            local imgSrc = Cfg.Image or Cfg.Icon or nil
+            local btnText = Cfg.ButtonText or Cfg.Text or "Copy Link"
+
+            local Frame = Instance.new("Frame", TabPage)
+            Frame.Size = UDim2.new(1,-4,0, (imgSrc and 110 or 70))
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
+            Corner(Frame, 10)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, title.." "..linkUrl, "LinkButton", Name)
+
+            local ImgLabel
+            local yOffset = 0
+            if imgSrc then
+                ImgLabel = Instance.new("ImageLabel", Frame)
+                ImgLabel.Size = UDim2.new(0,50,0,50)
+                ImgLabel.Position = UDim2.new(0.5,-25,0,8)
+                ImgLabel.BackgroundColor3 = Color3.fromRGB(20,20,22)
+                ImgLabel.BackgroundTransparency = 0.3
+                ImgLabel.Image = ResolveImageAsset(imgSrc)
+                ImgLabel.ScaleType = Enum.ScaleType.Crop
+                Corner(ImgLabel, 25)
+                yOffset = 58
+            end
+
+            local NameLabel = Instance.new("TextLabel", Frame)
+            NameLabel.Size = UDim2.new(1,-12,0,20)
+            NameLabel.Position = UDim2.new(0,6,0, yOffset + 4)
+            NameLabel.BackgroundTransparency = 1
+            NameLabel.Text = title
+            NameLabel.Font = Enum.Font.GothamBold
+            NameLabel.TextSize = 13
+            NameLabel.TextColor3 = CurrentTheme.Text
+            NameLabel.TextXAlignment = Enum.TextXAlignment.Center
+            NameLabel.AutoLocalize = true
+            AddTextStroke(NameLabel)
+            RegisterThemable(NameLabel, "TextColor3", "Text")
+
+            local CopyBtn = Instance.new("TextButton", Frame)
+            CopyBtn.Size = UDim2.new(1,-12,0,32)
+            CopyBtn.Position = UDim2.new(0,6,0, yOffset + 26)
+            CopyBtn.BackgroundColor3 = CurrentTheme.ElementBg2
+            CopyBtn.Text = btnText.."  📋"
+            CopyBtn.Font = Enum.Font.GothamMedium
+            CopyBtn.TextSize = 12
+            CopyBtn.TextColor3 = CurrentTheme.Text
+            CopyBtn.AutoLocalize = true
+            Corner(CopyBtn, 8)
+            Stroke(CopyBtn, CurrentTheme.StrokeLight, 1)
+
+            local function DoCopy()
+                local ok = pcall(function()
+                    if setclipboard then setclipboard(tostring(linkUrl)) end
+                end)
+                local old = CopyBtn.Text
+                CopyBtn.Text = "Copied! ✅"
+                Tween(CopyBtn, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
+                task.wait(1.2)
+                CopyBtn.Text = old
+                Tween(CopyBtn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.15)
+                if Cfg.Callback then pcall(Cfg.Callback, linkUrl) end
+            end
+
+            CopyBtn.MouseButton1Click:Connect(DoCopy)
+
+            local API = {}
+            function API:SetLink(newLink) linkUrl = newLink return API end
+            function API:SetTitle(t) NameLabel.Text = t return API end
+            function API:SetImage(i) if ImgLabel then ImgLabel.Image = ResolveImageAsset(i) end return API end
+            function API:SetButtonText(t) CopyBtn.Text = t return API end
+            function API:Refresh(newCfg)
+                if not newCfg then return API end
+                if newCfg.Title then NameLabel.Text = newCfg.Title end
+                if newCfg.Link or newCfg.Url then linkUrl = newCfg.Link or newCfg.Url end
+                if newCfg.Image and ImgLabel then ImgLabel.Image = ResolveImageAsset(newCfg.Image) end
+                if newCfg.ButtonText then CopyBtn.Text = newCfg.ButtonText end
+                return API
+            end
+            return API
+        end
+
+        -- ======= عنصر جديد 2: قائمة ستات اللاعب + صورة + جلب من الماب او رابط راو =======
+        local Players = game:GetService("Players")
+        local HttpService = game:GetService("HttpService")
+
+        local function GetInstanceByPath(pathStr)
+            if not pathStr or pathStr == "" then return nil end
+            local parts = {}
+            for p in string.gmatch(tostring(pathStr), "[^%.]+") do table.insert(parts, p) end
+            if #parts == 0 then return nil end
+            local first = string.lower(parts[1])
+            local cur = nil
+            if first == "workspace" then cur = workspace
+            elseif first == "game" then cur = game
+            elseif first == "players" then cur = Players
+            elseif first == "replicatedstorage" then cur = game:GetService("ReplicatedStorage")
+            elseif first == "replicatedfirst" then cur = game:GetService("ReplicatedFirst")
+            elseif first == "startergui" then cur = game:GetService("StarterGui")
+            elseif first == "lighting" then cur = game:GetService("Lighting")
+            elseif first == "localplayer" then cur = Players.LocalPlayer
+            else
+                -- جرب من workspace مباشرة
+                cur = workspace
+                -- اعد الاجزاء كاملة
+                parts = {}
+                for p in string.gmatch(tostring(pathStr), "[^%.]+") do table.insert(parts, p) end
+            end
+
+            local startIdx = 2
+            if first ~= "workspace" and first ~= "game" and first ~= "players" and first ~= "replicatedstorage" and first ~= "replicatedfirst" and first ~= "startergui" and first ~= "lighting" and first ~= "localplayer" then
+                startIdx = 1
+                cur = workspace
+                -- اذا ما لقى حاول من game
+                local tryGame = game
+                local found = tryGame
+                for i=1,#parts do
+                    local child = found:FindFirstChild(parts[i])
+                    if child then found = child else found = nil break end
+                end
+                if found then return found end
+            end
+
+            for i=startIdx,#parts do
+                if not cur then break end
+                local name = parts[i]
+                local nextInst = cur:FindFirstChild(name)
+                if nextInst then
+                    cur = nextInst
+                else
+                    -- اذا الخاصية وليس instance
+                    local ok, val = pcall(function() return cur[name] end)
+                    if ok then
+                        if i == #parts then
+                            return val
+                        else
+                            cur = val
+                        end
+                    else
+                        cur = nil
+                        break
+                    end
+                end
+            end
+            return cur
+        end
+
+        local function ExtractValueFromInstance(obj)
+            if obj == nil then return "N/A" end
+            if type(obj) ~= "userdata" and type(obj) ~= "table" then return tostring(obj) end
+            -- ValueBase
+            local ok, v = pcall(function() return obj.Value end)
+            if ok then return v end
+            -- TextLabel etc
+            local ok2, t = pcall(function() return obj.Text end)
+            if ok2 then return t end
+            return tostring(obj)
+        end
+
+        local function CreatePlayerStats(Cfg)
+            Cfg = Cfg or {}
+            local title = Cfg.Title or Cfg.Name or "Player Stats"
+            local playerInput = Cfg.Player or Cfg.PlayerName or Players.LocalPlayer
+            local customImg = Cfg.Image or Cfg.Avatar or nil
+            local statsList = Cfg.Stats or Cfg.List or {}
+            local updateInterval = Cfg.UpdateInterval or Cfg.Interval or 1
+            local autoUpdate = Cfg.AutoUpdate
+            if autoUpdate == nil then autoUpdate = true end
+
+            local totalStats = #statsList
+            local baseHeight = 78 + (totalStats * 32) + 8
+            if baseHeight < 120 then baseHeight = 120 end
+
+            local Frame = Instance.new("Frame", TabPage)
+            Frame.Size = UDim2.new(1,-4,0, baseHeight)
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
+            Frame.AutomaticSize = Enum.AutomaticSize.Y
+            Corner(Frame, 10)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            AddSearch(Frame, title, "PlayerStats", Name)
+
+            local HeaderF = Instance.new("Frame", Frame)
+            HeaderF.Size = UDim2.new(1,0,0,68)
+            HeaderF.BackgroundTransparency = 1
+
+            local AvatarImg = Instance.new("ImageLabel", HeaderF)
+            AvatarImg.Size = UDim2.new(0,48,0,48)
+            AvatarImg.Position = UDim2.new(0,10,0,10)
+            AvatarImg.BackgroundColor3 = Color3.fromRGB(30,30,35)
+            AvatarImg.BackgroundTransparency = 0.2
+            AvatarImg.ScaleType = Enum.ScaleType.Crop
+            Corner(AvatarImg, 24)
+
+            local PlayerNameLabel = Instance.new("TextLabel", HeaderF)
+            PlayerNameLabel.Size = UDim2.new(1,-70,0,20)
+            PlayerNameLabel.Position = UDim2.new(0,68,0,12)
+            PlayerNameLabel.BackgroundTransparency = 1
+            PlayerNameLabel.Text = title
+            PlayerNameLabel.Font = Enum.Font.GothamBold
+            PlayerNameLabel.TextSize = 14
+            PlayerNameLabel.TextColor3 = CurrentTheme.Text
+            PlayerNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            PlayerNameLabel.AutoLocalize = true
+            AddTextStroke(PlayerNameLabel)
+            RegisterThemable(PlayerNameLabel, "TextColor3", "Text")
+
+            local RealPlayerName = Instance.new("TextLabel", HeaderF)
+            RealPlayerName.Size = UDim2.new(1,-70,0,16)
+            RealPlayerName.Position = UDim2.new(0,68,0,32)
+            RealPlayerName.BackgroundTransparency = 1
+            RealPlayerName.Text = "Loading..."
+            RealPlayerName.Font = Enum.Font.Gotham
+            RealPlayerName.TextSize = 12
+            RealPlayerName.TextColor3 = CurrentTheme.SubText
+            RealPlayerName.TextXAlignment = Enum.TextXAlignment.Left
+            RegisterThemable(RealPlayerName, "TextColor3", "SubText")
+
+            local StatsContainer = Instance.new("Frame", Frame)
+            StatsContainer.Name = "StatsContainer"
+            StatsContainer.Size = UDim2.new(1,-12,0, totalStats * 32)
+            StatsContainer.Position = UDim2.new(0,6,0,70)
+            StatsContainer.BackgroundTransparency = 1
+            local sLayout = Instance.new("UIListLayout", StatsContainer)
+            sLayout.Padding = UDim.new(0,4)
+            sLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            local targetPlayer = nil
+            if type(playerInput) == "string" then
+                if string.lower(playerInput) == "localplayer" or string.lower(playerInput) == "local" then
+                    targetPlayer = Players.LocalPlayer
+                else
+                    targetPlayer = Players:FindFirstChild(playerInput) or Players.LocalPlayer
+                end
+            elseif typeof(playerInput) == "Instance" and playerInput:IsA("Player") then
+                targetPlayer = playerInput
+            else
+                targetPlayer = Players.LocalPlayer
+            end
+
+            local function UpdateAvatar()
+                if customImg and customImg ~= "" then
+                    AvatarImg.Image = ResolveImageAsset(customImg)
+                    RealPlayerName.Text = type(playerInput) == "string" and playerInput or (targetPlayer and targetPlayer.Name or "Player")
+                    return
+                end
+                if targetPlayer then
+                    RealPlayerName.Text = targetPlayer.Name.." ("..targetPlayer.DisplayName..")"
+                    local ok, thumb = pcall(function()
+                        return Players:GetUserThumbnailAsync(targetPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+                    end)
+                    if ok and thumb then
+                        AvatarImg.Image = thumb
+                    end
+                end
+            end
+            UpdateAvatar()
+
+            local statLabels = {} -- {entry = cfg, valueLabel = label}
+
+            local function CreateSingleStatRow(statCfg, idx)
+                local cfg = statCfg
+                local row = Instance.new("Frame", StatsContainer)
+                row.Size = UDim2.new(1,0,0,28)
+                row.BackgroundColor3 = CurrentTheme.ElementBg2
+                row.BackgroundTransparency = 0.2
+                Corner(row, 8)
+                Stroke(row, CurrentTheme.Stroke, 1)
+
+                local left = Instance.new("TextLabel", row)
+                left.Size = UDim2.new(0.55,-8,1,0)
+                left.Position = UDim2.new(0,8,0,0)
+                left.BackgroundTransparency = 1
+                left.Text = cfg.Name or cfg.Title or ("Stat "..idx)
+                left.Font = Enum.Font.GothamMedium
+                left.TextSize = 12
+                left.TextColor3 = CurrentTheme.Text
+                left.TextXAlignment = Enum.TextXAlignment.Left
+                left.AutoLocalize = true
+                RegisterThemable(left, "TextColor3", "Text")
+
+                local right = Instance.new("TextLabel", row)
+                right.Size = UDim2.new(0.45,-8,1,0)
+                right.Position = UDim2.new(0.55,4,0,0)
+                right.BackgroundTransparency = 1
+                right.Text = tostring(cfg.Value ~= nil and cfg.Value or cfg.Default or "0")
+                right.Font = Enum.Font.GothamBold
+                right.TextSize = 12
+                right.TextColor3 = CurrentTheme.ParagraphText
+                right.TextXAlignment = Enum.TextXAlignment.Right
+                right.AutoLocalize = false
+                RegisterThemable(right, "TextColor3", "ParagraphText")
+
+                return {row=row, valueLabel=right, cfg=cfg}
+            end
+
+            for i, sCfg in ipairs(statsList) do
+                local obj = CreateSingleStatRow(sCfg, i)
+                table.insert(statLabels, obj)
+            end
+
+            local function FetchRawValue(rawUrl, keyPath)
+                if not rawUrl or rawUrl == "" then return nil end
+                local ok, result = pcall(function()
+                    return game:HttpGet(rawUrl)
+                end)
+                if not ok then return nil end
+                -- حاول JSON
+                local ok2, json = pcall(function() return HttpService:JSONDecode(result) end)
+                if ok2 and type(json) == "table" then
+                    if keyPath and keyPath ~= "" then
+                        -- دعم key مثل a.b.c
+                        local cur = json
+                        for k in string.gmatch(keyPath, "[^%.]+") do
+                            if type(cur) == "table" then cur = cur[k] else cur = nil break end
+                        end
+                        return cur
+                    else
+                        return json
+                    end
+                else
+                    return result
+                end
+            end
+
+            local function UpdateAllStats()
+                for _, item in ipairs(statLabels) do
+                    local c = item.cfg
+                    local newVal = nil
+                    if c.Value ~= nil and (c.Path == nil and c.Raw == nil and c.RawUrl == nil and c.Link == nil) then
+                        newVal = c.Value
+                    end
+                    if c.Path and c.Path ~= "" then
+                        local inst = GetInstanceByPath(c.Path)
+                        newVal = ExtractValueFromInstance(inst)
+                    end
+                    if c.Raw or c.RawUrl or c.Link or c.Url then
+                        local url = c.Raw or c.RawUrl or c.Link or c.Url
+                        local key = c.Key or c.JsonKey or c.PathKey or ""
+                        -- اذا رابط راو وفيه Value ثابت لا نتجاهله، الراو له اولوية اذا موجود
+                        if IsUrlImage(url) or tostring(url):match("^https?://") then
+                            local fetched = FetchRawValue(url, key)
+                            if fetched ~= nil then newVal = fetched end
+                        end
+                    end
+                    if newVal ~= nil then
+                        item.valueLabel.Text = tostring(newVal)
+                    end
+                end
+            end
+
+            UpdateAllStats()
+
+            if autoUpdate then
+                task.spawn(function()
+                    while Frame.Parent do
+                        task.wait(updateInterval)
+                        pcall(UpdateAllStats)
+                    end
+                end)
+            end
+
+            local API = {}
+            function API:SetStat(nameOrIndex, value)
+                for _, it in ipairs(statLabels) do
+                    if type(nameOrIndex) == "number" then
+                        if _ == nameOrIndex then
+                            it.cfg.Value = value
+                            it.valueLabel.Text = tostring(value)
+                        end
+                    else
+                        if string.lower(it.cfg.Name or "") == string.lower(tostring(nameOrIndex)) then
+                            it.cfg.Value = value
+                            it.valueLabel.Text = tostring(value)
+                        end
+                    end
+                end
+                return API
+            end
+            function API:GetStat(nameOrIndex)
+                for idx, it in ipairs(statLabels) do
+                    if type(nameOrIndex) == "number" and idx == nameOrIndex then
+                        return it.valueLabel.Text
+                    elseif string.lower(it.cfg.Name or "") == string.lower(tostring(nameOrIndex)) then
+                        return it.valueLabel.Text
+                    end
+                end
+                return nil
+            end
+            function API:AddStat(newCfg)
+                local obj = CreateSingleStatRow(newCfg, #statLabels+1)
+                table.insert(statLabels, obj)
+                StatsContainer.Size = UDim2.new(1,-12,0, #statLabels * 32)
+                Frame.Size = UDim2.new(1,-4,0, 78 + (#statLabels * 32) + 8)
+                return API
+            end
+            function API:RemoveStat(nameOrIndex)
+                for i=#statLabels,1,-1 do
+                    local it = statLabels[i]
+                    local match = false
+                    if type(nameOrIndex) == "number" and i == nameOrIndex then match = true end
+                    if type(nameOrIndex) == "string" and string.lower(it.cfg.Name or "") == string.lower(nameOrIndex) then match = true end
+                    if match then
+                        it.row:Destroy()
+                        table.remove(statLabels, i)
+                    end
+                end
+                StatsContainer.Size = UDim2.new(1,-12,0, #statLabels * 32)
+                Frame.Size = UDim2.new(1,-4,0, 78 + (#statLabels * 32) + 8)
+                return API
+            end
+            function API:Refresh(newCfg)
+                if not newCfg then UpdateAllStats() return API end
+                if newCfg.Stats then
+                    for _, it in ipairs(statLabels) do it.row:Destroy() end
+                    table.clear(statLabels)
+                    for i, s in ipairs(newCfg.Stats) do
+                        local obj = CreateSingleStatRow(s, i)
+                        table.insert(statLabels, obj)
+                    end
+                    StatsContainer.Size = UDim2.new(1,-12,0, #statLabels * 32)
+                end
+                UpdateAllStats()
+                return API
+            end
+            function API:Update() UpdateAllStats() return API end
+            return API
+        end
+
+        
 
 if true then
 end
@@ -3221,6 +3684,8 @@ local Elements = {}
             elseif Type == "label" then api = CreateLabel(Cfg)
             elseif Type == "separator" or Type == "line" or Type == "divider" then api = CreateSeparator(Cfg)
             elseif Type == "image" or Type == "img" or Type == "logo" then api = CreateImage(Cfg)
+            elseif Type == "linkbutton" or Type == "link" or Type == "social" or Type == "discord" or Type == "copylink" then api = CreateLinkButton(Cfg)
+            elseif Type == "playerstats" or Type == "stats" or Type == "statlist" or Type == "player" then api = CreatePlayerStats(Cfg)
             else warn("[GGH Library v1.8.1] Unknown Add type: "..tostring(Type))
             end
             if api and type(api)=="table" and not api.Refresh then
@@ -3253,6 +3718,13 @@ local Elements = {}
         function Elements:Label(Cfg) return self:Add("Label", Cfg) end
         function Elements:Separator(Cfg) return self:Add("Separator", Cfg) end
         function Elements:Image(Cfg) return self:Add("Image", Cfg) end
+        function Elements:LinkButton(Cfg) return self:Add("LinkButton", Cfg) end
+        function Elements:Link(Cfg) return self:Add("LinkButton", Cfg) end
+        function Elements:Social(Cfg) return self:Add("LinkButton", Cfg) end
+        function Elements:CopyLink(Cfg) return self:Add("LinkButton", Cfg) end
+        function Elements:PlayerStats(Cfg) return self:Add("PlayerStats", Cfg) end
+        function Elements:Stats(Cfg) return self:Add("PlayerStats", Cfg) end
+        function Elements:StatList(Cfg) return self:Add("PlayerStats", Cfg) end
         return Elements
     end
     function Window:AddTab(Cfg)
