@@ -1315,11 +1315,11 @@ function GGH:CreateWindow(Config)
     local order = 1
 
     if showSearch then
-        SearchBtn = CreateCtrlButton("SearchBtn", "", CurrentTheme.ElementBg2)
+        SearchBtn = CreateCtrlButton("SearchBtn", "🔍", CurrentTheme.ElementBg2)
         SearchBtn.LayoutOrder = order; order+=1
     end
     if showSettings then
-        ThemeBtn = CreateCtrlButton("ThemeBtn", "", CurrentTheme.ElementBg2)
+        ThemeBtn = CreateCtrlButton("ThemeBtn", "⚙", CurrentTheme.ElementBg2)
         ThemeBtn.LayoutOrder = order; order+=1
     end
     MinBtn = CreateCtrlButton("MinBtn", "-", CurrentTheme.ElementBg2)
@@ -1330,7 +1330,7 @@ function GGH:CreateWindow(Config)
     MaxBtn.LayoutOrder = order; order+=1
     MaxBtn.Visible = false
     if showFloat then
-        FloatBtn = CreateCtrlButton("FloatBtn", "", CurrentTheme.ElementBg2)
+        FloatBtn = CreateCtrlButton("FloatBtn", "◉", CurrentTheme.ElementBg2)
         FloatBtn.LayoutOrder = order; order+=1
     end
     CloseBtn = CreateCtrlButton("CloseBtn", "X", CurrentTheme.CloseBg)
@@ -2598,10 +2598,10 @@ local function CreateDropdown(Cfg)
     local function RefreshOptions()
         for _, child in ipairs(List:GetChildren()) do
             if child:IsA("TextButton") then
-                local name = child:GetAttribute("OptName") or child.Text:gsub(" ","")
+                local name = child:GetAttribute("OptName") or child.Text:gsub("✓ ","")
                 local sel = IsSelected(name)
                 child.BackgroundColor3 = sel and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                child.Text = (sel and " " or "")..name
+                child.Text = (sel and "✓ " or "")..name
             end
         end
         Btn.Text = GetDisplayText()
@@ -2611,7 +2611,7 @@ local function CreateDropdown(Cfg)
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,-4,0,28)
         O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-        O.Text = (IsSelected(opt) and " " or "")..opt
+        O.Text = (IsSelected(opt) and "✓ " or "")..opt
         O.Font = Enum.Font.Gotham
         O.TextSize = 11
         O.TextColor3 = CurrentTheme.Text
@@ -3223,30 +3223,6 @@ local function CreateColorpicker(Cfg)
             if IsUrlImage(s) then
                 return s
             end
-
-        GGH.Icons = {
-            Lock = "rbxassetid://6031094678",
-            Unlock = "rbxassetid://6031094676",
-            Copy = "rbxassetid://6031090995",
-            Check = "rbxassetid://6031068426",
-            Play = "rbxassetid://6031090999",
-            Settings = "rbxassetid://6031091003",
-            Search = "rbxassetid://6031090998",
-            Close = "rbxassetid://6031090996",
-            Add = "rbxassetid://6031090994",
-            Arrow = "rbxassetid://6031091000",
-            Home = "rbxassetid://6031091002",
-            Star = "rbxassetid://6031091004",
-            Heart = "rbxassetid://6031091005",
-            Trash = "rbxassetid://6031091006",
-            Edit = "rbxassetid://6031091007",
-            Info = "rbxassetid://6031091008",
-            Warn = "rbxassetid://6031091009",
-            User = "rbxassetid://6031091010",
-            Game = "rbxassetid://6031091011",
-            Fire = "rbxassetid://6031091012",
-            Speed = "rbxassetid://6031091013",
-        }
             -- اذا rbxassetid كامل
             if s:match("rbxassetid://%d+") then
                 return s
@@ -3410,7 +3386,7 @@ local function CreateColorpicker(Cfg)
             CopyBtn.Size = UDim2.new(1,-12,0,32)
             CopyBtn.Position = UDim2.new(0,6,0, yOffset + 26)
             CopyBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-            CopyBtn.Text = btnText.."  "
+            CopyBtn.Text = btnText.."  📋"
             CopyBtn.Font = Enum.Font.GothamMedium
             CopyBtn.TextSize = 12
             CopyBtn.TextColor3 = CurrentTheme.Text
@@ -3423,7 +3399,7 @@ local function CreateColorpicker(Cfg)
                     if setclipboard then setclipboard(tostring(linkUrl)) end
                 end)
                 local old = CopyBtn.Text
-                CopyBtn.Text = "Copied! "
+                CopyBtn.Text = "Copied! ✅"
                 Tween(CopyBtn, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
                 task.wait(1.2)
                 CopyBtn.Text = old
@@ -3813,25 +3789,7 @@ if true then
 end
 
 
-        -- ======= عنصر جديد 3: زر + توجل يصنع زر عائم + قفل + شفافية + ايقونات روبلوكس =======
-        local IconPack = {
-            Lock = "rbxassetid://6031094678",
-            Unlock = "rbxassetid://6031094676",
-            Copy = "rbxassetid://6031090995",
-            Check = "rbxassetid://6031068426",
-            Play = "rbxassetid://6031090999",
-            Settings = "rbxassetid://6031091003",
-            Search = "rbxassetid://6031090998",
-            Close = "rbxassetid://6031090996",
-            Add = "rbxassetid://6031090994",
-            Minus = "rbxassetid://6031091001",
-            Arrow = "rbxassetid://6031091000",
-        }
-
-        local function GetIcon(name, fallback)
-            return IconPack[name] or fallback or ""
-        end
-
+        -- ======= عنصر جديد 3: زر + توجل يصنع زر عائم =======
         local function CreateFloatingButton(Cfg)
             Cfg = Cfg or {}
             local title = Cfg.Title or Cfg.Name or "Button"
@@ -3844,20 +3802,17 @@ end
             local floatImage = Cfg.FloatImage or Cfg.FloatIcon or Cfg.Image or nil
             local floatPosCfg = Cfg.FloatPosition or Cfg.Position or "Center"
             local floatSize = Cfg.FloatSize or Vector2.new(50,50)
-            local floatTrans = Cfg.Transparency or Cfg.Trans or 0
-            local lockIcon = Cfg.LockIcon or IconPack.Lock
-            local unlockIcon = Cfg.UnlockIcon or IconPack.Unlock
             
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,66)
+            Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Corner(Frame, 9)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
             AddSearch(Frame, title, "FloatingButton", Name)
 
             local TitleLabel = Instance.new("TextLabel", Frame)
-            TitleLabel.Size = UDim2.new(1,-110,0,18)
-            TitleLabel.Position = UDim2.new(0,10,0,6)
+            TitleLabel.Size = UDim2.new(1,-100,1,0)
+            TitleLabel.Position = UDim2.new(0,10,0,0)
             TitleLabel.BackgroundTransparency = 1
             TitleLabel.Text = title
             TitleLabel.Font = Enum.Font.GothamMedium
@@ -3868,95 +3823,36 @@ end
             RegisterThemable(TitleLabel, "TextColor3", "Text")
 
             local ToggleBg = Instance.new("Frame", Frame)
-            ToggleBg.Size = UDim2.new(0,36,0,18)
-            ToggleBg.Position = UDim2.new(1,-86,0,8)
+            ToggleBg.Size = UDim2.new(0,38,0,20)
+            ToggleBg.Position = UDim2.new(1,-88,0.5,-10)
             ToggleBg.BackgroundColor3 = floatEnabledDefault and CurrentTheme.Accent or CurrentTheme.ElementBg2
-            Corner(ToggleBg, 9)
+            Corner(ToggleBg, 10)
 
             local ToggleCircle = Instance.new("Frame", ToggleBg)
-            ToggleCircle.Size = UDim2.new(0,12,0,12)
-            ToggleCircle.Position = floatEnabledDefault and UDim2.new(1,-15,0.5,-6) or UDim2.new(0,3,0.5,-6)
+            ToggleCircle.Size = UDim2.new(0,14,0,14)
+            ToggleCircle.Position = floatEnabledDefault and UDim2.new(1,-17,0.5,-7) or UDim2.new(0,3,0.5,-7)
             ToggleCircle.BackgroundColor3 = Color3.fromRGB(255,255,255)
-            Corner(ToggleCircle, 6)
+            Corner(ToggleCircle, 7)
 
             local ToggleBtn = Instance.new("TextButton", Frame)
-            ToggleBtn.Size = UDim2.new(0,36,0,18)
+            ToggleBtn.Size = UDim2.new(0,38,0,20)
             ToggleBtn.Position = ToggleBg.Position
             ToggleBtn.BackgroundTransparency = 1
             ToggleBtn.Text = ""
 
             local MainBtn = Instance.new("TextButton", Frame)
-            MainBtn.Size = UDim2.new(0,40,0,22)
-            MainBtn.Position = UDim2.new(1,-42,0,6)
+            MainBtn.Size = UDim2.new(0,44,0,24)
+            MainBtn.Position = UDim2.new(1,-42,0.5,-12)
             MainBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-            MainBtn.Text = ""
+            MainBtn.Text = "▶"
             MainBtn.Font = Enum.Font.GothamBold
             MainBtn.TextSize = 12
             MainBtn.TextColor3 = CurrentTheme.Text
             Corner(MainBtn, 7)
             Stroke(MainBtn, CurrentTheme.StrokeLight, 1)
-            local MainIcon = Instance.new("ImageLabel", MainBtn)
-            MainIcon.Size = UDim2.new(0,14,0,14)
-            MainIcon.Position = UDim2.new(0.5,-7,0.5,-7)
-            MainIcon.BackgroundTransparency = 1
-            MainIcon.Image = ResolveImageAsset(Cfg.PlayIcon or IconPack.Play)
-            MainIcon.ImageColor3 = CurrentTheme.Text
-
-            -- صف ثاني: زر القفل + شفافية
-            local LockBtn = Instance.new("TextButton", Frame)
-            LockBtn.Size = UDim2.new(0,32,0,22)
-            LockBtn.Position = UDim2.new(0,8,0,36)
-            LockBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-            LockBtn.Text = ""
-            Corner(LockBtn, 6)
-            Stroke(LockBtn, CurrentTheme.StrokeLight, 1)
-            local LockImg = Instance.new("ImageLabel", LockBtn)
-            LockImg.Size = UDim2.new(0,14,0,14)
-            LockImg.Position = UDim2.new(0.5,-7,0.5,-7)
-            LockImg.BackgroundTransparency = 1
-            LockImg.Image = ResolveImageAsset(floatDraggable and unlockIcon or lockIcon)
-            LockImg.ImageColor3 = CurrentTheme.Text
-
-            local TransLabel = Instance.new("TextLabel", Frame)
-            TransLabel.Size = UDim2.new(0,50,0,22)
-            TransLabel.Position = UDim2.new(0,46,0,36)
-            TransLabel.BackgroundTransparency = 1
-            TransLabel.Text = "Trans:"
-            TransLabel.Font = Enum.Font.Gotham
-            TransLabel.TextSize = 11
-            TransLabel.TextColor3 = CurrentTheme.SubText
-            TransLabel.TextXAlignment = Enum.TextXAlignment.Left
-            RegisterThemable(TransLabel, "TextColor3", "SubText")
-
-            local TransBox = Instance.new("TextBox", Frame)
-            TransBox.Size = UDim2.new(0,50,0,22)
-            TransBox.Position = UDim2.new(0,92,0,36)
-            TransBox.BackgroundColor3 = CurrentTheme.ElementBg2
-            TransBox.Text = tostring(math.floor(floatTrans*100))
-            TransBox.PlaceholderText = "0-100"
-            TransBox.Font = Enum.Font.Gotham
-            TransBox.TextSize = 11
-            TransBox.TextColor3 = CurrentTheme.Text
-            TransBox.ClearTextOnFocus = false
-            Corner(TransBox, 6)
-            Stroke(TransBox, CurrentTheme.Stroke, 1)
-            RegisterThemable(TransBox, "BackgroundColor3", "ElementBg2")
-
-            local TransSlider = Instance.new("Frame", Frame)
-            TransSlider.Name = "TransSlider"
-            TransSlider.Size = UDim2.new(1,-156,0,4)
-            TransSlider.Position = UDim2.new(0,148,0,47)
-            TransSlider.BackgroundColor3 = CurrentTheme.ElementBg2
-            Corner(TransSlider, 2)
-            local TransFill = Instance.new("Frame", TransSlider)
-            TransFill.Size = UDim2.new(floatTrans,0,1,0)
-            TransFill.BackgroundColor3 = CurrentTheme.Accent
-            Corner(TransFill, 2)
 
             local floatingInstance = nil
             local isFloatEnabled = floatEnabledDefault
-            local isLocked = not floatDraggable
-            local currentTrans = floatTrans
 
             local function GetViewport()
                 local vp = ScreenGui.AbsoluteSize
@@ -4020,7 +3916,6 @@ end
                 btn.Size = UDim2.new(0, floatSize.X, 0, floatSize.Y)
                 btn.Position = ResolveFloatPosition()
                 btn.BackgroundColor3 = CurrentTheme.Accent
-                btn.BackgroundTransparency = currentTrans
                 btn.ZIndex = 199
                 btn.AutoButtonColor = false
                 Corner(btn, 12)
@@ -4032,7 +3927,7 @@ end
                 local hasDragged = false
 
                 btn.InputBegan:Connect(function(input)
-                    if not isLocked and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                    if floatDraggable and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                         dragging = true
                         hasDragged = false
                         dragStart = input.Position
@@ -4040,7 +3935,7 @@ end
                     end
                 end)
                 UserInputService.InputChanged:Connect(function(input)
-                    if dragging and not isLocked and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    if dragging and floatDraggable and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                         local delta = input.Position - dragStart
                         if delta.Magnitude > 4 then hasDragged = true end
                         local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
@@ -4095,35 +3990,12 @@ end
                 isFloatEnabled = state
                 if state then
                     Tween(ToggleBg, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
-                    Tween(ToggleCircle, {Position = UDim2.new(1,-15,0.5,-6)}, 0.15)
+                    Tween(ToggleCircle, {Position = UDim2.new(1,-17,0.5,-7)}, 0.15)
                     CreateFloat()
                 else
                     Tween(ToggleBg, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.15)
-                    Tween(ToggleCircle, {Position = UDim2.new(0,3,0.5,-6)}, 0.15)
+                    Tween(ToggleCircle, {Position = UDim2.new(0,3,0.5,-7)}, 0.15)
                     RemoveFloat()
-                end
-            end
-
-            local function SetLockState(locked)
-                isLocked = locked
-                floatDraggable = not locked
-                if locked then
-                    LockImg.Image = ResolveImageAsset(lockIcon)
-                    Tween(LockBtn, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
-                    LockImg.ImageColor3 = Color3.new(1,1,1)
-                else
-                    LockImg.Image = ResolveImageAsset(unlockIcon)
-                    Tween(LockBtn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.15)
-                    LockImg.ImageColor3 = CurrentTheme.Text
-                end
-            end
-
-            local function SetTrans(val)
-                currentTrans = math.clamp(val, 0, 1)
-                TransBox.Text = tostring(math.floor(currentTrans*100))
-                TransFill.Size = UDim2.new(currentTrans,0,1,0)
-                if floatingInstance then
-                    floatingInstance.BackgroundTransparency = currentTrans
                 end
             end
 
@@ -4138,55 +4010,13 @@ end
                 pcall(callback)
             end)
 
-            LockBtn.MouseButton1Click:Connect(function()
-                SetLockState(not isLocked)
-            end)
-
-            TransBox.FocusLost:Connect(function(enter)
-                if enter then
-                    local num = tonumber(TransBox.Text)
-                    if num then
-                        if num > 1 then num = num/100 end
-                        SetTrans(num)
-                    else
-                        TransBox.Text = tostring(math.floor(currentTrans*100))
-                    end
-                end
-            end)
-
-            -- سحب شريط الشفافية
-            local transDragging = false
-            TransSlider.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    transDragging = true
-                    local rel = math.clamp((input.Position.X - TransSlider.AbsolutePosition.X)/TransSlider.AbsoluteSize.X,0,1)
-                    SetTrans(rel)
-                end
-            end)
-            UserInputService.InputChanged:Connect(function(input)
-                if transDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    local rel = math.clamp((input.Position.X - TransSlider.AbsolutePosition.X)/TransSlider.AbsoluteSize.X,0,1)
-                    SetTrans(rel)
-                end
-            end)
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    transDragging = false
-                end
-            end)
-
             if isFloatEnabled then
                 task.spawn(function() task.wait(0.2) CreateFloat() end)
             end
-            SetLockState(isLocked)
 
             local API = {}
             function API:SetValue(v) SetToggleState(v) return API end
             function API:GetValue() return isFloatEnabled end
-            function API:SetLocked(l) SetLockState(l) return API end
-            function API:GetLocked() return isLocked end
-            function API:SetTransparency(t) SetTrans(t) return API end
-            function API:GetTransparency() return currentTrans end
             function API:SetTitle(t) TitleLabel.Text = t return API end
             function API:Fire() pcall(callback) return API end
             function API:Destroy()
@@ -4199,12 +4029,10 @@ end
                 if newCfg.Callback then callback = newCfg.Callback end
                 if newCfg.FloatText then floatText = newCfg.FloatText if floatingInstance and floatingInstance:IsA("TextButton") then floatingInstance.Text = floatText end end
                 if newCfg.FloatImage and floatingInstance and floatingInstance:IsA("ImageButton") then floatingInstance.Image = ResolveImageAsset(newCfg.FloatImage) end
-                if newCfg.Transparency then SetTrans(newCfg.Transparency) end
                 return API
             end
             return API
         end
-
 
         -- ======= عنصر جديد 4: سلايدر مع خانة رقم =======
                 -- ======= عنصر جديد 4: سلايدر مع خانة رقم (يدعم عشري) =======
