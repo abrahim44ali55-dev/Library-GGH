@@ -1883,22 +1883,80 @@ local function ContrastColor(c)
     return Color3.new(1,1,1)
 end
 
+local RunService = game:GetService("RunService")
+
+local function SmoothDestroy(gui)
+    pcall(function() if gui:IsA("ScreenGui") then gui.Enabled = false end end)
+    task.spawn(function()
+        local ok, list = pcall(function() return gui:GetDescendants() end)
+        if not ok then pcall(function() gui:Destroy() end) return end
+        local budget = 0.004
+        local t0 = os.clock()
+        for i = #list, 1, -1 do
+            local o = list[i]
+            pcall(function() o:Destroy() end)
+            if os.clock() - t0 > budget then
+                RunService.Heartbeat:Wait()
+                t0 = os.clock()
+            end
+        end
+        pcall(function() gui:Destroy() end)
+    end)
+end
+
 local function FadeOutGui(gui, dur, done)
     dur = dur or 0.4
     local info = TweenInfo.new(dur, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-    for _, d in ipairs(gui:GetDescendants()) do
-        local props
-        if d:IsA("GuiObject") then
-            props = {}
-            if d.BackgroundTransparency < 1 then props.BackgroundTransparency = 1 end
-            if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then props.TextTransparency = 1 end
-            if d:IsA("ImageLabel") or d:IsA("ImageButton") then props.ImageTransparency = 1 end
-            if d:IsA("ScrollingFrame") then props.ScrollBarImageTransparency = 1 end
-        elseif d:IsA("UIStroke") then
-            props = {Transparency = 1}
+    local function tw(o, props)
+        pcall(function() TweenService:Create(o, info, props):Play() end)
+    end
+    local function simpleFade(root)
+        for _, d in ipairs(root:GetDescendants()) do
+            if d:IsA("GuiObject") then
+                local props = {}
+                if d.BackgroundTransparency < 1 then props.BackgroundTransparency = 1 end
+                if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then props.TextTransparency = 1 end
+                if d:IsA("ImageLabel") or d:IsA("ImageButton") then props.ImageTransparency = 1 end
+                if next(props) then tw(d, props) end
+            elseif d:IsA("UIStroke") then
+                tw(d, {Transparency = 1})
+            end
         end
-        if props and next(props) then
-            pcall(function() TweenService:Create(d, info, props):Play() end)
+    end
+    for _, top in ipairs(gui:GetChildren()) do
+        if top:IsA("GuiObject") then
+            local count = #top:GetDescendants()
+            if count <= 40 then
+                simpleFade(top)
+                if top.BackgroundTransparency < 1 then tw(top, {BackgroundTransparency = 1}) end
+            else
+                local ok = pcall(function()
+                    local cg = Instance.new("CanvasGroup")
+                    cg.Name = "GGH_FadeGroup"
+                    cg.BackgroundTransparency = 1
+                    cg.BorderSizePixel = 0
+                    cg.Size = UDim2.fromScale(1, 1)
+                    cg.ZIndex = 1
+                    local corner = top:FindFirstChildOfClass("UICorner")
+                    if corner then
+                        local c2 = Instance.new("UICorner")
+                        c2.CornerRadius = corner.CornerRadius
+                        c2.Parent = cg
+                    end
+                    for _, ch in ipairs(top:GetChildren()) do
+                        if ch:IsA("GuiObject") then ch.Parent = cg end
+                    end
+                    cg.Parent = top
+                    tw(cg, {GroupTransparency = 1})
+                    if top.BackgroundTransparency < 1 then tw(top, {BackgroundTransparency = 1}) end
+                    for _, ch in ipairs(top:GetChildren()) do
+                        if ch:IsA("UIStroke") then tw(ch, {Transparency = 1}) end
+                    end
+                end)
+                if not ok then
+                    if top.BackgroundTransparency < 1 then tw(top, {BackgroundTransparency = 1}) end
+                end
+            end
         end
     end
     task.delay(dur + 0.05, function() if done then pcall(done) end end)
@@ -2864,6 +2922,17 @@ function GGH:CreateWindow(Config)
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     pcall(function() ScreenGui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets end)
+    if Config.DeferEnable ~= false then
+        ScreenGui.Enabled = false
+        local lastAdd = os.clock()
+        local addConn = ScreenGui.DescendantAdded:Connect(function() lastAdd = os.clock() end)
+        task.spawn(function()
+            local t0 = os.clock()
+            repeat task.wait() until os.clock() - lastAdd > 0.25 or os.clock() - t0 > 4
+            addConn:Disconnect()
+            if ScreenGui.Parent then ScreenGui.Enabled = true end
+        end)
+    end
     ScreenGui.Parent = GetGuiParent()
     local SizePresets = {
         ["Tiny"]   = {W=360, H=260},
@@ -3613,7 +3682,7 @@ function GGH:CreateWindow(Config)
         if GGH_Closing then return end
         GGH_Closing = true
         ConfirmFrame.Visible = false
-        FadeOutGui(ScreenGui, 0.45, function() ScreenGui:Destroy() end)
+        FadeOutGui(ScreenGui, 0.4, function() SmoothDestroy(ScreenGui) end)
     end)
     local Tabs = {}
     local ThemeListeners = {}
@@ -6926,13 +6995,13 @@ function Window:SetSizePreset(presetName)
     end
 
     function Window:Destroy()
-        pcall(function() ScreenGui:Destroy() end)
+        SmoothDestroy(ScreenGui)
     end
     function Window:Close()
         if GGH_Closing then return end
         GGH_Closing = true
         pcall(function() ConfirmFrame.Visible = false end)
-        FadeOutGui(ScreenGui, 0.45, function() pcall(function() ScreenGui:Destroy() end) end)
+        FadeOutGui(ScreenGui, 0.4, function() SmoothDestroy(ScreenGui) end)
     end
     function Window:Hide() Main.Visible = false end
     function Window:Show() Main.Visible = true end
