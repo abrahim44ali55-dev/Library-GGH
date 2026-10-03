@@ -3610,6 +3610,7 @@ function GGH:CreateWindow(Config)
         SearchClose.BackgroundColor3 = theme.ElementBg2
         SearchClose.TextColor3 = theme.Text
         ThemeDropdown.BackgroundColor3 = theme.ElementBg
+        ThemeHeader.TextColor3 = theme.Text
         ConfirmBox.BackgroundColor3 = theme.ElementBg
         CT.TextColor3 = theme.Text
         CT2.TextColor3 = theme.SubText
@@ -3621,7 +3622,6 @@ function GGH:CreateWindow(Config)
             if item.obj and item.obj.Parent then
                 if item.prop == "BackgroundColor3" then
                     item.obj.BackgroundColor3 = theme[item.key]
-                    Tween(item.obj, {BackgroundColor3 = theme[item.key]}, 0.15)
                 elseif item.prop == "TextColor3" then
                     item.obj.TextColor3 = theme[item.key]
                 elseif item.prop == "Stroke" then
@@ -4358,6 +4358,10 @@ function GGH:CreateWindow(Config)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
             Btn.Text = ""
+            table.insert(ThemeListeners, function(th)
+                if not Bg.Parent then return end
+                Bg.BackgroundColor3 = State and th.Accent or th.ElementBg2
+            end)
             local ToggleAPI = {}
             function ToggleAPI:SetValue(v)
                 State = v
@@ -4424,6 +4428,11 @@ function GGH:CreateWindow(Config)
             end
             local Value = math.clamp(Cfg.Default, Cfg.Min, Cfg.Max)
             Value = SnapValue(Value)
+            local function RelOf(v)
+                local range = Cfg.Max - Cfg.Min
+                if range <= 0 then return 0 end
+                return math.clamp((v - Cfg.Min) / range, 0, 1)
+            end
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,58)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
@@ -4448,14 +4457,14 @@ function GGH:CreateWindow(Config)
             Corner(Bar, 4)
             RegisterThemable(Bar, "BackgroundColor3", "ElementBg2")
             local Fill = Instance.new("Frame", Bar)
-            Fill.Size = UDim2.new((Value - Cfg.Min) / math.max(1, Cfg.Max - Cfg.Min),0,1,0)
+            Fill.Size = UDim2.new(RelOf(Value),0,1,0)
             Fill.BackgroundColor3 = CurrentTheme.Accent
             Corner(Fill, 4)
             RegisterThemable(Fill, "BackgroundColor3", "Accent")
-            local Circle = Instance.new("Frame", Frame)
+            local Circle = Instance.new("Frame", Bar)
             Circle.Size = UDim2.new(0,18,0,18)
             Circle.AnchorPoint = Vector2.new(0.5,0.5)
-            Circle.Position = UDim2.new(0, 10 + ((Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min))*200, 0, 36)
+            Circle.Position = UDim2.new(RelOf(Value), 0, 0.5, 0)
             Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
             Circle.ZIndex = 10
             Corner(Circle, 9)
@@ -4480,18 +4489,12 @@ function GGH:CreateWindow(Config)
                     end
                 end
                 Value = math.clamp(newVal, Cfg.Min, Cfg.Max)
-                Fill.Size = UDim2.new(rel,0,1,0)
-                Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
+                local r = RelOf(Value)
+                Fill.Size = UDim2.new(r,0,1,0)
+                Circle.Position = UDim2.new(r, 0, 0.5, 0)
                 Label.Text = Cfg.Title.." : "..FormatVal(Value)
                 pcall(Cfg.Callback or function() end, Value)
             end
-            task.spawn(function()
-                task.wait(0.05)
-                local barSize = Bar.AbsoluteSize.X
-                if barSize <= 0 then barSize = 200 end
-                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
-                Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
-            end)
             DragArea.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true UpdateSlider(input.Position.X) end
             end)
@@ -4508,9 +4511,9 @@ function GGH:CreateWindow(Config)
             function SliderAPI:SetValue(v)
                 v = SnapValue(math.clamp(v, Cfg.Min, Cfg.Max))
                 Value = v
-                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
+                local rel = RelOf(Value)
                 Fill.Size = UDim2.new(rel,0,1,0)
-                Circle.Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)
+                Circle.Position = UDim2.new(rel, 0, 0.5, 0)
                 Label.Text = Cfg.Title.." : "..FormatVal(Value)
                 pcall(Cfg.Callback or function() end, Value)
                 return SliderAPI
@@ -4680,6 +4683,18 @@ local function CreateDropdown(Cfg)
         Btn.Text = GetDisplayText()
     end
 
+    table.insert(ThemeListeners, function(th)
+        if not Frame.Parent then return end
+        List.ScrollBarImageColor3 = th.Accent
+        for _, child in ipairs(List:GetChildren()) do
+            if child:IsA("TextButton") then
+                local nm = child:GetAttribute("OptName") or child.Text
+                child.BackgroundColor3 = IsSelected(nm) and th.Accent or th.ElementBg2
+                child.TextColor3 = th.Text
+            end
+        end
+    end)
+
     local function CreateOptionButton(opt)
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,-4,0,28)
@@ -4691,7 +4706,6 @@ local function CreateDropdown(Cfg)
         O.AutoLocalize = true
         Corner(O, 6)
         AddBlackBorder(O, 0.8, 0.8)
-        RegisterThemable(O, "BackgroundColor3", "ElementBg2")
         AddTextStroke(O)
         O:SetAttribute("OptName", opt)
         do
@@ -4819,7 +4833,8 @@ local function CreateColorpicker(Cfg)
             Frame.BackgroundTransparency = ElementTrans
             Frame.BorderSizePixel = 0
             Corner(Frame, 10)
-            Stroke(Frame, CurrentTheme.Stroke, 1)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            RegisterThemable(Stroke(Frame, CurrentTheme.Stroke, 1), "Stroke", "Stroke")
             local Title = Instance.new("TextLabel", Frame)
             Title.Size = UDim2.new(1,-90,1,0)
             Title.Position = UDim2.new(0,12,0,0)
@@ -4830,6 +4845,7 @@ local function CreateColorpicker(Cfg)
             Title.TextSize = 13
             Title.TextColor3 = CurrentTheme.Text
             Title.TextXAlignment = Enum.TextXAlignment.Left
+            RegisterThemable(Title, "TextColor3", "Text")
             AddTextStroke(Title)
             local PreviewBtn = Instance.new("TextButton", Frame)
             PreviewBtn.Size = UDim2.new(0,56,0,22)
@@ -4838,7 +4854,7 @@ local function CreateColorpicker(Cfg)
             PreviewBtn.Text = ""
             PreviewBtn.AutoButtonColor = false
             Corner(PreviewBtn, 6)
-            Stroke(PreviewBtn, CurrentTheme.StrokeLight, 1)
+            RegisterThemable(Stroke(PreviewBtn, CurrentTheme.StrokeLight, 1), "Stroke", "StrokeLight")
             local DevContainer = nil
             local function Fire(c)
                 Color = c
@@ -4858,61 +4874,90 @@ local function CreateColorpicker(Cfg)
                 ov.BorderSizePixel = 0
                 ov.Active = true
                 local main = Instance.new("Frame", ov)
-                main.AnchorPoint = Vector2.new(0.5,0.5) -- Centered
-                main.Position = UDim2.new(0.5,0,0.5,0) -- Centered fixed
-                local baseW = Main.AbsoluteSize.X
-                local baseH = Main.AbsoluteSize.Y
-                local pickerW = math.clamp(baseW*0.9, 320, 420) -- Fixed: no outside
-                local pickerH = math.clamp(baseH*0.75, 200, 280) -- Fixed: no outside
-                main.Size = UDim2.new(0,pickerW,0,pickerH)
+                main.AnchorPoint = Vector2.new(0,0)
+                main.Size = UDim2.fromOffset(300,200)
+                main.Position = UDim2.fromOffset(10,10)
                 main.BackgroundColor3 = Color3.fromRGB(28,28,32)
                 main.BackgroundTransparency = 0
-                main.ClipsDescendants = false
-                local function clampPicker()
-                    local vp = ov.AbsoluteSize
-                    local sz = main.AbsoluteSize
-                    if sz.X==0 or vp.X<=10 then return end
-                    -- نضمن الحجم ما يطلع اكبر من الشاشة
-                    local maxW = math.clamp(vp.X - 20, 200, 600)
-                    local maxH = math.clamp(vp.Y - 20, 200, 340)
-                    if sz.X > maxW or sz.Y > maxH then
-                        main.Size = UDim2.fromOffset(math.min(sz.X, maxW), math.min(sz.Y, maxH))
-                        sz = main.AbsoluteSize
-                    end
-                    local pos = main.Position
-                    -- اذا بالوسط نحسب حدوده
-                    if pos.X.Scale==0.5 then
-                        -- الوسط آمن، بس نتأكد الحجم
-                        main.Position = UDim2.new(0.5,0,0.5,0) -- Centered fixed
-                        -- بعد الوسط نعمل clamp اضافي
-                        task.wait()
-                        local absPos = main.AbsolutePosition
-                        local cx = math.clamp(absPos.X, 5, vp.X - sz.X - 5)
-                        local cy = math.clamp(absPos.Y, 5, vp.Y - sz.Y - 5)
-                        main.Position = UDim2.fromOffset(cx, cy)
-                        main.AnchorPoint = Vector2.new(0,0)
-                    else
-                        local cx = math.clamp(pos.X.Offset, 5, vp.X - sz.X - 5)
-                        local cy = math.clamp(pos.Y.Offset, 5, vp.Y - sz.Y - 5)
-                        main.Position = UDim2.fromOffset(cx,cy)
-                    end
-                end
-                ov:GetPropertyChangedSignal("AbsoluteSize"):Connect(clampPicker)
+                main.ClipsDescendants = true
                 main.ZIndex = 301
                 Corner(main, 16)
                 Stroke(main, CurrentTheme.Stroke, 2)
                 local cont = Instance.new("Frame", main)
-                cont.Size = UDim2.new(1,-20,1,-20) -- Fixed bigger to fit colors
-                cont.Position = UDim2.new(0,10,0,10)
                 cont.BackgroundTransparency = 1
                 cont.ClipsDescendants = false
                 cont.ZIndex = 302
-                local layout = Instance.new("UIListLayout", cont)
-                layout.FillDirection = Enum.FillDirection.Horizontal
-                layout.Padding = UDim.new(0,12)
-                layout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+                -- hue bar (left)
+                local hueBar = Instance.new("Frame", cont)
+                hueBar.ZIndex = 303
+                Corner(hueBar, 4)
+                hueBar.Active = true
+                local grad = Instance.new("UIGradient", hueBar)
+                grad.Rotation = 90
+                local colors = {}
+                for i=0,1,0.1 do table.insert(colors, ColorSequenceKeypoint.new(i, Color3.fromHSV(i,1,1))) end
+                grad.Color = ColorSequence.new(colors)
+                local hueMarker = Instance.new("Frame", hueBar)
+                hueMarker.AnchorPoint = Vector2.new(0.5,0.5)
+                hueMarker.Size = UDim2.new(1,6,0,6)
+                hueMarker.BackgroundColor3 = Color3.new(1,1,1)
+                hueMarker.ZIndex = 310
+                Corner(hueMarker, 3)
+                Stroke(hueMarker, Color3.new(0,0,0), 1)
+
+                -- middle panel (preview + buttons)
+                local right = Instance.new("Frame", cont)
+                right.BackgroundColor3 = Color3.fromRGB(40,41,48)
+                right.BackgroundTransparency = ElementTrans
+                right.ZIndex = 302
+                Corner(right, 12)
+                local preview = Instance.new("Frame", right)
+                preview.ZIndex = 303
+                Corner(preview, 10)
+                Stroke(preview, CurrentTheme.Stroke, 1)
+                local hexBox = Instance.new("TextBox", preview)
+                hexBox.Size = UDim2.new(1,0,1,0)
+                hexBox.BackgroundTransparency = 1
+                hexBox.Font = Enum.Font.GothamBold
+                hexBox.TextSize = 14
+                hexBox.TextScaled = true
+                hexBox.TextColor3 = Color3.new(1,1,1)
+                hexBox.TextStrokeTransparency = 0.3
+                hexBox.ClearTextOnFocus = false
+                hexBox.ZIndex = 304
+                local hexLimit = Instance.new("UITextSizeConstraint", hexBox)
+                hexLimit.MaxTextSize = 14
+                hexLimit.MinTextSize = 6
+                local btns = Instance.new("Frame", right)
+                btns.BackgroundTransparency = 1
+                btns.ZIndex = 302
+                local bLay = Instance.new("UIListLayout", btns)
+                bLay.FillDirection = Enum.FillDirection.Horizontal
+                bLay.Padding = UDim.new(0,10)
+                local done = Instance.new("TextButton", btns)
+                done.Size = UDim2.new(0.5,-5,1,0)
+                done.BackgroundColor3 = CurrentTheme.Accent
+                done.Text = "Done"
+                done.Font = Enum.Font.GothamBold
+                done.TextScaled = true
+                done.TextColor3 = Color3.new(1,1,1)
+                done.ZIndex = 303
+                Corner(done, 10)
+                Instance.new("UITextSizeConstraint", done).MaxTextSize = 14
+                local ex = Instance.new("TextButton", btns)
+                ex.Size = UDim2.new(0.5,-5,1,0)
+                ex.BackgroundColor3 = Color3.fromRGB(60,61,70)
+                ex.Text = "Exit"
+                ex.Font = Enum.Font.GothamBold
+                ex.TextScaled = true
+                ex.TextColor3 = Color3.new(1,1,1)
+                ex.ZIndex = 303
+                Corner(ex, 10)
+                Instance.new("UITextSizeConstraint", ex).MaxTextSize = 14
+
+                -- saturation / value square (right)
                 local svFrame = Instance.new("ImageLabel", cont)
-                svFrame.Size = UDim2.new(0,180,0,180) -- Fixed inside
                 svFrame.Image = "rbxassetid://4155801252"
                 svFrame.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
                 svFrame.ZIndex = 303
@@ -4926,72 +4971,66 @@ local function CreateColorpicker(Cfg)
                 svMarker.ZIndex = 310
                 Corner(svMarker, 1)
                 Stroke(svMarker, Color3.new(1,1,1), 2)
-                local hueBar = Instance.new("Frame", cont)
-                hueBar.Size = UDim2.new(0,36,0,220)
-                hueBar.ZIndex = 303
-                Corner(hueBar, 1)
-                hueBar.Active = true
-                local grad = Instance.new("UIGradient", hueBar)
-                grad.Rotation = 90
-                local colors = {}
-                for i=0,1,0.1 do table.insert(colors, ColorSequenceKeypoint.new(i, Color3.fromHSV(i,1,1))) end
-                grad.Color = ColorSequence.new(colors)
-                local hueMarker = Instance.new("Frame", hueBar)
-                hueMarker.AnchorPoint = Vector2.new(0.5,0.5)
-                hueMarker.Size = UDim2.new(0,22,0,6)
-                hueMarker.BackgroundColor3 = Color3.new(1,1,1)
-                hueMarker.ZIndex = 310
-                Corner(hueMarker, 3)
-                Stroke(hueMarker, Color3.new(0,0,0), 1)
-                local right = Instance.new("Frame", cont)
-                right.Size = UDim2.new(0,160,0,180) -- Inside, not outside
- right.Position = UDim2.new(0,0,0,0)
-                right.BackgroundColor3 = Color3.fromRGB(40,41,48)
-                right.BackgroundTransparency = ElementTrans
-                right.ZIndex = 302
-                Corner(right, 12)
-                local rLayout = Instance.new("UIListLayout", right)
-                rLayout.FillDirection = Enum.FillDirection.Vertical
-                rLayout.Padding = UDim.new(0,10)
-                rLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-                rLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-                local preview = Instance.new("Frame", right)
-                preview.Size = UDim2.new(1,-20,0,70)
-                preview.ZIndex = 303
-                Corner(preview, 10)
-                Stroke(preview, CurrentTheme.Stroke, 1)
-                local hexBox = Instance.new("TextBox", preview)
-                hexBox.Size = UDim2.new(1,0,1,0)
-                hexBox.BackgroundTransparency = 1
-                hexBox.Font = Enum.Font.GothamBold
-                hexBox.TextSize = 14
-                hexBox.TextColor3 = Color3.new(1,1,1)
-                hexBox.TextStrokeTransparency = 0.3
-                hexBox.ClearTextOnFocus = false
-                hexBox.ZIndex = 304
-                local btns = Instance.new("Frame", right)
-                btns.Size = UDim2.new(1,-20,0,36)
-                btns.BackgroundTransparency = 1
-                btns.ZIndex = 302
-                local bLay = Instance.new("UIListLayout", btns)
-                bLay.FillDirection = Enum.FillDirection.Horizontal
-                bLay.Padding = UDim.new(0,10)
-                local done = Instance.new("TextButton", btns)
-                done.Size = UDim2.new(0.5,-5,1,0)
-                done.BackgroundColor3 = CurrentTheme.Accent
-                done.Text = "Done"
-                done.Font = Enum.Font.GothamBold
-                done.TextColor3 = Color3.new(1,1,1)
-                done.ZIndex = 303
-                Corner(done, 10)
-                local ex = Instance.new("TextButton", btns)
-                ex.Size = UDim2.new(0.5,-5,1,0)
-                ex.BackgroundColor3 = Color3.fromRGB(60,61,70)
-                ex.Text = "Exit"
-                ex.Font = Enum.Font.GothamBold
-                ex.TextColor3 = Color3.new(1,1,1)
-                ex.ZIndex = 303
-                Corner(ex, 10)
+
+                -- responsive layout: sized from the CURRENT window size, always inside the screen
+                local function LayoutPicker()
+                    if not ov.Parent or not main.Parent then return end
+                    local vp = ov.AbsoluteSize
+                    if vp.X < 10 or vp.Y < 10 then
+                        local cam = workspace.CurrentCamera
+                        vp = cam and cam.ViewportSize or Vector2.new(800, 450)
+                    end
+                    local MARGIN = 8
+                    local maxW = math.max(150, vp.X - MARGIN*2)
+                    local maxH = math.max(120, vp.Y - MARGIN*2)
+                    local mS = Main.AbsoluteSize
+                    local mP = Main.AbsolutePosition
+                    local w = math.floor(math.clamp(mS.X * 0.94, math.min(280, maxW), math.min(520, maxW)))
+                    local h = math.floor(math.clamp(mS.Y * 0.88, math.min(180, maxH), math.min(340, maxH)))
+                    -- center on the window, then keep fully on screen
+                    local ovP = ov.AbsolutePosition
+                    local cx = mP.X + mS.X/2 - ovP.X
+                    local cy = mP.Y + mS.Y/2 - ovP.Y
+                    local x = math.clamp(cx - w/2, MARGIN, math.max(MARGIN, vp.X - w - MARGIN))
+                    local y = math.clamp(cy - h/2, MARGIN, math.max(MARGIN, vp.Y - h - MARGIN))
+                    main.Size = UDim2.fromOffset(w, h)
+                    main.Position = UDim2.fromOffset(math.floor(x), math.floor(y))
+
+                    local PAD, GAP = 10, 10
+                    local iw, ih = w - PAD*2, h - PAD*2
+                    cont.Position = UDim2.fromOffset(PAD, PAD)
+                    cont.Size = UDim2.fromOffset(iw, ih)
+
+                    local hueW = math.clamp(math.floor(iw * 0.09), 20, 34)
+                    local rem = iw - hueW - GAP*2
+                    local rightW = math.floor(rem * 0.48)
+                    local svW = rem - rightW
+                    hueBar.Position = UDim2.fromOffset(0, 0)
+                    hueBar.Size = UDim2.fromOffset(hueW, ih)
+                    right.Position = UDim2.fromOffset(hueW + GAP, 0)
+                    right.Size = UDim2.fromOffset(rightW, ih)
+                    svFrame.Position = UDim2.fromOffset(hueW + GAP + rightW + GAP, 0)
+                    svFrame.Size = UDim2.fromOffset(svW, ih)
+
+                    local pv = math.clamp(math.floor(ih * 0.40), 26, 80)
+                    local bh = math.clamp(math.floor(ih * 0.20), 22, 36)
+                    local vgap = 8
+                    local top = math.max(6, math.floor((ih - (pv + vgap + bh)) / 2))
+                    preview.Position = UDim2.fromOffset(8, top)
+                    preview.Size = UDim2.new(1,-16,0,pv)
+                    btns.Position = UDim2.fromOffset(8, top + pv + vgap)
+                    btns.Size = UDim2.new(1,-16,0,bh)
+                end
+                LayoutPicker()
+                task.defer(LayoutPicker)
+                local layoutConns = {
+                    Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(LayoutPicker),
+                    Main:GetPropertyChangedSignal("AbsolutePosition"):Connect(LayoutPicker),
+                    ov:GetPropertyChangedSignal("AbsoluteSize"):Connect(LayoutPicker),
+                }
+                ov.Destroying:Connect(function()
+                    for _, c in ipairs(layoutConns) do c:Disconnect() end
+                end)
                 local function toHex(c) return "#"..c:ToHex() end
                 local curSat = Sat
                 local curVib = Vib
@@ -5110,6 +5149,7 @@ local function CreateColorpicker(Cfg)
                     DevContainer.BackgroundColor3 = CurrentTheme.TabListBg
                     DevContainer.BackgroundTransparency = ElementTrans
                     DevContainer.BorderSizePixel = 0
+                    RegisterThemable(DevContainer, "BackgroundColor3", "TabListBg")
                     Corner(DevContainer, 8)
                     local grid = Instance.new("UIGridLayout", DevContainer)
                     grid.CellSize = UDim2.new(0,28,0,28)
@@ -5405,6 +5445,7 @@ local function CreateColorpicker(Cfg)
                 ShowBtn.Font = Enum.Font.GothamBold
                 ShowBtn.TextSize = 12
                 Corner(ShowBtn, 8)
+                RegisterThemable(ShowBtn, "BackgroundColor3", "Accent")
                 ShowBtn.MouseButton1Click:Connect(showImageFromInput)
             end
 
@@ -5489,7 +5530,9 @@ local function CreateColorpicker(Cfg)
             CopyBtn.TextColor3 = CurrentTheme.Text
             CopyBtn.AutoLocalize = true
             Corner(CopyBtn, 8)
-            Stroke(CopyBtn, CurrentTheme.StrokeLight, 1)
+            RegisterThemable(Stroke(CopyBtn, CurrentTheme.StrokeLight, 1), "Stroke", "StrokeLight")
+            RegisterThemable(CopyBtn, "BackgroundColor3", "ElementBg2")
+            RegisterThemable(CopyBtn, "TextColor3", "Text")
             local CopyIcon = MakeIcon(CopyBtn, "clipboard-copy", 16)
             CopyIcon.AnchorPoint = Vector2.new(0, 0.5)
             CopyIcon.Position = UDim2.new(0, 12, 0.5, 0)
@@ -5718,7 +5761,8 @@ local function CreateColorpicker(Cfg)
                 row.BackgroundColor3 = CurrentTheme.ElementBg2
                 row.BackgroundTransparency = 0.2
                 Corner(row, 8)
-                Stroke(row, CurrentTheme.Stroke, 1)
+                RegisterThemable(Stroke(row, CurrentTheme.Stroke, 1), "Stroke", "Stroke")
+                RegisterThemable(row, "BackgroundColor3", "ElementBg2")
 
                 local left = Instance.new("TextLabel", row)
                 left.Size = UDim2.new(0.35,-8,0,0)
@@ -6368,6 +6412,11 @@ end
             end
             local Value = math.clamp(Cfg.Default, Cfg.Min, Cfg.Max)
             Value = SnapValue(Value)
+            local function RelOf(v)
+                local range = Cfg.Max - Cfg.Min
+                if range <= 0 then return 0 end
+                return math.clamp((v - Cfg.Min) / range, 0, 1)
+            end
 
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,58)
@@ -6399,7 +6448,7 @@ end
             NumberBox.PlaceholderColor3 = CurrentTheme.SubText
             NumberBox.ClearTextOnFocus = false
             Corner(NumberBox, 6)
-            Stroke(NumberBox, CurrentTheme.Stroke, 1)
+            RegisterThemable(Stroke(NumberBox, CurrentTheme.Stroke, 1), "Stroke", "Stroke")
             RegisterThemable(NumberBox, "BackgroundColor3", "ElementBg2")
 
             local Bar = Instance.new("Frame", Frame)
@@ -6410,15 +6459,15 @@ end
             RegisterThemable(Bar, "BackgroundColor3", "ElementBg2")
 
             local Fill = Instance.new("Frame", Bar)
-            Fill.Size = UDim2.new((Value - Cfg.Min) / math.max(1, Cfg.Max - Cfg.Min),0,1,0)
+            Fill.Size = UDim2.new(RelOf(Value),0,1,0)
             Fill.BackgroundColor3 = CurrentTheme.Accent
             Corner(Fill, 4)
             RegisterThemable(Fill, "BackgroundColor3", "Accent")
 
-            local Circle = Instance.new("Frame", Frame)
+            local Circle = Instance.new("Frame", Bar)
             Circle.Size = UDim2.new(0,16,0,16)
             Circle.AnchorPoint = Vector2.new(0.5,0.5)
-            Circle.Position = UDim2.new(0,10,0,36)
+            Circle.Position = UDim2.new(RelOf(Value), 0, 0.5, 0)
             Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
             Circle.ZIndex = 10
             Corner(Circle, 8)
@@ -6430,26 +6479,19 @@ end
             local function UpdateVisuals(newVal, tween)
                 newVal = SnapValue(math.clamp(newVal, Cfg.Min, Cfg.Max))
                 Value = newVal
-                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
+                local rel = RelOf(Value)
                 if tween then
                     Tween(Fill, {Size = UDim2.new(rel,0,1,0)}, 0.15)
-                    Tween(Circle, {Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)}, 0.15)
+                    Tween(Circle, {Position = UDim2.new(rel, 0, 0.5, 0)}, 0.15)
                 else
                     Fill.Size = UDim2.new(rel,0,1,0)
-                    Circle.Position = UDim2.new(0, 10 + rel*Bar.AbsoluteSize.X, 0, 36)
+                    Circle.Position = UDim2.new(rel, 0, 0.5, 0)
                 end
                 NumberBox.Text = FormatVal(Value)
                 TitleLabel.Text = (Cfg.Title or "Slider").." : "..FormatVal(Value)
                 pcall(Cfg.Callback or function() end, Value)
             end
 
-            task.spawn(function()
-                task.wait(0.08)
-                local rel = (Value - Cfg.Min)/math.max(1,Cfg.Max-Cfg.Min)
-                local barSize = Bar.AbsoluteSize.X
-                if barSize <= 0 then barSize = 200 end
-                Circle.Position = UDim2.new(0, 10 + rel*barSize, 0, 36)
-            end)
 
             local function UpdateFromInputPos(inputX)
                 local barPos = Bar.AbsolutePosition.X
@@ -6657,17 +6699,7 @@ function Window:SetSizePreset(presetName)
             self:SetTransparency(newCfg.WindowTransparency or newCfg.WindowTrans, newCfg.ElementTransparency or newCfg.ElementTrans)
         end
         if newCfg.Theme and Themes[newCfg.Theme] then
-            CurrentTheme = Themes[newCfg.Theme]
-            CurrentThemeName = newCfg.Theme
-            local function GetLum(c) return 0.299*c.R+0.587*c.G+0.114*c.B end
-            local lum = GetLum(CurrentTheme.MainBg)
-            if lum>0.5 then CurrentTheme.Text=Color3.fromRGB(20,20,25) CurrentTheme.SubText=Color3.fromRGB(80,80,85) else CurrentTheme.Text=Color3.fromRGB(240,240,245) CurrentTheme.SubText=Color3.fromRGB(180,180,190) end
-            Main.BackgroundColor3 = CurrentTheme.MainBg
-            Header.BackgroundColor3 = CurrentTheme.HeaderBg
-            HeaderFix.BackgroundColor3 = CurrentTheme.HeaderBg
-            TabList.BackgroundColor3 = CurrentTheme.TabListBg
-            TitleLabel.TextColor3 = CurrentTheme.Text
-            SubLabel.TextColor3 = CurrentTheme.SubText
+            ApplyTheme(newCfg.Theme)
         end
     end
     function Window:Refresh() self:Update({}) end
@@ -6729,6 +6761,7 @@ function Window:SetSizePreset(presetName)
         local Btn = Instance.new("TextButton", Frame)
         Btn.Size = UDim2.new(1,0,0,38)
         Btn.BackgroundTransparency = 1
+        RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
         Btn.Text = (Cfg.Title or "Theme").." : Dark"
         Btn.Font = Enum.Font.GothamMedium
         Btn.TextSize = 12
@@ -6757,6 +6790,8 @@ function Window:SetSizePreset(presetName)
             local O = Instance.new("TextButton", List)
             O.Size = UDim2.new(1,-4,0,28)
             O.BackgroundColor3 = CurrentTheme.ElementBg2
+            RegisterThemable(O, "BackgroundColor3", "ElementBg2")
+            RegisterThemable(O, "TextColor3", "Text")
             O.Text = thName
             O.Font = Enum.Font.Gotham
             O.TextSize = 11
