@@ -6039,7 +6039,28 @@ end
             local floatText = Cfg.FloatText or Cfg.FloatName or title
             local floatImage = Cfg.FloatImage or Cfg.FloatIcon or Cfg.Image or nil
             local floatPosCfg = Cfg.FloatPosition or Cfg.Position or "Center"
-            local floatSize = Cfg.FloatSize or Vector2.new(50,50)
+            local floatSize = Cfg.FloatSize or Cfg.Size or Cfg.ButtonSize or Vector2.new(50,50)
+            if type(floatSize) == "number" then
+                floatSize = Vector2.new(floatSize, floatSize)
+            elseif type(floatSize) == "table" then
+                floatSize = Vector2.new(tonumber(floatSize[1] or floatSize.W or floatSize.Width) or 50, tonumber(floatSize[2] or floatSize.H or floatSize.Height) or 50)
+            elseif typeof(floatSize) == "UDim2" then
+                floatSize = Vector2.new(floatSize.X.Offset, floatSize.Y.Offset)
+            elseif typeof(floatSize) ~= "Vector2" then
+                floatSize = Vector2.new(50,50)
+            end
+            if Cfg.FloatWidth or Cfg.Width then floatSize = Vector2.new(tonumber(Cfg.FloatWidth or Cfg.Width) or floatSize.X, floatSize.Y) end
+            if Cfg.FloatHeight or Cfg.Height then floatSize = Vector2.new(floatSize.X, tonumber(Cfg.FloatHeight or Cfg.Height) or floatSize.Y) end
+            floatSize = Vector2.new(math.clamp(math.floor(floatSize.X + 0.5), 1, 500), math.clamp(math.floor(floatSize.Y + 0.5), 1, 500))
+            local allowSizeControl = true
+            do
+                local a = Cfg.AllowSizeControl
+                if a == nil then a = Cfg.UserSize end
+                if a == nil then a = Cfg.SizeControl end
+                if a == nil then a = Cfg.AllowResize end
+                if a ~= nil then allowSizeControl = (a == true) end
+            end
+            local SIZE_ROW_END = allowSizeControl and 114 or 76
             local floatLocked = (Cfg.FloatLocked or Cfg.Locked) == true
             local floatTrans = tonumber(Cfg.FloatTransparency or Cfg.FloatTrans) or 0
             if floatTrans > 1 then floatTrans = floatTrans / 100 end
@@ -6156,9 +6177,59 @@ end
             RegisterThemable(TransBox, "BackgroundColor3", "ElementBg2")
             RegisterThemable(TransBox, "TextColor3", "Text")
 
+            local SizeLine = Instance.new("Frame", Frame)
+            SizeLine.Size = UDim2.new(1,-20,0,1)
+            SizeLine.Position = UDim2.new(0,10,0,76)
+            SizeLine.BackgroundColor3 = CurrentTheme.Stroke
+            SizeLine.BackgroundTransparency = 0.6
+            SizeLine.BorderSizePixel = 0
+            RegisterThemable(SizeLine, "BackgroundColor3", "Stroke")
+
+            local SizeCaption = Instance.new("TextLabel", Frame)
+            SizeCaption.Size = UDim2.new(1,-130,0,28)
+            SizeCaption.Position = UDim2.new(0,10,0,80)
+            SizeCaption.BackgroundTransparency = 1
+            SizeCaption.Text = "Size  W / H  (1-100)"
+            SizeCaption.Font = Enum.Font.GothamMedium
+            SizeCaption.TextSize = 10
+            SizeCaption.TextColor3 = CurrentTheme.SubText
+            SizeCaption.TextXAlignment = Enum.TextXAlignment.Left
+            SizeCaption.TextTruncate = Enum.TextTruncate.AtEnd
+            SizeCaption.AutoLocalize = true
+            RegisterThemable(SizeCaption, "TextColor3", "SubText")
+
+            local function MakeSizeBox(name, xOff, val)
+                local b = Instance.new("TextBox", Frame)
+                b.Name = name
+                b.Size = UDim2.new(0,50,0,28)
+                b.Position = UDim2.new(1,xOff,0,80)
+                b.BackgroundColor3 = CurrentTheme.ElementBg2
+                b.Text = tostring(val)
+                b.PlaceholderText = "1-100"
+                b.Font = Enum.Font.GothamMedium
+                b.TextSize = 11
+                b.TextColor3 = CurrentTheme.Text
+                b.PlaceholderColor3 = CurrentTheme.SubText
+                b.ClearTextOnFocus = false
+                Corner(b, 8)
+                Stroke(b, CurrentTheme.StrokeLight, 1)
+                RegisterThemable(b, "BackgroundColor3", "ElementBg2")
+                RegisterThemable(b, "TextColor3", "Text")
+                return b
+            end
+            local WBox = MakeSizeBox("WBox", -116, floatSize.X)
+            local HBox = MakeSizeBox("HBox", -62, floatSize.Y)
+
+            if not allowSizeControl then
+                SizeLine.Visible = false
+                SizeCaption.Visible = false
+                WBox.Visible = false
+                HBox.Visible = false
+            end
+
             local KeyLine = Instance.new("Frame", Frame)
             KeyLine.Size = UDim2.new(1,-20,0,1)
-            KeyLine.Position = UDim2.new(0,10,0,76)
+            KeyLine.Position = UDim2.new(0,10,0,SIZE_ROW_END)
             KeyLine.BackgroundColor3 = CurrentTheme.Stroke
             KeyLine.BackgroundTransparency = 0.6
             KeyLine.BorderSizePixel = 0
@@ -6166,7 +6237,7 @@ end
 
             local KeyCaption = Instance.new("TextLabel", Frame)
             KeyCaption.Size = UDim2.new(1,-130,0,28)
-            KeyCaption.Position = UDim2.new(0,10,0,80)
+            KeyCaption.Position = UDim2.new(0,10,0,SIZE_ROW_END + 4)
             KeyCaption.BackgroundTransparency = 1
             KeyCaption.Text = "Keybind (works when ON)"
             KeyCaption.Font = Enum.Font.GothamMedium
@@ -6180,7 +6251,7 @@ end
             local KeyBtn = Instance.new("TextButton", Frame)
             KeyBtn.Name = "KeyBtn"
             KeyBtn.Size = UDim2.new(0,108,0,28)
-            KeyBtn.Position = UDim2.new(1,-118,0,80)
+            KeyBtn.Position = UDim2.new(1,-118,0,SIZE_ROW_END + 4)
             KeyBtn.BackgroundColor3 = CurrentTheme.ElementBg2
             KeyBtn.Text = floatKey and floatKey.Name or "None"
             KeyBtn.Font = Enum.Font.GothamBold
@@ -6203,7 +6274,7 @@ end
                 KeyLine.Visible = show
                 KeyCaption.Visible = show
                 KeyBtn.Visible = show
-                Frame.Size = UDim2.new(1,-4,0, show and 114 or 76)
+                Frame.Size = UDim2.new(1,-4,0, show and (SIZE_ROW_END + 38) or SIZE_ROW_END)
             end
             RefreshKeyRow()
             local keyRowConn = UserInputService.LastInputTypeChanged:Connect(function()
@@ -6301,6 +6372,47 @@ end
                 if updateBox then TransBox.Text = tostring(math.floor(floatTrans * 100 + 0.5)) end
                 ApplyFloatLook()
             end
+
+            local function ApplyFloatSize(w, h, updateBoxes, maxV)
+                maxV = maxV or 100
+                w = math.clamp(math.floor((tonumber(w) or floatSize.X) + 0.5), 1, maxV)
+                h = math.clamp(math.floor((tonumber(h) or floatSize.Y) + 0.5), 1, maxV)
+                local oldS = floatSize
+                floatSize = Vector2.new(w, h)
+                if updateBoxes then
+                    WBox.Text = tostring(w)
+                    HBox.Text = tostring(h)
+                end
+                if floatingInstance and floatingInstance.Parent then
+                    local p = floatingInstance.Position
+                    local nx = p.X.Offset + (oldS.X - w) / 2
+                    local ny = p.Y.Offset + (oldS.Y - h) / 2
+                    floatingInstance.Size = UDim2.fromOffset(w, h)
+                    floatingInstance.Position = ClampFloatPartial(UDim2.fromOffset(nx, ny), floatSize)
+                    savedFloatPos = Vector2.new(floatingInstance.Position.X.Offset, floatingInstance.Position.Y.Offset)
+                end
+            end
+            local function ParseSizeText(txt)
+                local n = tonumber((tostring(txt):gsub("[%s%%px]", "")))
+                if not n then return nil end
+                return math.clamp(math.floor(n + 0.5), 1, 100)
+            end
+            WBox:GetPropertyChangedSignal("Text"):Connect(function()
+                local n = ParseSizeText(WBox.Text)
+                if n and n ~= floatSize.X then ApplyFloatSize(n, floatSize.Y, false) end
+            end)
+            HBox:GetPropertyChangedSignal("Text"):Connect(function()
+                local n = ParseSizeText(HBox.Text)
+                if n and n ~= floatSize.Y then ApplyFloatSize(floatSize.X, n, false) end
+            end)
+            WBox.FocusLost:Connect(function()
+                WBox.Text = tostring(floatSize.X)
+                SaveMgr.MarkDirty()
+            end)
+            HBox.FocusLost:Connect(function()
+                HBox.Text = tostring(floatSize.Y)
+                SaveMgr.MarkDirty()
+            end)
 
             local floatDown = false
             local function FloatBaseColor() return CurrentTheme.Accent end
@@ -6574,6 +6686,8 @@ end
                 RefreshLockVisual()
                 KeyBtn.BackgroundColor3 = keyListening and th.Accent or th.ElementBg2
                 KeyBtn.TextColor3 = th.Text
+                WBox.PlaceholderColor3 = th.SubText
+                HBox.PlaceholderColor3 = th.SubText
                 ApplyFloatTheme(th)
             end)
 
@@ -6591,7 +6705,7 @@ end
                 elseif savedFloatPos then
                     px, py = savedFloatPos.X, savedFloatPos.Y
                 end
-                return {on = isFloatEnabled, locked = floatLocked, trans = floatTrans, x = px, y = py, key = floatKey and floatKey.Name or ""}
+                return {on = isFloatEnabled, locked = floatLocked, trans = floatTrans, x = px, y = py, key = floatKey and floatKey.Name or "", w = floatSize.X, h = floatSize.Y}
             end
 
             local function SetState(s)
@@ -6601,6 +6715,9 @@ end
                     RefreshLockVisual()
                 end
                 if type(s.trans) == "number" then SetTransFromValue(s.trans, true) end
+                if allowSizeControl and (type(s.w) == "number" or type(s.h) == "number") then
+                    ApplyFloatSize(s.w, s.h, true)
+                end
                 if type(s.key) == "string" then
                     if s.key == "" then SetFloatKey(nil)
                     else
@@ -6636,6 +6753,26 @@ end
                 return API
             end
             function API:GetKeybind() return floatKey end
+            function API:SetSize(w, h)
+                if typeof(w) == "Vector2" then w, h = w.X, w.Y end
+                ApplyFloatSize(w, h or w, true, 500)
+                SaveMgr.MarkDirty()
+                return API
+            end
+            function API:GetSize() return floatSize end
+            function API:SetSizeControl(v)
+                allowSizeControl = v and true or false
+                SizeLine.Visible = allowSizeControl
+                SizeCaption.Visible = allowSizeControl
+                WBox.Visible = allowSizeControl
+                HBox.Visible = allowSizeControl
+                SIZE_ROW_END = allowSizeControl and 114 or 76
+                KeyLine.Position = UDim2.new(0,10,0,SIZE_ROW_END)
+                KeyCaption.Position = UDim2.new(0,10,0,SIZE_ROW_END + 4)
+                KeyBtn.Position = UDim2.new(1,-118,0,SIZE_ROW_END + 4)
+                RefreshKeyRow()
+                return API
+            end
             function API:SetTransparency(v)
                 SetTransFromValue(v, true)
                 SaveMgr.MarkDirty()
