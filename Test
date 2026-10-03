@@ -1,5 +1,4 @@
 local GGH = {}
-local GGH = {}
 GGH.Icons = {
     ["a-arrow-down"] = "rbxassetid://92867583610071",
     ["a-arrow-up"] = "rbxassetid://132318504999733",
@@ -1718,12 +1717,6 @@ GGH.Icons = {
     ["zoom-out"] = "rbxassetid://108334162607319",
 }
 
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-local LocalizationService = game:GetService("LocalizationService")
-local HttpService = game:GetService("HttpService")
-
 local function GetIcon(name)
     if not name then return nil end
     local k = string.lower(tostring(name))
@@ -1745,15 +1738,17 @@ local function ResolveImageAsset(asset)
     return s
 end
 
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local LocalizationService = game:GetService("LocalizationService")
+
 local function GetGuiParent()
     local ok, hui = pcall(function() return gethui() end)
     if ok and hui then return hui end
     return CoreGui
 end
-
-
-
-
 
 
     local function MakeTranslatable(textObj)
@@ -3039,7 +3034,7 @@ function GGH:CreateWindow(Config)
     if Config.DisableFloatButton then showFloat = false end
 
     local function CreateCtrlButton(name, text, bg)
-        local btn = Instance.new("TextButton", HeaderFix)
+        local btn = Instance.new("TextButton", Controls or HeaderFix)
         btn.Name = name
         btn.Size = UDim2.new(0,32,0,28)
         btn.BackgroundColor3 = bg or CurrentTheme.ElementBg2
@@ -3049,13 +3044,12 @@ function GGH:CreateWindow(Config)
         btn.ZIndex = 25
         Corner(btn, 8)
         Stroke(btn, CurrentTheme.Stroke, 1)
-        local map = {["🔍"]="search",["◉"]="anchor",["X"]="x",["search"]="search",["anchor"]="anchor",["x"]="x"}
+        local map = {["🔍"]="search",["◉"]="anchor",["X"]="x"}
         local iconName = map[text] or text
         local ic = GetIcon(iconName)
         if ic then
             btn.Text = ""
             local img = Instance.new("ImageLabel", btn)
-            img.Name = "BtnIcon"
             img.Size = UDim2.new(0,16,0,16)
             img.Position = UDim2.new(0.5,-8,0.5,-8)
             img.BackgroundTransparency = 1
@@ -3216,14 +3210,12 @@ function GGH:CreateWindow(Config)
     SaveToggleBtn.Size = UDim2.new(1,0,1,0)
     SaveToggleBtn.BackgroundTransparency = 1
     SaveToggleBtn.Text = ""
+
     local SaveEnabled = true
-    pcall(function()
-        if isfile and isfile("GGH_Settings.json") then
-            local d = HttpService:JSONDecode(readfile("GGH_Settings.json"))
-            if d and d.SaveEnabled ~= nil then SaveEnabled = d.SaveEnabled end
-        end
-    end)
-    local function UpdateSaveToggle()
+    if Config.SaveSettings ~= nil then SaveEnabled = Config.SaveSettings end
+    if Config.SaveEnabled ~= nil then SaveEnabled = Config.SaveEnabled end
+
+    local function UpdateSaveToggleVisual()
         if SaveEnabled then
             Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
             Tween(SaveCircle, {Position = UDim2.new(1,-19,0.5,-8)}, 0.15)
@@ -3231,12 +3223,19 @@ function GGH:CreateWindow(Config)
             Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.15)
             Tween(SaveCircle, {Position = UDim2.new(0,3,0.5,-8)}, 0.15)
         end
-        pcall(function() if writefile then writefile("GGH_Settings.json", HttpService:JSONEncode({SaveEnabled=SaveEnabled})) end end)
     end
-    task.spawn(function() task.wait(0.1) UpdateSaveToggle() end)
-    SaveToggleBtn.MouseButton1Click:Connect(function() SaveEnabled = not SaveEnabled UpdateSaveToggle() end)
-    function Window:SetSaveEnabled(s) SaveEnabled=s UpdateSaveToggle() end
+
+    task.spawn(function() task.wait(0.2) UpdateSaveToggleVisual() end)
+
+    SaveToggleBtn.MouseButton1Click:Connect(function()
+        SaveEnabled = not SaveEnabled
+        UpdateSaveToggleVisual()
+    end)
+
+    function Window:SetSaveEnabled(s) SaveEnabled=s UpdateSaveToggleVisual() end
     function Window:GetSaveEnabled() return SaveEnabled end
+    function Window:IsSaveEnabled() return SaveEnabled end
+
 -- سطر فاصل
     local Sep1 = Instance.new("Frame", ThemeList)
     Sep1.Size = UDim2.new(1,0,0,1)
@@ -3630,15 +3629,14 @@ function GGH:CreateWindow(Config)
         end
     end
 
-
     local FloatingLocked = false
     local FloatingTransparency = 0
     local function CreateFloatingIcon()
         if FloatingIcon then FloatingIcon:Destroy() end
         FloatingIcon = Instance.new("TextButton", ScreenGui)
         FloatingIcon.Name = "FloatingIcon"
-        FloatingIcon.Size = UDim2.new(0,48,0,48)
-        FloatingIcon.Position = UDim2.new(0.5,-24,0,15)
+        FloatingIcon.Size = UDim2.new(0,40,0,40)
+        FloatingIcon.Position = UDim2.new(0.5,-20,0,15)
         FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
         FloatingIcon.BackgroundTransparency = FloatingTransparency
         FloatingIcon.Text = "G"
@@ -3647,20 +3645,20 @@ function GGH:CreateWindow(Config)
         FloatingIcon.TextColor3 = Color3.new(1,1,1)
         FloatingIcon.ZIndex = 200
         FloatingIcon.AutoButtonColor = false
-        Corner(FloatingIcon, 24)
+        Corner(FloatingIcon, 20)
         Stroke(FloatingIcon, Color3.new(1,1,1), 1).Transparency = 0.5
         
+        -- زر القفل - ايقونة حلوة مو ايموجي
         local LockBtn = Instance.new("ImageButton", FloatingIcon)
         LockBtn.Name = "LockBtn"
-        LockBtn.Size = UDim2.new(0,18,0,18)
-        LockBtn.Position = UDim2.new(1,-10,0,-6)
+        LockBtn.Size = UDim2.new(0,16,0,16)
+        LockBtn.Position = UDim2.new(1,-8,0,-6)
         LockBtn.BackgroundColor3 = Color3.fromRGB(30,30,35)
-        LockBtn.BackgroundTransparency = 0.2
+        LockBtn.BackgroundTransparency = 0.1
         LockBtn.ZIndex = 201
         LockBtn.Image = GetIcon("unlock") or "rbxassetid://121110081714513"
         LockBtn.ScaleType = Enum.ScaleType.Fit
-        Corner(LockBtn, 9)
-        Stroke(LockBtn, Color3.new(1,1,1), 1).Transparency = 0.6
+        Corner(LockBtn, 8)
         LockBtn.ImageColor3 = Color3.new(1,1,1)
 
         local function UpdateLockVisual()
@@ -3677,7 +3675,7 @@ function GGH:CreateWindow(Config)
             FloatingLocked = not FloatingLocked
             UpdateLockVisual()
         end)
-
+        
         local dragging = false
         local dragStartPos
         local startGuiPos
@@ -3698,25 +3696,37 @@ function GGH:CreateWindow(Config)
                 vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080)
             end
             local sz = FloatingIcon.AbsoluteSize
-            if sz.X < 10 then sz = Vector2.new(48,48) end
-            return UDim2.fromOffset(math.clamp(pos.X.Offset, 4, vp.X - sz.X - 4), math.clamp(pos.Y.Offset, 4, vp.Y - sz.Y - 4))
+            if sz.X < 10 then sz = Vector2.new(40,40) end
+            local x = pos.X.Offset
+            local y = pos.Y.Offset
+            x = math.clamp(x, 4, vp.X - sz.X - 4)
+            y = math.clamp(y, 4, vp.Y - sz.Y - 4)
+            return UDim2.fromOffset(x, y)
         end
         UserInputService.InputChanged:Connect(function(input)
             if FloatingLocked then return end
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStartPos
                 if delta.Magnitude > 5 then hasDragged = true end
-                FloatingIcon.Position = ClampMainFloat(UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y))
+                local rawPos = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
+                FloatingIcon.Position = ClampMainFloat(rawPos)
             end
         end)
+        -- loop حماية اضافية
         task.spawn(function()
             while FloatingIcon and FloatingIcon.Parent do
-                local vp = ScreenGui.AbsoluteSize
-                if vp.X > 10 then
-                    local sz = FloatingIcon.AbsoluteSize
-                    if sz.X > 10 then
-                        local absPos = FloatingIcon.AbsolutePosition
-                        FloatingIcon.Position = UDim2.fromOffset(math.clamp(absPos.X, 4, vp.X - sz.X - 4), math.clamp(absPos.Y, 4, vp.Y - sz.Y - 4))
+                if not FloatingLocked then
+                    local vp = ScreenGui.AbsoluteSize
+                    if vp.X > 10 then
+                        local sz = FloatingIcon.AbsoluteSize
+                        if sz.X > 10 then
+                            local absPos = FloatingIcon.AbsolutePosition
+                            local clampedX = math.clamp(absPos.X, 4, vp.X - sz.X - 4)
+                            local clampedY = math.clamp(absPos.Y, 4, vp.Y - sz.Y - 4)
+                            if absPos.X ~= clampedX or absPos.Y ~= clampedY then
+                                FloatingIcon.Position = UDim2.fromOffset(clampedX, clampedY)
+                            end
+                        end
                     end
                 end
                 task.wait(0.2)
@@ -3759,8 +3769,8 @@ function GGH:CreateWindow(Config)
                 Tween(Main, {Size = savedSize}, 0.22)
             end
         end)
-        function Window:SetFloatingTransparency(val) FloatingTransparency=math.clamp(val,0,0.85) if FloatingIcon then FloatingIcon.BackgroundTransparency=FloatingTransparency end end
-        function Window:SetFloatingLocked(state) FloatingLocked=state UpdateLockVisual() end
+        function Window:SetFloatingTransparency(v) FloatingTransparency=math.clamp(v,0,0.85) if FloatingIcon then FloatingIcon.BackgroundTransparency=FloatingTransparency end end
+        function Window:SetFloatingLocked(s) FloatingLocked=s UpdateLockVisual() end
         function Window:GetFloatingLocked() return FloatingLocked end
         function Window:GetFloatingTransparency() return FloatingTransparency end
     end
@@ -3922,7 +3932,6 @@ function GGH:CreateWindow(Config)
             if ic and ic ~= "" then
                 TabButton.Text = "   " .. tabName
                 local TabIcon = Instance.new("ImageLabel", TabButton)
-                TabIcon.Name = "TabIcon"
                 TabIcon.Size = UDim2.new(0,14,0,14)
                 TabIcon.Position = UDim2.new(0,6,0.5,-7)
                 TabIcon.BackgroundTransparency = 1
@@ -5606,31 +5615,34 @@ end
             local floatEnabledDefault = Cfg.FloatDefault or Cfg.ToggleDefault or false
             local floatDraggable = Cfg.FloatDraggable
             if floatDraggable == nil then floatDraggable = true end
+            if Cfg.Draggable ~= nil then floatDraggable = Cfg.Draggable end
             local floatText = Cfg.FloatText or Cfg.FloatName or title
             local floatImage = Cfg.FloatImage or Cfg.FloatIcon or Cfg.Image or nil
             local floatPosCfg = Cfg.FloatPosition or Cfg.Position or "Center"
             local floatSize = Cfg.FloatSize or Vector2.new(50,50)
             local floatLocked = Cfg.Locked or false
-            local floatTrans = Cfg.Transparency or Cfg.FloatTransparency or 0
+            local floatTrans = Cfg.Transparency or 0
+            
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,42)
+            Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Corner(Frame, 9)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
             AddSearch(Frame, title, "FloatingButton", Name)
+
             local iconId = Cfg.Icon and ResolveImageAsset(Cfg.Icon) or nil
-            local titleOffset = iconId and 26 or 10
+            local off = iconId and 26 or 10
             if iconId then
-                local IconImg = Instance.new("ImageLabel", Frame)
-                IconImg.Name = "ElementIcon"
-                IconImg.Size = UDim2.new(0,16,0,16)
-                IconImg.Position = UDim2.new(0,8,0.5,-8)
-                IconImg.BackgroundTransparency = 1
-                IconImg.Image = iconId
+                local ic = Instance.new("ImageLabel", Frame)
+                ic.Size = UDim2.new(0,16,0,16)
+                ic.Position = UDim2.new(0,8,0.5,-8)
+                ic.BackgroundTransparency = 1
+                ic.Image = iconId
             end
+
             local TitleLabel = Instance.new("TextLabel", Frame)
-            TitleLabel.Size = UDim2.new(1,-210,1,0)
-            TitleLabel.Position = UDim2.new(0,titleOffset,0,0)
+            TitleLabel.Size = UDim2.new(1,-200,1,0)
+            TitleLabel.Position = UDim2.new(0,off,0,0)
             TitleLabel.BackgroundTransparency = 1
             TitleLabel.Text = title
             TitleLabel.Font = Enum.Font.GothamMedium
@@ -5638,9 +5650,11 @@ end
             TitleLabel.TextColor3 = CurrentTheme.Text
             TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
             RegisterThemable(TitleLabel, "TextColor3", "Text")
+
+            -- خانة الشفافية
             local TransBox = Instance.new("TextBox", Frame)
-            TransBox.Size = UDim2.new(0,42,0,22)
-            TransBox.Position = UDim2.new(1,-210,0.5,-11)
+            TransBox.Size = UDim2.new(0,40,0,20)
+            TransBox.Position = UDim2.new(1,-200,0.5,-10)
             TransBox.BackgroundColor3 = CurrentTheme.ElementBg2
             TransBox.Text = tostring(floatTrans)
             TransBox.Font = Enum.Font.Gotham
@@ -5648,30 +5662,33 @@ end
             TransBox.TextColor3 = CurrentTheme.Text
             TransBox.PlaceholderText = "0-1"
             Corner(TransBox, 6)
-            Stroke(TransBox, CurrentTheme.Stroke, 1)
+
             local ToggleBg = Instance.new("Frame", Frame)
             ToggleBg.Size = UDim2.new(0,38,0,20)
             ToggleBg.Position = UDim2.new(1,-88,0.5,-10)
             ToggleBg.BackgroundColor3 = floatEnabledDefault and CurrentTheme.Accent or CurrentTheme.ElementBg2
             Corner(ToggleBg, 10)
+
             local ToggleCircle = Instance.new("Frame", ToggleBg)
             ToggleCircle.Size = UDim2.new(0,14,0,14)
             ToggleCircle.Position = floatEnabledDefault and UDim2.new(1,-17,0.5,-7) or UDim2.new(0,3,0.5,-7)
             ToggleCircle.BackgroundColor3 = Color3.fromRGB(255,255,255)
             Corner(ToggleCircle, 7)
+
             local ToggleBtn = Instance.new("TextButton", Frame)
             ToggleBtn.Size = UDim2.new(0,38,0,20)
             ToggleBtn.Position = ToggleBg.Position
             ToggleBtn.BackgroundTransparency = 1
             ToggleBtn.Text = ""
-            local LockBg = Instance.new("ImageButton", Frame)
-            LockBg.Name = "LockBtn"
-            LockBg.Size = UDim2.new(0,24,0,24)
-            LockBg.Position = UDim2.new(1,-122,0.5,-12)
-            LockBg.BackgroundColor3 = floatLocked and Color3.fromRGB(200,50,60) or CurrentTheme.ElementBg2
-            LockBg.Image = floatLocked and (GetIcon("lock") or "rbxassetid://107233572212641") or (GetIcon("unlock") or "rbxassetid://121110081714513")
-            Corner(LockBg, 6)
-            Stroke(LockBg, CurrentTheme.StrokeLight, 1)
+
+            -- زر القفل (مو توجل - زر عليه ايقونة قفل حلوة)
+            local LockBtn = Instance.new("ImageButton", Frame)
+            LockBtn.Size = UDim2.new(0,22,0,22)
+            LockBtn.Position = UDim2.new(1,-118,0.5,-11)
+            LockBtn.BackgroundColor3 = floatLocked and Color3.fromRGB(200,50,60) or CurrentTheme.ElementBg2
+            LockBtn.Image = floatLocked and (GetIcon("lock") or "rbxassetid://107233572212641") or (GetIcon("unlock") or "rbxassetid://121110081714513")
+            Corner(LockBtn, 6)
+
             local MainBtn = Instance.new("TextButton", Frame)
             MainBtn.Size = UDim2.new(0,44,0,24)
             MainBtn.Position = UDim2.new(1,-42,0.5,-12)
@@ -5682,22 +5699,38 @@ end
             MainBtn.TextColor3 = CurrentTheme.Text
             Corner(MainBtn, 7)
             Stroke(MainBtn, CurrentTheme.StrokeLight, 1)
+
             local floatingInstance = nil
             local isFloatEnabled = floatEnabledDefault
+
             local function GetViewport()
                 local vp = ScreenGui.AbsoluteSize
-                if vp.X < 10 then vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080) end
+                if vp.X < 10 then
+                    vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080)
+                end
                 return vp
             end
+
             local function ClampFloatPartial(pos, size)
                 local vp = GetViewport()
-                return UDim2.fromOffset(math.clamp(pos.X.Offset, -size.X*0.5, vp.X - size.X*0.5), math.clamp(pos.Y.Offset, -size.Y*0.5, vp.Y - size.Y*0.5))
+                local minX = -size.X * 0.5
+                local maxX = vp.X - size.X * 0.5
+                local minY = -size.Y * 0.5
+                local maxY = vp.Y - size.Y * 0.5
+                local x = math.clamp(pos.X.Offset, minX, maxX)
+                local y = math.clamp(pos.Y.Offset, minY, maxY)
+                return UDim2.fromOffset(x, y)
             end
+
             local function ResolveFloatPosition()
-                if typeof(floatPosCfg) == "UDim2" then return floatPosCfg end
-                local vp = GetViewport()
-                return UDim2.fromOffset(vp.X/2 - floatSize.X/2, vp.Y/2 - floatSize.Y/2)
+                if typeof(floatPosCfg) == "UDim2" then
+                    return floatPosCfg
+                else
+                    local vp = GetViewport()
+                    return UDim2.fromOffset(vp.X/2 - floatSize.X/2, vp.Y/2 - floatSize.Y/2)
+                end
             end
+
             local function CreateFloat()
                 if floatingInstance then floatingInstance:Destroy() end
                 local btn
@@ -5710,6 +5743,7 @@ end
                     btn.Font = Enum.Font.GothamBold
                     btn.TextSize = 12
                     btn.TextColor3 = Color3.new(1,1,1)
+                    btn.TextWrapped = true
                 end
                 btn.Name = "GGH_Float_"..title
                 btn.Size = UDim2.new(0, floatSize.X, 0, floatSize.Y)
@@ -5720,9 +5754,12 @@ end
                 btn.AutoButtonColor = false
                 Corner(btn, 12)
                 Stroke(btn, Color3.new(1,1,1), 1).Transparency = 0.5
+                btn.Active = true
+
                 local dragging = false
                 local dragStart, startPos
                 local hasDragged = false
+
                 btn.InputBegan:Connect(function(input)
                     if floatLocked then return end
                     if floatDraggable and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
@@ -5736,7 +5773,8 @@ end
                     if dragging and floatDraggable and not floatLocked and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                         local delta = input.Position - dragStart
                         if delta.Magnitude > 4 then hasDragged = true end
-                        btn.Position = ClampFloatPartial(UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y), floatSize)
+                        local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                        btn.Position = ClampFloatPartial(newPos, floatSize)
                     end
                 end)
                 UserInputService.InputEnded:Connect(function(input)
@@ -5746,11 +5784,23 @@ end
                         hasDragged = false
                     end
                 end)
-                btn.MouseButton1Click:Connect(function() if hasDragged then return end pcall(callback) end)
+
+                btn.MouseButton1Click:Connect(function()
+                    if hasDragged then return end
+                    pcall(callback)
+                end)
+
                 floatingInstance = btn
                 return btn
             end
-            local function RemoveFloat() if floatingInstance then floatingInstance:Destroy() floatingInstance=nil end end
+
+            local function RemoveFloat()
+                if floatingInstance then
+                    floatingInstance:Destroy()
+                    floatingInstance = nil
+                end
+            end
+
             local function SetToggleState(state)
                 isFloatEnabled = state
                 if state then
@@ -5763,16 +5813,22 @@ end
                     RemoveFloat()
                 end
             end
+
             local function UpdateLock()
                 if floatLocked then
-                    LockBg.Image = GetIcon("lock") or "rbxassetid://107233572212641"
-                    LockBg.BackgroundColor3 = Color3.fromRGB(200,50,60)
+                    LockBtn.Image = GetIcon("lock") or "rbxassetid://107233572212641"
+                    LockBtn.BackgroundColor3 = Color3.fromRGB(200,50,60)
                 else
-                    LockBg.Image = GetIcon("unlock") or "rbxassetid://121110081714513"
-                    LockBg.BackgroundColor3 = CurrentTheme.ElementBg2
+                    LockBtn.Image = GetIcon("unlock") or "rbxassetid://121110081714513"
+                    LockBtn.BackgroundColor3 = CurrentTheme.ElementBg2
                 end
             end
-            LockBg.MouseButton1Click:Connect(function() floatLocked = not floatLocked UpdateLock() end)
+
+            LockBtn.MouseButton1Click:Connect(function()
+                floatLocked = not floatLocked
+                UpdateLock()
+            end)
+
             TransBox.FocusLost:Connect(function(enter)
                 if enter then
                     local num = tonumber(TransBox.Text)
@@ -5784,9 +5840,22 @@ end
                     end
                 end
             end)
-            ToggleBtn.MouseButton1Click:Connect(function() SetToggleState(not isFloatEnabled) end)
-            MainBtn.MouseButton1Click:Connect(function() pcall(callback) end)
-            if isFloatEnabled then task.spawn(function() task.wait(0.2) CreateFloat() end) end
+
+            ToggleBtn.MouseButton1Click:Connect(function()
+                SetToggleState(not isFloatEnabled)
+            end)
+
+            MainBtn.MouseButton1Click:Connect(function()
+                Tween(MainBtn, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.08)
+                task.wait(0.08)
+                Tween(MainBtn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.08)
+                pcall(callback)
+            end)
+
+            if isFloatEnabled then
+                task.spawn(function() task.wait(0.2) CreateFloat() end)
+            end
+
             local API = {}
             function API:SetValue(v) SetToggleState(v) return API end
             function API:GetValue() return isFloatEnabled end
@@ -5796,11 +5865,15 @@ end
             function API:GetLocked() return floatLocked end
             function API:SetTransparency(v) floatTrans=math.clamp(v,0,0.9) TransBox.Text=tostring(floatTrans) if floatingInstance then floatingInstance.BackgroundTransparency=floatTrans end return API end
             function API:GetTransparency() return floatTrans end
-            function API:Destroy() RemoveFloat() Frame:Destroy() end
+            function API:Destroy()
+                RemoveFloat()
+                Frame:Destroy()
+            end
             function API:Refresh(newCfg)
                 if not newCfg then return API end
-                if newCfg.Title then TitleLabel.Text=newCfg.Title end
-                if newCfg.Locked~=nil then floatLocked=newCfg.Locked UpdateLock() end
+                if newCfg.Title then TitleLabel.Text = newCfg.Title end
+                if newCfg.Callback then callback = newCfg.Callback end
+                if newCfg.Locked ~= nil then floatLocked=newCfg.Locked UpdateLock() end
                 if newCfg.Transparency then floatTrans=newCfg.Transparency if floatingInstance then floatingInstance.BackgroundTransparency=floatTrans end TransBox.Text=tostring(floatTrans) end
                 return API
             end
