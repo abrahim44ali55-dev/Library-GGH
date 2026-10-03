@@ -5,7 +5,6 @@ local CoreGui = game:GetService("CoreGui")
 local LocalizationService = game:GetService("LocalizationService")
 local HttpService = game:GetService("HttpService")
 
--- ===================== GGH ICON PACK (Roblox rbxassetid) =====================
 local GGH_ICONS = {
     ["a-arrow-down"] = "rbxassetid://92867583610071",
     ["a-arrow-up"] = "rbxassetid://132318504999733",
@@ -1725,7 +1724,6 @@ local GGH_ICONS = {
 }
 GGH.Icons = GGH_ICONS
 
--- يقبل: اسم ايقونة ("lock") / رقم ايدي (123) / "rbxassetid://123" / رابط
 local function ResolveIcon(v)
     if v == nil or v == "" or v == false then return nil end
     if typeof(v) == "number" then return "rbxassetid://" .. tostring(math.floor(v)) end
@@ -1786,7 +1784,6 @@ local function GetGuiParent()
     return CoreGui
 end
 
-
     local function MakeTranslatable(textObj)
         if textObj:IsA("TextLabel") or textObj:IsA("TextButton") or textObj:IsA("TextBox") then
             textObj.AutoLocalize = true
@@ -1794,7 +1791,6 @@ end
         end
         return textObj
     end
-
 
     local function Corner(p,r)
     local c = Instance.new("UICorner")
@@ -1822,6 +1818,16 @@ local function AddTextStroke(txtObj)
     return st
 end
 
+local function SoftStroke(frame, color)
+    local s = Instance.new("UIStroke")
+    s.Color = color or Color3.fromRGB(60,60,70)
+    s.Thickness = 1
+    s.Transparency = 0.55
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Parent = frame
+    return s
+end
+
 local function AddBlackBorder(frame, thick, trans)
     if not frame then return end
     local s = Instance.new("UIStroke", frame)
@@ -1832,12 +1838,10 @@ local function AddBlackBorder(frame, thick, trans)
     return s
 end
 
-
 local function Tween(o,props,dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
--- ===== نظام منع الخروج من الشاشة - نفس طريقة الزر العائم =====
 local function ClampFrameToScreen(frame, gui)
     if not frame or not gui then return end
     local viewport = gui.AbsoluteSize
@@ -1851,7 +1855,6 @@ local function ClampFrameToScreen(frame, gui)
         newY = math.clamp(fPos.Y.Offset, 0, viewport.Y - fSize.Y)
         frame.Position = UDim2.fromOffset(newX, newY)
     else
-        -- للـ Scale نحول لـ Offset مع Clamp
         local absX = fPos.X.Scale * viewport.X + fPos.X.Offset
         local absY = fPos.Y.Scale * viewport.Y + fPos.Y.Offset
         absX = math.clamp(absX, 0, viewport.X - fSize.X)
@@ -1873,7 +1876,6 @@ local function GetSafePickerPosition(anchorBtn, pickerSize, screenGui)
     y = math.clamp(y, 5, vp.Y - pH - 5)
     return UDim2.fromOffset(x, y)
 end
-
 
 local Themes = {
     ["Dark"] = {
@@ -2356,7 +2358,6 @@ local Themes = {
         CloseBg = Color3.fromRGB(80,40,35),
         CloseText = Color3.fromRGB(255,130,90),
     },
-    -- 10 NEON THEMES
     ["Neon Cyan"] = {
         MainBg = Color3.fromRGB(5,12,16),
         HeaderBg = Color3.fromRGB(8,20,26),
@@ -2811,8 +2812,7 @@ function GGH:CreateWindow(Config)
     local DefaultTheme = Config.Theme or "Monochrome"
     if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
     local CurrentTheme = Themes[DefaultTheme]
-    
-    -- AUTO TEXT COLOR
+
     local function GetLuminance(c)
         return 0.299*c.R + 0.587*c.G + 0.114*c.B
     end
@@ -2869,7 +2869,6 @@ function GGH:CreateWindow(Config)
         finalW = SizePresets[Config.SizePreset].W
         finalH = SizePresets[Config.SizePreset].H
         autoName = Config.SizePreset
-   
 
     local function GetViewportSize()
         local cam = workspace.CurrentCamera
@@ -3041,7 +3040,6 @@ function GGH:CreateWindow(Config)
     SubLabel.TextColor3 = CurrentTheme.SubText
     SubLabel.ZIndex = 4
     SubLabel.AutoLocalize = true AddTextStroke(SubLabel)
-    -- ايقونة الـ UI (جنب الاسم بالبداية) : Config.Icon / TitleIcon / UIIcon / WindowIcon / Logo
     local WindowIconValue = Config.Icon or Config.TitleIcon or Config.UIIcon or Config.WindowIcon or Config.Logo
     local TitleIconImg = Instance.new("ImageLabel", Header)
     TitleIconImg.Name = "TitleIcon"
@@ -3068,7 +3066,7 @@ function GGH:CreateWindow(Config)
         end
     end
     ApplyTitleIcon(WindowIconValue)
-    
+
     local Controls = Instance.new("Frame", Header)
     Controls.Size = UDim2.new(0,200,0,32)
     Controls.Position = UDim2.new(1,-208,0.5,-16)
@@ -3080,7 +3078,7 @@ function GGH:CreateWindow(Config)
     ControlsLayout.Padding = UDim.new(0,6)
     ControlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ControlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-    
+
     local showSearch = true
     local showSettings = true
     local showFloat = true
@@ -3120,7 +3118,7 @@ function GGH:CreateWindow(Config)
         end
         return btn
     end
-    
+
     local SearchBtn, ThemeBtn, FloatBtn
     local MinBtn, MaxBtn, CloseBtn
     local order = 1
@@ -3200,7 +3198,6 @@ function GGH:CreateWindow(Config)
         scIcon.ZIndex = 92
         BindIconToText(SearchClose, scIcon)
     end
-    -- ===== NEW: ThemeDropdown مرتب نفس ستايل المكتبة + بدون شفافية + توجل حفظ =====
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
     ThemeDropdown.Size = UDim2.new(0,220,0,0)
@@ -3229,7 +3226,6 @@ function GGH:CreateWindow(Config)
     local TLP = Instance.new("UIPadding", ThemeList)
     TLP.PaddingTop = UDim.new(0,8) TLP.PaddingBottom = UDim.new(0,8) TLP.PaddingLeft = UDim.new(0,8) TLP.PaddingRight = UDim.new(0,8)
 
-    -- Header مرتب
     local ThemeHeader = Instance.new("TextLabel", ThemeList)
     ThemeHeader.Size = UDim2.new(1,0,0,20)
     ThemeHeader.BackgroundTransparency = 1
@@ -3241,7 +3237,6 @@ function GGH:CreateWindow(Config)
     ThemeHeader.LayoutOrder = -100
     AddTextStroke(ThemeHeader)
 
-    -- ===== توجل حفظ الاعدادات - يظهر اول شي =====
     local SaveToggleFrame = Instance.new("Frame", ThemeList)
     SaveToggleFrame.Size = UDim2.new(1,0,0,38)
     SaveToggleFrame.BackgroundColor3 = CurrentTheme.ElementBg2
@@ -3277,14 +3272,12 @@ function GGH:CreateWindow(Config)
     SaveToggleBtn.BackgroundTransparency = 1
     SaveToggleBtn.Text = ""
 
-    -- سطر فاصل
     local Sep1 = Instance.new("Frame", ThemeList)
     Sep1.Size = UDim2.new(1,0,0,1)
     Sep1.BackgroundColor3 = CurrentTheme.Stroke
     Sep1.BackgroundTransparency = 0.5
     Sep1.LayoutOrder = -85
 
-    -- ملاحظة: التحكم بالشفافية انشال - بس المطور يحدده من Config.WindowTransparency
     local TabList = Instance.new("ScrollingFrame", Main)
     TabList.Name = "TabList"
     TabList.Size = UDim2.new(0,140,1,-64)
@@ -3395,11 +3388,9 @@ function GGH:CreateWindow(Config)
         local function ApplyResponsiveSize()
             local vp = ScreenGui.AbsoluteSize
             if vp.X < 100 or vp.Y < 100 then return end
-            -- الحجم المناسب حسب قياس الشاشة - 85% عرض و 80% ارتفاع كحد اقصى
             local maxW = math.clamp(vp.X * 0.88, 340, 620)
             local maxH = math.clamp(vp.Y * 0.78, 300, 500)
             local curSize = Main.AbsoluteSize
-            -- اذا الحجم الحالي اكبر من الشاشة، صغره تلقائيا
             if curSize.X > vp.X - 20 or curSize.Y > vp.Y - 80 then
                 Main.Size = UDim2.fromOffset(math.min(curSize.X, maxW), math.min(curSize.Y, maxH))
             end
@@ -3413,7 +3404,6 @@ function GGH:CreateWindow(Config)
         end
         ScreenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(newUpdateWrapper)
         task.spawn(function() task.wait(0.2) newUpdateWrapper() end)
-        -- اول مرة نحسب حجم مناسب
         ApplyResponsiveSize()
 
         local function StartDrag(input)
@@ -3582,7 +3572,6 @@ function GGH:CreateWindow(Config)
             theme.ParagraphText = Color3.fromRGB(220,220,230)
         end
         CurrentTheme = theme
-        -- تحديث فوري وكامل لكل شي بدون انتظار
         Main.BackgroundColor3 = theme.MainBg
         Header.BackgroundColor3 = theme.HeaderBg
         HeaderFix.BackgroundColor3 = theme.HeaderBg
@@ -3617,7 +3606,6 @@ function GGH:CreateWindow(Config)
         YesBtn.BackgroundColor3 = theme.Accent
         NoBtn.BackgroundColor3 = theme.ElementBg2
         NoBtn.TextColor3 = theme.Text
-        -- حدث كل العناصر المسجلة فورا + توين خفيف
         for _, item in ipairs(ThemableElements) do
             if item.obj and item.obj.Parent then
                 if item.prop == "BackgroundColor3" then
@@ -3631,13 +3619,11 @@ function GGH:CreateWindow(Config)
                 end
             end
         end
-        -- حدث كل الفريمات داخل الصفحات بشكل مباشر (للعناصر اللي ما تسجلت)
         for _, page in ipairs(Container:GetChildren()) do
             if page:IsA("ScrollingFrame") then
                 for _, v in ipairs(page:GetDescendants()) do
                     if v:IsA("Frame") then
                         if v.BackgroundColor3 == CurrentTheme.ElementBg or v.BackgroundColor3 == CurrentTheme.ElementBg2 or v.BackgroundColor3 == CurrentTheme.TabListBg then
-                            -- لا نغير الاكسنت
                         end
                     end
                 end
@@ -3645,7 +3631,6 @@ function GGH:CreateWindow(Config)
             end
         end
         for _, fn in ipairs(ThemeListeners) do pcall(fn, theme) end
-        -- حدث ازرار التابات
         for _, t in pairs(Tabs) do
             if t.Button then
                 if t.Page and t.Page.Visible then
@@ -3701,12 +3686,12 @@ function GGH:CreateWindow(Config)
             fim.Position = UDim2.fromScale(0.5, 0.5)
             fim.ZIndex = 201
         end
-        
+
         local dragging = false
         local dragStartPos
         local startGuiPos
         local hasDragged = false
-        
+
         FloatingIcon.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
@@ -3736,7 +3721,6 @@ function GGH:CreateWindow(Config)
                 FloatingIcon.Position = ClampMainFloat(rawPos)
             end
         end)
-        -- loop حماية اضافية
         task.spawn(function()
             while FloatingIcon and FloatingIcon.Parent do
                 local vp = ScreenGui.AbsoluteSize
@@ -3823,7 +3807,7 @@ function GGH:CreateWindow(Config)
         end
     end
 
-    if ThemeBtn then ThemeBtn.MouseButton1Click:Connect(function()  
+    if ThemeBtn then ThemeBtn.MouseButton1Click:Connect(function()
         EnsureUnminimizedForPopup()
         if SearchOpen then
             SearchOpen = false
@@ -3834,7 +3818,7 @@ function GGH:CreateWindow(Config)
             Tween(TabList, {Position = UDim2.new(0,8,0,58), Size = UDim2.new(0,140,1,-64)}, 0.2)
             Tween(Container, {Position = UDim2.new(0,152,0,58), Size = UDim2.new(1,-160,1,-64)}, 0.2)
         end
-        ThemeOpen = not ThemeOpen 
+        ThemeOpen = not ThemeOpen
         if ThemeOpen then
             ThemeDropdown.Visible = true
             ThemeDropdown.Size = UDim2.new(0,200,0,0)
@@ -3859,10 +3843,10 @@ function GGH:CreateWindow(Config)
         Btn.AutoLocalize = true
         Corner(Btn, 6)
         Stroke(Btn, th.Accent, 1)
-        Btn.MouseButton1Click:Connect(function() 
-            ApplyTheme(name) 
-            ThemeDropdown.Visible = false 
-            ThemeOpen = false 
+        Btn.MouseButton1Click:Connect(function()
+            ApplyTheme(name)
+            ThemeDropdown.Visible = false
+            ThemeOpen = false
             SubLabel.Text = "Theme: " .. name
             SaveMgr.MarkDirty()
             RestoreWindowSize()
@@ -3871,7 +3855,6 @@ function GGH:CreateWindow(Config)
             end
         end)
     end
-    -- ===================== SAVE SETTINGS SYSTEM (شغال فعلياً) =====================
     do
         local function SafeName(s)
             s = tostring(s or "")
@@ -3909,7 +3892,6 @@ function GGH:CreateWindow(Config)
             return ok
         end
 
-        -- قراءة الملف المحفوظ
         local Loaded = nil
         if SaveMgr.CanWrite then
             local ok, data = pcall(function()
@@ -3929,7 +3911,6 @@ function GGH:CreateWindow(Config)
             SaveMgr.Enabled = SaveMgr.CanWrite
         end
 
-        -- حفظ الكل (يدمج القيم القديمة مع الحالية حتى ما يضيع شي)
         function SaveMgr.Flush()
             if not SaveMgr.Enabled or not SaveMgr.CanWrite then return end
             local merged = {}
@@ -4070,7 +4051,6 @@ function GGH:CreateWindow(Config)
             end
         end
 
-        -- ربط توجل "Save Settings" (كان بدون كود)
         table.insert(ThemeListeners, function(th)
             SaveToggleFrame.BackgroundColor3 = th.ElementBg2
             SaveTitle.TextColor3 = th.Text
@@ -4086,7 +4066,6 @@ function GGH:CreateWindow(Config)
             SaveMgr.SetEnabled(not SaveMgr.Enabled)
         end)
 
-        -- تحميل الثيم المحفوظ
         if SaveMgr.Enabled and Loaded and type(Loaded.Theme) == "string" and Themes[Loaded.Theme] and Loaded.Theme ~= CurrentThemeName then
             pcall(ApplyTheme, Loaded.Theme)
         end
@@ -4161,7 +4140,7 @@ function GGH:CreateWindow(Config)
         TabButton.TextTruncate = Enum.TextTruncate.AtEnd
         TabButton.TextWrapped = false
         TabButton.Font = Enum.Font.GothamMedium
-        TabButton.TextSize = 11
+        TabButton.TextSize = 12
         TabButton.TextColor3 = Color3.fromRGB(170,170,180)
         TabButton.TextXAlignment = Enum.TextXAlignment.Left
         TabButton.AutoButtonColor = false
@@ -4203,7 +4182,7 @@ function GGH:CreateWindow(Config)
         TabPage.Visible = false
         TabPage.CanvasSize = UDim2.new(0,0,0,0)
         TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
-        TabPage.ScrollBarThickness = 2
+        TabPage.ScrollBarThickness = 3
         TabPage.ScrollBarImageColor3 = CurrentTheme.Accent
         TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
         TabPage.BorderSizePixel = 0
@@ -4290,15 +4269,15 @@ function GGH:CreateWindow(Config)
 
         local function CreateButton(Cfg)
             local Btn = Instance.new("TextButton", TabPage)
-            Btn.Size = UDim2.new(1,-4,0,34)
+            Btn.Size = UDim2.new(1,-4,0,38)
             Btn.BackgroundColor3 = CurrentTheme.ElementBg2
             Btn.Text = Cfg.Title
             Btn.Font = Enum.Font.GothamMedium
-            Btn.TextSize = 12
+            Btn.TextSize = 13
             Btn.TextColor3 = CurrentTheme.Text
             Btn.AutoButtonColor = false
             Btn.AutoLocalize = true
-            Corner(Btn, 8)
+            Corner(Btn, 10)
             local st = Stroke(Btn, CurrentTheme.StrokeLight, 1)
             RegisterThemable(Btn, "BackgroundColor3", "ElementBg2")
             RegisterThemable(Btn, "TextColor3", "Text")
@@ -4327,33 +4306,34 @@ function GGH:CreateWindow(Config)
         local function CreateToggle(Cfg)
             local State = Cfg.Default or false
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,36)
+            Frame.Size = UDim2.new(1,-4,0,40)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
-            Corner(Frame, 9)
+            Corner(Frame, 10)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
             AddSearch(Frame, Cfg.Title, "Toggle", Name)
             local Title = Instance.new("TextLabel", Frame)
             Title.Text = Cfg.Title
             Title.AutoLocalize = true
-            Title.Size = UDim2.new(1,-54,1,0)
+            Title.Size = UDim2.new(1,-66,1,0)
             Title.Position = UDim2.new(0,12,0,0)
             Title.BackgroundTransparency = 1
             Title.TextXAlignment = Enum.TextXAlignment.Left
             Title.Font = Enum.Font.GothamMedium
-            Title.TextSize = 12
+            Title.TextSize = 13
             Title.TextColor3 = CurrentTheme.Text
             Title.AutoLocalize = true
             RegisterThemable(Title, "TextColor3", "Text")
             local Bg = Instance.new("Frame", Frame)
-            Bg.Size = UDim2.new(0,44,0,22)
-            Bg.Position = UDim2.new(1,-50,0.5,-11)
+            Bg.Size = UDim2.new(0,48,0,26)
+            Bg.Position = UDim2.new(1,-58,0.5,-13)
             Bg.BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2
-            Corner(Bg, 11)
+            Corner(Bg, 13)
             local Circle = Instance.new("Frame", Bg)
-            Circle.Size = UDim2.new(0,16,0,16)
-            Circle.Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)
+            Circle.Size = UDim2.new(0,20,0,20)
+            Circle.Position = State and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10)
             Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
-            Corner(Circle, 8)
+            Corner(Circle, 10)
             local Btn = Instance.new("TextButton", Frame)
             Btn.Size = UDim2.new(1,0,1,0)
             Btn.BackgroundTransparency = 1
@@ -4366,7 +4346,7 @@ function GGH:CreateWindow(Config)
             function ToggleAPI:SetValue(v)
                 State = v
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
-                Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
+                Tween(Circle, {Position = State and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10)}, 0.2)
                 pcall(function() Cfg.Callback(State) end)
                 return ToggleAPI
             end
@@ -4386,7 +4366,7 @@ function GGH:CreateWindow(Config)
                 if IsScrolling then return end
                 State = not State
                 Tween(Bg, {BackgroundColor3 = State and CurrentTheme.Accent or CurrentTheme.ElementBg2}, 0.2)
-                Tween(Circle, {Position = State and UDim2.new(1,-19,0.5,-8) or UDim2.new(0,3,0.5,-8)}, 0.2)
+                Tween(Circle, {Position = State and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10)}, 0.2)
                 pcall(function() Cfg.Callback(State) end)
             end)
             return ToggleAPI
@@ -4436,8 +4416,9 @@ function GGH:CreateWindow(Config)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,58)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
-            Corner(Frame, 9)
+            Corner(Frame, 10)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
             AddSearch(Frame, Cfg.Title, "Slider", Name)
             local Label = Instance.new("TextLabel", Frame)
             Label.Size = UDim2.new(1,-16,0,18)
@@ -4445,7 +4426,7 @@ function GGH:CreateWindow(Config)
             Label.BackgroundTransparency = 1
             Label.TextXAlignment = Enum.TextXAlignment.Left
             Label.Font = Enum.Font.GothamMedium
-            Label.TextSize = 12
+            Label.TextSize = 13
             Label.TextColor3 = CurrentTheme.Text
             Label.Text = Cfg.Title.." : "..FormatVal(Value)
             Label.AutoLocalize = true
@@ -4533,10 +4514,11 @@ function GGH:CreateWindow(Config)
 
         local function CreateInput(Cfg)
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,38)
+            Frame.Size = UDim2.new(1,-4,0,40)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
-            Corner(Frame, 9)
+            Corner(Frame, 10)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
             AddSearch(Frame, Cfg.Title, "Input", Name)
             local Box = Instance.new("TextBox", Frame)
             Box.Size = UDim2.new(1,-20,1,-10)
@@ -4545,7 +4527,7 @@ function GGH:CreateWindow(Config)
             Box.PlaceholderText = Cfg.Placeholder or Cfg.Title
             Box.Text = Cfg.Default or ""
             Box.Font = Enum.Font.Gotham
-            Box.TextSize = 12
+            Box.TextSize = 13
             Box.TextColor3 = CurrentTheme.Text
             Box.PlaceholderColor3 = CurrentTheme.SubText
             Box.TextXAlignment = Enum.TextXAlignment.Left
@@ -4569,7 +4551,6 @@ function GGH:CreateWindow(Config)
             return InputAPI
         end
 
--- [FIXED DROPDOWN: 7 items + scroll]
 local function CreateDropdown(Cfg)
     local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
     Cfg.Options = Cfg.Options or {}
@@ -4588,8 +4569,9 @@ local function CreateDropdown(Cfg)
     Frame.Size = UDim2.new(1,-4,0,38)
     Frame.BackgroundColor3 = CurrentTheme.ElementBg
     Frame.ClipsDescendants = true
-    Corner(Frame, 9)
+    Corner(Frame, 10)
     RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+    RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
     AddSearch(Frame, Cfg.Title, "Dropdown", Name)
 
     local function GetDisplayText()
@@ -4615,7 +4597,6 @@ local function CreateDropdown(Cfg)
     RegisterThemable(Btn, "TextColor3", "Text")
     AddTextStroke(Btn)
 
-    -- SCROLLING LIST - FIXED
     local List = Instance.new("ScrollingFrame", Frame)
     List.Name = "DropdownList"
     List.Position = UDim2.new(0,0,0,38)
@@ -4798,12 +4779,8 @@ local function CreateDropdown(Cfg)
     return DropdownAPI
 end
 
-
-
-
 local function CreateColorpicker(Cfg)
 
-    -- Fix: Center color picker and make it bigger so colors not outside
     local function CenterPicker(pickerFrame, screenGui)
         local vp = screenGui.AbsoluteSize
         if vp.X < 10 or vp.Y < 10 then
@@ -4811,7 +4788,6 @@ local function CreateColorpicker(Cfg)
         end
         local pSize = pickerFrame.AbsoluteSize
         if pSize.X < 10 then pSize = Vector2.new(320, 280) end
-        -- Center
         local x = (vp.X - pSize.X) / 2
         local y = (vp.Y - pSize.Y) / 2
         x = math.clamp(x, 10, vp.X - pSize.X - 10)
@@ -4864,12 +4840,12 @@ local function CreateColorpicker(Cfg)
             local AdvancedGui = nil
             local function OpenAdvancedPicker()
                 if AdvancedGui and AdvancedGui.Parent then AdvancedGui:Destroy() end
-                local originalColor = Color -- حفظ اللون الاصلي للرجوع عند Exit
+                local originalColor = Color
                 local ov = Instance.new("Frame", ScreenGui)
                 ov.Name = "GGH_ColorPicker_Overlay"
                 ov.Size = UDim2.new(1,0,1,0)
                 ov.BackgroundColor3 = Color3.new(0,0,0)
-                ov.BackgroundTransparency = 1 -- مخفي حسب طلب المستخدم
+                ov.BackgroundTransparency = 1
                 ov.ZIndex = 300
                 ov.BorderSizePixel = 0
                 ov.Active = true
@@ -4877,22 +4853,22 @@ local function CreateColorpicker(Cfg)
                 main.AnchorPoint = Vector2.new(0,0)
                 main.Size = UDim2.fromOffset(300,200)
                 main.Position = UDim2.fromOffset(10,10)
-                main.BackgroundColor3 = Color3.fromRGB(28,28,32)
+                main.BackgroundColor3 = CurrentTheme.MainBg
                 main.BackgroundTransparency = 0
                 main.ClipsDescendants = true
                 main.ZIndex = 301
-                Corner(main, 16)
-                Stroke(main, CurrentTheme.Stroke, 2)
+                Corner(main, 18)
+                Stroke(main, CurrentTheme.Accent, 1.5).Transparency = 0.35
                 local cont = Instance.new("Frame", main)
                 cont.BackgroundTransparency = 1
                 cont.ClipsDescendants = false
                 cont.ZIndex = 302
 
-                -- hue bar (left)
                 local hueBar = Instance.new("Frame", cont)
                 hueBar.ZIndex = 303
-                Corner(hueBar, 4)
+                Corner(hueBar, 6)
                 hueBar.Active = true
+                Stroke(hueBar, Color3.new(1,1,1), 1).Transparency = 0.8
                 local grad = Instance.new("UIGradient", hueBar)
                 grad.Rotation = 90
                 local colors = {}
@@ -4906,15 +4882,14 @@ local function CreateColorpicker(Cfg)
                 Corner(hueMarker, 3)
                 Stroke(hueMarker, Color3.new(0,0,0), 1)
 
-                -- middle panel (preview + buttons)
                 local right = Instance.new("Frame", cont)
-                right.BackgroundColor3 = Color3.fromRGB(40,41,48)
+                right.BackgroundColor3 = CurrentTheme.ElementBg
                 right.BackgroundTransparency = ElementTrans
                 right.ZIndex = 302
                 Corner(right, 12)
                 local preview = Instance.new("Frame", right)
                 preview.ZIndex = 303
-                Corner(preview, 10)
+                Corner(preview, 12)
                 Stroke(preview, CurrentTheme.Stroke, 1)
                 local hexBox = Instance.new("TextBox", preview)
                 hexBox.Size = UDim2.new(1,0,1,0)
@@ -4943,20 +4918,19 @@ local function CreateColorpicker(Cfg)
                 done.TextScaled = true
                 done.TextColor3 = Color3.new(1,1,1)
                 done.ZIndex = 303
-                Corner(done, 10)
+                Corner(done, 12)
                 Instance.new("UITextSizeConstraint", done).MaxTextSize = 14
                 local ex = Instance.new("TextButton", btns)
                 ex.Size = UDim2.new(0.5,-5,1,0)
-                ex.BackgroundColor3 = Color3.fromRGB(60,61,70)
+                ex.BackgroundColor3 = CurrentTheme.ElementBg2
                 ex.Text = "Exit"
                 ex.Font = Enum.Font.GothamBold
                 ex.TextScaled = true
-                ex.TextColor3 = Color3.new(1,1,1)
+                ex.TextColor3 = CurrentTheme.Text
                 ex.ZIndex = 303
-                Corner(ex, 10)
+                Corner(ex, 12)
                 Instance.new("UITextSizeConstraint", ex).MaxTextSize = 14
 
-                -- saturation / value square (right)
                 local svFrame = Instance.new("ImageLabel", cont)
                 svFrame.Image = "rbxassetid://4155801252"
                 svFrame.BackgroundColor3 = Color3.fromHSV(Hue,1,1)
@@ -4964,15 +4938,15 @@ local function CreateColorpicker(Cfg)
                 svFrame.ClipsDescendants = true
                 Corner(svFrame, 10)
                 svFrame.Active = true
+                Stroke(svFrame, Color3.new(1,1,1), 1).Transparency = 0.8
                 local svMarker = Instance.new("Frame", svFrame)
                 svMarker.AnchorPoint = Vector2.new(0.5,0.5)
-                svMarker.Size = UDim2.new(0,14,0,14)
+                svMarker.Size = UDim2.new(0,16,0,16)
                 svMarker.BackgroundColor3 = Color
                 svMarker.ZIndex = 310
-                Corner(svMarker, 1)
+                Corner(svMarker, 8)
                 Stroke(svMarker, Color3.new(1,1,1), 2)
 
-                -- responsive layout: sized from the CURRENT window size, always inside the screen
                 local function LayoutPicker()
                     if not ov.Parent or not main.Parent then return end
                     local vp = ov.AbsoluteSize
@@ -4987,7 +4961,6 @@ local function CreateColorpicker(Cfg)
                     local mP = Main.AbsolutePosition
                     local w = math.floor(math.clamp(mS.X * 0.94, math.min(280, maxW), math.min(520, maxW)))
                     local h = math.floor(math.clamp(mS.Y * 0.88, math.min(180, maxH), math.min(340, maxH)))
-                    -- center on the window, then keep fully on screen
                     local ovP = ov.AbsolutePosition
                     local cx = mP.X + mS.X/2 - ovP.X
                     local cy = mP.Y + mS.Y/2 - ovP.Y
@@ -5043,10 +5016,8 @@ local function CreateColorpicker(Cfg)
                     preview.BackgroundColor3 = c
                     hexBox.Text = toHex(c)
                     svMarker.Position = UDim2.new(curSat,0,1-curVib,0)
-                    -- Preview فقط، ما ننفذ Fire الا عند Done
                     PreviewBtn.BackgroundColor3 = c
                     if not noFire then
-                        -- معاينة فقط بدون استدعاء الكولباك النهائي
                     end
                 end
                 local function updateHue(noFire)
@@ -5130,7 +5101,6 @@ local function CreateColorpicker(Cfg)
                     if apply then
                         Fire(Color)
                     else
-                        -- Exit: ارجع اللون القديم
                         Color = originalColor
                         PreviewBtn.BackgroundColor3 = originalColor
                         Hue,Sat,Vib = Color3.toHSV(originalColor)
@@ -5204,8 +5174,9 @@ local function CreateColorpicker(Cfg)
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,38)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
-            Corner(Frame, 9)
+            Corner(Frame, 10)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
             AddSearch(Frame, Cfg.Title, "Keybind", Name)
             local Label = Instance.new("TextLabel", Frame)
             Label.Text = Cfg.Title.." : "..Key.Name
@@ -5266,7 +5237,7 @@ local function CreateColorpicker(Cfg)
             CodeLabel.Size = UDim2.new(1,-16,1,-16)
             CodeLabel.Position = UDim2.new(0,8,0,8)
             CodeLabel.BackgroundTransparency = 1
-            CodeLabel.Text = Cfg.Code or "-- code"
+            CodeLabel.Text = Cfg.Code or ""
             CodeLabel.Font = Enum.Font.Code
             CodeLabel.TextSize = 11
             CodeLabel.TextColor3 = CurrentTheme.Accent
@@ -5344,7 +5315,6 @@ local function CreateColorpicker(Cfg)
 
         end
 
-        -- ======= Helper: يدعم رابط مباشر png/jpg و روبلوكس ايدي =======
         local function IsUrlImage(str)
             if not str then return false end
             str = tostring(str):lower()
@@ -5356,20 +5326,16 @@ local function CreateColorpicker(Cfg)
             local s = tostring(inputStr)
             if GGH_ICONS[s] then return GGH_ICONS[s] end
             if GGH_ICONS[s:lower()] then return GGH_ICONS[s:lower()] end
-            -- اذا رابط مباشر png/jpg/webp/gif
             if IsUrlImage(s) then
                 return s
             end
-            -- اذا rbxassetid كامل
             if s:match("rbxassetid://%d+") then
                 return s
             end
-            -- استخرج الايدي
             local id = s:match("id=(%d+)") or s:match("rbxassetid://(%d+)") or s:match("(%d+)")
             if id then
                 return "rbxassetid://"..id
             end
-            -- اذا رابط لكن بدون https ؟ جرب ارجاعه كما هو
             return s
         end
 
@@ -5406,7 +5372,6 @@ local function CreateColorpicker(Cfg)
             ImageLabel.ScaleType = Cfg.ScaleType or Enum.ScaleType.Fit
             Corner(ImageLabel, 8)
 
-            -- يدعم رابط مباشر + روبلوكس ايدي
             local rawImg = Cfg.Image or Cfg.Url or Cfg.Id or Cfg.Default or ""
             ImageLabel.Image = ResolveImageAsset(rawImg)
 
@@ -5478,7 +5443,6 @@ local function CreateColorpicker(Cfg)
             return ImageAPI
         end
 
-        -- ======= عنصر جديد 1: زر رابط ينسخ (ديسكورد / يوتيوب / اي رابط) =======
         local function CreateLinkButton(Cfg)
             Cfg = Cfg or {}
             local title = Cfg.Title or Cfg.Name or "Link"
@@ -5575,7 +5539,6 @@ local function CreateColorpicker(Cfg)
             return API
         end
 
-        -- ======= عنصر جديد 2: قائمة ستات اللاعب + صورة + جلب من الماب او رابط راو =======
         local Players = game:GetService("Players")
         local HttpService = game:GetService("HttpService")
 
@@ -5595,9 +5558,7 @@ local function CreateColorpicker(Cfg)
             elseif first == "lighting" then cur = game:GetService("Lighting")
             elseif first == "localplayer" then cur = Players.LocalPlayer
             else
-                -- جرب من workspace مباشرة
                 cur = workspace
-                -- اعد الاجزاء كاملة
                 parts = {}
                 for p in string.gmatch(tostring(pathStr), "[^%.]+") do table.insert(parts, p) end
             end
@@ -5606,7 +5567,6 @@ local function CreateColorpicker(Cfg)
             if first ~= "workspace" and first ~= "game" and first ~= "players" and first ~= "replicatedstorage" and first ~= "replicatedfirst" and first ~= "startergui" and first ~= "lighting" and first ~= "localplayer" then
                 startIdx = 1
                 cur = workspace
-                -- اذا ما لقى حاول من game
                 local tryGame = game
                 local found = tryGame
                 for i=1,#parts do
@@ -5623,7 +5583,6 @@ local function CreateColorpicker(Cfg)
                 if nextInst then
                     cur = nextInst
                 else
-                    -- اذا الخاصية وليس instance
                     local ok, val = pcall(function() return cur[name] end)
                     if ok then
                         if i == #parts then
@@ -5643,10 +5602,8 @@ local function CreateColorpicker(Cfg)
         local function ExtractValueFromInstance(obj)
             if obj == nil then return "N/A" end
             if type(obj) ~= "userdata" and type(obj) ~= "table" then return tostring(obj) end
-            -- ValueBase
             local ok, v = pcall(function() return obj.Value end)
             if ok then return v end
-            -- TextLabel etc
             local ok2, t = pcall(function() return obj.Text end)
             if ok2 then return t end
             return tostring(obj)
@@ -5751,7 +5708,7 @@ local function CreateColorpicker(Cfg)
             end
             UpdateAvatar()
 
-            local statLabels = {} -- {entry = cfg, valueLabel = label}
+            local statLabels = {}
 
             local function CreateSingleStatRow(statCfg, idx)
                 local cfg = statCfg
@@ -5793,7 +5750,6 @@ local function CreateColorpicker(Cfg)
                 right.AutoLocalize = false
                 RegisterThemable(right, "TextColor3", "ParagraphText")
 
-                -- padding bottom
                 local pad = Instance.new("UIPadding", row)
                 pad.PaddingBottom = UDim.new(0,6)
                 pad.PaddingTop = UDim.new(0,6)
@@ -5812,11 +5768,9 @@ local function CreateColorpicker(Cfg)
                     return game:HttpGet(rawUrl)
                 end)
                 if not ok then return nil end
-                -- حاول JSON
                 local ok2, json = pcall(function() return HttpService:JSONDecode(result) end)
                 if ok2 and type(json) == "table" then
                     if keyPath and keyPath ~= "" then
-                        -- دعم key مثل a.b.c
                         local cur = json
                         for k in string.gmatch(keyPath, "[^%.]+") do
                             if type(cur) == "table" then cur = cur[k] else cur = nil break end
@@ -5844,7 +5798,6 @@ local function CreateColorpicker(Cfg)
                     if c.Raw or c.RawUrl or c.Link or c.Url then
                         local url = c.Raw or c.RawUrl or c.Link or c.Url
                         local key = c.Key or c.JsonKey or c.PathKey or ""
-                        -- اذا رابط راو وفيه Value ثابت لا نتجاهله، الراو له اولوية اذا موجود
                         if IsUrlImage(url) or tostring(url):match("^https?://") then
                             local fetched = FetchRawValue(url, key)
                             if fetched ~= nil then newVal = fetched end
@@ -5934,13 +5887,9 @@ local function CreateColorpicker(Cfg)
             return API
         end
 
-        
-
 if true then
 end
 
-
-        -- ======= عنصر جديد 3: زر + توجل يصنع زر عائم (قفل + شفافية + حفظ) =======
         local function CreateFloatingButton(Cfg)
             Cfg = Cfg or {}
             local title = Cfg.Title or Cfg.Name or "Button"
@@ -5962,8 +5911,9 @@ end
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,76)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
-            Corner(Frame, 9)
+            Corner(Frame, 10)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
             AddSearch(Frame, title, "FloatingButton", Name)
 
             local TitleLabel = Instance.new("TextLabel", Frame)
@@ -6008,7 +5958,6 @@ end
             PlayIcon.AnchorPoint = Vector2.new(0.5, 0.5)
             PlayIcon.Position = UDim2.fromScale(0.5, 0.5)
 
-            -- خط فاصل بين الصفين
             local RowLine = Instance.new("Frame", Frame)
             RowLine.Size = UDim2.new(1,-20,0,1)
             RowLine.Position = UDim2.new(0,10,0,38)
@@ -6017,7 +5966,6 @@ end
             RowLine.BorderSizePixel = 0
             RegisterThemable(RowLine, "BackgroundColor3", "Stroke")
 
-            -- زر القفل (ايقونة قفل) : يقفل مكان الزر العائم / يفتحه
             local LockBtn = Instance.new("TextButton", Frame)
             LockBtn.Name = "LockBtn"
             LockBtn.Size = UDim2.new(0,34,0,28)
@@ -6031,7 +5979,6 @@ end
             LockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
             LockIcon.Position = UDim2.fromScale(0.5, 0.5)
 
-            -- خانة الشفافية
             local TransCaption = Instance.new("TextLabel", Frame)
             TransCaption.Size = UDim2.new(1,-126,0,28)
             TransCaption.Position = UDim2.new(0,52,0,42)
@@ -6116,7 +6063,6 @@ end
                 end
             end
 
-            -- تطبيق الشفافية على الزر العائم (الخلفية + الصورة/النص + الحدود)
             local function ApplyFloatLook()
                 if not floatingInstance or not floatingInstance.Parent then return end
                 floatingInstance.BackgroundTransparency = floatTrans
@@ -6278,7 +6224,6 @@ end
                 pcall(callback)
             end)
 
-            -- زر القفل
             LockBtn.MouseButton1Click:Connect(function()
                 if IsScrolling then return end
                 floatLocked = not floatLocked
@@ -6286,7 +6231,6 @@ end
                 SaveMgr.MarkDirty()
             end)
 
-            -- خانة الشفافية (تتغير مباشرة وانت تكتب)
             TransBox:GetPropertyChangedSignal("Text"):Connect(function()
                 local n = ParseTransText(TransBox.Text)
                 if n then
@@ -6302,7 +6246,6 @@ end
                 SaveMgr.MarkDirty()
             end)
 
-            -- تحديث الألوان عند تغيير الثيم
             table.insert(ThemeListeners, function(th)
                 if not Frame.Parent then return end
                 ToggleBg.BackgroundColor3 = isFloatEnabled and th.Accent or th.ElementBg2
@@ -6378,8 +6321,6 @@ end
             return API
         end
 
-        -- ======= عنصر جديد 4: سلايدر مع خانة رقم =======
-                -- ======= عنصر جديد 4: سلايدر مع خانة رقم (يدعم عشري) =======
         local function CreateSliderWithInput(Cfg)
             Cfg.Min = Cfg.Min or 0
             Cfg.Max = Cfg.Max or 100
@@ -6421,8 +6362,9 @@ end
             local Frame = Instance.new("Frame", TabPage)
             Frame.Size = UDim2.new(1,-4,0,58)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
-            Corner(Frame, 9)
+            Corner(Frame, 10)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
             AddSearch(Frame, Cfg.Title, "SliderInput", Name)
 
             local TitleLabel = Instance.new("TextLabel", Frame)
@@ -6492,7 +6434,6 @@ end
                 pcall(Cfg.Callback or function() end, Value)
             end
 
-
             local function UpdateFromInputPos(inputX)
                 local barPos = Bar.AbsolutePosition.X
                 local barSize = Bar.AbsoluteSize.X
@@ -6556,7 +6497,6 @@ end
             end
             return API
         end
-
 
 local Elements = {}
         local AllElements = {}
@@ -6757,7 +6697,7 @@ function Window:SetSizePreset(presetName)
         Frame.Size = UDim2.new(1,-4,0,38)
         Frame.BackgroundColor3 = CurrentTheme.ElementBg
         Frame.ClipsDescendants = true
-        Corner(Frame, 9)
+        Corner(Frame, 10)
         local Btn = Instance.new("TextButton", Frame)
         Btn.Size = UDim2.new(1,0,0,38)
         Btn.BackgroundTransparency = 1
@@ -6833,7 +6773,6 @@ function Window:SetSizePreset(presetName)
     function Window:GetSaveEnabled() return SaveMgr.Enabled end
     function Window:SaveNow() SaveMgr.Flush() return Window end
     function Window:GetConfigPath() return SaveMgr.Path end
-
 
         return Window
 end
