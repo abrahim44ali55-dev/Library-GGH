@@ -3,23 +3,24 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local LocalizationService = game:GetService("LocalizationService")
+local HttpService = game:GetService("HttpService")
 
-local Icons = {
-
+-- ===================== GGH ICON PACK (Roblox rbxassetid) =====================
+local GGH_ICONS = {
     ["a-arrow-down"] = "rbxassetid://92867583610071",
     ["a-arrow-up"] = "rbxassetid://132318504999733",
     ["a-large-small"] = "rbxassetid://111491496660216",
-    accessibility = "rbxassetid://114029945302017",
-    activity = "rbxassetid://94212016861936",
+    ["accessibility"] = "rbxassetid://114029945302017",
+    ["activity"] = "rbxassetid://94212016861936",
     ["air-vent"] = "rbxassetid://81517226012329",
-    airplay = "rbxassetid://115020759309179",
+    ["airplay"] = "rbxassetid://115020759309179",
     ["alarm-clock"] = "rbxassetid://126259032907535",
     ["alarm-clock-check"] = "rbxassetid://76437352099157",
     ["alarm-clock-minus"] = "rbxassetid://77364179863205",
     ["alarm-clock-off"] = "rbxassetid://97904885874823",
     ["alarm-clock-plus"] = "rbxassetid://80468822979214",
     ["alarm-smoke"] = "rbxassetid://96965448419685",
-    album = "rbxassetid://127358331163602",
+    ["album"] = "rbxassetid://127358331163602",
     ["align-center-horizontal"] = "rbxassetid://81570549209434",
     ["align-center-vertical"] = "rbxassetid://118470463752466",
     ["align-end-horizontal"] = "rbxassetid://139502909745427",
@@ -42,23 +43,23 @@ local Icons = {
     ["align-vertical-justify-start"] = "rbxassetid://99692844572718",
     ["align-vertical-space-around"] = "rbxassetid://96206012459190",
     ["align-vertical-space-between"] = "rbxassetid://124998077349706",
-    ambulance = "rbxassetid://78599995190651",
-    ampersand = "rbxassetid://75272915739209",
-    ampersands = "rbxassetid://126947193455996",
-    amphora = "rbxassetid://137370389604364",
-    anchor = "rbxassetid://92181172123618",
-    angry = "rbxassetid://74237056000103",
-    annoyed = "rbxassetid://80064369052011",
-    antenna = "rbxassetid://99628923540956",
-    anvil = "rbxassetid://100203029845919",
-    aperture = "rbxassetid://83396154449972",
+    ["ambulance"] = "rbxassetid://78599995190651",
+    ["ampersand"] = "rbxassetid://75272915739209",
+    ["ampersands"] = "rbxassetid://126947193455996",
+    ["amphora"] = "rbxassetid://137370389604364",
+    ["anchor"] = "rbxassetid://92181172123618",
+    ["angry"] = "rbxassetid://74237056000103",
+    ["annoyed"] = "rbxassetid://80064369052011",
+    ["antenna"] = "rbxassetid://99628923540956",
+    ["anvil"] = "rbxassetid://100203029845919",
+    ["aperture"] = "rbxassetid://83396154449972",
     ["app-window"] = "rbxassetid://93142176757189",
     ["app-window-mac"] = "rbxassetid://79587216113811",
-    apple = "rbxassetid://104349242902442",
-    archive = "rbxassetid://122180020814574",
+    ["apple"] = "rbxassetid://104349242902442",
+    ["archive"] = "rbxassetid://122180020814574",
     ["archive-restore"] = "rbxassetid://78956681942188",
     ["archive-x"] = "rbxassetid://75830115088395",
-    armchair = "rbxassetid://105384358373973",
+    ["armchair"] = "rbxassetid://105384358373973",
     ["arrow-big-down"] = "rbxassetid://81081164158885",
     ["arrow-big-down-dash"] = "rbxassetid://137987229582002",
     ["arrow-big-left"] = "rbxassetid://85973092492641",
@@ -102,17 +103,17 @@ local Icons = {
     ["arrow-up-wide-narrow"] = "rbxassetid://87437426951568",
     ["arrow-up-z-a"] = "rbxassetid://107546173611884",
     ["arrows-up-from-line"] = "rbxassetid://133710016938621",
-    asterisk = "rbxassetid://88552752106723",
+    ["asterisk"] = "rbxassetid://88552752106723",
     ["at-sign"] = "rbxassetid://79059152889146",
-    atom = "rbxassetid://73167696981648",
+    ["atom"] = "rbxassetid://73167696981648",
     ["audio-lines"] = "rbxassetid://70930641819242",
     ["audio-waveform"] = "rbxassetid://86462036665209",
-    award = "rbxassetid://132740088158419",
-    axe = "rbxassetid://132405197863294",
+    ["award"] = "rbxassetid://132740088158419",
+    ["axe"] = "rbxassetid://132405197863294",
     ["axis-3d"] = "rbxassetid://122438676546804",
-    baby = "rbxassetid://93472926933440",
-    backpack = "rbxassetid://140420225386018",
-    badge = "rbxassetid://116620312917084",
+    ["baby"] = "rbxassetid://93472926933440",
+    ["backpack"] = "rbxassetid://140420225386018",
+    ["badge"] = "rbxassetid://116620312917084",
     ["badge-alert"] = "rbxassetid://101829200081951",
     ["badge-cent"] = "rbxassetid://133345018873154",
     ["badge-check"] = "rbxassetid://76078495178149",
@@ -131,36 +132,36 @@ local Icons = {
     ["badge-turkish-lira"] = "rbxassetid://137839965873529",
     ["badge-x"] = "rbxassetid://122931434733842",
     ["baggage-claim"] = "rbxassetid://86922213051957",
-    balloon = "rbxassetid://97489111621526",
-    ban = "rbxassetid://90767043015246",
-    banana = "rbxassetid://140713420056179",
-    bandage = "rbxassetid://129660129590770",
-    banknote = "rbxassetid://104840231536668",
+    ["balloon"] = "rbxassetid://97489111621526",
+    ["ban"] = "rbxassetid://90767043015246",
+    ["banana"] = "rbxassetid://140713420056179",
+    ["bandage"] = "rbxassetid://129660129590770",
+    ["banknote"] = "rbxassetid://104840231536668",
     ["banknote-arrow-down"] = "rbxassetid://139366449345199",
     ["banknote-arrow-up"] = "rbxassetid://133758343082529",
     ["banknote-x"] = "rbxassetid://95348701438065",
-    barcode = "rbxassetid://118473018143689",
-    barrel = "rbxassetid://130647115622774",
-    baseline = "rbxassetid://124677132511270",
-    bath = "rbxassetid://76031400297942",
-    battery = "rbxassetid://70765800346189",
+    ["barcode"] = "rbxassetid://118473018143689",
+    ["barrel"] = "rbxassetid://130647115622774",
+    ["baseline"] = "rbxassetid://124677132511270",
+    ["bath"] = "rbxassetid://76031400297942",
+    ["battery"] = "rbxassetid://70765800346189",
     ["battery-charging"] = "rbxassetid://80139357470047",
     ["battery-full"] = "rbxassetid://70906718268972",
     ["battery-low"] = "rbxassetid://139659256984314",
     ["battery-medium"] = "rbxassetid://105934079398915",
     ["battery-plus"] = "rbxassetid://91931341486966",
     ["battery-warning"] = "rbxassetid://115230083817257",
-    beaker = "rbxassetid://80902539995520",
-    bean = "rbxassetid://89491967076869",
+    ["beaker"] = "rbxassetid://80902539995520",
+    ["bean"] = "rbxassetid://89491967076869",
     ["bean-off"] = "rbxassetid://98164436608714",
-    bed = "rbxassetid://97726529032925",
+    ["bed"] = "rbxassetid://97726529032925",
     ["bed-double"] = "rbxassetid://73820193212911",
     ["bed-single"] = "rbxassetid://113423940880634",
-    beef = "rbxassetid://105850162318915",
+    ["beef"] = "rbxassetid://105850162318915",
     ["beef-off"] = "rbxassetid://99869959725200",
-    beer = "rbxassetid://116404978807744",
+    ["beer"] = "rbxassetid://116404978807744",
     ["beer-off"] = "rbxassetid://120333134736361",
-    bell = "rbxassetid://97392696311902",
+    ["bell"] = "rbxassetid://97392696311902",
     ["bell-dot"] = "rbxassetid://93161277118810",
     ["bell-electric"] = "rbxassetid://100277767266983",
     ["bell-minus"] = "rbxassetid://126334890449727",
@@ -172,25 +173,25 @@ local Icons = {
     ["between-vertical-end"] = "rbxassetid://72817612571631",
     ["between-vertical-start"] = "rbxassetid://85278312190301",
     ["biceps-flexed"] = "rbxassetid://82004462003936",
-    bike = "rbxassetid://102930322246035",
-    binary = "rbxassetid://91751953950088",
-    binoculars = "rbxassetid://101460003267896",
-    biohazard = "rbxassetid://95956532900432",
-    bird = "rbxassetid://132284145117371",
-    birdhouse = "rbxassetid://83999157401433",
-    bitcoin = "rbxassetid://95459240442938",
-    blend = "rbxassetid://111679612185257",
-    blinds = "rbxassetid://71164165283925",
-    blocks = "rbxassetid://72212693357737",
-    bluetooth = "rbxassetid://90506573139443",
+    ["bike"] = "rbxassetid://102930322246035",
+    ["binary"] = "rbxassetid://91751953950088",
+    ["binoculars"] = "rbxassetid://101460003267896",
+    ["biohazard"] = "rbxassetid://95956532900432",
+    ["bird"] = "rbxassetid://132284145117371",
+    ["birdhouse"] = "rbxassetid://83999157401433",
+    ["bitcoin"] = "rbxassetid://95459240442938",
+    ["blend"] = "rbxassetid://111679612185257",
+    ["blinds"] = "rbxassetid://71164165283925",
+    ["blocks"] = "rbxassetid://72212693357737",
+    ["bluetooth"] = "rbxassetid://90506573139443",
     ["bluetooth-connected"] = "rbxassetid://96315134002985",
     ["bluetooth-off"] = "rbxassetid://80600044218117",
     ["bluetooth-searching"] = "rbxassetid://100673019606426",
-    bold = "rbxassetid://116141470019166",
-    bolt = "rbxassetid://102881251417484",
-    bomb = "rbxassetid://139223800924636",
-    bone = "rbxassetid://111242153474115",
-    book = "rbxassetid://125383279695672",
+    ["bold"] = "rbxassetid://116141470019166",
+    ["bolt"] = "rbxassetid://102881251417484",
+    ["bomb"] = "rbxassetid://139223800924636",
+    ["bone"] = "rbxassetid://111242153474115",
+    ["book"] = "rbxassetid://125383279695672",
     ["book-a"] = "rbxassetid://104067275658465",
     ["book-alert"] = "rbxassetid://124159928044853",
     ["book-audio"] = "rbxassetid://109208148317037",
@@ -216,48 +217,48 @@ local Icons = {
     ["book-up-2"] = "rbxassetid://130161620853665",
     ["book-user"] = "rbxassetid://128489189240523",
     ["book-x"] = "rbxassetid://118754548186537",
-    bookmark = "rbxassetid://121093149326239",
+    ["bookmark"] = "rbxassetid://121093149326239",
     ["bookmark-check"] = "rbxassetid://93940443347986",
     ["bookmark-minus"] = "rbxassetid://96807096039910",
     ["bookmark-plus"] = "rbxassetid://121469724491615",
     ["bookmark-x"] = "rbxassetid://112272342584706",
     ["boom-box"] = "rbxassetid://99901322535868",
-    bot = "rbxassetid://80451686744860",
+    ["bot"] = "rbxassetid://80451686744860",
     ["bot-message-square"] = "rbxassetid://96145330292478",
     ["bot-off"] = "rbxassetid://140417690560013",
     ["bottle-wine"] = "rbxassetid://131675403196921",
     ["bow-arrow"] = "rbxassetid://124089655150375",
-    box = "rbxassetid://101768155599700",
-    boxes = "rbxassetid://136372617578355",
-    braces = "rbxassetid://117761094704041",
-    brackets = "rbxassetid://74368995728099",
-    brain = "rbxassetid://92424107303177",
+    ["box"] = "rbxassetid://101768155599700",
+    ["boxes"] = "rbxassetid://136372617578355",
+    ["braces"] = "rbxassetid://117761094704041",
+    ["brackets"] = "rbxassetid://74368995728099",
+    ["brain"] = "rbxassetid://92424107303177",
     ["brain-circuit"] = "rbxassetid://70547962410202",
     ["brain-cog"] = "rbxassetid://132039205501538",
     ["brick-wall"] = "rbxassetid://112878522258821",
     ["brick-wall-fire"] = "rbxassetid://92980588705520",
     ["brick-wall-shield"] = "rbxassetid://75954432775071",
-    briefcase = "rbxassetid://96754188164225",
+    ["briefcase"] = "rbxassetid://96754188164225",
     ["briefcase-business"] = "rbxassetid://129135125207283",
     ["briefcase-conveyor-belt"] = "rbxassetid://108665725653714",
     ["briefcase-medical"] = "rbxassetid://119917756334087",
     ["bring-to-front"] = "rbxassetid://132975903553748",
-    brush = "rbxassetid://127035535799640",
+    ["brush"] = "rbxassetid://127035535799640",
     ["brush-cleaning"] = "rbxassetid://71728977448805",
-    bubbles = "rbxassetid://106183424168227",
-    bug = "rbxassetid://83626408925438",
+    ["bubbles"] = "rbxassetid://106183424168227",
+    ["bug"] = "rbxassetid://83626408925438",
     ["bug-off"] = "rbxassetid://88020025049245",
     ["bug-play"] = "rbxassetid://80107955888092",
-    building = "rbxassetid://110616258983082",
+    ["building"] = "rbxassetid://110616258983082",
     ["building-2"] = "rbxassetid://77873775611951",
-    bus = "rbxassetid://133798469717463",
+    ["bus"] = "rbxassetid://133798469717463",
     ["bus-front"] = "rbxassetid://89863432456045",
-    cable = "rbxassetid://128449944504901",
+    ["cable"] = "rbxassetid://128449944504901",
     ["cable-car"] = "rbxassetid://128643682205596",
-    cake = "rbxassetid://103131590503275",
+    ["cake"] = "rbxassetid://103131590503275",
     ["cake-slice"] = "rbxassetid://136769828413242",
-    calculator = "rbxassetid://74915716529646",
-    calendar = "rbxassetid://114792700814035",
+    ["calculator"] = "rbxassetid://74915716529646",
+    ["calendar"] = "rbxassetid://114792700814035",
     ["calendar-1"] = "rbxassetid://98458364171044",
     ["calendar-arrow-down"] = "rbxassetid://108415736543437",
     ["calendar-arrow-up"] = "rbxassetid://70574654109118",
@@ -278,30 +279,30 @@ local Icons = {
     ["calendar-sync"] = "rbxassetid://78082218499697",
     ["calendar-x"] = "rbxassetid://106703374806500",
     ["calendar-x-2"] = "rbxassetid://107518051061147",
-    calendars = "rbxassetid://130944763042289",
-    camera = "rbxassetid://79950339943067",
+    ["calendars"] = "rbxassetid://130944763042289",
+    ["camera"] = "rbxassetid://79950339943067",
     ["camera-off"] = "rbxassetid://81057636835256",
-    candy = "rbxassetid://107812129154678",
+    ["candy"] = "rbxassetid://107812129154678",
     ["candy-cane"] = "rbxassetid://71689468772492",
     ["candy-off"] = "rbxassetid://110232752314832",
-    cannabis = "rbxassetid://98792006538601",
+    ["cannabis"] = "rbxassetid://98792006538601",
     ["cannabis-off"] = "rbxassetid://101938500363812",
-    captions = "rbxassetid://104960225031445",
+    ["captions"] = "rbxassetid://104960225031445",
     ["captions-off"] = "rbxassetid://105223545364193",
-    car = "rbxassetid://121065933462582",
+    ["car"] = "rbxassetid://121065933462582",
     ["car-front"] = "rbxassetid://87380942739063",
     ["car-taxi-front"] = "rbxassetid://122455403384057",
-    caravan = "rbxassetid://120070979471783",
+    ["caravan"] = "rbxassetid://120070979471783",
     ["card-sim"] = "rbxassetid://134490550095771",
-    carrot = "rbxassetid://119118221444304",
+    ["carrot"] = "rbxassetid://119118221444304",
     ["case-lower"] = "rbxassetid://129303130603241",
     ["case-sensitive"] = "rbxassetid://125410273293056",
     ["case-upper"] = "rbxassetid://111633433531325",
     ["cassette-tape"] = "rbxassetid://137065788934157",
-    cast = "rbxassetid://98202245922071",
-    castle = "rbxassetid://119275077187784",
-    cat = "rbxassetid://124252153404931",
-    cctv = "rbxassetid://99979894766624",
+    ["cast"] = "rbxassetid://98202245922071",
+    ["castle"] = "rbxassetid://119275077187784",
+    ["cat"] = "rbxassetid://124252153404931",
+    ["cctv"] = "rbxassetid://99979894766624",
     ["cctv-off"] = "rbxassetid://75925370187295",
     ["chart-area"] = "rbxassetid://123446436762366",
     ["chart-bar"] = "rbxassetid://105389816384108",
@@ -326,11 +327,11 @@ local Icons = {
     ["chart-pie"] = "rbxassetid://113412261630136",
     ["chart-scatter"] = "rbxassetid://108217585014571",
     ["chart-spline"] = "rbxassetid://90307460742494",
-    check = "rbxassetid://93898873302694",
+    ["check"] = "rbxassetid://93898873302694",
     ["check-check"] = "rbxassetid://95183312173858",
     ["check-line"] = "rbxassetid://115122343485290",
     ["chef-hat"] = "rbxassetid://121744015002573",
-    cherry = "rbxassetid://139519182403183",
+    ["cherry"] = "rbxassetid://139519182403183",
     ["chess-bishop"] = "rbxassetid://121701705580238",
     ["chess-king"] = "rbxassetid://90885687223462",
     ["chess-knight"] = "rbxassetid://96467707042169",
@@ -352,11 +353,11 @@ local Icons = {
     ["chevrons-right-left"] = "rbxassetid://87149546686569",
     ["chevrons-up"] = "rbxassetid://100467452364672",
     ["chevrons-up-down"] = "rbxassetid://131833120209646",
-    chromium = "rbxassetid://128165143739006",
-    church = "rbxassetid://113714744350666",
-    cigarette = "rbxassetid://137149549886852",
+    ["chromium"] = "rbxassetid://128165143739006",
+    ["church"] = "rbxassetid://113714744350666",
+    ["cigarette"] = "rbxassetid://137149549886852",
     ["cigarette-off"] = "rbxassetid://77797883078452",
-    circle = "rbxassetid://130359823580534",
+    ["circle"] = "rbxassetid://130359823580534",
     ["circle-alert"] = "rbxassetid://83898160590116",
     ["circle-arrow-down"] = "rbxassetid://95901860261344",
     ["circle-arrow-left"] = "rbxassetid://102148876968988",
@@ -403,9 +404,9 @@ local Icons = {
     ["circle-user-round"] = "rbxassetid://95489465399880",
     ["circle-x"] = "rbxassetid://76821953846248",
     ["circuit-board"] = "rbxassetid://107695264369312",
-    citrus = "rbxassetid://139018222976433",
-    clapperboard = "rbxassetid://132660667070200",
-    clipboard = "rbxassetid://89601995828423",
+    ["citrus"] = "rbxassetid://139018222976433",
+    ["clapperboard"] = "rbxassetid://132660667070200",
+    ["clipboard"] = "rbxassetid://89601995828423",
     ["clipboard-check"] = "rbxassetid://92649798577170",
     ["clipboard-clock"] = "rbxassetid://123957515687745",
     ["clipboard-copy"] = "rbxassetid://125851897718493",
@@ -417,7 +418,7 @@ local Icons = {
     ["clipboard-plus"] = "rbxassetid://134285318675662",
     ["clipboard-type"] = "rbxassetid://89949374318028",
     ["clipboard-x"] = "rbxassetid://102222456890103",
-    clock = "rbxassetid://121808839832144",
+    ["clock"] = "rbxassetid://121808839832144",
     ["clock-1"] = "rbxassetid://129363225422045",
     ["clock-10"] = "rbxassetid://104332695855541",
     ["clock-11"] = "rbxassetid://119023205186105",
@@ -437,7 +438,7 @@ local Icons = {
     ["clock-fading"] = "rbxassetid://93205297285245",
     ["clock-plus"] = "rbxassetid://93367709263150",
     ["closed-caption"] = "rbxassetid://99832644030788",
-    cloud = "rbxassetid://121226497050352",
+    ["cloud"] = "rbxassetid://121226497050352",
     ["cloud-alert"] = "rbxassetid://91967273658626",
     ["cloud-backup"] = "rbxassetid://111649579696132",
     ["cloud-check"] = "rbxassetid://97318598202432",
@@ -457,42 +458,42 @@ local Icons = {
     ["cloud-sun-rain"] = "rbxassetid://99041604425705",
     ["cloud-sync"] = "rbxassetid://79393911188593",
     ["cloud-upload"] = "rbxassetid://93307473217005",
-    cloudy = "rbxassetid://105360479023346",
-    clover = "rbxassetid://74925550436750",
-    club = "rbxassetid://108490365816628",
-    code = "rbxassetid://107380207681249",
+    ["cloudy"] = "rbxassetid://105360479023346",
+    ["clover"] = "rbxassetid://74925550436750",
+    ["club"] = "rbxassetid://108490365816628",
+    ["code"] = "rbxassetid://107380207681249",
     ["code-xml"] = "rbxassetid://130150477351734",
-    codepen = "rbxassetid://135643965971885",
-    codesandbox = "rbxassetid://106911852964823",
-    coffee = "rbxassetid://106864403231093",
-    cog = "rbxassetid://116544501716299",
-    coins = "rbxassetid://116510979641930",
+    ["codepen"] = "rbxassetid://135643965971885",
+    ["codesandbox"] = "rbxassetid://106911852964823",
+    ["coffee"] = "rbxassetid://106864403231093",
+    ["cog"] = "rbxassetid://116544501716299",
+    ["coins"] = "rbxassetid://116510979641930",
     ["columns-2"] = "rbxassetid://113004100221850",
     ["columns-3"] = "rbxassetid://115223357399375",
     ["columns-3-cog"] = "rbxassetid://121589691981064",
     ["columns-4"] = "rbxassetid://130807991968419",
-    combine = "rbxassetid://79908476334048",
-    command = "rbxassetid://93648221906330",
-    compass = "rbxassetid://115123411028382",
-    component = "rbxassetid://110027788875080",
-    computer = "rbxassetid://77480056459407",
+    ["combine"] = "rbxassetid://79908476334048",
+    ["command"] = "rbxassetid://93648221906330",
+    ["compass"] = "rbxassetid://115123411028382",
+    ["component"] = "rbxassetid://110027788875080",
+    ["computer"] = "rbxassetid://77480056459407",
     ["concierge-bell"] = "rbxassetid://140384259310436",
-    cone = "rbxassetid://97759550688437",
-    construction = "rbxassetid://106539489968173",
-    contact = "rbxassetid://75868297719012",
+    ["cone"] = "rbxassetid://97759550688437",
+    ["construction"] = "rbxassetid://106539489968173",
+    ["contact"] = "rbxassetid://75868297719012",
     ["contact-round"] = "rbxassetid://71907624112229",
-    container = "rbxassetid://91507237573499",
-    contrast = "rbxassetid://112796643981497",
-    cookie = "rbxassetid://73159504540002",
+    ["container"] = "rbxassetid://91507237573499",
+    ["contrast"] = "rbxassetid://112796643981497",
+    ["cookie"] = "rbxassetid://73159504540002",
     ["cooking-pot"] = "rbxassetid://94959783129799",
-    copy = "rbxassetid://78979572434545",
+    ["copy"] = "rbxassetid://78979572434545",
     ["copy-check"] = "rbxassetid://91177247988892",
     ["copy-minus"] = "rbxassetid://109524509933035",
     ["copy-plus"] = "rbxassetid://113618379616952",
     ["copy-slash"] = "rbxassetid://93805787810390",
     ["copy-x"] = "rbxassetid://106557557978061",
-    copyleft = "rbxassetid://78559055698593",
-    copyright = "rbxassetid://129433635747111",
+    ["copyleft"] = "rbxassetid://78559055698593",
+    ["copyright"] = "rbxassetid://129433635747111",
     ["corner-down-left"] = "rbxassetid://90473561177832",
     ["corner-down-right"] = "rbxassetid://86512767702085",
     ["corner-left-down"] = "rbxassetid://139876989150630",
@@ -501,29 +502,29 @@ local Icons = {
     ["corner-right-up"] = "rbxassetid://112851237026705",
     ["corner-up-left"] = "rbxassetid://84669279763024",
     ["corner-up-right"] = "rbxassetid://115099889693145",
-    cpu = "rbxassetid://77549309870247",
+    ["cpu"] = "rbxassetid://77549309870247",
     ["creative-commons"] = "rbxassetid://90408210735312",
     ["credit-card"] = "rbxassetid://99163352872346",
-    croissant = "rbxassetid://130710485559420",
-    crop = "rbxassetid://116344601101413",
-    cross = "rbxassetid://101833377863588",
-    crosshair = "rbxassetid://134242818164054",
-    crown = "rbxassetid://127843403295538",
-    cuboid = "rbxassetid://75618807946111",
+    ["croissant"] = "rbxassetid://130710485559420",
+    ["crop"] = "rbxassetid://116344601101413",
+    ["cross"] = "rbxassetid://101833377863588",
+    ["crosshair"] = "rbxassetid://134242818164054",
+    ["crown"] = "rbxassetid://127843403295538",
+    ["cuboid"] = "rbxassetid://75618807946111",
     ["cup-soda"] = "rbxassetid://121098640829562",
-    currency = "rbxassetid://90551250119972",
-    cylinder = "rbxassetid://90569677179169",
-    dam = "rbxassetid://76874486231393",
-    database = "rbxassetid://126791525623846",
+    ["currency"] = "rbxassetid://90551250119972",
+    ["cylinder"] = "rbxassetid://90569677179169",
+    ["dam"] = "rbxassetid://76874486231393",
+    ["database"] = "rbxassetid://126791525623846",
     ["database-backup"] = "rbxassetid://103403210984699",
     ["database-search"] = "rbxassetid://92017137080138",
     ["database-zap"] = "rbxassetid://131199921258418",
     ["decimals-arrow-left"] = "rbxassetid://120198500638749",
     ["decimals-arrow-right"] = "rbxassetid://118263047146797",
-    delete = "rbxassetid://126279426372342",
-    dessert = "rbxassetid://71508133278830",
-    diameter = "rbxassetid://97429051503783",
-    diamond = "rbxassetid://105846996304890",
+    ["delete"] = "rbxassetid://126279426372342",
+    ["dessert"] = "rbxassetid://71508133278830",
+    ["diameter"] = "rbxassetid://97429051503783",
+    ["diamond"] = "rbxassetid://105846996304890",
     ["diamond-minus"] = "rbxassetid://128989071438290",
     ["diamond-percent"] = "rbxassetid://107717860105959",
     ["diamond-plus"] = "rbxassetid://134701163723675",
@@ -533,67 +534,67 @@ local Icons = {
     ["dice-4"] = "rbxassetid://113365650364004",
     ["dice-5"] = "rbxassetid://72768312430593",
     ["dice-6"] = "rbxassetid://85376239182543",
-    dices = "rbxassetid://81268120302865",
-    diff = "rbxassetid://135052708609715",
-    disc = "rbxassetid://101908120120777",
+    ["dices"] = "rbxassetid://81268120302865",
+    ["diff"] = "rbxassetid://135052708609715",
+    ["disc"] = "rbxassetid://101908120120777",
     ["disc-2"] = "rbxassetid://91419420404185",
     ["disc-3"] = "rbxassetid://135470554736048",
     ["disc-album"] = "rbxassetid://74693460404344",
-    divide = "rbxassetid://136678191878278",
-    dna = "rbxassetid://74007982981741",
+    ["divide"] = "rbxassetid://136678191878278",
+    ["dna"] = "rbxassetid://74007982981741",
     ["dna-off"] = "rbxassetid://89612426361540",
-    dock = "rbxassetid://121997427160252",
-    dog = "rbxassetid://71920105558570",
+    ["dock"] = "rbxassetid://121997427160252",
+    ["dog"] = "rbxassetid://71920105558570",
     ["dollar-sign"] = "rbxassetid://127320961224019",
-    donut = "rbxassetid://72204922742657",
+    ["donut"] = "rbxassetid://72204922742657",
     ["door-closed"] = "rbxassetid://136249099949073",
     ["door-closed-locked"] = "rbxassetid://74027613267551",
     ["door-open"] = "rbxassetid://91306356501736",
-    dot = "rbxassetid://137321056643916",
-    download = "rbxassetid://134814648082393",
+    ["dot"] = "rbxassetid://137321056643916",
+    ["download"] = "rbxassetid://134814648082393",
     ["drafting-compass"] = "rbxassetid://99701976182841",
-    drama = "rbxassetid://110297795801577",
-    dribbble = "rbxassetid://80231809663849",
-    drill = "rbxassetid://108644821412796",
-    drone = "rbxassetid://117299095794783",
-    droplet = "rbxassetid://100597455015098",
+    ["drama"] = "rbxassetid://110297795801577",
+    ["dribbble"] = "rbxassetid://80231809663849",
+    ["drill"] = "rbxassetid://108644821412796",
+    ["drone"] = "rbxassetid://117299095794783",
+    ["droplet"] = "rbxassetid://100597455015098",
     ["droplet-off"] = "rbxassetid://119365002225172",
-    droplets = "rbxassetid://140111846025180",
-    drum = "rbxassetid://136979060344890",
-    drumstick = "rbxassetid://104662462521709",
-    dumbbell = "rbxassetid://80277236776212",
-    ear = "rbxassetid://121894949934209",
+    ["droplets"] = "rbxassetid://140111846025180",
+    ["drum"] = "rbxassetid://136979060344890",
+    ["drumstick"] = "rbxassetid://104662462521709",
+    ["dumbbell"] = "rbxassetid://80277236776212",
+    ["ear"] = "rbxassetid://121894949934209",
     ["ear-off"] = "rbxassetid://87421916192807",
-    earth = "rbxassetid://76231597751076",
+    ["earth"] = "rbxassetid://76231597751076",
     ["earth-lock"] = "rbxassetid://88814147073745",
-    eclipse = "rbxassetid://114829622118222",
-    egg = "rbxassetid://117851493400222",
+    ["eclipse"] = "rbxassetid://114829622118222",
+    ["egg"] = "rbxassetid://117851493400222",
     ["egg-fried"] = "rbxassetid://90622538210545",
     ["egg-off"] = "rbxassetid://92288321309285",
-    ellipse = "rbxassetid://71559658267482",
-    ellipsis = "rbxassetid://140019550645825",
+    ["ellipse"] = "rbxassetid://71559658267482",
+    ["ellipsis"] = "rbxassetid://140019550645825",
     ["ellipsis-vertical"] = "rbxassetid://117978708573781",
-    equal = "rbxassetid://123467780715624",
+    ["equal"] = "rbxassetid://123467780715624",
     ["equal-approximately"] = "rbxassetid://105382689698323",
     ["equal-not"] = "rbxassetid://76864449458032",
-    eraser = "rbxassetid://133957773112410",
+    ["eraser"] = "rbxassetid://133957773112410",
     ["ethernet-port"] = "rbxassetid://75391715149314",
-    euro = "rbxassetid://72229646524456",
+    ["euro"] = "rbxassetid://72229646524456",
     ["ev-charger"] = "rbxassetid://97906158859623",
-    expand = "rbxassetid://137492887754537",
+    ["expand"] = "rbxassetid://137492887754537",
     ["external-link"] = "rbxassetid://129331830773832",
-    eye = "rbxassetid://100033680381365",
+    ["eye"] = "rbxassetid://100033680381365",
     ["eye-closed"] = "rbxassetid://111063268625789",
     ["eye-off"] = "rbxassetid://135928786788378",
-    facebook = "rbxassetid://72098528632192",
-    factory = "rbxassetid://102170024318039",
-    fan = "rbxassetid://78391400440696",
+    ["facebook"] = "rbxassetid://72098528632192",
+    ["factory"] = "rbxassetid://102170024318039",
+    ["fan"] = "rbxassetid://78391400440696",
     ["fast-forward"] = "rbxassetid://121615540167909",
-    feather = "rbxassetid://91872927606406",
-    fence = "rbxassetid://123451565578029",
+    ["feather"] = "rbxassetid://91872927606406",
+    ["fence"] = "rbxassetid://123451565578029",
     ["ferris-wheel"] = "rbxassetid://79729205796176",
-    figma = "rbxassetid://134182122852301",
-    file = "rbxassetid://74748492079329",
+    ["figma"] = "rbxassetid://134182122852301",
+    ["file"] = "rbxassetid://74748492079329",
     ["file-archive"] = "rbxassetid://77018106869967",
     ["file-axis-3d"] = "rbxassetid://133912328009885",
     ["file-badge"] = "rbxassetid://74564895394477",
@@ -648,23 +649,23 @@ local Icons = {
     ["file-volume"] = "rbxassetid://111264764438958",
     ["file-x"] = "rbxassetid://107333775515154",
     ["file-x-corner"] = "rbxassetid://87554136773609",
-    files = "rbxassetid://102806336233202",
-    film = "rbxassetid://120978945609706",
-    fingerprint = "rbxassetid://112173305232811",
+    ["files"] = "rbxassetid://102806336233202",
+    ["film"] = "rbxassetid://120978945609706",
+    ["fingerprint"] = "rbxassetid://112173305232811",
     ["fingerprint-pattern"] = "rbxassetid://80934710831288",
     ["fire-extinguisher"] = "rbxassetid://111643493006960",
-    fish = "rbxassetid://124360663785796",
+    ["fish"] = "rbxassetid://124360663785796",
     ["fish-off"] = "rbxassetid://89756724887508",
     ["fish-symbol"] = "rbxassetid://118475177681618",
     ["fishing-hook"] = "rbxassetid://121038780855899",
     ["fishing-rod"] = "rbxassetid://71754848048049",
-    flag = "rbxassetid://78183383236196",
+    ["flag"] = "rbxassetid://78183383236196",
     ["flag-off"] = "rbxassetid://112944528856799",
     ["flag-triangle-left"] = "rbxassetid://88045221285272",
     ["flag-triangle-right"] = "rbxassetid://108292480304566",
-    flame = "rbxassetid://98218034436456",
+    ["flame"] = "rbxassetid://98218034436456",
     ["flame-kindling"] = "rbxassetid://139728976917928",
-    flashlight = "rbxassetid://100286985600444",
+    ["flashlight"] = "rbxassetid://100286985600444",
     ["flashlight-off"] = "rbxassetid://79780362871740",
     ["flask-conical"] = "rbxassetid://128406680901165",
     ["flask-conical-off"] = "rbxassetid://112597970025298",
@@ -673,12 +674,12 @@ local Icons = {
     ["flip-horizontal-2"] = "rbxassetid://103726993598186",
     ["flip-vertical"] = "rbxassetid://108003917346888",
     ["flip-vertical-2"] = "rbxassetid://103836358956328",
-    flower = "rbxassetid://86129438272762",
+    ["flower"] = "rbxassetid://86129438272762",
     ["flower-2"] = "rbxassetid://72934574245145",
-    focus = "rbxassetid://87493973153317",
+    ["focus"] = "rbxassetid://87493973153317",
     ["fold-horizontal"] = "rbxassetid://92835712442240",
     ["fold-vertical"] = "rbxassetid://108873727253656",
-    folder = "rbxassetid://80846616596607",
+    ["folder"] = "rbxassetid://80846616596607",
     ["folder-archive"] = "rbxassetid://97312009460206",
     ["folder-check"] = "rbxassetid://128492920904557",
     ["folder-clock"] = "rbxassetid://111964836738545",
@@ -708,17 +709,17 @@ local Icons = {
     ["folder-tree"] = "rbxassetid://85577554337861",
     ["folder-up"] = "rbxassetid://72008269765857",
     ["folder-x"] = "rbxassetid://91699618247635",
-    folders = "rbxassetid://110351216219061",
-    footprints = "rbxassetid://139192589041315",
-    forklift = "rbxassetid://72030930983101",
-    form = "rbxassetid://72999643971000",
-    forward = "rbxassetid://97545944739523",
-    frame = "rbxassetid://109080612832751",
-    framer = "rbxassetid://108384807262391",
-    frown = "rbxassetid://124407301067982",
-    fuel = "rbxassetid://106447647274511",
-    fullscreen = "rbxassetid://77793665526178",
-    funnel = "rbxassetid://108829540827529",
+    ["folders"] = "rbxassetid://110351216219061",
+    ["footprints"] = "rbxassetid://139192589041315",
+    ["forklift"] = "rbxassetid://72030930983101",
+    ["form"] = "rbxassetid://72999643971000",
+    ["forward"] = "rbxassetid://97545944739523",
+    ["frame"] = "rbxassetid://109080612832751",
+    ["framer"] = "rbxassetid://108384807262391",
+    ["frown"] = "rbxassetid://124407301067982",
+    ["fuel"] = "rbxassetid://106447647274511",
+    ["fullscreen"] = "rbxassetid://77793665526178",
+    ["funnel"] = "rbxassetid://108829540827529",
     ["funnel-plus"] = "rbxassetid://100780233821928",
     ["funnel-x"] = "rbxassetid://70984385812555",
     ["gallery-horizontal"] = "rbxassetid://80004001442122",
@@ -726,15 +727,15 @@ local Icons = {
     ["gallery-thumbnails"] = "rbxassetid://136219289862706",
     ["gallery-vertical"] = "rbxassetid://119299431466725",
     ["gallery-vertical-end"] = "rbxassetid://106461402088317",
-    gamepad = "rbxassetid://121607283959010",
+    ["gamepad"] = "rbxassetid://121607283959010",
     ["gamepad-2"] = "rbxassetid://92483947987410",
     ["gamepad-directional"] = "rbxassetid://84342305212226",
-    gauge = "rbxassetid://110273524101447",
-    gavel = "rbxassetid://78952298198456",
-    gem = "rbxassetid://112904952151156",
+    ["gauge"] = "rbxassetid://110273524101447",
+    ["gavel"] = "rbxassetid://78952298198456",
+    ["gem"] = "rbxassetid://112904952151156",
     ["georgian-lari"] = "rbxassetid://98084432591687",
-    ghost = "rbxassetid://113822048130017",
-    gift = "rbxassetid://109855212076373",
+    ["ghost"] = "rbxassetid://113822048130017",
+    ["gift"] = "rbxassetid://109855212076373",
     ["git-branch"] = "rbxassetid://90490195516649",
     ["git-branch-minus"] = "rbxassetid://97385010649411",
     ["git-branch-plus"] = "rbxassetid://125944221134316",
@@ -752,33 +753,33 @@ local Icons = {
     ["git-pull-request-create"] = "rbxassetid://105929577383926",
     ["git-pull-request-create-arrow"] = "rbxassetid://127422677061091",
     ["git-pull-request-draft"] = "rbxassetid://76173459869943",
-    github = "rbxassetid://120349554354380",
-    gitlab = "rbxassetid://114054627192933",
+    ["github"] = "rbxassetid://120349554354380",
+    ["gitlab"] = "rbxassetid://114054627192933",
     ["glass-water"] = "rbxassetid://115526102400988",
-    glasses = "rbxassetid://87936407455373",
-    globe = "rbxassetid://114238209622913",
+    ["glasses"] = "rbxassetid://87936407455373",
+    ["globe"] = "rbxassetid://114238209622913",
     ["globe-lock"] = "rbxassetid://134065526704402",
     ["globe-off"] = "rbxassetid://77775243585824",
     ["globe-x"] = "rbxassetid://109268097029296",
-    goal = "rbxassetid://120517954878160",
-    gpu = "rbxassetid://95577823614219",
+    ["goal"] = "rbxassetid://120517954878160",
+    ["gpu"] = "rbxassetid://95577823614219",
     ["graduation-cap"] = "rbxassetid://93771896340220",
-    grape = "rbxassetid://134760640415561",
+    ["grape"] = "rbxassetid://134760640415561",
     ["grid-2x2"] = "rbxassetid://99050491897640",
     ["grid-2x2-check"] = "rbxassetid://138468840220821",
     ["grid-2x2-plus"] = "rbxassetid://91811610580247",
     ["grid-2x2-x"] = "rbxassetid://72407303981388",
     ["grid-3x2"] = "rbxassetid://95528684210010",
     ["grid-3x3"] = "rbxassetid://70419024781206",
-    grip = "rbxassetid://109058783556768",
+    ["grip"] = "rbxassetid://109058783556768",
     ["grip-horizontal"] = "rbxassetid://136255899715930",
     ["grip-vertical"] = "rbxassetid://137183678565296",
-    group = "rbxassetid://107643418926671",
-    guitar = "rbxassetid://75915531867926",
-    ham = "rbxassetid://74465607934635",
-    hamburger = "rbxassetid://93086916815495",
-    hammer = "rbxassetid://83545120140895",
-    hand = "rbxassetid://130703864968637",
+    ["group"] = "rbxassetid://107643418926671",
+    ["guitar"] = "rbxassetid://75915531867926",
+    ["ham"] = "rbxassetid://74465607934635",
+    ["hamburger"] = "rbxassetid://93086916815495",
+    ["hammer"] = "rbxassetid://83545120140895",
+    ["hand"] = "rbxassetid://130703864968637",
     ["hand-coins"] = "rbxassetid://126990543175462",
     ["hand-fist"] = "rbxassetid://83341608917591",
     ["hand-grab"] = "rbxassetid://88867162163985",
@@ -786,18 +787,18 @@ local Icons = {
     ["hand-helping"] = "rbxassetid://89897738419446",
     ["hand-metal"] = "rbxassetid://113619498548713",
     ["hand-platter"] = "rbxassetid://88594727743168",
-    handbag = "rbxassetid://135675846264061",
-    handshake = "rbxassetid://78442115255814",
+    ["handbag"] = "rbxassetid://135675846264061",
+    ["handshake"] = "rbxassetid://78442115255814",
     ["hard-drive"] = "rbxassetid://88183305858463",
     ["hard-drive-download"] = "rbxassetid://73913801230614",
     ["hard-drive-upload"] = "rbxassetid://85762133615118",
     ["hard-hat"] = "rbxassetid://128050846767382",
-    hash = "rbxassetid://82890331678520",
+    ["hash"] = "rbxassetid://82890331678520",
     ["hat-glasses"] = "rbxassetid://101165538224815",
-    haze = "rbxassetid://108857561768901",
-    hd = "rbxassetid://71682790698278",
+    ["haze"] = "rbxassetid://108857561768901",
+    ["hd"] = "rbxassetid://71682790698278",
     ["hdmi-port"] = "rbxassetid://103693661037020",
-    heading = "rbxassetid://129254312067735",
+    ["heading"] = "rbxassetid://129254312067735",
     ["heading-1"] = "rbxassetid://118129315662110",
     ["heading-2"] = "rbxassetid://110209069670094",
     ["heading-3"] = "rbxassetid://90267885237062",
@@ -805,26 +806,26 @@ local Icons = {
     ["heading-5"] = "rbxassetid://120386663181267",
     ["heading-6"] = "rbxassetid://90959079775093",
     ["headphone-off"] = "rbxassetid://85038251615641",
-    headphones = "rbxassetid://118833729589183",
-    headset = "rbxassetid://129269236787694",
-    heart = "rbxassetid://116559368303288",
+    ["headphones"] = "rbxassetid://118833729589183",
+    ["headset"] = "rbxassetid://129269236787694",
+    ["heart"] = "rbxassetid://116559368303288",
     ["heart-crack"] = "rbxassetid://110987638564119",
     ["heart-handshake"] = "rbxassetid://111483078692002",
     ["heart-minus"] = "rbxassetid://96827380163326",
     ["heart-off"] = "rbxassetid://89748414415617",
     ["heart-plus"] = "rbxassetid://94877796283249",
     ["heart-pulse"] = "rbxassetid://129352925579546",
-    heater = "rbxassetid://140478466880916",
-    helicopter = "rbxassetid://111557171735930",
-    hexagon = "rbxassetid://127592089339199",
-    highlighter = "rbxassetid://77411555641113",
-    history = "rbxassetid://123980022019922",
-    hop = "rbxassetid://82778923997672",
+    ["heater"] = "rbxassetid://140478466880916",
+    ["helicopter"] = "rbxassetid://111557171735930",
+    ["hexagon"] = "rbxassetid://127592089339199",
+    ["highlighter"] = "rbxassetid://77411555641113",
+    ["history"] = "rbxassetid://123980022019922",
+    ["hop"] = "rbxassetid://82778923997672",
     ["hop-off"] = "rbxassetid://103386036934034",
-    hospital = "rbxassetid://105868763850707",
-    hotel = "rbxassetid://132283390859718",
-    hourglass = "rbxassetid://86160434939203",
-    house = "rbxassetid://98755624629571",
+    ["hospital"] = "rbxassetid://105868763850707",
+    ["hotel"] = "rbxassetid://132283390859718",
+    ["hourglass"] = "rbxassetid://86160434939203",
+    ["house"] = "rbxassetid://98755624629571",
     ["house-heart"] = "rbxassetid://136054771868597",
     ["house-plug"] = "rbxassetid://71438263712075",
     ["house-plus"] = "rbxassetid://118495165208309",
@@ -833,7 +834,7 @@ local Icons = {
     ["ice-cream-cone"] = "rbxassetid://90751397288639",
     ["id-card"] = "rbxassetid://75354294622640",
     ["id-card-lanyard"] = "rbxassetid://90761480469224",
-    image = "rbxassetid://112751259236831",
+    ["image"] = "rbxassetid://112751259236831",
     ["image-down"] = "rbxassetid://78972295741235",
     ["image-minus"] = "rbxassetid://101066016918565",
     ["image-off"] = "rbxassetid://81934811700938",
@@ -841,43 +842,43 @@ local Icons = {
     ["image-plus"] = "rbxassetid://70391970623917",
     ["image-up"] = "rbxassetid://126610009605241",
     ["image-upscale"] = "rbxassetid://106963545024679",
-    images = "rbxassetid://79350649395557",
-    import = "rbxassetid://116545008906029",
-    inbox = "rbxassetid://112591360302868",
+    ["images"] = "rbxassetid://79350649395557",
+    ["import"] = "rbxassetid://116545008906029",
+    ["inbox"] = "rbxassetid://112591360302868",
     ["indian-rupee"] = "rbxassetid://113038778381805",
-    infinity = "rbxassetid://98083086936965",
-    info = "rbxassetid://124560466474914",
+    ["infinity"] = "rbxassetid://98083086936965",
+    ["info"] = "rbxassetid://124560466474914",
     ["inspection-panel"] = "rbxassetid://70905313146088",
-    instagram = "rbxassetid://119864798614855",
-    italic = "rbxassetid://96220378864282",
+    ["instagram"] = "rbxassetid://119864798614855",
+    ["italic"] = "rbxassetid://96220378864282",
     ["iteration-ccw"] = "rbxassetid://140221832794083",
     ["iteration-cw"] = "rbxassetid://95534489554662",
     ["japanese-yen"] = "rbxassetid://106362863465813",
-    joystick = "rbxassetid://99416790224739",
-    kanban = "rbxassetid://125934100055431",
-    kayak = "rbxassetid://136107544609389",
-    key = "rbxassetid://96510194465420",
+    ["joystick"] = "rbxassetid://99416790224739",
+    ["kanban"] = "rbxassetid://125934100055431",
+    ["kayak"] = "rbxassetid://136107544609389",
+    ["key"] = "rbxassetid://96510194465420",
     ["key-round"] = "rbxassetid://83619031955390",
     ["key-square"] = "rbxassetid://94621420033649",
-    keyboard = "rbxassetid://121474456068237",
+    ["keyboard"] = "rbxassetid://121474456068237",
     ["keyboard-music"] = "rbxassetid://121058541758636",
     ["keyboard-off"] = "rbxassetid://92466375369772",
-    lamp = "rbxassetid://110730830653382",
+    ["lamp"] = "rbxassetid://110730830653382",
     ["lamp-ceiling"] = "rbxassetid://80032758469141",
     ["lamp-desk"] = "rbxassetid://85290686983238",
     ["lamp-floor"] = "rbxassetid://104585881375892",
     ["lamp-wall-down"] = "rbxassetid://91271394132073",
     ["lamp-wall-up"] = "rbxassetid://132141464337445",
     ["land-plot"] = "rbxassetid://96449039620294",
-    landmark = "rbxassetid://76885079756393",
-    languages = "rbxassetid://90816903776498",
-    laptop = "rbxassetid://111387063244975",
+    ["landmark"] = "rbxassetid://76885079756393",
+    ["languages"] = "rbxassetid://90816903776498",
+    ["laptop"] = "rbxassetid://111387063244975",
     ["laptop-minimal"] = "rbxassetid://136705765566068",
     ["laptop-minimal-check"] = "rbxassetid://114352019833865",
-    lasso = "rbxassetid://121072936884007",
+    ["lasso"] = "rbxassetid://121072936884007",
     ["lasso-select"] = "rbxassetid://105609719912753",
-    laugh = "rbxassetid://104491311361166",
-    layers = "rbxassetid://81973586053257",
+    ["laugh"] = "rbxassetid://104491311361166",
+    ["layers"] = "rbxassetid://81973586053257",
     ["layers-2"] = "rbxassetid://70536710516357",
     ["layers-plus"] = "rbxassetid://77587765623057",
     ["layout-dashboard"] = "rbxassetid://139929981863901",
@@ -886,25 +887,25 @@ local Icons = {
     ["layout-panel-left"] = "rbxassetid://125092469751491",
     ["layout-panel-top"] = "rbxassetid://91943941515944",
     ["layout-template"] = "rbxassetid://115564446417985",
-    leaf = "rbxassetid://119951075637174",
+    ["leaf"] = "rbxassetid://119951075637174",
     ["leafy-green"] = "rbxassetid://105146290493154",
-    lectern = "rbxassetid://106166425183862",
+    ["lectern"] = "rbxassetid://106166425183862",
     ["lens-concave"] = "rbxassetid://94819631937027",
     ["lens-convex"] = "rbxassetid://74736504195474",
-    library = "rbxassetid://114334671982047",
+    ["library"] = "rbxassetid://114334671982047",
     ["library-big"] = "rbxassetid://106794530191412",
     ["life-buoy"] = "rbxassetid://81168450671956",
-    ligature = "rbxassetid://111397873269411",
-    lightbulb = "rbxassetid://103871245626488",
+    ["ligature"] = "rbxassetid://111397873269411",
+    ["lightbulb"] = "rbxassetid://103871245626488",
     ["lightbulb-off"] = "rbxassetid://83795722296178",
     ["line-dot-right-horizontal"] = "rbxassetid://104718593155221",
     ["line-squiggle"] = "rbxassetid://109555164424447",
     ["line-style"] = "rbxassetid://90176717785772",
-    link = "rbxassetid://131607023382430",
+    ["link"] = "rbxassetid://131607023382430",
     ["link-2"] = "rbxassetid://86072351557466",
     ["link-2-off"] = "rbxassetid://76885956296867",
-    linkedin = "rbxassetid://132842789255788",
-    list = "rbxassetid://113179976918783",
+    ["linkedin"] = "rbxassetid://132842789255788",
+    ["list"] = "rbxassetid://113179976918783",
     ["list-check"] = "rbxassetid://72374358471156",
     ["list-checks"] = "rbxassetid://99809353635593",
     ["list-chevrons-down-up"] = "rbxassetid://137409641500711",
@@ -925,23 +926,23 @@ local Icons = {
     ["list-tree"] = "rbxassetid://97685396239010",
     ["list-video"] = "rbxassetid://93648525452489",
     ["list-x"] = "rbxassetid://113025303988861",
-    loader = "rbxassetid://78408734580845",
+    ["loader"] = "rbxassetid://78408734580845",
     ["loader-circle"] = "rbxassetid://116535712789945",
     ["loader-pinwheel"] = "rbxassetid://108513357940900",
-    locate = "rbxassetid://84467676590391",
+    ["locate"] = "rbxassetid://84467676590391",
     ["locate-fixed"] = "rbxassetid://137367361548433",
     ["locate-off"] = "rbxassetid://73729216338137",
-    lock = "rbxassetid://134724289526879",
+    ["lock"] = "rbxassetid://134724289526879",
     ["lock-keyhole"] = "rbxassetid://78672912777756",
     ["lock-keyhole-open"] = "rbxassetid://110863509313073",
     ["lock-open"] = "rbxassetid://93597915325122",
     ["log-in"] = "rbxassetid://103768533135201",
     ["log-out"] = "rbxassetid://84895399304975",
-    logs = "rbxassetid://89772091251787",
-    lollipop = "rbxassetid://84681611583044",
-    luggage = "rbxassetid://76619236486400",
-    magnet = "rbxassetid://135162361226972",
-    mail = "rbxassetid://103945161245599",
+    ["logs"] = "rbxassetid://89772091251787",
+    ["lollipop"] = "rbxassetid://84681611583044",
+    ["luggage"] = "rbxassetid://76619236486400",
+    ["magnet"] = "rbxassetid://135162361226972",
+    ["mail"] = "rbxassetid://103945161245599",
     ["mail-check"] = "rbxassetid://86921536259917",
     ["mail-minus"] = "rbxassetid://81989813236553",
     ["mail-open"] = "rbxassetid://122785416858638",
@@ -950,9 +951,9 @@ local Icons = {
     ["mail-search"] = "rbxassetid://135616173775287",
     ["mail-warning"] = "rbxassetid://81495303676089",
     ["mail-x"] = "rbxassetid://74607841705644",
-    mailbox = "rbxassetid://82765503320335",
-    mails = "rbxassetid://90673453450080",
-    map = "rbxassetid://95107167260947",
+    ["mailbox"] = "rbxassetid://82765503320335",
+    ["mails"] = "rbxassetid://90673453450080",
+    ["map"] = "rbxassetid://95107167260947",
     ["map-minus"] = "rbxassetid://129525760577747",
     ["map-pin"] = "rbxassetid://84279202219901",
     ["map-pin-check"] = "rbxassetid://118110914690154",
@@ -969,18 +970,18 @@ local Icons = {
     ["map-pin-x-inside"] = "rbxassetid://126235934252379",
     ["map-pinned"] = "rbxassetid://103963788475034",
     ["map-plus"] = "rbxassetid://129388826743495",
-    mars = "rbxassetid://111287112372511",
+    ["mars"] = "rbxassetid://111287112372511",
     ["mars-stroke"] = "rbxassetid://131973193186828",
-    martini = "rbxassetid://82977695401058",
-    maximize = "rbxassetid://76045941763188",
+    ["martini"] = "rbxassetid://82977695401058",
+    ["maximize"] = "rbxassetid://76045941763188",
     ["maximize-2"] = "rbxassetid://73085922906397",
-    medal = "rbxassetid://79016002264450",
-    megaphone = "rbxassetid://118759541854879",
+    ["medal"] = "rbxassetid://79016002264450",
+    ["megaphone"] = "rbxassetid://118759541854879",
     ["megaphone-off"] = "rbxassetid://124280774193935",
-    meh = "rbxassetid://132197867028557",
+    ["meh"] = "rbxassetid://132197867028557",
     ["memory-stick"] = "rbxassetid://93212591343119",
-    menu = "rbxassetid://77021539815611",
-    merge = "rbxassetid://126201866476775",
+    ["menu"] = "rbxassetid://77021539815611",
+    ["merge"] = "rbxassetid://126201866476775",
     ["message-circle"] = "rbxassetid://127255077587058",
     ["message-circle-check"] = "rbxassetid://132772297689418",
     ["message-circle-code"] = "rbxassetid://112865244991651",
@@ -1011,22 +1012,22 @@ local Icons = {
     ["message-square-warning"] = "rbxassetid://138432903962261",
     ["message-square-x"] = "rbxassetid://137285463279462",
     ["messages-square"] = "rbxassetid://97532166733358",
-    metronome = "rbxassetid://101991829345965",
-    mic = "rbxassetid://89640799126523",
+    ["metronome"] = "rbxassetid://101991829345965",
+    ["mic"] = "rbxassetid://89640799126523",
     ["mic-off"] = "rbxassetid://82123034444822",
     ["mic-vocal"] = "rbxassetid://99082286164362",
-    microchip = "rbxassetid://73937907669903",
-    microscope = "rbxassetid://116875530102782",
-    microwave = "rbxassetid://108411735353008",
-    milestone = "rbxassetid://101618292325920",
-    milk = "rbxassetid://96221903896918",
+    ["microchip"] = "rbxassetid://73937907669903",
+    ["microscope"] = "rbxassetid://116875530102782",
+    ["microwave"] = "rbxassetid://108411735353008",
+    ["milestone"] = "rbxassetid://101618292325920",
+    ["milk"] = "rbxassetid://96221903896918",
     ["milk-off"] = "rbxassetid://72388480962742",
-    minimize = "rbxassetid://121304296213645",
+    ["minimize"] = "rbxassetid://121304296213645",
     ["minimize-2"] = "rbxassetid://116269596042539",
-    minus = "rbxassetid://118026365011536",
+    ["minus"] = "rbxassetid://118026365011536",
     ["mirror-rectangular"] = "rbxassetid://109046769760336",
     ["mirror-round"] = "rbxassetid://121534049429097",
-    monitor = "rbxassetid://72664649203050",
+    ["monitor"] = "rbxassetid://72664649203050",
     ["monitor-check"] = "rbxassetid://86651948439229",
     ["monitor-cloud"] = "rbxassetid://85931096038318",
     ["monitor-cog"] = "rbxassetid://94345128715799",
@@ -1040,12 +1041,12 @@ local Icons = {
     ["monitor-stop"] = "rbxassetid://98708958984757",
     ["monitor-up"] = "rbxassetid://96035360858377",
     ["monitor-x"] = "rbxassetid://126265210441423",
-    moon = "rbxassetid://83380517901735",
+    ["moon"] = "rbxassetid://83380517901735",
     ["moon-star"] = "rbxassetid://82782200506348",
-    motorbike = "rbxassetid://94580787368233",
-    mountain = "rbxassetid://73269957566415",
+    ["motorbike"] = "rbxassetid://94580787368233",
+    ["mountain"] = "rbxassetid://73269957566415",
     ["mountain-snow"] = "rbxassetid://105315495740588",
-    mouse = "rbxassetid://73096068864710",
+    ["mouse"] = "rbxassetid://73096068864710",
     ["mouse-left"] = "rbxassetid://99144293708743",
     ["mouse-off"] = "rbxassetid://75267871697595",
     ["mouse-pointer"] = "rbxassetid://72322454962935",
@@ -1054,7 +1055,7 @@ local Icons = {
     ["mouse-pointer-ban"] = "rbxassetid://106849413057133",
     ["mouse-pointer-click"] = "rbxassetid://107150227368485",
     ["mouse-right"] = "rbxassetid://88331710212594",
-    move = "rbxassetid://116138709011735",
+    ["move"] = "rbxassetid://116138709011735",
     ["move-3d"] = "rbxassetid://103365982054003",
     ["move-diagonal"] = "rbxassetid://101433481954184",
     ["move-diagonal-2"] = "rbxassetid://117298577948096",
@@ -1068,36 +1069,36 @@ local Icons = {
     ["move-up-left"] = "rbxassetid://139079815540148",
     ["move-up-right"] = "rbxassetid://105885140592646",
     ["move-vertical"] = "rbxassetid://86234730730899",
-    music = "rbxassetid://113343203848535",
+    ["music"] = "rbxassetid://113343203848535",
     ["music-2"] = "rbxassetid://134397426600888",
     ["music-3"] = "rbxassetid://94466120066498",
     ["music-4"] = "rbxassetid://132459323665838",
-    navigation = "rbxassetid://79308213542922",
+    ["navigation"] = "rbxassetid://79308213542922",
     ["navigation-2"] = "rbxassetid://81889066747907",
     ["navigation-2-off"] = "rbxassetid://116569611780763",
     ["navigation-off"] = "rbxassetid://87003270290777",
-    network = "rbxassetid://127410729922644",
-    newspaper = "rbxassetid://123479530460544",
-    nfc = "rbxassetid://76822396542242",
+    ["network"] = "rbxassetid://127410729922644",
+    ["newspaper"] = "rbxassetid://123479530460544",
+    ["nfc"] = "rbxassetid://76822396542242",
     ["non-binary"] = "rbxassetid://78442360386235",
-    notebook = "rbxassetid://136132108664987",
+    ["notebook"] = "rbxassetid://136132108664987",
     ["notebook-pen"] = "rbxassetid://140380614761023",
     ["notebook-tabs"] = "rbxassetid://127371085570083",
     ["notebook-text"] = "rbxassetid://93061585217270",
     ["notepad-text"] = "rbxassetid://93404682958966",
     ["notepad-text-dashed"] = "rbxassetid://135793446376219",
-    nut = "rbxassetid://127146410705656",
+    ["nut"] = "rbxassetid://127146410705656",
     ["nut-off"] = "rbxassetid://78795397311573",
-    octagon = "rbxassetid://120803515514852",
+    ["octagon"] = "rbxassetid://120803515514852",
     ["octagon-alert"] = "rbxassetid://140438367956051",
     ["octagon-minus"] = "rbxassetid://74720436795421",
     ["octagon-pause"] = "rbxassetid://103161463909039",
     ["octagon-x"] = "rbxassetid://90498161006311",
-    omega = "rbxassetid://70414080018786",
-    option = "rbxassetid://100776883894054",
-    orbit = "rbxassetid://108926136860562",
-    origami = "rbxassetid://136020626667101",
-    package = "rbxassetid://97261141732706",
+    ["omega"] = "rbxassetid://70414080018786",
+    ["option"] = "rbxassetid://100776883894054",
+    ["orbit"] = "rbxassetid://108926136860562",
+    ["origami"] = "rbxassetid://136020626667101",
+    ["package"] = "rbxassetid://97261141732706",
     ["package-2"] = "rbxassetid://70394974762575",
     ["package-check"] = "rbxassetid://102374216055130",
     ["package-minus"] = "rbxassetid://114492858789692",
@@ -1107,10 +1108,10 @@ local Icons = {
     ["package-x"] = "rbxassetid://70818501607442",
     ["paint-bucket"] = "rbxassetid://124275586663284",
     ["paint-roller"] = "rbxassetid://115248074358348",
-    paintbrush = "rbxassetid://125572663700289",
+    ["paintbrush"] = "rbxassetid://125572663700289",
     ["paintbrush-vertical"] = "rbxassetid://105151296591292",
-    palette = "rbxassetid://86350350950064",
-    panda = "rbxassetid://132509022802512",
+    ["palette"] = "rbxassetid://86350350950064",
+    ["panda"] = "rbxassetid://132509022802512",
     ["panel-bottom"] = "rbxassetid://132127145048511",
     ["panel-bottom-close"] = "rbxassetid://74287004071159",
     ["panel-bottom-dashed"] = "rbxassetid://131084651621603",
@@ -1132,89 +1133,89 @@ local Icons = {
     ["panels-left-bottom"] = "rbxassetid://72996856149149",
     ["panels-right-bottom"] = "rbxassetid://90659068960726",
     ["panels-top-left"] = "rbxassetid://79858853850600",
-    paperclip = "rbxassetid://92088291163453",
-    parentheses = "rbxassetid://78950955173096",
+    ["paperclip"] = "rbxassetid://92088291163453",
+    ["parentheses"] = "rbxassetid://78950955173096",
     ["parking-meter"] = "rbxassetid://84652733960568",
     ["party-popper"] = "rbxassetid://111626795712193",
-    pause = "rbxassetid://74873705394436",
+    ["pause"] = "rbxassetid://74873705394436",
     ["paw-print"] = "rbxassetid://112218825427601",
     ["pc-case"] = "rbxassetid://122978648019101",
-    pen = "rbxassetid://72037878096321",
+    ["pen"] = "rbxassetid://72037878096321",
     ["pen-line"] = "rbxassetid://109108135755303",
     ["pen-off"] = "rbxassetid://84807123119438",
     ["pen-tool"] = "rbxassetid://106145404953445",
-    pencil = "rbxassetid://137986121120732",
+    ["pencil"] = "rbxassetid://137986121120732",
     ["pencil-line"] = "rbxassetid://88392917053533",
     ["pencil-off"] = "rbxassetid://103330927652832",
     ["pencil-ruler"] = "rbxassetid://110120288284597",
-    pentagon = "rbxassetid://79184802179890",
-    percent = "rbxassetid://130155041032013",
+    ["pentagon"] = "rbxassetid://79184802179890",
+    ["percent"] = "rbxassetid://130155041032013",
     ["person-standing"] = "rbxassetid://125020872044147",
     ["philippine-peso"] = "rbxassetid://91173798254675",
-    phone = "rbxassetid://128804946640049",
+    ["phone"] = "rbxassetid://128804946640049",
     ["phone-call"] = "rbxassetid://70555587592860",
     ["phone-forwarded"] = "rbxassetid://113269614319737",
     ["phone-incoming"] = "rbxassetid://82863576359288",
     ["phone-missed"] = "rbxassetid://130156165198376",
     ["phone-off"] = "rbxassetid://133318623553383",
     ["phone-outgoing"] = "rbxassetid://104576478735825",
-    pi = "rbxassetid://74936036243146",
-    piano = "rbxassetid://85008880789520",
-    pickaxe = "rbxassetid://105888023317688",
+    ["pi"] = "rbxassetid://74936036243146",
+    ["piano"] = "rbxassetid://85008880789520",
+    ["pickaxe"] = "rbxassetid://105888023317688",
     ["picture-in-picture"] = "rbxassetid://80579597835123",
     ["picture-in-picture-2"] = "rbxassetid://112803319544468",
     ["piggy-bank"] = "rbxassetid://79498575790721",
-    pilcrow = "rbxassetid://139512780392871",
+    ["pilcrow"] = "rbxassetid://139512780392871",
     ["pilcrow-left"] = "rbxassetid://103803000849583",
     ["pilcrow-right"] = "rbxassetid://104881733911870",
-    pill = "rbxassetid://73280534813448",
+    ["pill"] = "rbxassetid://73280534813448",
     ["pill-bottle"] = "rbxassetid://118394692404597",
-    pin = "rbxassetid://120978111007514",
+    ["pin"] = "rbxassetid://120978111007514",
     ["pin-off"] = "rbxassetid://127696372451750",
-    pipette = "rbxassetid://133167932934404",
-    pizza = "rbxassetid://126964453193501",
-    plane = "rbxassetid://126985561580989",
+    ["pipette"] = "rbxassetid://133167932934404",
+    ["pizza"] = "rbxassetid://126964453193501",
+    ["plane"] = "rbxassetid://126985561580989",
     ["plane-landing"] = "rbxassetid://122555692211889",
     ["plane-takeoff"] = "rbxassetid://117179478829575",
-    play = "rbxassetid://135609604299893",
-    plug = "rbxassetid://99782373064495",
+    ["play"] = "rbxassetid://135609604299893",
+    ["plug"] = "rbxassetid://99782373064495",
     ["plug-2"] = "rbxassetid://97912386476366",
     ["plug-zap"] = "rbxassetid://74506269884055",
-    plus = "rbxassetid://111774323017047",
-    pocket = "rbxassetid://136686762542964",
+    ["plus"] = "rbxassetid://111774323017047",
+    ["pocket"] = "rbxassetid://136686762542964",
     ["pocket-knife"] = "rbxassetid://134075428063965",
-    podcast = "rbxassetid://109577075549215",
-    pointer = "rbxassetid://92615117311099",
+    ["podcast"] = "rbxassetid://109577075549215",
+    ["pointer"] = "rbxassetid://92615117311099",
     ["pointer-off"] = "rbxassetid://95488389312794",
-    popcorn = "rbxassetid://139446511232750",
-    popsicle = "rbxassetid://112696318077073",
+    ["popcorn"] = "rbxassetid://139446511232750",
+    ["popsicle"] = "rbxassetid://112696318077073",
     ["pound-sterling"] = "rbxassetid://127482649469130",
-    power = "rbxassetid://96479131758775",
+    ["power"] = "rbxassetid://96479131758775",
     ["power-off"] = "rbxassetid://118768311012214",
-    presentation = "rbxassetid://106134583757890",
-    printer = "rbxassetid://76080649734247",
+    ["presentation"] = "rbxassetid://106134583757890",
+    ["printer"] = "rbxassetid://76080649734247",
     ["printer-check"] = "rbxassetid://130273549443689",
     ["printer-x"] = "rbxassetid://103002721801548",
-    projector = "rbxassetid://103281856385283",
-    proportions = "rbxassetid://130046855997237",
-    puzzle = "rbxassetid://136837798892463",
-    pyramid = "rbxassetid://107811442374127",
+    ["projector"] = "rbxassetid://103281856385283",
+    ["proportions"] = "rbxassetid://130046855997237",
+    ["puzzle"] = "rbxassetid://136837798892463",
+    ["pyramid"] = "rbxassetid://107811442374127",
     ["qr-code"] = "rbxassetid://105329945723350",
-    quote = "rbxassetid://103271711590001",
-    rabbit = "rbxassetid://98580518804206",
-    radar = "rbxassetid://138528222906635",
-    radiation = "rbxassetid://104499586848433",
-    radical = "rbxassetid://132758286926047",
-    radio = "rbxassetid://85611589536956",
+    ["quote"] = "rbxassetid://103271711590001",
+    ["rabbit"] = "rbxassetid://98580518804206",
+    ["radar"] = "rbxassetid://138528222906635",
+    ["radiation"] = "rbxassetid://104499586848433",
+    ["radical"] = "rbxassetid://132758286926047",
+    ["radio"] = "rbxassetid://85611589536956",
     ["radio-off"] = "rbxassetid://80359258046586",
     ["radio-receiver"] = "rbxassetid://129598303378835",
     ["radio-tower"] = "rbxassetid://93958663130054",
-    radius = "rbxassetid://89814505307129",
+    ["radius"] = "rbxassetid://89814505307129",
     ["rail-symbol"] = "rbxassetid://134295386306962",
-    rainbow = "rbxassetid://132488862841895",
-    rat = "rbxassetid://127400975953159",
-    ratio = "rbxassetid://126369423897295",
-    receipt = "rbxassetid://77877895901792",
+    ["rainbow"] = "rbxassetid://132488862841895",
+    ["rat"] = "rbxassetid://127400975953159",
+    ["ratio"] = "rbxassetid://126369423897295",
+    ["receipt"] = "rbxassetid://77877895901792",
     ["receipt-cent"] = "rbxassetid://91557573925201",
     ["receipt-euro"] = "rbxassetid://94015722210295",
     ["receipt-indian-rupee"] = "rbxassetid://89718170439990",
@@ -1229,60 +1230,60 @@ local Icons = {
     ["rectangle-goggles"] = "rbxassetid://98605436666727",
     ["rectangle-horizontal"] = "rbxassetid://90224199814966",
     ["rectangle-vertical"] = "rbxassetid://117277050590967",
-    recycle = "rbxassetid://140417023381961",
-    redo = "rbxassetid://116150342119054",
+    ["recycle"] = "rbxassetid://140417023381961",
+    ["redo"] = "rbxassetid://116150342119054",
     ["redo-2"] = "rbxassetid://70451039017914",
     ["redo-dot"] = "rbxassetid://94252981719732",
     ["refresh-ccw"] = "rbxassetid://117913330389477",
     ["refresh-ccw-dot"] = "rbxassetid://106702246753270",
     ["refresh-cw"] = "rbxassetid://138133190015277",
     ["refresh-cw-off"] = "rbxassetid://140179498843054",
-    refrigerator = "rbxassetid://102614042652753",
-    regex = "rbxassetid://100727200791841",
+    ["refrigerator"] = "rbxassetid://102614042652753",
+    ["regex"] = "rbxassetid://100727200791841",
     ["remove-formatting"] = "rbxassetid://112833162022628",
     ["repeat"] = "rbxassetid://121886242955173",
     ["repeat-1"] = "rbxassetid://130144534857095",
     ["repeat-2"] = "rbxassetid://85927537182704",
-    replace = "rbxassetid://128404082279430",
+    ["replace"] = "rbxassetid://128404082279430",
     ["replace-all"] = "rbxassetid://127862728198635",
-    reply = "rbxassetid://109788633497028",
+    ["reply"] = "rbxassetid://109788633497028",
     ["reply-all"] = "rbxassetid://71723137343562",
-    rewind = "rbxassetid://95205297521988",
-    ribbon = "rbxassetid://94265331526851",
-    road = "rbxassetid://120251329173530",
-    rocket = "rbxassetid://87412317685854",
+    ["rewind"] = "rbxassetid://95205297521988",
+    ["ribbon"] = "rbxassetid://94265331526851",
+    ["road"] = "rbxassetid://120251329173530",
+    ["rocket"] = "rbxassetid://87412317685854",
     ["rocking-chair"] = "rbxassetid://110420269495360",
     ["roller-coaster"] = "rbxassetid://112426178972099",
-    rose = "rbxassetid://126336840238769",
+    ["rose"] = "rbxassetid://126336840238769",
     ["rotate-3d"] = "rbxassetid://76300551576392",
     ["rotate-ccw"] = "rbxassetid://110116685948665",
     ["rotate-ccw-key"] = "rbxassetid://74976035240976",
     ["rotate-ccw-square"] = "rbxassetid://90515853170424",
     ["rotate-cw"] = "rbxassetid://84183336178654",
     ["rotate-cw-square"] = "rbxassetid://77095448159303",
-    route = "rbxassetid://89968303228953",
+    ["route"] = "rbxassetid://89968303228953",
     ["route-off"] = "rbxassetid://106350402024079",
-    router = "rbxassetid://102130331994471",
+    ["router"] = "rbxassetid://102130331994471",
     ["rows-2"] = "rbxassetid://112556185960101",
     ["rows-3"] = "rbxassetid://117215586961375",
     ["rows-4"] = "rbxassetid://125646021959055",
-    rss = "rbxassetid://131789058984793",
-    ruler = "rbxassetid://81432445547423",
+    ["rss"] = "rbxassetid://131789058984793",
+    ["ruler"] = "rbxassetid://81432445547423",
     ["ruler-dimension-line"] = "rbxassetid://70673861371412",
     ["russian-ruble"] = "rbxassetid://126357936542156",
-    sailboat = "rbxassetid://87110567187540",
-    salad = "rbxassetid://128864507821603",
-    sandwich = "rbxassetid://104573187458917",
-    satellite = "rbxassetid://134967053164645",
+    ["sailboat"] = "rbxassetid://87110567187540",
+    ["salad"] = "rbxassetid://128864507821603",
+    ["sandwich"] = "rbxassetid://104573187458917",
+    ["satellite"] = "rbxassetid://134967053164645",
     ["satellite-dish"] = "rbxassetid://136742443888305",
     ["saudi-riyal"] = "rbxassetid://102282769104635",
-    save = "rbxassetid://126116963775616",
+    ["save"] = "rbxassetid://126116963775616",
     ["save-all"] = "rbxassetid://116946975799440",
     ["save-off"] = "rbxassetid://87085435778560",
-    scale = "rbxassetid://108203682317477",
+    ["scale"] = "rbxassetid://108203682317477",
     ["scale-3d"] = "rbxassetid://72414199620352",
-    scaling = "rbxassetid://122360365318466",
-    scan = "rbxassetid://123104789658180",
+    ["scaling"] = "rbxassetid://122360365318466",
+    ["scan"] = "rbxassetid://123104789658180",
     ["scan-barcode"] = "rbxassetid://96889457154761",
     ["scan-eye"] = "rbxassetid://99244790601968",
     ["scan-face"] = "rbxassetid://109959345069668",
@@ -1291,39 +1292,39 @@ local Icons = {
     ["scan-qr-code"] = "rbxassetid://105409149549927",
     ["scan-search"] = "rbxassetid://80009010551347",
     ["scan-text"] = "rbxassetid://73702396787766",
-    school = "rbxassetid://76351530290068",
-    scissors = "rbxassetid://118665510911274",
+    ["school"] = "rbxassetid://76351530290068",
+    ["scissors"] = "rbxassetid://118665510911274",
     ["scissors-line-dashed"] = "rbxassetid://122237447974173",
-    scooter = "rbxassetid://100035452787934",
+    ["scooter"] = "rbxassetid://100035452787934",
     ["screen-share"] = "rbxassetid://85137895705653",
     ["screen-share-off"] = "rbxassetid://107677572669805",
-    scroll = "rbxassetid://74072101474951",
+    ["scroll"] = "rbxassetid://74072101474951",
     ["scroll-text"] = "rbxassetid://97321022666868",
-    search = "rbxassetid://121018724060431",
+    ["search"] = "rbxassetid://121018724060431",
     ["search-alert"] = "rbxassetid://127597984617505",
     ["search-check"] = "rbxassetid://75442076191356",
     ["search-code"] = "rbxassetid://117114794592802",
     ["search-slash"] = "rbxassetid://96483932261041",
     ["search-x"] = "rbxassetid://137319957522951",
-    section = "rbxassetid://91732188298948",
-    send = "rbxassetid://127751956873796",
+    ["section"] = "rbxassetid://91732188298948",
+    ["send"] = "rbxassetid://127751956873796",
     ["send-horizontal"] = "rbxassetid://111734392411664",
     ["send-to-back"] = "rbxassetid://75340312862253",
     ["separator-horizontal"] = "rbxassetid://84864453699927",
     ["separator-vertical"] = "rbxassetid://84031801478581",
-    server = "rbxassetid://92188766517878",
+    ["server"] = "rbxassetid://92188766517878",
     ["server-cog"] = "rbxassetid://138470287250966",
     ["server-crash"] = "rbxassetid://132810618000212",
     ["server-off"] = "rbxassetid://114048751507723",
-    settings = "rbxassetid://80758916183665",
+    ["settings"] = "rbxassetid://80758916183665",
     ["settings-2"] = "rbxassetid://135684703553372",
-    shapes = "rbxassetid://129989433311409",
-    share = "rbxassetid://87340985053299",
+    ["shapes"] = "rbxassetid://129989433311409",
+    ["share"] = "rbxassetid://87340985053299",
     ["share-2"] = "rbxassetid://71210767962065",
-    sheet = "rbxassetid://134902122480171",
-    shell = "rbxassetid://140212943563599",
+    ["sheet"] = "rbxassetid://134902122480171",
+    ["shell"] = "rbxassetid://140212943563599",
     ["shelving-unit"] = "rbxassetid://80116568514793",
-    shield = "rbxassetid://110987169760162",
+    ["shield"] = "rbxassetid://110987169760162",
     ["shield-alert"] = "rbxassetid://114995877719925",
     ["shield-ban"] = "rbxassetid://108765041044649",
     ["shield-check"] = "rbxassetid://87354736164608",
@@ -1337,65 +1338,65 @@ local Icons = {
     ["shield-question-mark"] = "rbxassetid://135722075265150",
     ["shield-user"] = "rbxassetid://124832775645347",
     ["shield-x"] = "rbxassetid://73370117343811",
-    ship = "rbxassetid://83995100553930",
+    ["ship"] = "rbxassetid://83995100553930",
     ["ship-wheel"] = "rbxassetid://130797795829448",
-    shirt = "rbxassetid://106579555405966",
+    ["shirt"] = "rbxassetid://106579555405966",
     ["shopping-bag"] = "rbxassetid://71885477293226",
     ["shopping-basket"] = "rbxassetid://138646411956433",
     ["shopping-cart"] = "rbxassetid://128420521375441",
-    shovel = "rbxassetid://102465000512056",
+    ["shovel"] = "rbxassetid://102465000512056",
     ["shower-head"] = "rbxassetid://75884944024117",
-    shredder = "rbxassetid://122125164414463",
-    shrimp = "rbxassetid://102625900815307",
-    shrink = "rbxassetid://90953687918880",
-    shrub = "rbxassetid://127326280714343",
-    shuffle = "rbxassetid://132382786975101",
-    sigma = "rbxassetid://126884244870899",
-    signal = "rbxassetid://78424889355261",
+    ["shredder"] = "rbxassetid://122125164414463",
+    ["shrimp"] = "rbxassetid://102625900815307",
+    ["shrink"] = "rbxassetid://90953687918880",
+    ["shrub"] = "rbxassetid://127326280714343",
+    ["shuffle"] = "rbxassetid://132382786975101",
+    ["sigma"] = "rbxassetid://126884244870899",
+    ["signal"] = "rbxassetid://78424889355261",
     ["signal-high"] = "rbxassetid://130436670012270",
     ["signal-low"] = "rbxassetid://73674683500458",
     ["signal-medium"] = "rbxassetid://125003021367019",
     ["signal-zero"] = "rbxassetid://130045332414754",
-    signature = "rbxassetid://114402748013000",
-    signpost = "rbxassetid://106584743791433",
+    ["signature"] = "rbxassetid://114402748013000",
+    ["signpost"] = "rbxassetid://106584743791433",
     ["signpost-big"] = "rbxassetid://115780185675001",
-    siren = "rbxassetid://134210267818039",
+    ["siren"] = "rbxassetid://134210267818039",
     ["skip-back"] = "rbxassetid://70466132711334",
     ["skip-forward"] = "rbxassetid://124844823753990",
-    skull = "rbxassetid://137726256442333",
-    slack = "rbxassetid://96089719516736",
-    slash = "rbxassetid://117792185664263",
-    slice = "rbxassetid://95810504278179",
+    ["skull"] = "rbxassetid://137726256442333",
+    ["slack"] = "rbxassetid://96089719516736",
+    ["slash"] = "rbxassetid://117792185664263",
+    ["slice"] = "rbxassetid://95810504278179",
     ["sliders-horizontal"] = "rbxassetid://85538382643347",
     ["sliders-vertical"] = "rbxassetid://101190569086853",
-    smartphone = "rbxassetid://96623008834511",
+    ["smartphone"] = "rbxassetid://96623008834511",
     ["smartphone-charging"] = "rbxassetid://102837532613995",
     ["smartphone-nfc"] = "rbxassetid://82326425754446",
-    smile = "rbxassetid://105880397565283",
+    ["smile"] = "rbxassetid://105880397565283",
     ["smile-plus"] = "rbxassetid://131981881472144",
-    snail = "rbxassetid://70904536548363",
-    snowflake = "rbxassetid://101235206534566",
+    ["snail"] = "rbxassetid://70904536548363",
+    ["snowflake"] = "rbxassetid://101235206534566",
     ["soap-dispenser-droplet"] = "rbxassetid://77258480479465",
-    sofa = "rbxassetid://114427687218324",
+    ["sofa"] = "rbxassetid://114427687218324",
     ["solar-panel"] = "rbxassetid://132448188047921",
-    soup = "rbxassetid://115092551871618",
-    space = "rbxassetid://87072088914178",
-    spade = "rbxassetid://131444449466462",
-    sparkle = "rbxassetid://111044800239623",
-    sparkles = "rbxassetid://138635884129147",
-    speaker = "rbxassetid://96227183003618",
-    speech = "rbxassetid://87013139446349",
+    ["soup"] = "rbxassetid://115092551871618",
+    ["space"] = "rbxassetid://87072088914178",
+    ["spade"] = "rbxassetid://131444449466462",
+    ["sparkle"] = "rbxassetid://111044800239623",
+    ["sparkles"] = "rbxassetid://138635884129147",
+    ["speaker"] = "rbxassetid://96227183003618",
+    ["speech"] = "rbxassetid://87013139446349",
     ["spell-check"] = "rbxassetid://91913483031334",
     ["spell-check-2"] = "rbxassetid://81556731785534",
-    spline = "rbxassetid://129406685807412",
+    ["spline"] = "rbxassetid://129406685807412",
     ["spline-pointer"] = "rbxassetid://84842840956804",
-    split = "rbxassetid://105112438805988",
-    spool = "rbxassetid://124541981347743",
+    ["split"] = "rbxassetid://105112438805988",
+    ["spool"] = "rbxassetid://124541981347743",
     ["sport-shoe"] = "rbxassetid://120495992692630",
-    spotlight = "rbxassetid://77571742539344",
+    ["spotlight"] = "rbxassetid://77571742539344",
     ["spray-can"] = "rbxassetid://128372039366326",
-    sprout = "rbxassetid://100091687832508",
-    square = "rbxassetid://86304921356806",
+    ["sprout"] = "rbxassetid://100091687832508",
+    ["square"] = "rbxassetid://86304921356806",
     ["square-activity"] = "rbxassetid://89496630185293",
     ["square-arrow-down"] = "rbxassetid://135962519626588",
     ["square-arrow-down-left"] = "rbxassetid://108194680296901",
@@ -1468,39 +1469,39 @@ local Icons = {
     ["squares-intersect"] = "rbxassetid://120869602570119",
     ["squares-subtract"] = "rbxassetid://131484650948795",
     ["squares-unite"] = "rbxassetid://96673080107843",
-    squircle = "rbxassetid://82426632573807",
+    ["squircle"] = "rbxassetid://82426632573807",
     ["squircle-dashed"] = "rbxassetid://129936702532522",
-    squirrel = "rbxassetid://112864252085343",
-    stamp = "rbxassetid://92370779813368",
-    star = "rbxassetid://136141469398409",
+    ["squirrel"] = "rbxassetid://112864252085343",
+    ["stamp"] = "rbxassetid://92370779813368",
+    ["star"] = "rbxassetid://136141469398409",
     ["star-half"] = "rbxassetid://117449275562979",
     ["star-off"] = "rbxassetid://75742832732503",
     ["step-back"] = "rbxassetid://108672750005121",
     ["step-forward"] = "rbxassetid://126131872136145",
-    stethoscope = "rbxassetid://122331031702148",
-    sticker = "rbxassetid://79938203791608",
+    ["stethoscope"] = "rbxassetid://122331031702148",
+    ["sticker"] = "rbxassetid://79938203791608",
     ["sticky-note"] = "rbxassetid://111894074643919",
-    stone = "rbxassetid://135161057497830",
-    store = "rbxassetid://90338129673705",
+    ["stone"] = "rbxassetid://135161057497830",
+    ["store"] = "rbxassetid://90338129673705",
     ["stretch-horizontal"] = "rbxassetid://87665042192343",
     ["stretch-vertical"] = "rbxassetid://95265463417122",
-    strikethrough = "rbxassetid://103417324549613",
-    subscript = "rbxassetid://74553514785183",
-    sun = "rbxassetid://110150589884127",
+    ["strikethrough"] = "rbxassetid://103417324549613",
+    ["subscript"] = "rbxassetid://74553514785183",
+    ["sun"] = "rbxassetid://110150589884127",
     ["sun-dim"] = "rbxassetid://129141645592715",
     ["sun-medium"] = "rbxassetid://130278807964710",
     ["sun-moon"] = "rbxassetid://75752898854559",
     ["sun-snow"] = "rbxassetid://112791898014579",
-    sunrise = "rbxassetid://134705665494098",
-    sunset = "rbxassetid://75904872203588",
-    superscript = "rbxassetid://96887696590118",
+    ["sunrise"] = "rbxassetid://134705665494098",
+    ["sunset"] = "rbxassetid://75904872203588",
+    ["superscript"] = "rbxassetid://96887696590118",
     ["swatch-book"] = "rbxassetid://126786244872453",
     ["swiss-franc"] = "rbxassetid://113497920041625",
     ["switch-camera"] = "rbxassetid://76841154349737",
-    sword = "rbxassetid://124448418211665",
-    swords = "rbxassetid://81872698913435",
-    syringe = "rbxassetid://123891270479254",
-    table = "rbxassetid://109109148250737",
+    ["sword"] = "rbxassetid://124448418211665",
+    ["swords"] = "rbxassetid://81872698913435",
+    ["syringe"] = "rbxassetid://123891270479254",
+    ["table"] = "rbxassetid://109109148250737",
     ["table-2"] = "rbxassetid://95751552281545",
     ["table-cells-merge"] = "rbxassetid://95363715175258",
     ["table-cells-split"] = "rbxassetid://114799086088649",
@@ -1508,22 +1509,22 @@ local Icons = {
     ["table-of-contents"] = "rbxassetid://135044763275414",
     ["table-properties"] = "rbxassetid://125062886015372",
     ["table-rows-split"] = "rbxassetid://96443733673997",
-    tablet = "rbxassetid://128403991264386",
+    ["tablet"] = "rbxassetid://128403991264386",
     ["tablet-smartphone"] = "rbxassetid://133680859813404",
-    tablets = "rbxassetid://80835787970735",
-    tag = "rbxassetid://129104970103940",
-    tags = "rbxassetid://107179263080798",
+    ["tablets"] = "rbxassetid://80835787970735",
+    ["tag"] = "rbxassetid://129104970103940",
+    ["tags"] = "rbxassetid://107179263080798",
     ["tally-1"] = "rbxassetid://115301298241643",
     ["tally-2"] = "rbxassetid://110363186864027",
     ["tally-3"] = "rbxassetid://97655344572540",
     ["tally-4"] = "rbxassetid://102633494371890",
     ["tally-5"] = "rbxassetid://88031817475886",
-    tangent = "rbxassetid://123263132981724",
-    target = "rbxassetid://87563802520297",
-    telescope = "rbxassetid://91755049143647",
-    tent = "rbxassetid://109779587826330",
+    ["tangent"] = "rbxassetid://123263132981724",
+    ["target"] = "rbxassetid://87563802520297",
+    ["telescope"] = "rbxassetid://91755049143647",
+    ["tent"] = "rbxassetid://109779587826330",
     ["tent-tree"] = "rbxassetid://76698322463977",
-    terminal = "rbxassetid://106783148545356",
+    ["terminal"] = "rbxassetid://106783148545356",
     ["test-tube"] = "rbxassetid://98801015650164",
     ["test-tube-diagonal"] = "rbxassetid://75662704378840",
     ["test-tubes"] = "rbxassetid://92555361447433",
@@ -1538,86 +1539,86 @@ local Icons = {
     ["text-search"] = "rbxassetid://92345384671606",
     ["text-select"] = "rbxassetid://117087320884956",
     ["text-wrap"] = "rbxassetid://114804318314018",
-    theater = "rbxassetid://108558145549163",
-    thermometer = "rbxassetid://106546011492311",
+    ["theater"] = "rbxassetid://108558145549163",
+    ["thermometer"] = "rbxassetid://106546011492311",
     ["thermometer-snowflake"] = "rbxassetid://121876188028425",
     ["thermometer-sun"] = "rbxassetid://106693240074310",
     ["thumbs-down"] = "rbxassetid://87794009914015",
     ["thumbs-up"] = "rbxassetid://111137070767020",
-    ticket = "rbxassetid://126527071492145",
+    ["ticket"] = "rbxassetid://126527071492145",
     ["ticket-check"] = "rbxassetid://105428777212507",
     ["ticket-minus"] = "rbxassetid://78966299769328",
     ["ticket-percent"] = "rbxassetid://80834774406405",
     ["ticket-plus"] = "rbxassetid://110086734392189",
     ["ticket-slash"] = "rbxassetid://89045681172265",
     ["ticket-x"] = "rbxassetid://88674114109926",
-    tickets = "rbxassetid://135268612687833",
+    ["tickets"] = "rbxassetid://135268612687833",
     ["tickets-plane"] = "rbxassetid://100367018248695",
-    timer = "rbxassetid://85473888890506",
+    ["timer"] = "rbxassetid://85473888890506",
     ["timer-off"] = "rbxassetid://110916370767271",
     ["timer-reset"] = "rbxassetid://110052125369932",
     ["toggle-left"] = "rbxassetid://85887872573050",
     ["toggle-right"] = "rbxassetid://90411952142550",
-    toilet = "rbxassetid://80930782432931",
+    ["toilet"] = "rbxassetid://80930782432931",
     ["tool-case"] = "rbxassetid://87533537832522",
-    toolbox = "rbxassetid://85341033903792",
-    tornado = "rbxassetid://88358291515768",
-    torus = "rbxassetid://70855707283051",
-    touchpad = "rbxassetid://74882354908014",
+    ["toolbox"] = "rbxassetid://85341033903792",
+    ["tornado"] = "rbxassetid://88358291515768",
+    ["torus"] = "rbxassetid://70855707283051",
+    ["touchpad"] = "rbxassetid://74882354908014",
     ["touchpad-off"] = "rbxassetid://78784008075456",
     ["towel-rack"] = "rbxassetid://125223915620991",
     ["tower-control"] = "rbxassetid://95937619060532",
     ["toy-brick"] = "rbxassetid://86293483924633",
-    tractor = "rbxassetid://103376704722051",
+    ["tractor"] = "rbxassetid://103376704722051",
     ["traffic-cone"] = "rbxassetid://74110220470369",
     ["train-front"] = "rbxassetid://125237934215370",
     ["train-front-tunnel"] = "rbxassetid://105194827005114",
     ["train-track"] = "rbxassetid://77451032453723",
     ["tram-front"] = "rbxassetid://93315182364998",
-    transgender = "rbxassetid://135530817673639",
-    trash = "rbxassetid://106723740584310",
+    ["transgender"] = "rbxassetid://135530817673639",
+    ["trash"] = "rbxassetid://106723740584310",
     ["trash-2"] = "rbxassetid://109843431391323",
     ["tree-deciduous"] = "rbxassetid://123124389219004",
     ["tree-palm"] = "rbxassetid://103846705893963",
     ["tree-pine"] = "rbxassetid://124662547202594",
-    trees = "rbxassetid://121203841375919",
-    trello = "rbxassetid://130987241149527",
+    ["trees"] = "rbxassetid://121203841375919",
+    ["trello"] = "rbxassetid://130987241149527",
     ["trending-down"] = "rbxassetid://139309232226438",
     ["trending-up"] = "rbxassetid://81819858538839",
     ["trending-up-down"] = "rbxassetid://85083293981691",
-    triangle = "rbxassetid://126330486745540",
+    ["triangle"] = "rbxassetid://126330486745540",
     ["triangle-alert"] = "rbxassetid://125920361880643",
     ["triangle-dashed"] = "rbxassetid://124324079103935",
     ["triangle-right"] = "rbxassetid://116930791412791",
-    trophy = "rbxassetid://131545003268773",
-    truck = "rbxassetid://86662707764771",
+    ["trophy"] = "rbxassetid://131545003268773",
+    ["truck"] = "rbxassetid://86662707764771",
     ["truck-electric"] = "rbxassetid://111873446387359",
     ["turkish-lira"] = "rbxassetid://114589876174070",
-    turntable = "rbxassetid://129870346487856",
-    turtle = "rbxassetid://118295081560334",
-    tv = "rbxassetid://135687724791776",
+    ["turntable"] = "rbxassetid://129870346487856",
+    ["turtle"] = "rbxassetid://118295081560334",
+    ["tv"] = "rbxassetid://135687724791776",
     ["tv-minimal"] = "rbxassetid://100382201729427",
     ["tv-minimal-play"] = "rbxassetid://99201833426972",
-    twitch = "rbxassetid://71383308134888",
-    twitter = "rbxassetid://88791703276842",
-    type = "rbxassetid://133543553793564",
+    ["twitch"] = "rbxassetid://71383308134888",
+    ["twitter"] = "rbxassetid://88791703276842",
+    ["type"] = "rbxassetid://133543553793564",
     ["type-outline"] = "rbxassetid://80108627791690",
-    umbrella = "rbxassetid://127502210274589",
+    ["umbrella"] = "rbxassetid://127502210274589",
     ["umbrella-off"] = "rbxassetid://72395143739955",
-    underline = "rbxassetid://123709229216544",
-    undo = "rbxassetid://111258459077271",
+    ["underline"] = "rbxassetid://123709229216544",
+    ["undo"] = "rbxassetid://111258459077271",
     ["undo-2"] = "rbxassetid://113885292059932",
     ["undo-dot"] = "rbxassetid://132055277744844",
     ["unfold-horizontal"] = "rbxassetid://117128358526398",
     ["unfold-vertical"] = "rbxassetid://116593025265499",
-    ungroup = "rbxassetid://106674800451003",
-    university = "rbxassetid://84652528263642",
-    unlink = "rbxassetid://139835795227752",
+    ["ungroup"] = "rbxassetid://106674800451003",
+    ["university"] = "rbxassetid://84652528263642",
+    ["unlink"] = "rbxassetid://139835795227752",
     ["unlink-2"] = "rbxassetid://128131898892572",
-    unplug = "rbxassetid://90171381619874",
-    upload = "rbxassetid://138212042425501",
-    usb = "rbxassetid://117230058949613",
-    user = "rbxassetid://81589895647169",
+    ["unplug"] = "rbxassetid://90171381619874",
+    ["upload"] = "rbxassetid://138212042425501",
+    ["usb"] = "rbxassetid://117230058949613",
+    ["user"] = "rbxassetid://81589895647169",
     ["user-check"] = "rbxassetid://81775205032725",
     ["user-cog"] = "rbxassetid://92795491530865",
     ["user-key"] = "rbxassetid://105403041782190",
@@ -1637,56 +1638,56 @@ local Icons = {
     ["user-search"] = "rbxassetid://101335649828115",
     ["user-star"] = "rbxassetid://98777846316000",
     ["user-x"] = "rbxassetid://139748155894754",
-    users = "rbxassetid://115398113982385",
+    ["users"] = "rbxassetid://115398113982385",
     ["users-round"] = "rbxassetid://103005444008339",
-    utensils = "rbxassetid://139952569804235",
+    ["utensils"] = "rbxassetid://139952569804235",
     ["utensils-crossed"] = "rbxassetid://109520762270383",
     ["utility-pole"] = "rbxassetid://101965541238242",
-    van = "rbxassetid://122066377022942",
-    variable = "rbxassetid://104743088438151",
-    vault = "rbxassetid://108049164599845",
+    ["van"] = "rbxassetid://122066377022942",
+    ["variable"] = "rbxassetid://104743088438151",
+    ["vault"] = "rbxassetid://108049164599845",
     ["vector-square"] = "rbxassetid://86713728565344",
-    vegan = "rbxassetid://119489190688082",
+    ["vegan"] = "rbxassetid://119489190688082",
     ["venetian-mask"] = "rbxassetid://102636443033920",
-    venus = "rbxassetid://82891342220859",
+    ["venus"] = "rbxassetid://82891342220859",
     ["venus-and-mars"] = "rbxassetid://120227752103771",
-    vibrate = "rbxassetid://108330910738733",
+    ["vibrate"] = "rbxassetid://108330910738733",
     ["vibrate-off"] = "rbxassetid://113446447326246",
-    video = "rbxassetid://107587444636945",
+    ["video"] = "rbxassetid://107587444636945",
     ["video-off"] = "rbxassetid://132239189859305",
-    videotape = "rbxassetid://114816894323398",
-    view = "rbxassetid://118717253976805",
-    voicemail = "rbxassetid://134313454010227",
-    volleyball = "rbxassetid://83889351124153",
-    volume = "rbxassetid://103236289817396",
+    ["videotape"] = "rbxassetid://114816894323398",
+    ["view"] = "rbxassetid://118717253976805",
+    ["voicemail"] = "rbxassetid://134313454010227",
+    ["volleyball"] = "rbxassetid://83889351124153",
+    ["volume"] = "rbxassetid://103236289817396",
     ["volume-1"] = "rbxassetid://98514588731639",
     ["volume-2"] = "rbxassetid://89344380902620",
     ["volume-off"] = "rbxassetid://103047478058767",
     ["volume-x"] = "rbxassetid://139252359189540",
-    vote = "rbxassetid://89409762851246",
-    wallet = "rbxassetid://132331555762628",
+    ["vote"] = "rbxassetid://89409762851246",
+    ["wallet"] = "rbxassetid://132331555762628",
     ["wallet-cards"] = "rbxassetid://129728715308337",
     ["wallet-minimal"] = "rbxassetid://137800448816116",
-    wallpaper = "rbxassetid://74682121235494",
-    wand = "rbxassetid://114580617777835",
+    ["wallpaper"] = "rbxassetid://74682121235494",
+    ["wand"] = "rbxassetid://114580617777835",
     ["wand-sparkles"] = "rbxassetid://82546429942392",
-    warehouse = "rbxassetid://78388887451080",
+    ["warehouse"] = "rbxassetid://78388887451080",
     ["washing-machine"] = "rbxassetid://104194127573858",
-    watch = "rbxassetid://130544621618405",
-    waves = "rbxassetid://96340135183647",
+    ["watch"] = "rbxassetid://130544621618405",
+    ["waves"] = "rbxassetid://96340135183647",
     ["waves-arrow-down"] = "rbxassetid://129215220911792",
     ["waves-arrow-up"] = "rbxassetid://102314705716217",
     ["waves-ladder"] = "rbxassetid://101808619355514",
-    waypoints = "rbxassetid://102450133666017",
-    webcam = "rbxassetid://104148487911129",
-    webhook = "rbxassetid://112812457747322",
+    ["waypoints"] = "rbxassetid://102450133666017",
+    ["webcam"] = "rbxassetid://104148487911129",
+    ["webhook"] = "rbxassetid://112812457747322",
     ["webhook-off"] = "rbxassetid://96370548093471",
-    weight = "rbxassetid://103860559844854",
+    ["weight"] = "rbxassetid://103860559844854",
     ["weight-tilde"] = "rbxassetid://112081212176951",
-    wheat = "rbxassetid://85261952080359",
+    ["wheat"] = "rbxassetid://85261952080359",
     ["wheat-off"] = "rbxassetid://133294844612307",
     ["whole-word"] = "rbxassetid://90111083954485",
-    wifi = "rbxassetid://104669375183960",
+    ["wifi"] = "rbxassetid://104669375183960",
     ["wifi-cog"] = "rbxassetid://110500263326209",
     ["wifi-high"] = "rbxassetid://81954601342139",
     ["wifi-low"] = "rbxassetid://138217335635913",
@@ -1694,17 +1695,17 @@ local Icons = {
     ["wifi-pen"] = "rbxassetid://91290205064712",
     ["wifi-sync"] = "rbxassetid://84043971055177",
     ["wifi-zero"] = "rbxassetid://124286465246123",
-    wind = "rbxassetid://114551690399915",
+    ["wind"] = "rbxassetid://114551690399915",
     ["wind-arrow-down"] = "rbxassetid://127753987414870",
-    wine = "rbxassetid://115743721332829",
+    ["wine"] = "rbxassetid://115743721332829",
     ["wine-off"] = "rbxassetid://108294164302317",
-    workflow = "rbxassetid://99186544029189",
-    worm = "rbxassetid://115752311548091",
-    wrench = "rbxassetid://112148279212860",
-    x = "rbxassetid://110786993356448",
+    ["workflow"] = "rbxassetid://99186544029189",
+    ["worm"] = "rbxassetid://115752311548091",
+    ["wrench"] = "rbxassetid://112148279212860",
+    ["x"] = "rbxassetid://110786993356448",
     ["x-line-top"] = "rbxassetid://140592656289509",
-    youtube = "rbxassetid://123663668456341",
-    zap = "rbxassetid://130551565616516",
+    ["youtube"] = "rbxassetid://123663668456341",
+    ["zap"] = "rbxassetid://130551565616516",
     ["zap-off"] = "rbxassetid://81385483183652",
     ["zodiac-aquarius"] = "rbxassetid://74560047770362",
     ["zodiac-aries"] = "rbxassetid://73255859670234",
@@ -1722,41 +1723,61 @@ local Icons = {
     ["zoom-in"] = "rbxassetid://127956924984803",
     ["zoom-out"] = "rbxassetid://108334162607319",
 }
+GGH.Icons = GGH_ICONS
 
-
-}
-
-local function GetIcon(name)
-    if not name then return nil end
-    local key = string.lower(tostring(name)):gsub("_","-")
-    return Icons[key] or Icons[name] or nil
+-- يقبل: اسم ايقونة ("lock") / رقم ايدي (123) / "rbxassetid://123" / رابط
+local function ResolveIcon(v)
+    if v == nil or v == "" or v == false then return nil end
+    if typeof(v) == "number" then return "rbxassetid://" .. tostring(math.floor(v)) end
+    local s = tostring(v)
+    if GGH_ICONS[s] then return GGH_ICONS[s] end
+    local norm = s:lower()
+    norm = norm:gsub("^lucide[:/]", "")
+    norm = norm:gsub("[_%s]+", "-")
+    if GGH_ICONS[norm] then return GGH_ICONS[norm] end
+    if s:match("^rbxassetid://%d+$") or s:match("^rbxasset://") or s:match("^https?://") then return s end
+    local id = s:match("^(%d+)$") or s:match("id=(%d+)") or s:match("rbxassetid://(%d+)")
+    if id then return "rbxassetid://" .. id end
+    return nil
 end
-local function CreateIconImage(parent, iconName, size, color)
-    local id = GetIcon(iconName)
-    if not id then return nil end
-    local img = Instance.new("ImageLabel", parent)
-    img.Name = "Icon_"..tostring(iconName)
+GGH.ResolveIcon = ResolveIcon
+
+function GGH:GetIcon(name) return ResolveIcon(name) end
+function GGH:HasIcon(name) return GGH_ICONS[tostring(name)] ~= nil end
+function GGH:ListIcons()
+    local t = {}
+    for k in pairs(GGH_ICONS) do table.insert(t, k) end
+    table.sort(t)
+    return t
+end
+function GGH:SearchIcons(query)
+    query = tostring(query or ""):lower()
+    local t = {}
+    for k in pairs(GGH_ICONS) do
+        if query == "" or string.find(k, query, 1, true) then table.insert(t, k) end
+    end
+    table.sort(t)
+    return t
+end
+
+local function MakeIcon(parent, icon, size, color)
+    local img = Instance.new("ImageLabel")
+    img.Name = "Icon"
     img.BackgroundTransparency = 1
-    img.Image = id
-    img.Size = UDim2.fromOffset(size or 18, size or 18)
-    img.ImageColor3 = color or Color3.fromRGB(255,255,255)
+    img.BorderSizePixel = 0
+    img.Size = UDim2.fromOffset(size or 16, size or 16)
+    img.Image = ResolveIcon(icon) or ""
+    img.ImageColor3 = color or Color3.new(1, 1, 1)
     img.ScaleType = Enum.ScaleType.Fit
+    img.Parent = parent
     return img
 end
-local function SetButtonIcon(btn, iconName)
-    btn.Text = ""
-    for _, c in ipairs(btn:GetChildren()) do
-        if c.Name:find("Icon_") then c:Destroy() end
-    end
-    local icon = Instance.new("ImageLabel", btn)
-    icon.Name = "Icon_"..iconName
-    icon.BackgroundTransparency = 1
-    icon.Size = UDim2.new(0,18,0,18)
-    icon.Position = UDim2.new(0.5,-9,0.5,-9)
-    icon.Image = GetIcon(iconName) or GetIcon("settings")
-    icon.ImageColor3 = Color3.fromRGB(255,255,255)
-    icon.ZIndex = btn.ZIndex + 1
-    return icon
+
+local function BindIconToText(btn, img)
+    img.ImageColor3 = btn.TextColor3
+    btn:GetPropertyChangedSignal("TextColor3"):Connect(function()
+        img.ImageColor3 = btn.TextColor3
+    end)
 end
 
 local function GetGuiParent()
@@ -2786,8 +2807,6 @@ function GGH:CreateWindow(Config)
         if not success then return nil end
     end
     local Title = Config.Title or "GGH Library"
-    local WindowIconName = Config.Icon or Config.WindowIcon or Config.Logo or nil
-
     local SubTitle = Config.SubTitle or ("v1.8.5 FIXED ["..autoName.."]")
     local DefaultTheme = Config.Theme or "Monochrome"
     if not Themes[DefaultTheme] then DefaultTheme = "Monochrome" end
@@ -3011,21 +3030,6 @@ function GGH:CreateWindow(Config)
     TitleLabel.TextColor3 = CurrentTheme.Text
     TitleLabel.ZIndex = 4
     TitleLabel.AutoLocalize = true AddTextStroke(TitleLabel)
-    if WindowIconName then
-        local winIconId = GetIcon(WindowIconName)
-        if winIconId then
-            TitleLabel.Position = UDim2.new(0,42,0,7)
-            TitleLabel.Size = UDim2.new(0,156,0,18)
-            local winIcon = Instance.new("ImageLabel", Header)
-            winIcon.Name = "WindowIcon"
-            winIcon.BackgroundTransparency = 1
-            winIcon.Size = UDim2.new(0,22,0,22)
-            winIcon.Position = UDim2.new(0,14,0,15)
-            winIcon.Image = winIconId
-            winIcon.ImageColor3 = CurrentTheme.Text
-            winIcon.ZIndex = 20
-        end
-    end
     local SubLabel = Instance.new("TextLabel", Header)
     SubLabel.Text = SubTitle
     SubLabel.Position = UDim2.new(0,18,0,26)
@@ -3037,6 +3041,33 @@ function GGH:CreateWindow(Config)
     SubLabel.TextColor3 = CurrentTheme.SubText
     SubLabel.ZIndex = 4
     SubLabel.AutoLocalize = true AddTextStroke(SubLabel)
+    -- ايقونة الـ UI (جنب الاسم بالبداية) : Config.Icon / TitleIcon / UIIcon / WindowIcon / Logo
+    local WindowIconValue = Config.Icon or Config.TitleIcon or Config.UIIcon or Config.WindowIcon or Config.Logo
+    local TitleIconImg = Instance.new("ImageLabel", Header)
+    TitleIconImg.Name = "TitleIcon"
+    TitleIconImg.Size = UDim2.new(0, 24, 0, 24)
+    TitleIconImg.Position = UDim2.new(0, 14, 0.5, -12)
+    TitleIconImg.BackgroundTransparency = 1
+    TitleIconImg.ScaleType = Enum.ScaleType.Fit
+    TitleIconImg.ImageColor3 = CurrentTheme.Accent
+    TitleIconImg.ZIndex = 4
+    TitleIconImg.Visible = false
+    local function ApplyTitleIcon(icon)
+        WindowIconValue = icon
+        local res = ResolveIcon(icon)
+        if res then
+            TitleIconImg.Image = res
+            TitleIconImg.Visible = true
+            TitleLabel.Position = UDim2.new(0, 46, 0, 7)
+            SubLabel.Position = UDim2.new(0, 46, 0, 26)
+        else
+            TitleIconImg.Image = ""
+            TitleIconImg.Visible = false
+            TitleLabel.Position = UDim2.new(0, 18, 0, 7)
+            SubLabel.Position = UDim2.new(0, 18, 0, 26)
+        end
+    end
+    ApplyTitleIcon(WindowIconValue)
     
     local Controls = Instance.new("Frame", Header)
     Controls.Size = UDim2.new(0,200,0,32)
@@ -3065,38 +3096,28 @@ function GGH:CreateWindow(Config)
     if Config.DisableThemeButton then showSettings = false end
     if Config.DisableFloatButton then showFloat = false end
 
-    local function CreateCtrlButton(name, iconName, bg, isText)
+    local function CreateCtrlButton(name, text, bg, iconName)
         local btn = Instance.new("TextButton", Controls)
         btn.Name = name
         btn.Size = UDim2.new(0,32,0,32)
         btn.BackgroundColor3 = bg
         btn.BackgroundTransparency = 0
-        btn.Text = ""
-        if isText then
-            btn.Text = iconName
-            btn.Font = Enum.Font.GothamBold
-            btn.TextSize = 14
-            btn.TextColor3 = (name=="CloseBtn") and CurrentTheme.CloseText or CurrentTheme.Text
-        else
-            btn.Font = Enum.Font.GothamBold
-            btn.TextSize = 14
-            btn.TextColor3 = (name=="CloseBtn") and CurrentTheme.CloseText or CurrentTheme.Text
-            local iconId = GetIcon(iconName) or GetIcon("circle")
-            local img = Instance.new("ImageLabel", btn)
-            img.Name = "Icon_"..name
-            img.BackgroundTransparency = 1
-            img.Size = UDim2.new(0,18,0,18)
-            img.Position = UDim2.new(0.5,-9,0.5,-9)
-            img.Image = iconId
-            img.ImageColor3 = (name=="CloseBtn") and CurrentTheme.CloseText or CurrentTheme.Text
-            img.ZIndex = 26
-            img.ScaleType = Enum.ScaleType.Fit
-        end
+        btn.Text = text
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 14
+        btn.TextColor3 = (name=="CloseBtn") and CurrentTheme.CloseText or CurrentTheme.Text
         btn.ZIndex = 25
         btn.AutoButtonColor = false
         btn.LayoutOrder = 10
         Corner(btn, 10)
-        AddBlackBorder(btn, 1, 0.7)
+        if iconName then
+            btn.Text = ""
+            local ic = MakeIcon(btn, iconName, 18)
+            ic.AnchorPoint = Vector2.new(0.5, 0.5)
+            ic.Position = UDim2.fromScale(0.5, 0.5)
+            ic.ZIndex = 26
+            BindIconToText(btn, ic)
+        end
         return btn
     end
     
@@ -3105,25 +3126,25 @@ function GGH:CreateWindow(Config)
     local order = 1
 
     if showSearch then
-        SearchBtn = CreateCtrlButton("SearchBtn", "search", CurrentTheme.ElementBg2)
+        SearchBtn = CreateCtrlButton("SearchBtn", "", CurrentTheme.ElementBg2, "search")
         SearchBtn.LayoutOrder = order; order+=1
     end
     if showSettings then
-        ThemeBtn = CreateCtrlButton("ThemeBtn", "settings", CurrentTheme.ElementBg2)
+        ThemeBtn = CreateCtrlButton("ThemeBtn", "", CurrentTheme.ElementBg2, "settings")
         ThemeBtn.LayoutOrder = order; order+=1
     end
-    MinBtn = CreateCtrlButton("MinBtn", "minimize", CurrentTheme.ElementBg2)
+    MinBtn = CreateCtrlButton("MinBtn", "", CurrentTheme.ElementBg2, "minus")
     MinBtn.TextSize = 20
     MinBtn.LayoutOrder = order; order+=1
-    MaxBtn = CreateCtrlButton("MaxBtn", "maximize", CurrentTheme.ElementBg2)
+    MaxBtn = CreateCtrlButton("MaxBtn", "", CurrentTheme.ElementBg2, "plus")
     MaxBtn.TextSize = 20
     MaxBtn.LayoutOrder = order; order+=1
     MaxBtn.Visible = false
     if showFloat then
-        FloatBtn = CreateCtrlButton("FloatBtn", "move", CurrentTheme.ElementBg2)
+        FloatBtn = CreateCtrlButton("FloatBtn", "", CurrentTheme.ElementBg2, "circle-dot")
         FloatBtn.LayoutOrder = order; order+=1
     end
-    CloseBtn = CreateCtrlButton("CloseBtn", "x", CurrentTheme.CloseBg)
+    CloseBtn = CreateCtrlButton("CloseBtn", "", CurrentTheme.CloseBg, "x")
     CloseBtn.LayoutOrder = order; order+=1
     CloseBtn.TextSize = 13
 
@@ -3166,12 +3187,19 @@ function GGH:CreateWindow(Config)
     SearchClose.Size = UDim2.new(0,28,0,28)
     SearchClose.Position = UDim2.new(1,-32,0.5,-14)
     SearchClose.BackgroundColor3 = CurrentTheme.ElementBg2
-    SearchClose.Text = "X"
+    SearchClose.Text = ""
     SearchClose.Font = Enum.Font.GothamBold
     SearchClose.TextSize = 12
     SearchClose.TextColor3 = CurrentTheme.Text
     SearchClose.ZIndex = 91
     Corner(SearchClose, 7)
+    do
+        local scIcon = MakeIcon(SearchClose, "x", 14)
+        scIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+        scIcon.Position = UDim2.fromScale(0.5, 0.5)
+        scIcon.ZIndex = 92
+        BindIconToText(SearchClose, scIcon)
+    end
     -- ===== NEW: ThemeDropdown مرتب نفس ستايل المكتبة + بدون شفافية + توجل حفظ =====
     local ThemeDropdown = Instance.new("Frame", Main)
     ThemeDropdown.Name = "ThemeDropdown"
@@ -3248,45 +3276,6 @@ function GGH:CreateWindow(Config)
     SaveToggleBtn.Size = UDim2.new(1,0,1,0)
     SaveToggleBtn.BackgroundTransparency = 1
     SaveToggleBtn.Text = ""
-    SaveToggleBtn.ZIndex = 10
-    local SaveEnabled = false
-    if Config then
-        SaveEnabled = Config.SaveConfig or Config.SaveSettings or Config.AutoSave or false
-    end
-    local function UpdateSaveToggleVisual(state, instant)
-        local dur = instant and 0 or 0.22
-        if state then
-            Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.Accent}, dur)
-            Tween(SaveCircle, {Position = UDim2.new(1,-19,0.5,-8)}, dur)
-        else
-            Tween(SaveToggleBg, {BackgroundColor3 = CurrentTheme.ElementBg}, dur)
-            Tween(SaveCircle, {Position = UDim2.new(0,3,0.5,-8)}, dur)
-        end
-    end
-    task.spawn(function() task.wait(0.1) UpdateSaveToggleVisual(SaveEnabled, true) end)
-    SaveToggleBtn.MouseButton1Click:Connect(function()
-        SaveEnabled = not SaveEnabled
-        UpdateSaveToggleVisual(SaveEnabled, false)
-        pcall(function()
-            if writefile and isfolder then
-                if not isfolder("GGH_Library") then makefolder("GGH_Library") end
-                local data = {SaveEnabled = SaveEnabled, Time = os.time()}
-                writefile("GGH_Library/SaveToggle.json", game:GetService("HttpService"):JSONEncode(data))
-            end
-        end)
-        if Config and Config.OnSaveToggle then pcall(function() Config.OnSaveToggle(SaveEnabled) end) end
-    end)
-    pcall(function()
-        if isfile and isfile("GGH_Library/SaveToggle.json") then
-            local content = readfile("GGH_Library/SaveToggle.json")
-            local decoded = game:GetService("HttpService"):JSONDecode(content)
-            if decoded and decoded.SaveEnabled ~= nil then
-                SaveEnabled = decoded.SaveEnabled
-                task.spawn(function() task.wait(0.2) UpdateSaveToggleVisual(SaveEnabled, true) end)
-            end
-        end
-    end)
-
 
     -- سطر فاصل
     local Sep1 = Instance.new("Frame", ThemeList)
@@ -3567,11 +3556,18 @@ function GGH:CreateWindow(Config)
     end)
     NoBtn.MouseButton1Click:Connect(function() ConfirmFrame.Visible = false ConfirmFrame.Size = Main.Size end)
     YesBtn.MouseButton1Click:Connect(function() Tween(Main, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) Tween(ConfirmFrame, {Size = UDim2.new(0,Main.Size.X.Offset,0,0)}, 0.2) task.wait(0.25) ScreenGui:Destroy() end)
+    local Tabs = {}
+    local ThemeListeners = {}
+    local CurrentThemeName = DefaultTheme
+    local SaveMgr = {Enabled = false, CanWrite = false, Pending = 0, Registry = {}, Stored = {}, KeyCount = {}}
+    function SaveMgr.MarkDirty() end
+    function SaveMgr.RegisterElement() end
     local ThemableElements = {}
     local function RegisterThemable(obj, prop, themeKey) table.insert(ThemableElements, {obj=obj, prop=prop, key=themeKey}) end
     local function ApplyTheme(themeName)
         local theme = Themes[themeName]
         if not theme then return end
+        CurrentThemeName = themeName
         local function GetLum(c) return 0.299*c.R+0.587*c.G+0.114*c.B end
         local lum = GetLum(theme.MainBg)
         if lum > 0.5 then
@@ -3597,6 +3593,7 @@ function GGH:CreateWindow(Config)
         MainStroke.Color = theme.Stroke
         TitleLabel.TextColor3 = theme.Text
         SubLabel.TextColor3 = theme.SubText
+        TitleIconImg.ImageColor3 = theme.Accent
         if SearchBtn then SearchBtn.BackgroundColor3 = theme.ElementBg2; SearchBtn.TextColor3 = theme.Text end
         if ThemeBtn then ThemeBtn.BackgroundColor3 = theme.ElementBg2; ThemeBtn.TextColor3 = theme.Text end
         MinBtn.BackgroundColor3 = theme.ElementBg2
@@ -3647,6 +3644,7 @@ function GGH:CreateWindow(Config)
                 page.ScrollBarImageColor3 = theme.Accent
             end
         end
+        for _, fn in ipairs(ThemeListeners) do pcall(fn, theme) end
         -- حدث ازرار التابات
         for _, t in pairs(Tabs) do
             if t.Button then
@@ -3681,94 +3679,40 @@ function GGH:CreateWindow(Config)
         end
     end
 
-
-    local FloatingContainer = nil
-    local FloatingLockBtn = nil
-    local FloatingTransBox = nil
-    local FloatingIsLocked = false
-    local FloatingTransparency = 0
     local function CreateFloatingIcon()
-        if FloatingContainer then FloatingContainer:Destroy() end
-        if FloatingIcon then pcall(function() FloatingIcon:Destroy() end) end
-        FloatingContainer = Instance.new("Frame", ScreenGui)
-        FloatingContainer.Name = "FloatingContainer"
-        FloatingContainer.Size = UDim2.new(0,40,0,40)
-        FloatingContainer.Position = UDim2.new(0.5,-20,0,15)
-        FloatingContainer.BackgroundTransparency = 1
-        FloatingContainer.ZIndex = 200
-        
-        FloatingIcon = Instance.new("TextButton", FloatingContainer)
+        if FloatingIcon then FloatingIcon:Destroy() end
+        FloatingIcon = Instance.new("TextButton", ScreenGui)
         FloatingIcon.Name = "FloatingIcon"
         FloatingIcon.Size = UDim2.new(0,40,0,40)
-        FloatingIcon.Position = UDim2.new(0,0,0,0)
+        FloatingIcon.Position = UDim2.new(0.5,-20,0,15)
         FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
-        FloatingIcon.BackgroundTransparency = FloatingTransparency
-        FloatingIcon.Text = ""
-        FloatingIcon.AutoButtonColor = false
+        FloatingIcon.Text = "G"
+        FloatingIcon.Font = Enum.Font.GothamBold
+        FloatingIcon.TextSize = 16
+        FloatingIcon.TextColor3 = Color3.new(1,1,1)
         FloatingIcon.ZIndex = 200
+        FloatingIcon.AutoButtonColor = false
         Corner(FloatingIcon, 20)
         Stroke(FloatingIcon, Color3.new(1,1,1), 1).Transparency = 0.5
-        AddBlackBorder(FloatingIcon, 1, 0.5)
-
-        local iconId = GetIcon("ghost") or GetIcon("sparkles") or GetIcon("zap")
-        local mainImg = Instance.new("ImageLabel", FloatingIcon)
-        mainImg.Name = "MainIcon"
-        mainImg.BackgroundTransparency = 1
-        mainImg.Size = UDim2.new(0,22,0,22)
-        mainImg.Position = UDim2.new(0.5,-11,0.5,-11)
-        mainImg.Image = iconId
-        mainImg.ImageColor3 = Color3.new(1,1,1)
-        mainImg.ZIndex = 201
-        mainImg.ScaleType = Enum.ScaleType.Fit
-
-        FloatingLockBtn = Instance.new("TextButton", FloatingContainer)
-        FloatingLockBtn.Name = "LockBtn"
-        FloatingLockBtn.Size = UDim2.new(0,22,0,22)
-        FloatingLockBtn.Position = UDim2.new(0,42,0,0)
-        FloatingLockBtn.BackgroundColor3 = FloatingIsLocked and Color3.fromRGB(200,60,60) or Color3.fromRGB(40,40,50)
-        FloatingLockBtn.Text = ""
-        FloatingLockBtn.ZIndex = 201
-        FloatingLockBtn.AutoButtonColor = false
-        Corner(FloatingLockBtn, 11)
-        Stroke(FloatingLockBtn, Color3.new(0,0,0), 1).Transparency = 0.6
-
-        local lockImg = Instance.new("ImageLabel", FloatingLockBtn)
-        lockImg.Name = "LockIcon"
-        lockImg.BackgroundTransparency = 1
-        lockImg.Size = UDim2.new(0,14,0,14)
-        lockImg.Position = UDim2.new(0.5,-7,0.5,-7)
-        lockImg.Image = GetIcon(FloatingIsLocked and "lock" or "lock-open")
-        lockImg.ImageColor3 = Color3.new(1,1,1)
-        lockImg.ZIndex = 202
-        lockImg.ScaleType = Enum.ScaleType.Fit
-
-        FloatingTransBox = Instance.new("TextBox", FloatingContainer)
-        FloatingTransBox.Name = "TransBox"
-        FloatingTransBox.Size = UDim2.new(0,34,0,18)
-        FloatingTransBox.Position = UDim2.new(0,42,0,24)
-        FloatingTransBox.BackgroundColor3 = Color3.fromRGB(30,30,35)
-        FloatingTransBox.Text = tostring(FloatingTransparency)
-        FloatingTransBox.PlaceholderText = "0-1"
-        FloatingTransBox.Font = Enum.Font.GothamBold
-        FloatingTransBox.TextSize = 10
-        FloatingTransBox.TextColor3 = Color3.new(1,1,1)
-        FloatingTransBox.ZIndex = 201
-        FloatingTransBox.ClearTextOnFocus = false
-        Corner(FloatingTransBox, 6)
-        Stroke(FloatingTransBox, Color3.fromRGB(0,0,0), 1).Transparency = 0.5
-
+        if ResolveIcon(WindowIconValue) then
+            FloatingIcon.Text = ""
+            local fim = MakeIcon(FloatingIcon, WindowIconValue, 22, Color3.new(1, 1, 1))
+            fim.AnchorPoint = Vector2.new(0.5, 0.5)
+            fim.Position = UDim2.fromScale(0.5, 0.5)
+            fim.ZIndex = 201
+        end
+        
         local dragging = false
         local dragStartPos
         local startGuiPos
         local hasDragged = false
         
         FloatingIcon.InputBegan:Connect(function(input)
-            if FloatingIsLocked then return end
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
                 hasDragged = false
                 dragStartPos = input.Position
-                startGuiPos = FloatingContainer.Position
+                startGuiPos = FloatingIcon.Position
             end
         end)
         local function ClampMainFloat(pos)
@@ -3776,8 +3720,8 @@ function GGH:CreateWindow(Config)
             if vp.X < 10 or vp.Y < 10 then
                 vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920,1080)
             end
-            local sz = FloatingContainer.AbsoluteSize
-            if sz.X < 10 then sz = Vector2.new(76,44) end
+            local sz = FloatingIcon.AbsoluteSize
+            if sz.X < 10 then sz = Vector2.new(40,40) end
             local x = pos.X.Offset
             local y = pos.Y.Offset
             x = math.clamp(x, 4, vp.X - sz.X - 4)
@@ -3785,25 +3729,25 @@ function GGH:CreateWindow(Config)
             return UDim2.fromOffset(x, y)
         end
         UserInputService.InputChanged:Connect(function(input)
-            if FloatingIsLocked then return end
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local delta = input.Position - dragStartPos
                 if delta.Magnitude > 5 then hasDragged = true end
                 local rawPos = UDim2.new(startGuiPos.X.Scale, startGuiPos.X.Offset + delta.X, startGuiPos.Y.Scale, startGuiPos.Y.Offset + delta.Y)
-                FloatingContainer.Position = ClampMainFloat(rawPos)
+                FloatingIcon.Position = ClampMainFloat(rawPos)
             end
         end)
+        -- loop حماية اضافية
         task.spawn(function()
-            while FloatingContainer and FloatingContainer.Parent do
+            while FloatingIcon and FloatingIcon.Parent do
                 local vp = ScreenGui.AbsoluteSize
                 if vp.X > 10 then
-                    local sz = FloatingContainer.AbsoluteSize
+                    local sz = FloatingIcon.AbsoluteSize
                     if sz.X > 10 then
-                        local absPos = FloatingContainer.AbsolutePosition
+                        local absPos = FloatingIcon.AbsolutePosition
                         local clampedX = math.clamp(absPos.X, 4, vp.X - sz.X - 4)
                         local clampedY = math.clamp(absPos.Y, 4, vp.Y - sz.Y - 4)
                         if absPos.X ~= clampedX or absPos.Y ~= clampedY then
-                            FloatingContainer.Position = UDim2.fromOffset(clampedX, clampedY)
+                            FloatingIcon.Position = UDim2.fromOffset(clampedX, clampedY)
                         end
                     end
                 end
@@ -3817,30 +3761,6 @@ function GGH:CreateWindow(Config)
                 hasDragged = false
             end
         end)
-
-        FloatingLockBtn.MouseButton1Click:Connect(function()
-            FloatingIsLocked = not FloatingIsLocked
-            Tween(FloatingLockBtn, {BackgroundColor3 = FloatingIsLocked and Color3.fromRGB(200,60,60) or Color3.fromRGB(40,40,50)}, 0.2)
-            local img = FloatingLockBtn:FindFirstChild("LockIcon")
-            if img then
-                img.Image = GetIcon(FloatingIsLocked and "lock" or "lock-open")
-            end
-        end)
-
-        FloatingTransBox.FocusLost:Connect(function(enter)
-            if enter then
-                local num = tonumber(FloatingTransBox.Text)
-                if num then
-                    num = math.clamp(num, 0, 1)
-                    FloatingTransparency = num
-                    FloatingIcon.BackgroundTransparency = num
-                    FloatingTransBox.Text = tostring(num)
-                else
-                    FloatingTransBox.Text = tostring(FloatingTransparency)
-                end
-            end
-        end)
-
         FloatingIcon.MouseButton1Click:Connect(function()
             if hasDragged then return end
             ConfirmFrame.Visible = false
@@ -3872,6 +3792,7 @@ function GGH:CreateWindow(Config)
             end
         end)
     end
+
     if FloatBtn then FloatBtn.MouseButton1Click:Connect(function()
         floatEnabled = not floatEnabled
         if floatEnabled then
@@ -3881,7 +3802,7 @@ function GGH:CreateWindow(Config)
         else
             Tween(FloatBtn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.2)
             FloatBtn.TextColor3 = CurrentTheme.Text
-            if FloatingContainer then FloatingContainer:Destroy() FloatingContainer=nil end if FloatingIcon then pcall(function() FloatingIcon:Destroy() end) FloatingIcon=nil end ConfirmFrame.Visible = false
+            if FloatingIcon then FloatingIcon:Destroy() FloatingIcon=nil end ConfirmFrame.Visible = false
         end
     end) end
 
@@ -3943,13 +3864,238 @@ function GGH:CreateWindow(Config)
             ThemeDropdown.Visible = false 
             ThemeOpen = false 
             SubLabel.Text = "Theme: " .. name
+            SaveMgr.MarkDirty()
             RestoreWindowSize()
-            if FloatingIcon then FloatingIcon.BackgroundColor3 = CurrentTheme.Accent end
+            if FloatingIcon then
+                FloatingIcon.BackgroundColor3 = CurrentTheme.Accent
+            end
         end)
     end
-    local Window = {}
+    -- ===================== SAVE SETTINGS SYSTEM (شغال فعلياً) =====================
+    do
+        local function SafeName(s)
+            s = tostring(s or "")
+            s = s:gsub("[^%w_%-]", "_")
+            if not s:find("%w") then s = "GGH" end
+            return s
+        end
 
-    local Tabs = {}
+        SaveMgr.CanWrite = (type(writefile) == "function") and (type(readfile) == "function") and (type(isfile) == "function")
+        SaveMgr.Folder = tostring(Config.ConfigFolder or "GGH_Configs")
+        SaveMgr.Path = SaveMgr.Folder .. "/" .. SafeName(Config.ConfigName or Config.SaveName or Config.Title or "GGH") .. "_" .. tostring(game.PlaceId) .. ".json"
+
+        local function RefreshSaveToggle(animate)
+            local th = CurrentTheme
+            local on = SaveMgr.Enabled
+            local bgCol = on and th.Accent or th.ElementBg
+            local pos = on and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+            if animate then
+                Tween(SaveToggleBg, {BackgroundColor3 = bgCol}, 0.2)
+                Tween(SaveCircle, {Position = pos}, 0.2)
+            else
+                SaveToggleBg.BackgroundColor3 = bgCol
+                SaveCircle.Position = pos
+            end
+        end
+
+        local function WriteFile(payload)
+            if not SaveMgr.CanWrite then return false end
+            local ok = pcall(function()
+                if type(isfolder) == "function" and type(makefolder) == "function" and not isfolder(SaveMgr.Folder) then
+                    makefolder(SaveMgr.Folder)
+                end
+                writefile(SaveMgr.Path, HttpService:JSONEncode(payload))
+            end)
+            return ok
+        end
+
+        -- قراءة الملف المحفوظ
+        local Loaded = nil
+        if SaveMgr.CanWrite then
+            local ok, data = pcall(function()
+                if isfile(SaveMgr.Path) then
+                    return HttpService:JSONDecode(readfile(SaveMgr.Path))
+                end
+                return nil
+            end)
+            if ok and type(data) == "table" then Loaded = data end
+        end
+        if Loaded then
+            SaveMgr.Enabled = (Loaded.SaveEnabled == true)
+            if SaveMgr.Enabled and type(Loaded.Elements) == "table" then
+                SaveMgr.Stored = Loaded.Elements
+            end
+        elseif Config.SaveDefault == true or Config.AutoSave == true then
+            SaveMgr.Enabled = SaveMgr.CanWrite
+        end
+
+        -- حفظ الكل (يدمج القيم القديمة مع الحالية حتى ما يضيع شي)
+        function SaveMgr.Flush()
+            if not SaveMgr.Enabled or not SaveMgr.CanWrite then return end
+            local merged = {}
+            for k, v in pairs(SaveMgr.Stored) do merged[k] = v end
+            for key, entry in pairs(SaveMgr.Registry) do
+                if entry.applied then
+                    local ok, v = pcall(entry.get)
+                    if ok and v ~= nil then merged[key] = v end
+                end
+            end
+            SaveMgr.Stored = merged
+            WriteFile({Version = 2, SaveEnabled = true, Theme = CurrentThemeName, Elements = merged})
+        end
+
+        local scheduled = false
+        function SaveMgr.MarkDirty()
+            if not SaveMgr.Enabled or not SaveMgr.CanWrite or scheduled then return end
+            scheduled = true
+            task.delay(0.6, function()
+                scheduled = false
+                if SaveMgr.Pending > 0 then
+                    SaveMgr.MarkDirty()
+                    return
+                end
+                SaveMgr.Flush()
+            end)
+        end
+
+        function SaveMgr.SetEnabled(state, silent)
+            state = state and true or false
+            if state and not SaveMgr.CanWrite then return false end
+            SaveMgr.Enabled = state
+            if state then
+                SaveMgr.Flush()
+            else
+                SaveMgr.Stored = {}
+                WriteFile({Version = 2, SaveEnabled = false})
+            end
+            RefreshSaveToggle(not silent)
+            return true
+        end
+
+        local KeyAlias = {
+            color = "colorpicker", key = "keybind",
+            sliderbox = "sliderinput", inputslider = "sliderinput",
+            buttonfloat = "floatbutton", btnfloat = "floatbutton", floatingbutton = "floatbutton",
+        }
+
+        function SaveMgr.RegisterElement(tabName, typ, Cfg, api, userCb)
+            if type(api) ~= "table" then return end
+            typ = KeyAlias[typ] or typ
+            local get, set
+            if typ == "toggle" then
+                get = function() return api:GetValue() == true end
+                set = function(v) if type(v) == "boolean" then api:SetValue(v) end end
+            elseif typ == "slider" or typ == "sliderinput" then
+                get = function() return api:GetValue() end
+                set = function(v) if type(v) == "number" then api:SetValue(v) end end
+            elseif typ == "input" then
+                get = function() return api:GetValue() end
+                set = function(v)
+                    if type(v) == "string" then
+                        api:SetValue(v)
+                        if userCb then pcall(userCb, v) end
+                    end
+                end
+            elseif typ == "dropdown" then
+                local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
+                get = function()
+                    local sel = api:Get()
+                    if isMulti then
+                        local out = {}
+                        if type(sel) == "table" then
+                            for _, o in ipairs(sel) do table.insert(out, tostring(o)) end
+                        end
+                        return out
+                    end
+                    if sel == nil then return nil end
+                    return tostring(sel)
+                end
+                set = function(v)
+                    local opts = Cfg.Options or {}
+                    local function exists(x)
+                        for _, o in ipairs(opts) do if o == x then return true end end
+                        return false
+                    end
+                    if isMulti then
+                        if type(v) ~= "table" then return end
+                        local out = {}
+                        for _, o in ipairs(v) do if exists(o) then table.insert(out, o) end end
+                        api:Set(out)
+                    else
+                        if type(v) == "string" and exists(v) then api:Set(v) end
+                    end
+                end
+            elseif typ == "colorpicker" then
+                get = function()
+                    local c = api:Get()
+                    if typeof(c) == "Color3" then return c:ToHex() end
+                    return nil
+                end
+                set = function(v)
+                    if type(v) == "string" then
+                        local ok, c = pcall(Color3.fromHex, v)
+                        if ok and typeof(c) == "Color3" then api:Set(c) end
+                    end
+                end
+            elseif typ == "keybind" then
+                get = function()
+                    local k = api:GetValue()
+                    if typeof(k) == "EnumItem" then return k.Name end
+                    return nil
+                end
+                set = function(v) if type(v) == "string" then api:SetValue(v) end end
+            elseif typ == "floatbutton" then
+                get = function() return api:GetState() end
+                set = function(v) api:SetState(v) end
+            else
+                return
+            end
+
+            local base = tostring(tabName) .. "|" .. typ .. "|" .. tostring(Cfg.Title or Cfg.Name or "")
+            local n = SaveMgr.KeyCount[base] or 0
+            SaveMgr.KeyCount[base] = n + 1
+            local key = (n == 0) and base or (base .. "#" .. n)
+
+            local entry = {get = get, applied = true}
+            SaveMgr.Registry[key] = entry
+            local saved = SaveMgr.Stored[key]
+            if SaveMgr.Enabled and saved ~= nil then
+                entry.applied = false
+                SaveMgr.Pending += 1
+                task.delay(0.12, function()
+                    pcall(set, saved)
+                    entry.applied = true
+                    SaveMgr.Pending = math.max(0, SaveMgr.Pending - 1)
+                end)
+            end
+        end
+
+        -- ربط توجل "Save Settings" (كان بدون كود)
+        table.insert(ThemeListeners, function(th)
+            SaveToggleFrame.BackgroundColor3 = th.ElementBg2
+            SaveTitle.TextColor3 = th.Text
+            Sep1.BackgroundColor3 = th.Stroke
+            RefreshSaveToggle(false)
+        end)
+        if not SaveMgr.CanWrite then
+            SaveTitle.Text = "Save Settings (not supported)"
+        end
+        RefreshSaveToggle(false)
+        SaveToggleBtn.MouseButton1Click:Connect(function()
+            if not SaveMgr.CanWrite then return end
+            SaveMgr.SetEnabled(not SaveMgr.Enabled)
+        end)
+
+        -- تحميل الثيم المحفوظ
+        if SaveMgr.Enabled and Loaded and type(Loaded.Theme) == "string" and Themes[Loaded.Theme] and Loaded.Theme ~= CurrentThemeName then
+            pcall(ApplyTheme, Loaded.Theme)
+        end
+        if SaveMgr.Enabled then
+            task.delay(1.5, function() SaveMgr.Flush() end)
+        end
+    end
+
+    local Window = {}
     local WindowAPI_Trans_W = WindowTrans
     local WindowAPI_Trans_E = ElementTrans
 
@@ -4000,35 +4146,18 @@ function GGH:CreateWindow(Config)
         end
         for _, t in pairs(Tabs) do if t.Button then local n = t.Button.Text:lower() t.Button.Visible = (string.find(n, query, 1, true) ~= nil) end end
     end)
-    function Window:CreateTab(Name, IconName)
-        local TabIconName = IconName
+    function Window:CreateTab(Name, TabIcon)
         if type(Name) == "table" then
-            TabIconName = Name.Icon or Name.icon or IconName
-            Name = Name.Name or Name.Title or "Tab"
+            local tcfg = Name
+            Name = tcfg.Title or tcfg.Name or "Tab"
+            TabIcon = tcfg.Icon or tcfg.Image or TabIcon
         end
-
+        Name = tostring(Name)
         local TabButton = Instance.new("TextButton", TabList)
         TabButton.Size = UDim2.new(1,0,0,36)
         TabButton.BackgroundColor3 = CurrentTheme.ElementBg
         TabButton.BackgroundTransparency = 0
         TabButton.Text = Name
-        if TabIconName then
-            local iconId = GetIcon(TabIconName)
-            if iconId then
-                TabButton.Text = "   "..Name
-                local tabIcon = Instance.new("ImageLabel", TabButton)
-                tabIcon.Name = "TabIcon"
-                tabIcon.BackgroundTransparency = 1
-                tabIcon.Size = UDim2.new(0,16,0,16)
-                tabIcon.Position = UDim2.new(0,6,0.5,-8)
-                tabIcon.Image = iconId
-                tabIcon.ImageColor3 = Color3.fromRGB(170,170,180)
-                tabIcon.ZIndex = 16
-                TabButton:GetPropertyChangedSignal("TextColor3"):Connect(function()
-                    tabIcon.ImageColor3 = TabButton.TextColor3
-                end)
-            end
-        end
         TabButton.TextTruncate = Enum.TextTruncate.AtEnd
         TabButton.TextWrapped = false
         TabButton.Font = Enum.Font.GothamMedium
@@ -4042,6 +4171,14 @@ function GGH:CreateWindow(Config)
         local tabPad = Instance.new("UIPadding", TabButton)
         tabPad.PaddingLeft = UDim.new(0,12)
         tabPad.PaddingRight = UDim.new(0,8)
+        if ResolveIcon(TabIcon) then
+            tabPad.PaddingLeft = UDim.new(0, 34)
+            local tabIconImg = MakeIcon(TabButton, TabIcon, 16)
+            tabIconImg.AnchorPoint = Vector2.new(0, 0.5)
+            tabIconImg.Position = UDim2.new(0, -22, 0.5, 0)
+            tabIconImg.ZIndex = TabButton.ZIndex + 1
+            BindIconToText(TabButton, tabIconImg)
+        end
         TabButton.MouseEnter:Connect(function()
             if #Name > 15 then
                 SubLabel.Text = Name
@@ -4532,10 +4669,12 @@ local function CreateDropdown(Cfg)
     local function RefreshOptions()
         for _, child in ipairs(List:GetChildren()) do
             if child:IsA("TextButton") then
-                local name = child:GetAttribute("OptName") or child.Text:gsub("✓ ","")
+                local name = child:GetAttribute("OptName") or child.Text
                 local sel = IsSelected(name)
                 child.BackgroundColor3 = sel and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                child.Text = (sel and "✓ " or "")..name
+                child.Text = name
+                local ck = child:FindFirstChild("Check")
+                if ck then ck.Visible = sel end
             end
         end
         Btn.Text = GetDisplayText()
@@ -4545,7 +4684,7 @@ local function CreateDropdown(Cfg)
         local O = Instance.new("TextButton", List)
         O.Size = UDim2.new(1,-4,0,28)
         O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-        O.Text = (IsSelected(opt) and "✓ " or "")..opt
+        O.Text = opt
         O.Font = Enum.Font.Gotham
         O.TextSize = 11
         O.TextColor3 = CurrentTheme.Text
@@ -4555,6 +4694,13 @@ local function CreateDropdown(Cfg)
         RegisterThemable(O, "BackgroundColor3", "ElementBg2")
         AddTextStroke(O)
         O:SetAttribute("OptName", opt)
+        do
+            local ck = MakeIcon(O, "check", 14, Color3.new(1, 1, 1))
+            ck.Name = "Check"
+            ck.AnchorPoint = Vector2.new(1, 0.5)
+            ck.Position = UDim2.new(1, -8, 0.5, 0)
+            ck.Visible = IsSelected(opt)
+        end
         O.MouseButton1Click:Connect(function()
             if isMulti then
                 if IsSelected(opt) then
@@ -5050,6 +5196,21 @@ local function CreateColorpicker(Cfg)
             end)
             local CreateKeybindAPI = {}
             function CreateKeybindAPI:Refresh(newCfg) return CreateKeybindAPI end
+            function CreateKeybindAPI:SetValue(k)
+                if type(k) == "string" then
+                    local ok, kc = pcall(function() return Enum.KeyCode[k] end)
+                    k = ok and kc or nil
+                end
+                if typeof(k) == "EnumItem" then
+                    Key = k
+                    Label.Text = Cfg.Title.." : "..Key.Name
+                    pcall(Cfg.Callback or function() end, Key)
+                end
+                return CreateKeybindAPI
+            end
+            function CreateKeybindAPI:GetValue() return Key end
+            function CreateKeybindAPI:Set(k) return self:SetValue(k) end
+            function CreateKeybindAPI:Get() return Key end
             return CreateKeybindAPI
 
         end
@@ -5153,6 +5314,8 @@ local function CreateColorpicker(Cfg)
         local function ResolveImageAsset(inputStr)
             if not inputStr or inputStr == "" then return "" end
             local s = tostring(inputStr)
+            if GGH_ICONS[s] then return GGH_ICONS[s] end
+            if GGH_ICONS[s:lower()] then return GGH_ICONS[s:lower()] end
             -- اذا رابط مباشر png/jpg/webp/gif
             if IsUrlImage(s) then
                 return s
@@ -5320,23 +5483,33 @@ local function CreateColorpicker(Cfg)
             CopyBtn.Size = UDim2.new(1,-12,0,32)
             CopyBtn.Position = UDim2.new(0,6,0, yOffset + 26)
             CopyBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-            CopyBtn.Text = btnText.."  📋"
+            CopyBtn.Text = btnText
             CopyBtn.Font = Enum.Font.GothamMedium
             CopyBtn.TextSize = 12
             CopyBtn.TextColor3 = CurrentTheme.Text
             CopyBtn.AutoLocalize = true
             Corner(CopyBtn, 8)
             Stroke(CopyBtn, CurrentTheme.StrokeLight, 1)
+            local CopyIcon = MakeIcon(CopyBtn, "clipboard-copy", 16)
+            CopyIcon.AnchorPoint = Vector2.new(0, 0.5)
+            CopyIcon.Position = UDim2.new(0, 12, 0.5, 0)
+            CopyIcon.ZIndex = CopyBtn.ZIndex + 1
+            BindIconToText(CopyBtn, CopyIcon)
+            local function ApplyCopyIconTint()
+                CopyIcon.ImageColor3 = CopyBtn.TextColor3
+            end
 
             local function DoCopy()
                 local ok = pcall(function()
                     if setclipboard then setclipboard(tostring(linkUrl)) end
                 end)
                 local old = CopyBtn.Text
-                CopyBtn.Text = "Copied! ✅"
+                CopyBtn.Text = "Copied!"
+                CopyIcon.Image = ResolveIcon("circle-check") or ""
                 Tween(CopyBtn, {BackgroundColor3 = CurrentTheme.Accent}, 0.15)
                 task.wait(1.2)
                 CopyBtn.Text = old
+                CopyIcon.Image = ResolveIcon("clipboard-copy") or ""
                 Tween(CopyBtn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.15)
                 if Cfg.Callback then pcall(Cfg.Callback, linkUrl) end
             end
@@ -5723,7 +5896,7 @@ if true then
 end
 
 
-        -- ======= عنصر جديد 3: زر + توجل يصنع زر عائم =======
+        -- ======= عنصر جديد 3: زر + توجل يصنع زر عائم (قفل + شفافية + حفظ) =======
         local function CreateFloatingButton(Cfg)
             Cfg = Cfg or {}
             local title = Cfg.Title or Cfg.Name or "Button"
@@ -5736,16 +5909,21 @@ end
             local floatImage = Cfg.FloatImage or Cfg.FloatIcon or Cfg.Image or nil
             local floatPosCfg = Cfg.FloatPosition or Cfg.Position or "Center"
             local floatSize = Cfg.FloatSize or Vector2.new(50,50)
-            
+            local floatLocked = (Cfg.FloatLocked or Cfg.Locked) == true
+            local floatTrans = tonumber(Cfg.FloatTransparency or Cfg.FloatTrans) or 0
+            if floatTrans > 1 then floatTrans = floatTrans / 100 end
+            floatTrans = math.clamp(floatTrans, 0, 0.9)
+            local savedFloatPos = nil
+
             local Frame = Instance.new("Frame", TabPage)
-            Frame.Size = UDim2.new(1,-4,0,38)
+            Frame.Size = UDim2.new(1,-4,0,76)
             Frame.BackgroundColor3 = CurrentTheme.ElementBg
             Corner(Frame, 9)
             RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
             AddSearch(Frame, title, "FloatingButton", Name)
 
             local TitleLabel = Instance.new("TextLabel", Frame)
-            TitleLabel.Size = UDim2.new(1,-100,1,0)
+            TitleLabel.Size = UDim2.new(1,-100,0,38)
             TitleLabel.Position = UDim2.new(0,10,0,0)
             TitleLabel.BackgroundTransparency = 1
             TitleLabel.Text = title
@@ -5758,7 +5936,7 @@ end
 
             local ToggleBg = Instance.new("Frame", Frame)
             ToggleBg.Size = UDim2.new(0,38,0,20)
-            ToggleBg.Position = UDim2.new(1,-88,0.5,-10)
+            ToggleBg.Position = UDim2.new(1,-88,0,9)
             ToggleBg.BackgroundColor3 = floatEnabledDefault and CurrentTheme.Accent or CurrentTheme.ElementBg2
             Corner(ToggleBg, 10)
 
@@ -5776,17 +5954,79 @@ end
 
             local MainBtn = Instance.new("TextButton", Frame)
             MainBtn.Size = UDim2.new(0,44,0,24)
-            MainBtn.Position = UDim2.new(1,-42,0.5,-12)
+            MainBtn.Position = UDim2.new(1,-42,0,7)
             MainBtn.BackgroundColor3 = CurrentTheme.ElementBg2
-            MainBtn.Text = "▶"
-            MainBtn.Font = Enum.Font.GothamBold
-            MainBtn.TextSize = 12
-            MainBtn.TextColor3 = CurrentTheme.Text
+            MainBtn.Text = ""
+            MainBtn.AutoButtonColor = false
             Corner(MainBtn, 7)
             Stroke(MainBtn, CurrentTheme.StrokeLight, 1)
+            local PlayIcon = MakeIcon(MainBtn, "play", 14, CurrentTheme.Text)
+            PlayIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+            PlayIcon.Position = UDim2.fromScale(0.5, 0.5)
+
+            -- خط فاصل بين الصفين
+            local RowLine = Instance.new("Frame", Frame)
+            RowLine.Size = UDim2.new(1,-20,0,1)
+            RowLine.Position = UDim2.new(0,10,0,38)
+            RowLine.BackgroundColor3 = CurrentTheme.Stroke
+            RowLine.BackgroundTransparency = 0.6
+            RowLine.BorderSizePixel = 0
+            RegisterThemable(RowLine, "BackgroundColor3", "Stroke")
+
+            -- زر القفل (ايقونة قفل) : يقفل مكان الزر العائم / يفتحه
+            local LockBtn = Instance.new("TextButton", Frame)
+            LockBtn.Name = "LockBtn"
+            LockBtn.Size = UDim2.new(0,34,0,28)
+            LockBtn.Position = UDim2.new(0,10,0,42)
+            LockBtn.BackgroundColor3 = CurrentTheme.ElementBg2
+            LockBtn.Text = ""
+            LockBtn.AutoButtonColor = false
+            Corner(LockBtn, 8)
+            Stroke(LockBtn, CurrentTheme.StrokeLight, 1)
+            local LockIcon = MakeIcon(LockBtn, "lock-open", 16, CurrentTheme.Text)
+            LockIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+            LockIcon.Position = UDim2.fromScale(0.5, 0.5)
+
+            -- خانة الشفافية
+            local TransCaption = Instance.new("TextLabel", Frame)
+            TransCaption.Size = UDim2.new(1,-126,0,28)
+            TransCaption.Position = UDim2.new(0,52,0,42)
+            TransCaption.BackgroundTransparency = 1
+            TransCaption.Text = "Transparency %"
+            TransCaption.Font = Enum.Font.GothamMedium
+            TransCaption.TextSize = 10
+            TransCaption.TextColor3 = CurrentTheme.SubText
+            TransCaption.TextXAlignment = Enum.TextXAlignment.Left
+            TransCaption.TextTruncate = Enum.TextTruncate.AtEnd
+            TransCaption.AutoLocalize = true
+            RegisterThemable(TransCaption, "TextColor3", "SubText")
+
+            local TransBox = Instance.new("TextBox", Frame)
+            TransBox.Name = "TransBox"
+            TransBox.Size = UDim2.new(0,48,0,28)
+            TransBox.Position = UDim2.new(1,-58,0,42)
+            TransBox.BackgroundColor3 = CurrentTheme.ElementBg2
+            TransBox.Text = tostring(math.floor(floatTrans * 100 + 0.5))
+            TransBox.PlaceholderText = "0-90"
+            TransBox.Font = Enum.Font.GothamMedium
+            TransBox.TextSize = 11
+            TransBox.TextColor3 = CurrentTheme.Text
+            TransBox.PlaceholderColor3 = CurrentTheme.SubText
+            TransBox.ClearTextOnFocus = false
+            Corner(TransBox, 8)
+            Stroke(TransBox, CurrentTheme.StrokeLight, 1)
+            RegisterThemable(TransBox, "BackgroundColor3", "ElementBg2")
+            RegisterThemable(TransBox, "TextColor3", "Text")
 
             local floatingInstance = nil
+            local floatStroke = nil
+            local floatConns = {}
             local isFloatEnabled = floatEnabledDefault
+
+            local function DisconnectFloat()
+                for _, c in ipairs(floatConns) do pcall(function() c:Disconnect() end) end
+                floatConns = {}
+            end
 
             local function GetViewport()
                 local vp = ScreenGui.AbsoluteSize
@@ -5832,8 +6072,43 @@ end
                 end
             end
 
+            -- تطبيق الشفافية على الزر العائم (الخلفية + الصورة/النص + الحدود)
+            local function ApplyFloatLook()
+                if not floatingInstance or not floatingInstance.Parent then return end
+                floatingInstance.BackgroundTransparency = floatTrans
+                if floatingInstance:IsA("ImageButton") then
+                    floatingInstance.ImageTransparency = floatTrans
+                else
+                    floatingInstance.TextTransparency = floatTrans
+                end
+                if floatStroke then floatStroke.Transparency = 0.5 + (0.5 * floatTrans) end
+            end
+
+            local function RefreshLockVisual()
+                local th = CurrentTheme
+                LockBtn.BackgroundColor3 = floatLocked and th.Accent or th.ElementBg2
+                LockIcon.Image = ResolveIcon(floatLocked and "lock" or "lock-open") or ""
+                LockIcon.ImageColor3 = floatLocked and Color3.new(1,1,1) or th.Text
+            end
+            RefreshLockVisual()
+
+            local function ParseTransText(txt)
+                local n = tonumber((tostring(txt):gsub("[%%%s]", "")))
+                if not n then return nil end
+                return math.clamp(n, 0, 90) / 100
+            end
+
+            local function SetTransFromValue(v, updateBox)
+                v = tonumber(v) or 0
+                if v > 1 then v = v / 100 end
+                floatTrans = math.clamp(v, 0, 0.9)
+                if updateBox then TransBox.Text = tostring(math.floor(floatTrans * 100 + 0.5)) end
+                ApplyFloatLook()
+            end
+
             local function CreateFloat()
-                if floatingInstance then floatingInstance:Destroy() end
+                DisconnectFloat()
+                if floatingInstance then floatingInstance:Destroy() floatingInstance = nil end
                 local btn
                 if floatImage and floatImage ~= "" then
                     btn = Instance.new("ImageButton", ScreenGui)
@@ -5848,46 +6123,57 @@ end
                 end
                 btn.Name = "GGH_Float_"..title
                 btn.Size = UDim2.new(0, floatSize.X, 0, floatSize.Y)
-                btn.Position = ResolveFloatPosition()
+                if savedFloatPos then
+                    btn.Position = ClampFloatPartial(UDim2.fromOffset(savedFloatPos.X, savedFloatPos.Y), floatSize)
+                else
+                    btn.Position = ResolveFloatPosition()
+                end
                 btn.BackgroundColor3 = CurrentTheme.Accent
                 btn.ZIndex = 199
                 btn.AutoButtonColor = false
                 Corner(btn, 12)
-                Stroke(btn, Color3.new(1,1,1), 1).Transparency = 0.5
+                floatStroke = Stroke(btn, Color3.new(1,1,1), 1)
+                floatStroke.Transparency = 0.5
                 btn.Active = true
+                floatingInstance = btn
+                ApplyFloatLook()
 
                 local dragging = false
                 local dragStart, startPos
                 local hasDragged = false
 
-                btn.InputBegan:Connect(function(input)
-                    if floatDraggable and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                table.insert(floatConns, btn.InputBegan:Connect(function(input)
+                    if floatDraggable and not floatLocked and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                         dragging = true
                         hasDragged = false
                         dragStart = input.Position
                         startPos = btn.Position
                     end
-                end)
-                UserInputService.InputChanged:Connect(function(input)
-                    if dragging and floatDraggable and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                end))
+                table.insert(floatConns, UserInputService.InputChanged:Connect(function(input)
+                    if dragging and floatDraggable and not floatLocked and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                         local delta = input.Position - dragStart
                         if delta.Magnitude > 4 then hasDragged = true end
                         local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
                         btn.Position = ClampFloatPartial(newPos, floatSize)
                     end
-                end)
-                UserInputService.InputEnded:Connect(function(input)
+                end))
+                table.insert(floatConns, UserInputService.InputEnded:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        if dragging and hasDragged and btn.Parent then
+                            savedFloatPos = Vector2.new(btn.Position.X.Offset, btn.Position.Y.Offset)
+                            SaveMgr.MarkDirty()
+                        end
                         dragging = false
                         task.wait(0.05)
                         hasDragged = false
                     end
-                end)
+                end))
 
-                btn.MouseButton1Click:Connect(function()
+                table.insert(floatConns, btn.MouseButton1Click:Connect(function()
                     if hasDragged then return end
                     pcall(callback)
-                end)
+                end))
 
                 task.spawn(function()
                     while btn and btn.Parent do
@@ -5909,15 +6195,16 @@ end
                     end
                 end)
 
-                floatingInstance = btn
                 return btn
             end
 
             local function RemoveFloat()
+                DisconnectFloat()
                 if floatingInstance then
                     floatingInstance:Destroy()
                     floatingInstance = nil
                 end
+                floatStroke = nil
             end
 
             local function SetToggleState(state)
@@ -5934,18 +6221,82 @@ end
             end
 
             ToggleBtn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
                 SetToggleState(not isFloatEnabled)
+                SaveMgr.MarkDirty()
             end)
 
             MainBtn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
                 Tween(MainBtn, {BackgroundColor3 = CurrentTheme.ElementBg}, 0.08)
                 task.wait(0.08)
                 Tween(MainBtn, {BackgroundColor3 = CurrentTheme.ElementBg2}, 0.08)
                 pcall(callback)
             end)
 
+            -- زر القفل
+            LockBtn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
+                floatLocked = not floatLocked
+                RefreshLockVisual()
+                SaveMgr.MarkDirty()
+            end)
+
+            -- خانة الشفافية (تتغير مباشرة وانت تكتب)
+            TransBox:GetPropertyChangedSignal("Text"):Connect(function()
+                local n = ParseTransText(TransBox.Text)
+                if n then
+                    floatTrans = n
+                    ApplyFloatLook()
+                end
+            end)
+            TransBox.FocusLost:Connect(function()
+                local n = ParseTransText(TransBox.Text)
+                if n then floatTrans = n end
+                TransBox.Text = tostring(math.floor(floatTrans * 100 + 0.5))
+                ApplyFloatLook()
+                SaveMgr.MarkDirty()
+            end)
+
+            -- تحديث الألوان عند تغيير الثيم
+            table.insert(ThemeListeners, function(th)
+                if not Frame.Parent then return end
+                ToggleBg.BackgroundColor3 = isFloatEnabled and th.Accent or th.ElementBg2
+                MainBtn.BackgroundColor3 = th.ElementBg2
+                PlayIcon.ImageColor3 = th.Text
+                TransBox.PlaceholderColor3 = th.SubText
+                RefreshLockVisual()
+                if floatingInstance then floatingInstance.BackgroundColor3 = th.Accent end
+            end)
+
             if isFloatEnabled then
-                task.spawn(function() task.wait(0.2) CreateFloat() end)
+                task.spawn(function()
+                    task.wait(0.2)
+                    if isFloatEnabled and not floatingInstance then CreateFloat() end
+                end)
+            end
+
+            local function GetState()
+                local px, py
+                if floatingInstance and floatingInstance.Parent then
+                    px, py = floatingInstance.Position.X.Offset, floatingInstance.Position.Y.Offset
+                elseif savedFloatPos then
+                    px, py = savedFloatPos.X, savedFloatPos.Y
+                end
+                return {on = isFloatEnabled, locked = floatLocked, trans = floatTrans, x = px, y = py}
+            end
+
+            local function SetState(s)
+                if type(s) ~= "table" then return end
+                if type(s.locked) == "boolean" then
+                    floatLocked = s.locked
+                    RefreshLockVisual()
+                end
+                if type(s.trans) == "number" then SetTransFromValue(s.trans, true) end
+                if type(s.x) == "number" and type(s.y) == "number" then
+                    savedFloatPos = Vector2.new(s.x, s.y)
+                end
+                if type(s.on) == "boolean" then SetToggleState(s.on) end
             end
 
             local API = {}
@@ -5953,6 +6304,21 @@ end
             function API:GetValue() return isFloatEnabled end
             function API:SetTitle(t) TitleLabel.Text = t return API end
             function API:Fire() pcall(callback) return API end
+            function API:SetLocked(v)
+                floatLocked = v and true or false
+                RefreshLockVisual()
+                SaveMgr.MarkDirty()
+                return API
+            end
+            function API:GetLocked() return floatLocked end
+            function API:SetTransparency(v)
+                SetTransFromValue(v, true)
+                SaveMgr.MarkDirty()
+                return API
+            end
+            function API:GetTransparency() return floatTrans end
+            function API:GetState() return GetState() end
+            function API:SetState(s) SetState(s) return API end
             function API:Destroy()
                 RemoveFloat()
                 Frame:Destroy()
@@ -6165,6 +6531,15 @@ local Elements = {}
             Cfg = Cfg or {}
             Type = string.lower(tostring(Type))
             local api = nil
+            local SaveTypes = {toggle=true, slider=true, input=true, dropdown=true, colorpicker=true, color=true, keybind=true, key=true, sliderinput=true, sliderbox=true, inputslider=true}
+            local userCb = nil
+            if SaveTypes[Type] then
+                userCb = Cfg.Callback or Cfg.OnChanged
+                Cfg.Callback = function(...)
+                    SaveMgr.MarkDirty()
+                    if userCb then return userCb(...) end
+                end
+            end
             if Type == "section" then api = CreateSection(Cfg)
             elseif Type == "paragraph" then api = CreateParagraph(Cfg)
             elseif Type == "button" then api = CreateButton(Cfg)
@@ -6191,6 +6566,9 @@ local Elements = {}
                     end
                     return api
                 end
+            end
+            if api and (SaveTypes[Type] or Type == "floatbutton" or Type == "buttonfloat" or Type == "btnfloat" or Type == "floatingbutton") then
+                pcall(SaveMgr.RegisterElement, Name, Type, Cfg, api, userCb)
             end
             return RegisterElement(api, Type, Cfg)
         end
@@ -6231,7 +6609,7 @@ local Elements = {}
     function Window:AddTab(Cfg)
         Cfg = Cfg or {}
         local name = Cfg.Title or Cfg.Name or "Tab"
-        return self:CreateTab(name)
+        return self:CreateTab(name, Cfg.Icon or Cfg.Image)
     end
 
 function Window:SetSizePreset(presetName)
@@ -6273,12 +6651,14 @@ function Window:SetSizePreset(presetName)
     function Window:Update(newCfg)
         newCfg = newCfg or {}
         if newCfg.Title then TitleLabel.Text = newCfg.Title end
+        if newCfg.Icon ~= nil then ApplyTitleIcon(newCfg.Icon) end
         if newCfg.SubTitle then SubLabel.Text = newCfg.SubTitle end
         if newCfg.WindowTransparency or newCfg.ElementTransparency or newCfg.WindowTrans or newCfg.ElementTrans then
             self:SetTransparency(newCfg.WindowTransparency or newCfg.WindowTrans, newCfg.ElementTransparency or newCfg.ElementTrans)
         end
         if newCfg.Theme and Themes[newCfg.Theme] then
             CurrentTheme = Themes[newCfg.Theme]
+            CurrentThemeName = newCfg.Theme
             local function GetLum(c) return 0.299*c.R+0.587*c.G+0.114*c.B end
             local lum = GetLum(CurrentTheme.MainBg)
             if lum>0.5 then CurrentTheme.Text=Color3.fromRGB(20,20,25) CurrentTheme.SubText=Color3.fromRGB(80,80,85) else CurrentTheme.Text=Color3.fromRGB(240,240,245) CurrentTheme.SubText=Color3.fromRGB(180,180,190) end
@@ -6324,7 +6704,7 @@ function Window:SetSizePreset(presetName)
         if (n == "float" or n == "floating") and FloatBtn then FloatBtn.Visible = true end
     end
     function Window:SetTheme(name)
-        if Themes[name] then ApplyTheme(name) SubLabel.Text = "Theme: "..name end
+        if Themes[name] then ApplyTheme(name) SubLabel.Text = "Theme: "..name SaveMgr.MarkDirty() end
     end
     function Window:GetThemes()
         local t = {}
@@ -6413,6 +6793,11 @@ function Window:SetSizePreset(presetName)
         return Btn
     end
     function Window:GetTab(name) return Tabs[name] end
+    function Window:SetIcon(icon) ApplyTitleIcon(icon) return Window end
+    function Window:SetSaveEnabled(state) return SaveMgr.SetEnabled(state) end
+    function Window:GetSaveEnabled() return SaveMgr.Enabled end
+    function Window:SaveNow() SaveMgr.Flush() return Window end
+    function Window:GetConfigPath() return SaveMgr.Path end
 
 
         return Window
