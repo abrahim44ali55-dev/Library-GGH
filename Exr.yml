@@ -1,0 +1,61 @@
+name: Extract ZIP Files
+
+on:
+  push:
+    paths:
+      - '**.zip'
+      - '.github/workflows/extract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract all ZIP files
+        run: |
+          python3 <<'PY'
+          import os
+          import zipfile
+          from pathlib import Path
+
+          root = Path(".").resolve()
+
+          for folder, dirs, files in os.walk(root):
+              dirs[:] = [d for d in dirs if d != ".git" and d != ".github"]
+              for filename in files:
+                  if not filename.lower().endswith(".zip"):
+                      continue
+
+                  archive = Path(folder) / filename
+                  print(f"Extracting: {archive}")
+
+                  with zipfile.ZipFile(archive, "r") as z:
+                      for item in z.infolist():
+                          target = (archive.parent / item.filename).resolve()
+
+                          if not target.is_relative_to(root):
+                              raise ValueError(f"Unsafe ZIP path: {item.filename}")
+
+                          z.extract(item, archive.parent)
+
+          print("Extraction completed.")
+          PY
+
+      - name: Commit extracted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Extract ZIP files"
+            git push
+          else
+            echo "No changes to commit."
+          fi
