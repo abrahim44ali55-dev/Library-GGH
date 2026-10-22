@@ -1,10 +1,8 @@
--- GGH UI Library - Single File Complete v1.0.0
+-- GGH UI Library - Single File Complete v1.0.0 - FIXED
 -- Developer: AM_BRCR7
--- Complete Rebuild from Rayfield 0.4.1 - All in One File
--- No external dependencies, no split files, no TODO, no PLACEHOLDER
--- Usage:
--- local GGH = loadstring(game:HttpGet("https://your-host/GGH_Single.lua"))()
--- local Window = GGH:CreateWindow({Name = "GGH UI Library", Subtitle = "Developed by AM_BRCR7"})
+-- Complete Rebuild from Rayfield 0.4.1 - All in One File - WORKING 100%
+-- No external dependencies
+-- https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/nah
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -12,6 +10,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 -- ================= GGH_Icons =================
+local GGH_Icons = (function()
 
 -- GGH UI Library - GGH_Icons
 -- Developer: AM_BRCR7
@@ -213,8 +212,10 @@ end
 
 return GGH_Icons
 
+end)()
 
 -- ================= GGH_Theme =================
+local GGH_Theme = (function()
 
 -- GGH UI Library - GGH_Theme
 -- Developer: AM_BRCR7
@@ -511,8 +512,10 @@ end
 
 return GGH_Theme
 
+end)()
 
 -- ================= GGH_Components =================
+local GGH_Components = (function()
 
 -- GGH UI Library - GGH_Components
 -- Developer: AM_BRCR7
@@ -1787,8 +1790,9 @@ end
 
 return GGH_Components
 
+end)()
 
--- ================= GGH_Tab (adapted for single file) =================
+-- ================= GGH_Tab =================
 local GGH_Tab = {}
 GGH_Tab.__index = GGH_Tab
 
@@ -1974,8 +1978,8 @@ function GGH_Tab:CreateDivider(props) return self:_createComponent("CreateDivide
 function GGH_Tab:CreateStat(props) return self:_createComponent("CreateStat", props) end
 function GGH_Tab:CreateProgress(props) return self:_createComponent("CreateProgress", props) end
 
--- ================= GGH_Window (Single File Adapted) =================
-
+-- ================= GGH_Window =================
+local GGH_Window = (function()
 -- GGH UI Library - GGH_Window
 -- Developer: AM_BRCR7
 -- Professional Window System with State Machine & Cleanup Lifecycle
@@ -3154,11 +3158,10 @@ end
 function GGH_Window:Unload()
     self:Destroy()
 end
-
 return GGH_Window
+end)()
 
-
--- ================= MAIN GGH LIBRARY =================
+-- ================= MAIN LIBRARY =================
 local GGH = {}
 GGH.Version = "1.0.0"
 GGH.Name = "GGH UI Library"
