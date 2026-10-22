@@ -15,8 +15,10 @@
    ╚═════╝  ╚═════╝ ╚═╝  ╚═╝
 
   --------------------------------------------------------------
-   AM_BRCR7 x GGH LIBRARY | Premium UI Library
-   GitHub RAW Ready | No Colors | Clean
+   AM_BRCR7 x GGH LIBRARY | Premium UI Library v2.0
+   180+ Real Themes | Smart CoreGui/PlayerGui Detection
+   Advanced Multi-Dropdown Rules | Web Image URL Caching
+   English Default | Full Script Optimization
   --------------------------------------------------------------
 ================================================================
 --]]
@@ -25,9 +27,63 @@ local GGH = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
-local LocalizationService = game:GetService("LocalizationService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
+local TextService = game:GetService("TextService")
 
+-- =====================================================================
+--  SMART GUI PARENT DETECTOR (gethui -> CoreGui -> PlayerGui Fallback)
+-- =====================================================================
+local SmartMountSource = "CoreGui"
+local function GetSmartGuiParent()
+    -- 1. Try gethui() first if supported (safest against detection)
+    local okHui, hui = pcall(function()
+        if typeof(gethui) == "function" then
+            local h = gethui()
+            if h and typeof(h) == "Instance" then return h end
+        end
+        return nil
+    end)
+    if okHui and hui then
+        SmartMountSource = "gethui"
+        return hui
+    end
+
+    -- 2. Test if executor permits CoreGui writing
+    local canCore = false
+    pcall(function()
+        local probe = Instance.new("Folder")
+        probe.Name = "GGH_Mount_Probe_" .. tostring(math.random(1000, 9999))
+        probe.Parent = CoreGui
+        probe:Destroy()
+        canCore = true
+    end)
+
+    if canCore then
+        SmartMountSource = "CoreGui"
+        return CoreGui
+    end
+
+    -- 3. Graceful fallback to PlayerGui
+    local lp = Players.LocalPlayer
+    if lp then
+        local pg = lp:FindFirstChildOfClass("PlayerGui") or lp:WaitForChild("PlayerGui", 4)
+        if pg then
+            SmartMountSource = "PlayerGui"
+            return pg
+        end
+    end
+
+    SmartMountSource = "CoreGui"
+    return CoreGui
+end
+local function GetGuiParent() return GetSmartGuiParent() end
+function GGH:GetMountTarget() return SmartMountSource end
+
+-- =====================================================================
+--  IMAGE & ASSET RESOLUTION ENGINE (URL Caching + AssetIDs + Lucide)
+-- =====================================================================
 local GGH_ICONS = {
     ["a-arrow-down"] = "rbxassetid://92867583610071",
     ["a-arrow-up"] = "rbxassetid://132318504999733",
@@ -1781,6 +1837,7 @@ function GGH:SearchIcons(query)
     return t
 end
 
+
 local function MakeIcon(parent, icon, size, color)
     local img = Instance.new("ImageLabel")
     img.Name = "Icon"
@@ -1801,28 +1858,130 @@ local function BindIconToText(btn, img)
     end)
 end
 
-local function GetGuiParent()
-    local ok, hui = pcall(function() return gethui() end)
-    if ok and hui then return hui end
-    return CoreGui
+-- Web Image Downloader & Asset Cache
+local ImageCacheFolder = "GGH_AssetCache"
+local MemoryImageCache = {}
+
+local function IsWebUrl(str)
+    if not str or type(str) ~= "string" then return false end
+    local s = str:lower()
+    return s:match("^https?://") ~= nil
 end
 
-    local function MakeTranslatable(textObj)
-        if textObj:IsA("TextLabel") or textObj:IsA("TextButton") or textObj:IsA("TextBox") then
-            textObj.AutoLocalize = true
-            pcall(function() textObj.RichText = false end)
-        end
-        return textObj
+local function DownloadWebImage(url, onReady)
+    if not IsWebUrl(url) then
+        if onReady then onReady(url) end
+        return url
     end
 
-    local function Corner(p,r)
+    if MemoryImageCache[url] then
+        if onReady then onReady(MemoryImageCache[url]) end
+        return MemoryImageCache[url]
+    end
+
+    local customAssetFn = (typeof(getcustomasset) == "function" and getcustomasset)
+        or (typeof(getsynasset) == "function" and getsynasset)
+    local canWrite = (typeof(writefile) == "function") and (typeof(isfile) == "function")
+
+    if not customAssetFn or not canWrite then
+        -- Executor doesn't support local asset creation, fallback to raw url
+        if onReady then onReady(url) end
+        return url
+    end
+
+    -- Create cache folder
+    pcall(function()
+        if type(isfolder) == "function" and type(makefolder) == "function" and not isfolder(ImageCacheFolder) then
+            makefolder(ImageCacheFolder)
+        end
+    end)
+
+    local ext = url:match("%.([%w]+)%??") or "png"
+    ext = ext:lower()
+    if #ext > 4 or not ext:match("^[a-z]+$") then ext = "png" end
+    local hash = "img_" .. tostring(url):gsub("[^%w]", "_"):sub(-28) .. "." .. ext
+    local filePath = ImageCacheFolder .. "/" .. hash
+
+    if isfile(filePath) then
+        local ok, asset = pcall(customAssetFn, filePath)
+        if ok and asset then
+            MemoryImageCache[url] = asset
+            if onReady then onReady(asset) end
+            return asset
+        end
+    end
+
+    task.spawn(function()
+        local okData, body = pcall(function()
+            if type(game.HttpGet) == "function" then
+                return game:HttpGet(url)
+            end
+            local req = (typeof(request) == "function" and request)
+                or (typeof(http_request) == "function" and http_request)
+                or (typeof(syn) == "table" and syn.request)
+            if req then
+                local res = req({Url = url, Method = "GET"})
+                return res and (res.Body or res.body)
+            end
+            return nil
+        end)
+
+        if okData and body and #body > 0 then
+            pcall(function() writefile(filePath, body) end)
+            if isfile(filePath) then
+                local ok2, asset = pcall(customAssetFn, filePath)
+                if ok2 and asset then
+                    MemoryImageCache[url] = asset
+                    if onReady then onReady(asset) end
+                    return
+                end
+            end
+        end
+        if onReady then onReady(url) end
+    end)
+
+    return url
+end
+
+local function UniversalResolveImage(inputStr, onReady)
+    if not inputStr or inputStr == "" then return "" end
+    local s = tostring(inputStr)
+    if GGH_ICONS[s] then
+        local res = GGH_ICONS[s]
+        if onReady then onReady(res) end
+        return res
+    end
+    if GGH_ICONS[s:lower()] then
+        local res = GGH_ICONS[s:lower()]
+        if onReady then onReady(res) end
+        return res
+    end
+    if IsWebUrl(s) then
+        return DownloadWebImage(s, onReady)
+    end
+    if s:match("^rbxassetid://") or s:match("^rbxasset://") then
+        if onReady then onReady(s) end
+        return s
+    end
+    local id = s:match("^(%d+)$") or s:match("id=(%d+)") or s:match("rbxassetid://(%d+)")
+    if id then
+        local res = "rbxassetid://" .. id
+        if onReady then onReady(res) end
+        return res
+    end
+    if onReady then onReady(s) end
+    return s
+end
+GGH.ResolveImage = UniversalResolveImage
+
+local function Corner(p, r)
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, r or 8)
     c.Parent = p
     return c
 end
 
-local function Stroke(p,color,thick)
+local function Stroke(p, color, thick)
     local s = Instance.new("UIStroke")
     s.Color = color or Color3.fromRGB(40,40,50)
     s.Thickness = thick or 1
@@ -1861,7 +2020,7 @@ local function AddBlackBorder(frame, thick, trans)
     return s
 end
 
-local function Tween(o,props,dur)
+local function Tween(o, props, dur)
     TweenService:Create(o, TweenInfo.new(dur or 0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props):Play()
 end
 
@@ -1886,27 +2045,11 @@ local function ClampFrameToScreen(frame, gui)
     end
 end
 
-local function GetSafePickerPosition(anchorBtn, pickerSize, screenGui)
-    local vp = screenGui.AbsoluteSize
-    local btnPos = anchorBtn.AbsolutePosition
-    local btnSize = anchorBtn.AbsoluteSize
-    local pW, pH = pickerSize.X, pickerSize.Y
-    local x = btnPos.X + btnSize.X + 10
-    local y = btnPos.Y
-    if x + pW > vp.X - 5 then x = btnPos.X - pW - 10 end
-    if y + pH > vp.Y - 5 then y = vp.Y - pH - 10 end
-    x = math.clamp(x, 5, vp.X - pW - 5)
-    y = math.clamp(y, 5, vp.Y - pH - 5)
-    return UDim2.fromOffset(x, y)
-end
-
 local function ContrastColor(c)
     local lum = 0.299*c.R + 0.587*c.G + 0.114*c.B
     if lum > 0.62 then return Color3.fromRGB(20,20,26) end
     return Color3.new(1,1,1)
 end
-
-local RunService = game:GetService("RunService")
 
 local function SmoothDestroy(gui)
     pcall(function() if gui:IsA("ScreenGui") then gui.Enabled = false end end)
@@ -1933,78 +2076,44 @@ local function FadeOutGui(gui, dur, done)
     local function tw(o, props)
         pcall(function() TweenService:Create(o, info, props):Play() end)
     end
-    local function simpleFade(root)
-        for _, d in ipairs(root:GetDescendants()) do
-            if d:IsA("GuiObject") then
-                local props = {}
-                if d.BackgroundTransparency < 1 then props.BackgroundTransparency = 1 end
-                if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then props.TextTransparency = 1 end
-                if d:IsA("ImageLabel") or d:IsA("ImageButton") then props.ImageTransparency = 1 end
-                if next(props) then tw(d, props) end
-            elseif d:IsA("UIStroke") then
-                tw(d, {Transparency = 1})
-            end
-        end
-    end
     for _, top in ipairs(gui:GetChildren()) do
         if top:IsA("GuiObject") then
-            local count = #top:GetDescendants()
-            if count <= 40 then
-                simpleFade(top)
-                if top.BackgroundTransparency < 1 then tw(top, {BackgroundTransparency = 1}) end
-            else
-                local ok = pcall(function()
-                    local cg = Instance.new("CanvasGroup")
-                    cg.Name = "GGH_FadeGroup"
-                    cg.BackgroundTransparency = 1
-                    cg.BorderSizePixel = 0
-                    cg.Size = UDim2.fromScale(1, 1)
-                    cg.ZIndex = 1
-                    local corner = top:FindFirstChildOfClass("UICorner")
-                    if corner then
-                        local c2 = Instance.new("UICorner")
-                        c2.CornerRadius = corner.CornerRadius
-                        c2.Parent = cg
-                    end
-                    for _, ch in ipairs(top:GetChildren()) do
-                        if ch:IsA("GuiObject") then ch.Parent = cg end
-                    end
-                    cg.Parent = top
-                    tw(cg, {GroupTransparency = 1})
-                    if top.BackgroundTransparency < 1 then tw(top, {BackgroundTransparency = 1}) end
-                    for _, ch in ipairs(top:GetChildren()) do
-                        if ch:IsA("UIStroke") then tw(ch, {Transparency = 1}) end
-                    end
-                end)
-                if not ok then
-                    if top.BackgroundTransparency < 1 then tw(top, {BackgroundTransparency = 1}) end
+            for _, d in ipairs(top:GetDescendants()) do
+                if d:IsA("GuiObject") then
+                    local props = {}
+                    if d.BackgroundTransparency < 1 then props.BackgroundTransparency = 1 end
+                    if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then props.TextTransparency = 1 end
+                    if d:IsA("ImageLabel") or d:IsA("ImageButton") then props.ImageTransparency = 1 end
+                    if next(props) then tw(d, props) end
+                elseif d:IsA("UIStroke") then
+                    tw(d, {Transparency = 1})
                 end
             end
+            if top.BackgroundTransparency < 1 then tw(top, {BackgroundTransparency = 1}) end
         end
     end
     task.delay(dur + 0.05, function() if done then pcall(done) end end)
 end
 
-
 -- =====================================================================
---  LOCALIZATION ENGINE  (translations: inline / one JSON url / url per language)
---  Keys = the ORIGINAL text written in the script (Source language).
+--  LOCALIZATION ENGINE (English Default - Pure English Strings by Default)
 -- =====================================================================
 local Loc = {
     Enabled = false,
     Source = "English",
     Current = "English",
     Pending = nil,
-    Dicts = {},       -- [language] = { [original] = translated }
-    Urls = {},        -- [language] = url (loaded when the language is picked)
-    Order = {},       -- ordered list of language names
-    Listeners = {},   -- function(kind)  kind = "list" | "set"
+    Dicts = {},
+    Urls = {},
+    Order = {"English"},
+    Listeners = {},
     OnChange = nil,
 }
 GGH.Localization = Loc
 
-local BuiltIn = {
-    ["arabic"] = {
+-- Optional translation dictionaries (activated only if explicitly chosen!)
+local OptionalDictionaries = {
+    ["Arabic"] = {
         ["SETTINGS"] = "الإعدادات",
         ["Save Settings"] = "حفظ الإعدادات",
         ["Save Settings (not supported)"] = "حفظ الإعدادات (غير مدعوم)",
@@ -2019,11 +2128,15 @@ local BuiltIn = {
         ["Confirm"] = "تأكيد",
         ["Confirmation"] = "تأكيد",
         ["Are you sure?"] = "هل أنت متأكد؟",
-        ["Search toggles, buttons, tabs..."] = "ابحث عن مفاتيح، أزرار، تبويبات...",
-    },
+        ["Search toggles, buttons, tabs..."] = "ابحث عن عناصر، أزرار، تبويبات...",
+        ["Show Image"] = "عرض الصورة",
+        ["Copy Link"] = "نسخ الرابط",
+        ["Copied!"] = "تم النسخ!",
+        ["Selection Conflict"] = "تعارض في الاختيار",
+    }
 }
-BuiltIn["العربية"] = BuiltIn["arabic"]
-BuiltIn["ar"] = BuiltIn["arabic"]
+OptionalDictionaries["العربية"] = OptionalDictionaries["Arabic"]
+OptionalDictionaries["ar"] = OptionalDictionaries["Arabic"]
 
 local function LocNotify(kind)
     for _, f in ipairs(Loc.Listeners) do pcall(f, kind) end
@@ -2051,7 +2164,7 @@ function Loc.AddDict(lang, tbl)
     local d = Loc.Dicts[lang]
     if not d then
         d = {}
-        local base = BuiltIn[lang:lower()]
+        local base = OptionalDictionaries[lang] or OptionalDictionaries[lang:lower()]
         if base then for k, v in pairs(base) do d[k] = v end end
         Loc.Dicts[lang] = d
     end
@@ -2061,97 +2174,7 @@ function Loc.AddDict(lang, tbl)
     LocNotify("list")
 end
 
-function Loc.AddUrl(lang, url)
-    lang = tostring(lang or "")
-    if lang == "" or type(url) ~= "string" or url == "" then return end
-    Loc.AddLanguage(lang)
-    Loc.Urls[lang] = url
-    LocNotify("list")
-end
-
--- accepts { "Arabic": {...}, "French": {...} }  or  (forcedLang) { "Hello": "مرحبا", ... }
-function Loc.ApplyJson(data, forced)
-    if type(data) ~= "table" then return end
-    local hasString = false
-    for _, v in pairs(data) do if type(v) == "string" then hasString = true break end end
-    if forced and hasString then
-        Loc.AddDict(forced, data)
-    elseif forced and type(data[forced]) == "table" then
-        Loc.AddDict(forced, data[forced])
-    else
-        for lang, tbl in pairs(data) do
-            if type(tbl) == "table" then Loc.AddDict(lang, tbl) end
-        end
-    end
-end
-
-local function HttpGetSafe(url)
-    local ok, res = pcall(function() return game:HttpGet(url) end)
-    if ok and type(res) == "string" and #res > 0 then return res end
-    local req = (typeof(request) == "function" and request)
-        or (typeof(http_request) == "function" and http_request)
-        or (typeof(syn) == "table" and syn.request)
-    if req then
-        local ok2, r = pcall(req, {Url = url, Method = "GET"})
-        if ok2 and type(r) == "table" then return r.Body or r.body end
-    end
-    return nil
-end
-
-local function FetchJson(url)
-    local body = HttpGetSafe(url)
-    if not body then return nil end
-    local ok, data = pcall(function() return HttpService:JSONDecode(body) end)
-    if ok and type(data) == "table" then return data end
-    return nil
-end
-
-local Tr
-function Loc.ApplyPending()
-    local p = Loc.Pending
-    if not p then return end
-    local real = Loc.Find(p)
-    if real then
-        Loc.Pending = nil
-        GGH.SetLanguage(real)
-    end
-end
-
-function Loc.LoadAll(url)
-    task.spawn(function()
-        local data = FetchJson(url)
-        if data then
-            Loc.ApplyJson(data)
-        else
-            warn("[GGH Language] failed to load translations: " .. tostring(url))
-        end
-        Loc.ApplyPending()
-    end)
-end
-
-function Loc.LoadLang(lang, done)
-    local url = Loc.Urls[lang]
-    if not url then if done then done() end return end
-    task.spawn(function()
-        local data = FetchJson(url)
-        if data then
-            Loc.ApplyJson(data, lang)
-            Loc.Urls[lang] = nil
-        else
-            warn("[GGH Language] failed to load: " .. tostring(url))
-        end
-        if done then done() end
-    end)
-end
-
-function Loc.GetLanguages()
-    local t = {}
-    for _, n in ipairs(Loc.Order) do table.insert(t, n) end
-    return t
-end
-
--- translate a single string (also handles "Title : value", "• Name" and "Name  (WxH)")
-Tr = function(s)
+local function Tr(s)
     if type(s) ~= "string" or s == "" or Loc.Current == Loc.Source then return s end
     local d = Loc.Dicts[Loc.Current]
     if not d then return s end
@@ -2233,52 +2256,19 @@ function Loc.Apply(name)
     if Loc.OnChange then pcall(Loc.OnChange, name) end
 end
 
-function Loc.Configure(c, extra)
-    local oldSource = Loc.Source
-    Loc.Source = tostring(c.Source or c.SourceLanguage or Loc.Source)
-    if Loc.Current == oldSource then Loc.Current = Loc.Source end
-    Loc.AddLanguage(Loc.Source)
-    if type(c.Languages) == "table" then
-        for _, n in ipairs(c.Languages) do Loc.AddLanguage(n) end
-    end
-    for lang, tbl in pairs(c.Translations or {}) do Loc.AddDict(lang, tbl) end
-    for lang, tbl in pairs(extra or {}) do Loc.AddDict(lang, tbl) end
-    for lang, url in pairs(c.Urls or c.Links or {}) do Loc.AddUrl(lang, url) end
-    if c.Callback or c.OnChanged then Loc.OnChange = c.OnChanged or c.Callback end
-    if c.Default then Loc.Pending = c.Default end
-    Loc.Enabled = true
-    if c.Url or c.Link then Loc.LoadAll(c.Url or c.Link) end
-    Loc.ApplyPending()
-end
-
 function GGH.SetLanguage(a, b)
     local name = (a == GGH) and b or a
     local real = Loc.Find(name)
     if not real then return false end
-    if real ~= Loc.Source and Loc.Urls[real] and not Loc.Dicts[real] then
-        Loc.LoadLang(real, function() Loc.Apply(real) end)
-    else
-        Loc.Apply(real)
-    end
+    Loc.Apply(real)
     return true
 end
 function GGH.GetLanguage() return Loc.Current end
-function GGH.GetLanguages() return Loc.GetLanguages() end
-function GGH.AddTranslations(a, b, c)
-    if a == GGH then a, b = b, c end
-    if type(a) == "table" then Loc.ApplyJson(a) else Loc.AddDict(a, b) end
-end
-function GGH.LoadTranslations(a, b, c)
-    if a == GGH then a, b = b, c end
-    local url, lang = a, b
-    task.spawn(function()
-        local data = FetchJson(url)
-        if data then Loc.ApplyJson(data, lang) end
-        Loc.ApplyPending()
-    end)
-end
--- =====================================================================
+function GGH.GetLanguages() return Loc.Order end
 
+-- =====================================================================
+--  180+ REAL THEMES COLLECTION (Diverse, High-Contrast & Harmonious)
+-- =====================================================================
 local Themes = {
     ["Dark"] = {
         MainBg = Color3.fromRGB(18,18,22),
@@ -2920,9 +2910,2253 @@ local Themes = {
         CloseBg = Color3.fromRGB(30,20,40),
         CloseText = Color3.fromRGB(200,100,255),
     },
-
+    ["Dracula"] = {
+        MainBg = Color3.fromRGB(40,42,54),
+        HeaderBg = Color3.fromRGB(68,71,90),
+        TabListBg = Color3.fromRGB(50,52,68),
+        ElementBg = Color3.fromRGB(68,71,90),
+        ElementBg2 = Color3.fromRGB(98,114,164),
+        Text = Color3.fromRGB(248,248,242),
+        SubText = Color3.fromRGB(189,147,249),
+        SectionText = Color3.fromRGB(255,121,198),
+        ParagraphText = Color3.fromRGB(241,250,140),
+        Accent = Color3.fromRGB(189,147,249),
+        Stroke = Color3.fromRGB(98,114,164),
+        StrokeLight = Color3.fromRGB(139,233,253),
+        CloseBg = Color3.fromRGB(255,85,85),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Nord"] = {
+        MainBg = Color3.fromRGB(46,52,64),
+        HeaderBg = Color3.fromRGB(59,66,82),
+        TabListBg = Color3.fromRGB(53,60,74),
+        ElementBg = Color3.fromRGB(67,76,94),
+        ElementBg2 = Color3.fromRGB(76,86,106),
+        Text = Color3.fromRGB(236,239,244),
+        SubText = Color3.fromRGB(216,222,233),
+        SectionText = Color3.fromRGB(143,188,187),
+        ParagraphText = Color3.fromRGB(229,233,240),
+        Accent = Color3.fromRGB(136,192,208),
+        Stroke = Color3.fromRGB(76,86,106),
+        StrokeLight = Color3.fromRGB(129,161,193),
+        CloseBg = Color3.fromRGB(191,97,106),
+        CloseText = Color3.fromRGB(236,239,244),
+    },
+    ["Tokyo Night"] = {
+        MainBg = Color3.fromRGB(26,27,38),
+        HeaderBg = Color3.fromRGB(36,40,59),
+        TabListBg = Color3.fromRGB(31,35,53),
+        ElementBg = Color3.fromRGB(41,46,66),
+        ElementBg2 = Color3.fromRGB(54,60,84),
+        Text = Color3.fromRGB(192,202,245),
+        SubText = Color3.fromRGB(122,162,247),
+        SectionText = Color3.fromRGB(187,154,247),
+        ParagraphText = Color3.fromRGB(169,177,214),
+        Accent = Color3.fromRGB(122,162,247),
+        Stroke = Color3.fromRGB(65,72,104),
+        StrokeLight = Color3.fromRGB(115,218,202),
+        CloseBg = Color3.fromRGB(247,118,142),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["One Dark"] = {
+        MainBg = Color3.fromRGB(40,44,52),
+        HeaderBg = Color3.fromRGB(33,37,43),
+        TabListBg = Color3.fromRGB(37,41,48),
+        ElementBg = Color3.fromRGB(44,49,58),
+        ElementBg2 = Color3.fromRGB(58,63,75),
+        Text = Color3.fromRGB(171,178,191),
+        SubText = Color3.fromRGB(92,99,112),
+        SectionText = Color3.fromRGB(224,108,117),
+        ParagraphText = Color3.fromRGB(152,195,121),
+        Accent = Color3.fromRGB(97,175,239),
+        Stroke = Color3.fromRGB(62,68,82),
+        StrokeLight = Color3.fromRGB(86,182,194),
+        CloseBg = Color3.fromRGB(224,108,117),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Monokai Pro"] = {
+        MainBg = Color3.fromRGB(45,42,46),
+        HeaderBg = Color3.fromRGB(34,31,34),
+        TabListBg = Color3.fromRGB(40,37,41),
+        ElementBg = Color3.fromRGB(58,53,59),
+        ElementBg2 = Color3.fromRGB(74,69,76),
+        Text = Color3.fromRGB(252,252,250),
+        SubText = Color3.fromRGB(147,146,147),
+        SectionText = Color3.fromRGB(255,97,136),
+        ParagraphText = Color3.fromRGB(255,216,102),
+        Accent = Color3.fromRGB(120,220,232),
+        Stroke = Color3.fromRGB(85,80,88),
+        StrokeLight = Color3.fromRGB(169,220,113),
+        CloseBg = Color3.fromRGB(255,97,136),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Catppuccin Mocha"] = {
+        MainBg = Color3.fromRGB(30,30,46),
+        HeaderBg = Color3.fromRGB(24,24,37),
+        TabListBg = Color3.fromRGB(27,27,42),
+        ElementBg = Color3.fromRGB(49,50,68),
+        ElementBg2 = Color3.fromRGB(69,71,90),
+        Text = Color3.fromRGB(205,214,244),
+        SubText = Color3.fromRGB(166,173,200),
+        SectionText = Color3.fromRGB(203,166,247),
+        ParagraphText = Color3.fromRGB(245,224,220),
+        Accent = Color3.fromRGB(137,180,250),
+        Stroke = Color3.fromRGB(69,71,90),
+        StrokeLight = Color3.fromRGB(116,199,236),
+        CloseBg = Color3.fromRGB(243,139,168),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Catppuccin Macchiato"] = {
+        MainBg = Color3.fromRGB(36,39,58),
+        HeaderBg = Color3.fromRGB(30,32,48),
+        TabListBg = Color3.fromRGB(33,35,53),
+        ElementBg = Color3.fromRGB(54,58,79),
+        ElementBg2 = Color3.fromRGB(73,77,100),
+        Text = Color3.fromRGB(202,211,245),
+        SubText = Color3.fromRGB(165,173,203),
+        SectionText = Color3.fromRGB(198,160,246),
+        ParagraphText = Color3.fromRGB(244,219,214),
+        Accent = Color3.fromRGB(138,173,244),
+        Stroke = Color3.fromRGB(73,77,100),
+        StrokeLight = Color3.fromRGB(139,213,202),
+        CloseBg = Color3.fromRGB(237,135,150),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Catppuccin Frappe"] = {
+        MainBg = Color3.fromRGB(48,52,70),
+        HeaderBg = Color3.fromRGB(41,44,60),
+        TabListBg = Color3.fromRGB(45,48,65),
+        ElementBg = Color3.fromRGB(65,69,89),
+        ElementBg2 = Color3.fromRGB(81,87,110),
+        Text = Color3.fromRGB(198,208,245),
+        SubText = Color3.fromRGB(165,173,206),
+        SectionText = Color3.fromRGB(202,158,230),
+        ParagraphText = Color3.fromRGB(238,212,199),
+        Accent = Color3.fromRGB(140,170,238),
+        Stroke = Color3.fromRGB(81,87,110),
+        StrokeLight = Color3.fromRGB(129,200,191),
+        CloseBg = Color3.fromRGB(231,130,132),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Catppuccin Latte"] = {
+        MainBg = Color3.fromRGB(239,241,245),
+        HeaderBg = Color3.fromRGB(230,233,239),
+        TabListBg = Color3.fromRGB(234,237,243),
+        ElementBg = Color3.fromRGB(220,224,232),
+        ElementBg2 = Color3.fromRGB(204,208,218),
+        Text = Color3.fromRGB(76,79,105),
+        SubText = Color3.fromRGB(108,111,133),
+        SectionText = Color3.fromRGB(136,57,239),
+        ParagraphText = Color3.fromRGB(92,95,119),
+        Accent = Color3.fromRGB(30,102,245),
+        Stroke = Color3.fromRGB(188,192,204),
+        StrokeLight = Color3.fromRGB(32,159,181),
+        CloseBg = Color3.fromRGB(210,15,57),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Gruvbox Dark"] = {
+        MainBg = Color3.fromRGB(40,40,40),
+        HeaderBg = Color3.fromRGB(29,32,33),
+        TabListBg = Color3.fromRGB(35,36,36),
+        ElementBg = Color3.fromRGB(60,56,54),
+        ElementBg2 = Color3.fromRGB(80,73,69),
+        Text = Color3.fromRGB(235,219,178),
+        SubText = Color3.fromRGB(168,153,132),
+        SectionText = Color3.fromRGB(251,73,52),
+        ParagraphText = Color3.fromRGB(213,196,161),
+        Accent = Color3.fromRGB(250,189,47),
+        Stroke = Color3.fromRGB(102,92,84),
+        StrokeLight = Color3.fromRGB(184,187,38),
+        CloseBg = Color3.fromRGB(204,36,29),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Gruvbox Light"] = {
+        MainBg = Color3.fromRGB(251,241,199),
+        HeaderBg = Color3.fromRGB(242,229,188),
+        TabListBg = Color3.fromRGB(246,235,193),
+        ElementBg = Color3.fromRGB(235,219,178),
+        ElementBg2 = Color3.fromRGB(213,196,161),
+        Text = Color3.fromRGB(60,56,54),
+        SubText = Color3.fromRGB(124,111,100),
+        SectionText = Color3.fromRGB(175,58,3),
+        ParagraphText = Color3.fromRGB(80,73,69),
+        Accent = Color3.fromRGB(181,118,20),
+        Stroke = Color3.fromRGB(189,174,147),
+        StrokeLight = Color3.fromRGB(66,123,88),
+        CloseBg = Color3.fromRGB(157,0,6),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Solarized Dark"] = {
+        MainBg = Color3.fromRGB(0,43,54),
+        HeaderBg = Color3.fromRGB(7,54,66),
+        TabListBg = Color3.fromRGB(4,49,60),
+        ElementBg = Color3.fromRGB(10,65,79),
+        ElementBg2 = Color3.fromRGB(14,83,101),
+        Text = Color3.fromRGB(131,148,150),
+        SubText = Color3.fromRGB(88,110,117),
+        SectionText = Color3.fromRGB(211,54,130),
+        ParagraphText = Color3.fromRGB(147,161,161),
+        Accent = Color3.fromRGB(38,139,210),
+        Stroke = Color3.fromRGB(14,83,101),
+        StrokeLight = Color3.fromRGB(42,161,152),
+        CloseBg = Color3.fromRGB(220,50,47),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Solarized Light"] = {
+        MainBg = Color3.fromRGB(253,246,227),
+        HeaderBg = Color3.fromRGB(238,232,213),
+        TabListBg = Color3.fromRGB(245,239,220),
+        ElementBg = Color3.fromRGB(220,212,191),
+        ElementBg2 = Color3.fromRGB(203,194,172),
+        Text = Color3.fromRGB(101,123,131),
+        SubText = Color3.fromRGB(147,161,161),
+        SectionText = Color3.fromRGB(211,54,130),
+        ParagraphText = Color3.fromRGB(88,110,117),
+        Accent = Color3.fromRGB(38,139,210),
+        Stroke = Color3.fromRGB(180,172,150),
+        StrokeLight = Color3.fromRGB(42,161,152),
+        CloseBg = Color3.fromRGB(220,50,47),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["GitHub Dark"] = {
+        MainBg = Color3.fromRGB(13,17,23),
+        HeaderBg = Color3.fromRGB(22,27,34),
+        TabListBg = Color3.fromRGB(18,22,28),
+        ElementBg = Color3.fromRGB(33,38,45),
+        ElementBg2 = Color3.fromRGB(48,54,61),
+        Text = Color3.fromRGB(230,237,243),
+        SubText = Color3.fromRGB(139,148,158),
+        SectionText = Color3.fromRGB(163,113,247),
+        ParagraphText = Color3.fromRGB(201,209,217),
+        Accent = Color3.fromRGB(47,129,247),
+        Stroke = Color3.fromRGB(48,54,61),
+        StrokeLight = Color3.fromRGB(56,139,253),
+        CloseBg = Color3.fromRGB(248,81,73),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["GitHub Light"] = {
+        MainBg = Color3.fromRGB(255,255,255),
+        HeaderBg = Color3.fromRGB(246,248,250),
+        TabListBg = Color3.fromRGB(250,251,252),
+        ElementBg = Color3.fromRGB(234,238,242),
+        ElementBg2 = Color3.fromRGB(218,222,228),
+        Text = Color3.fromRGB(31,35,40),
+        SubText = Color3.fromRGB(101,109,118),
+        SectionText = Color3.fromRGB(130,80,223),
+        ParagraphText = Color3.fromRGB(87,96,106),
+        Accent = Color3.fromRGB(9,105,218),
+        Stroke = Color3.fromRGB(208,215,222),
+        StrokeLight = Color3.fromRGB(5,154,206),
+        CloseBg = Color3.fromRGB(207,34,46),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["SynthWave 84"] = {
+        MainBg = Color3.fromRGB(42,24,53),
+        HeaderBg = Color3.fromRGB(36,19,45),
+        TabListBg = Color3.fromRGB(39,21,49),
+        ElementBg = Color3.fromRGB(52,33,67),
+        ElementBg2 = Color3.fromRGB(69,45,87),
+        Text = Color3.fromRGB(249,248,245),
+        SubText = Color3.fromRGB(132,113,150),
+        SectionText = Color3.fromRGB(254,68,156),
+        ParagraphText = Color3.fromRGB(255,230,109),
+        Accent = Color3.fromRGB(255,126,219),
+        Stroke = Color3.fromRGB(69,45,87),
+        StrokeLight = Color3.fromRGB(54,243,197),
+        CloseBg = Color3.fromRGB(254,68,156),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Palenight"] = {
+        MainBg = Color3.fromRGB(41,44,58),
+        HeaderBg = Color3.fromRGB(33,36,48),
+        TabListBg = Color3.fromRGB(37,40,53),
+        ElementBg = Color3.fromRGB(52,56,73),
+        ElementBg2 = Color3.fromRGB(68,73,94),
+        Text = Color3.fromRGB(238,240,244),
+        SubText = Color3.fromRGB(149,157,174),
+        SectionText = Color3.fromRGB(199,146,234),
+        ParagraphText = Color3.fromRGB(191,199,213),
+        Accent = Color3.fromRGB(130,170,255),
+        Stroke = Color3.fromRGB(68,73,94),
+        StrokeLight = Color3.fromRGB(137,221,255),
+        CloseBg = Color3.fromRGB(255,83,112),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Ayu Dark"] = {
+        MainBg = Color3.fromRGB(15,20,25),
+        HeaderBg = Color3.fromRGB(10,14,20),
+        TabListBg = Color3.fromRGB(12,17,22),
+        ElementBg = Color3.fromRGB(25,34,43),
+        ElementBg2 = Color3.fromRGB(37,49,61),
+        Text = Color3.fromRGB(230,225,207),
+        SubText = Color3.fromRGB(92,103,115),
+        SectionText = Color3.fromRGB(255,180,84),
+        ParagraphText = Color3.fromRGB(191,189,182),
+        Accent = Color3.fromRGB(255,159,67),
+        Stroke = Color3.fromRGB(37,49,61),
+        StrokeLight = Color3.fromRGB(115,208,255),
+        CloseBg = Color3.fromRGB(240,113,120),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Ayu Mirage"] = {
+        MainBg = Color3.fromRGB(31,36,48),
+        HeaderBg = Color3.fromRGB(25,29,39),
+        TabListBg = Color3.fromRGB(28,32,43),
+        ElementBg = Color3.fromRGB(42,48,63),
+        ElementBg2 = Color3.fromRGB(57,65,83),
+        Text = Color3.fromRGB(203,204,198),
+        SubText = Color3.fromRGB(112,122,140),
+        SectionText = Color3.fromRGB(255,204,102),
+        ParagraphText = Color3.fromRGB(184,186,180),
+        Accent = Color3.fromRGB(115,208,255),
+        Stroke = Color3.fromRGB(57,65,83),
+        StrokeLight = Color3.fromRGB(149,230,203),
+        CloseBg = Color3.fromRGB(242,135,141),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Rose Pine"] = {
+        MainBg = Color3.fromRGB(25,23,36),
+        HeaderBg = Color3.fromRGB(31,29,46),
+        TabListBg = Color3.fromRGB(28,26,41),
+        ElementBg = Color3.fromRGB(38,35,58),
+        ElementBg2 = Color3.fromRGB(57,53,82),
+        Text = Color3.fromRGB(224,222,244),
+        SubText = Color3.fromRGB(144,140,170),
+        SectionText = Color3.fromRGB(235,188,186),
+        ParagraphText = Color3.fromRGB(246,193,119),
+        Accent = Color3.fromRGB(196,167,231),
+        Stroke = Color3.fromRGB(57,53,82),
+        StrokeLight = Color3.fromRGB(156,207,216),
+        CloseBg = Color3.fromRGB(235,111,146),
+        CloseText = Color3.fromRGB(255,255,255),
+    },
+    ["Pure AMOLED"] = {
+        MainBg = Color3.fromRGB(0,0,0),
+        HeaderBg = Color3.fromRGB(10,10,10),
+        TabListBg = Color3.fromRGB(5,5,5),
+        ElementBg = Color3.fromRGB(16,16,16),
+        ElementBg2 = Color3.fromRGB(28,28,28),
+        Text = Color3.fromRGB(255,255,255),
+        SubText = Color3.fromRGB(160,160,160),
+        SectionText = Color3.fromRGB(120,120,120),
+        ParagraphText = Color3.fromRGB(210,210,210),
+        Accent = Color3.fromRGB(255,255,255),
+        Stroke = Color3.fromRGB(45,45,45),
+        StrokeLight = Color3.fromRGB(75,75,75),
+        CloseBg = Color3.fromRGB(80,20,20),
+        CloseText = Color3.fromRGB(255,100,100),
+    },
+    ["Obsidian"] = {
+        MainBg = Color3.fromRGB(11,13,17),
+        HeaderBg = Color3.fromRGB(18,21,28),
+        TabListBg = Color3.fromRGB(14,17,23),
+        ElementBg = Color3.fromRGB(24,28,38),
+        ElementBg2 = Color3.fromRGB(34,40,54),
+        Text = Color3.fromRGB(235,240,250),
+        SubText = Color3.fromRGB(140,150,170),
+        SectionText = Color3.fromRGB(100,130,190),
+        ParagraphText = Color3.fromRGB(200,215,235),
+        Accent = Color3.fromRGB(90,130,240),
+        Stroke = Color3.fromRGB(40,48,65),
+        StrokeLight = Color3.fromRGB(60,75,100),
+        CloseBg = Color3.fromRGB(80,30,40),
+        CloseText = Color3.fromRGB(255,100,120),
+    },
+    ["Onyx Void"] = {
+        MainBg = Color3.fromRGB(8,9,10),
+        HeaderBg = Color3.fromRGB(16,18,20),
+        TabListBg = Color3.fromRGB(12,13,15),
+        ElementBg = Color3.fromRGB(22,24,28),
+        ElementBg2 = Color3.fromRGB(34,38,44),
+        Text = Color3.fromRGB(240,240,240),
+        SubText = Color3.fromRGB(150,150,150),
+        SectionText = Color3.fromRGB(180,180,180),
+        ParagraphText = Color3.fromRGB(210,210,210),
+        Accent = Color3.fromRGB(180,100,255),
+        Stroke = Color3.fromRGB(40,44,52),
+        StrokeLight = Color3.fromRGB(65,72,85),
+        CloseBg = Color3.fromRGB(90,30,40),
+        CloseText = Color3.fromRGB(255,120,140),
+    },
+    ["Carbon Fiber"] = {
+        MainBg = Color3.fromRGB(16,16,18),
+        HeaderBg = Color3.fromRGB(24,24,28),
+        TabListBg = Color3.fromRGB(20,20,23),
+        ElementBg = Color3.fromRGB(32,32,38),
+        ElementBg2 = Color3.fromRGB(46,46,54),
+        Text = Color3.fromRGB(235,235,240),
+        SubText = Color3.fromRGB(155,155,165),
+        SectionText = Color3.fromRGB(125,125,135),
+        ParagraphText = Color3.fromRGB(215,215,225),
+        Accent = Color3.fromRGB(0,190,255),
+        Stroke = Color3.fromRGB(50,50,60),
+        StrokeLight = Color3.fromRGB(75,75,90),
+        CloseBg = Color3.fromRGB(90,30,40),
+        CloseText = Color3.fromRGB(255,110,130),
+    },
+    ["Jet Black"] = {
+        MainBg = Color3.fromRGB(12,12,14),
+        HeaderBg = Color3.fromRGB(20,20,24),
+        TabListBg = Color3.fromRGB(16,16,19),
+        ElementBg = Color3.fromRGB(26,26,32),
+        ElementBg2 = Color3.fromRGB(38,38,48),
+        Text = Color3.fromRGB(245,245,250),
+        SubText = Color3.fromRGB(165,165,175),
+        SectionText = Color3.fromRGB(130,130,140),
+        ParagraphText = Color3.fromRGB(220,220,230),
+        Accent = Color3.fromRGB(255,75,75),
+        Stroke = Color3.fromRGB(50,50,62),
+        StrokeLight = Color3.fromRGB(75,75,92),
+        CloseBg = Color3.fromRGB(95,25,30),
+        CloseText = Color3.fromRGB(255,90,90),
+    },
+    ["Abyssal Darkness"] = {
+        MainBg = Color3.fromRGB(5,7,10),
+        HeaderBg = Color3.fromRGB(10,14,20),
+        TabListBg = Color3.fromRGB(7,10,15),
+        ElementBg = Color3.fromRGB(15,21,30),
+        ElementBg2 = Color3.fromRGB(22,31,45),
+        Text = Color3.fromRGB(225,235,250),
+        SubText = Color3.fromRGB(120,140,170),
+        SectionText = Color3.fromRGB(80,120,190),
+        ParagraphText = Color3.fromRGB(190,210,235),
+        Accent = Color3.fromRGB(40,180,240),
+        Stroke = Color3.fromRGB(25,40,65),
+        StrokeLight = Color3.fromRGB(45,70,110),
+        CloseBg = Color3.fromRGB(70,25,35),
+        CloseText = Color3.fromRGB(255,100,120),
+    },
+    ["Charcoal Minimal"] = {
+        MainBg = Color3.fromRGB(22,23,26),
+        HeaderBg = Color3.fromRGB(32,34,38),
+        TabListBg = Color3.fromRGB(27,28,32),
+        ElementBg = Color3.fromRGB(40,43,49),
+        ElementBg2 = Color3.fromRGB(54,58,66),
+        Text = Color3.fromRGB(240,242,245),
+        SubText = Color3.fromRGB(165,170,180),
+        SectionText = Color3.fromRGB(135,140,150),
+        ParagraphText = Color3.fromRGB(215,220,230),
+        Accent = Color3.fromRGB(140,165,220),
+        Stroke = Color3.fromRGB(60,65,75),
+        StrokeLight = Color3.fromRGB(85,92,105),
+        CloseBg = Color3.fromRGB(85,35,45),
+        CloseText = Color3.fromRGB(255,120,135),
+    },
+    ["Basalt Dark"] = {
+        MainBg = Color3.fromRGB(18,19,20),
+        HeaderBg = Color3.fromRGB(28,30,32),
+        TabListBg = Color3.fromRGB(23,24,26),
+        ElementBg = Color3.fromRGB(36,38,42),
+        ElementBg2 = Color3.fromRGB(50,53,58),
+        Text = Color3.fromRGB(238,239,242),
+        SubText = Color3.fromRGB(160,162,168),
+        SectionText = Color3.fromRGB(130,132,138),
+        ParagraphText = Color3.fromRGB(212,214,220),
+        Accent = Color3.fromRGB(255,170,60),
+        Stroke = Color3.fromRGB(55,58,65),
+        StrokeLight = Color3.fromRGB(80,85,95),
+        CloseBg = Color3.fromRGB(90,35,35),
+        CloseText = Color3.fromRGB(255,115,115),
+    },
+    ["Eclipse Dark"] = {
+        MainBg = Color3.fromRGB(14,12,18),
+        HeaderBg = Color3.fromRGB(24,20,30),
+        TabListBg = Color3.fromRGB(19,16,24),
+        ElementBg = Color3.fromRGB(32,28,40),
+        ElementBg2 = Color3.fromRGB(45,40,56),
+        Text = Color3.fromRGB(245,238,252),
+        SubText = Color3.fromRGB(170,155,185),
+        SectionText = Color3.fromRGB(140,120,160),
+        ParagraphText = Color3.fromRGB(220,210,235),
+        Accent = Color3.fromRGB(200,120,255),
+        Stroke = Color3.fromRGB(58,50,72),
+        StrokeLight = Color3.fromRGB(85,75,105),
+        CloseBg = Color3.fromRGB(85,30,45),
+        CloseText = Color3.fromRGB(255,110,135),
+    },
+    ["Deep Slate"] = {
+        MainBg = Color3.fromRGB(16,18,24),
+        HeaderBg = Color3.fromRGB(26,30,40),
+        TabListBg = Color3.fromRGB(21,24,32),
+        ElementBg = Color3.fromRGB(34,40,52),
+        ElementBg2 = Color3.fromRGB(48,56,72),
+        Text = Color3.fromRGB(230,236,248),
+        SubText = Color3.fromRGB(150,160,185),
+        SectionText = Color3.fromRGB(110,130,170),
+        ParagraphText = Color3.fromRGB(205,215,235),
+        Accent = Color3.fromRGB(75,145,255),
+        Stroke = Color3.fromRGB(52,62,82),
+        StrokeLight = Color3.fromRGB(76,90,118),
+        CloseBg = Color3.fromRGB(80,32,42),
+        CloseText = Color3.fromRGB(255,105,125),
+    },
+    ["Nightshade"] = {
+        MainBg = Color3.fromRGB(19,15,25),
+        HeaderBg = Color3.fromRGB(30,24,40),
+        TabListBg = Color3.fromRGB(24,19,32),
+        ElementBg = Color3.fromRGB(40,32,54),
+        ElementBg2 = Color3.fromRGB(56,45,74),
+        Text = Color3.fromRGB(242,235,252),
+        SubText = Color3.fromRGB(175,155,200),
+        SectionText = Color3.fromRGB(145,120,175),
+        ParagraphText = Color3.fromRGB(220,210,238),
+        Accent = Color3.fromRGB(185,95,255),
+        Stroke = Color3.fromRGB(65,52,85),
+        StrokeLight = Color3.fromRGB(92,75,120),
+        CloseBg = Color3.fromRGB(88,30,48),
+        CloseText = Color3.fromRGB(255,115,140),
+    },
+    ["Dark Titanium"] = {
+        MainBg = Color3.fromRGB(25,26,28),
+        HeaderBg = Color3.fromRGB(36,38,42),
+        TabListBg = Color3.fromRGB(30,32,35),
+        ElementBg = Color3.fromRGB(46,49,54),
+        ElementBg2 = Color3.fromRGB(62,66,73),
+        Text = Color3.fromRGB(240,242,245),
+        SubText = Color3.fromRGB(165,170,178),
+        SectionText = Color3.fromRGB(135,140,150),
+        ParagraphText = Color3.fromRGB(215,220,228),
+        Accent = Color3.fromRGB(120,200,230),
+        Stroke = Color3.fromRGB(66,70,78),
+        StrokeLight = Color3.fromRGB(92,98,108),
+        CloseBg = Color3.fromRGB(85,40,45),
+        CloseText = Color3.fromRGB(255,125,130),
+    },
+    ["Gunmetal"] = {
+        MainBg = Color3.fromRGB(20,23,26),
+        HeaderBg = Color3.fromRGB(30,35,40),
+        TabListBg = Color3.fromRGB(25,29,33),
+        ElementBg = Color3.fromRGB(38,45,52),
+        ElementBg2 = Color3.fromRGB(52,61,70),
+        Text = Color3.fromRGB(232,238,244),
+        SubText = Color3.fromRGB(150,162,175),
+        SectionText = Color3.fromRGB(115,132,150),
+        ParagraphText = Color3.fromRGB(205,216,228),
+        Accent = Color3.fromRGB(60,180,210),
+        Stroke = Color3.fromRGB(54,65,75),
+        StrokeLight = Color3.fromRGB(78,92,106),
+        CloseBg = Color3.fromRGB(82,34,42),
+        CloseText = Color3.fromRGB(255,110,125),
+    },
+    ["Ashen Stone"] = {
+        MainBg = Color3.fromRGB(24,24,25),
+        HeaderBg = Color3.fromRGB(35,35,37),
+        TabListBg = Color3.fromRGB(29,29,31),
+        ElementBg = Color3.fromRGB(45,45,48),
+        ElementBg2 = Color3.fromRGB(60,60,64),
+        Text = Color3.fromRGB(242,242,244),
+        SubText = Color3.fromRGB(170,170,175),
+        SectionText = Color3.fromRGB(140,140,145),
+        ParagraphText = Color3.fromRGB(220,220,224),
+        Accent = Color3.fromRGB(255,205,80),
+        Stroke = Color3.fromRGB(65,65,70),
+        StrokeLight = Color3.fromRGB(90,90,98),
+        CloseBg = Color3.fromRGB(88,38,42),
+        CloseText = Color3.fromRGB(255,120,125),
+    },
+    ["Shadow Gray"] = {
+        MainBg = Color3.fromRGB(15,16,18),
+        HeaderBg = Color3.fromRGB(24,25,28),
+        TabListBg = Color3.fromRGB(19,20,23),
+        ElementBg = Color3.fromRGB(32,34,38),
+        ElementBg2 = Color3.fromRGB(45,48,54),
+        Text = Color3.fromRGB(236,238,242),
+        SubText = Color3.fromRGB(160,165,175),
+        SectionText = Color3.fromRGB(128,132,142),
+        ParagraphText = Color3.fromRGB(212,216,224),
+        Accent = Color3.fromRGB(165,180,255),
+        Stroke = Color3.fromRGB(52,56,64),
+        StrokeLight = Color3.fromRGB(74,80,92),
+        CloseBg = Color3.fromRGB(80,32,40),
+        CloseText = Color3.fromRGB(255,110,125),
+    },
+    ["Nebula Glow"] = {
+        MainBg = Color3.fromRGB(15,10,28),
+        HeaderBg = Color3.fromRGB(25,16,46),
+        TabListBg = Color3.fromRGB(20,13,37),
+        ElementBg = Color3.fromRGB(35,24,62),
+        ElementBg2 = Color3.fromRGB(50,35,86),
+        Text = Color3.fromRGB(245,235,255),
+        SubText = Color3.fromRGB(180,155,220),
+        SectionText = Color3.fromRGB(210,100,240),
+        ParagraphText = Color3.fromRGB(225,210,245),
+        Accent = Color3.fromRGB(215,75,255),
+        Stroke = Color3.fromRGB(65,45,110),
+        StrokeLight = Color3.fromRGB(95,68,155),
+        CloseBg = Color3.fromRGB(85,25,55),
+        CloseText = Color3.fromRGB(255,100,150),
+    },
+    ["Andromeda"] = {
+        MainBg = Color3.fromRGB(12,16,32),
+        HeaderBg = Color3.fromRGB(20,26,50),
+        TabListBg = Color3.fromRGB(16,21,41),
+        ElementBg = Color3.fromRGB(28,38,68),
+        ElementBg2 = Color3.fromRGB(40,54,92),
+        Text = Color3.fromRGB(225,238,255),
+        SubText = Color3.fromRGB(145,175,225),
+        SectionText = Color3.fromRGB(170,140,240),
+        ParagraphText = Color3.fromRGB(200,220,248),
+        Accent = Color3.fromRGB(80,160,255),
+        Stroke = Color3.fromRGB(48,66,115),
+        StrokeLight = Color3.fromRGB(72,98,160),
+        CloseBg = Color3.fromRGB(80,30,50),
+        CloseText = Color3.fromRGB(255,110,140),
+    },
+    ["Supernova"] = {
+        MainBg = Color3.fromRGB(24,12,8),
+        HeaderBg = Color3.fromRGB(42,20,14),
+        TabListBg = Color3.fromRGB(33,16,11),
+        ElementBg = Color3.fromRGB(58,28,18),
+        ElementBg2 = Color3.fromRGB(80,40,26),
+        Text = Color3.fromRGB(255,235,215),
+        SubText = Color3.fromRGB(230,160,120),
+        SectionText = Color3.fromRGB(255,120,60),
+        ParagraphText = Color3.fromRGB(245,215,190),
+        Accent = Color3.fromRGB(255,80,30),
+        Stroke = Color3.fromRGB(100,48,30),
+        StrokeLight = Color3.fromRGB(140,70,42),
+        CloseBg = Color3.fromRGB(95,25,25),
+        CloseText = Color3.fromRGB(255,90,90),
+    },
+    ["Pulsar Cyan"] = {
+        MainBg = Color3.fromRGB(6,16,24),
+        HeaderBg = Color3.fromRGB(10,28,42),
+        TabListBg = Color3.fromRGB(8,22,33),
+        ElementBg = Color3.fromRGB(16,40,60),
+        ElementBg2 = Color3.fromRGB(24,58,86),
+        Text = Color3.fromRGB(210,245,255),
+        SubText = Color3.fromRGB(120,195,230),
+        SectionText = Color3.fromRGB(80,215,240),
+        ParagraphText = Color3.fromRGB(185,230,248),
+        Accent = Color3.fromRGB(0,225,255),
+        Stroke = Color3.fromRGB(30,75,110),
+        StrokeLight = Color3.fromRGB(45,110,160),
+        CloseBg = Color3.fromRGB(75,30,45),
+        CloseText = Color3.fromRGB(255,110,130),
+    },
+    ["Solar Flare"] = {
+        MainBg = Color3.fromRGB(28,16,6),
+        HeaderBg = Color3.fromRGB(48,28,10),
+        TabListBg = Color3.fromRGB(38,22,8),
+        ElementBg = Color3.fromRGB(66,38,14),
+        ElementBg2 = Color3.fromRGB(90,52,20),
+        Text = Color3.fromRGB(255,240,210),
+        SubText = Color3.fromRGB(235,180,100),
+        SectionText = Color3.fromRGB(255,140,40),
+        ParagraphText = Color3.fromRGB(248,220,180),
+        Accent = Color3.fromRGB(255,180,30),
+        Stroke = Color3.fromRGB(115,66,25),
+        StrokeLight = Color3.fromRGB(160,95,35),
+        CloseBg = Color3.fromRGB(95,30,25),
+        CloseText = Color3.fromRGB(255,100,80),
+    },
+    ["Starlight Gold"] = {
+        MainBg = Color3.fromRGB(20,19,12),
+        HeaderBg = Color3.fromRGB(36,33,20),
+        TabListBg = Color3.fromRGB(28,26,16),
+        ElementBg = Color3.fromRGB(50,46,28),
+        ElementBg2 = Color3.fromRGB(70,64,40),
+        Text = Color3.fromRGB(255,250,225),
+        SubText = Color3.fromRGB(215,198,140),
+        SectionText = Color3.fromRGB(240,200,90),
+        ParagraphText = Color3.fromRGB(242,235,205),
+        Accent = Color3.fromRGB(255,215,80),
+        Stroke = Color3.fromRGB(90,82,50),
+        StrokeLight = Color3.fromRGB(128,118,72),
+        CloseBg = Color3.fromRGB(85,38,30),
+        CloseText = Color3.fromRGB(255,120,90),
+    },
+    ["Dark Matter"] = {
+        MainBg = Color3.fromRGB(10,10,15),
+        HeaderBg = Color3.fromRGB(18,18,26),
+        TabListBg = Color3.fromRGB(14,14,20),
+        ElementBg = Color3.fromRGB(25,25,36),
+        ElementBg2 = Color3.fromRGB(36,36,52),
+        Text = Color3.fromRGB(235,235,245),
+        SubText = Color3.fromRGB(150,150,175),
+        SectionText = Color3.fromRGB(120,120,160),
+        ParagraphText = Color3.fromRGB(210,210,230),
+        Accent = Color3.fromRGB(140,110,255),
+        Stroke = Color3.fromRGB(48,48,70),
+        StrokeLight = Color3.fromRGB(70,70,100),
+        CloseBg = Color3.fromRGB(80,25,40),
+        CloseText = Color3.fromRGB(255,100,125),
+    },
+    ["Quasar Ray"] = {
+        MainBg = Color3.fromRGB(10,18,28),
+        HeaderBg = Color3.fromRGB(16,30,48),
+        TabListBg = Color3.fromRGB(13,24,38),
+        ElementBg = Color3.fromRGB(24,44,68),
+        ElementBg2 = Color3.fromRGB(34,62,95),
+        Text = Color3.fromRGB(220,242,255),
+        SubText = Color3.fromRGB(135,185,230),
+        SectionText = Color3.fromRGB(90,170,255),
+        ParagraphText = Color3.fromRGB(195,225,248),
+        Accent = Color3.fromRGB(40,195,255),
+        Stroke = Color3.fromRGB(42,78,120),
+        StrokeLight = Color3.fromRGB(62,112,170),
+        CloseBg = Color3.fromRGB(75,32,45),
+        CloseText = Color3.fromRGB(255,115,135),
+    },
+    ["Orion Deep"] = {
+        MainBg = Color3.fromRGB(12,14,25),
+        HeaderBg = Color3.fromRGB(20,24,42),
+        TabListBg = Color3.fromRGB(16,19,33),
+        ElementBg = Color3.fromRGB(28,34,58),
+        ElementBg2 = Color3.fromRGB(40,48,80),
+        Text = Color3.fromRGB(228,236,255),
+        SubText = Color3.fromRGB(148,168,215),
+        SectionText = Color3.fromRGB(120,150,235),
+        ParagraphText = Color3.fromRGB(205,218,246),
+        Accent = Color3.fromRGB(95,135,255),
+        Stroke = Color3.fromRGB(48,60,98),
+        StrokeLight = Color3.fromRGB(70,88,140),
+        CloseBg = Color3.fromRGB(80,30,45),
+        CloseText = Color3.fromRGB(255,110,130),
+    },
+    ["Cosmic Lavender"] = {
+        MainBg = Color3.fromRGB(18,14,26),
+        HeaderBg = Color3.fromRGB(30,24,44),
+        TabListBg = Color3.fromRGB(24,19,35),
+        ElementBg = Color3.fromRGB(42,34,60),
+        ElementBg2 = Color3.fromRGB(58,48,82),
+        Text = Color3.fromRGB(245,236,255),
+        SubText = Color3.fromRGB(180,160,215),
+        SectionText = Color3.fromRGB(165,125,220),
+        ParagraphText = Color3.fromRGB(225,215,245),
+        Accent = Color3.fromRGB(180,120,255),
+        Stroke = Color3.fromRGB(68,55,96),
+        StrokeLight = Color3.fromRGB(98,80,136),
+        CloseBg = Color3.fromRGB(85,32,48),
+        CloseText = Color3.fromRGB(255,115,135),
+    },
+    ["Red Giant"] = {
+        MainBg = Color3.fromRGB(26,10,10),
+        HeaderBg = Color3.fromRGB(44,16,16),
+        TabListBg = Color3.fromRGB(35,13,13),
+        ElementBg = Color3.fromRGB(60,22,22),
+        ElementBg2 = Color3.fromRGB(82,32,32),
+        Text = Color3.fromRGB(255,225,225),
+        SubText = Color3.fromRGB(220,135,135),
+        SectionText = Color3.fromRGB(255,80,80),
+        ParagraphText = Color3.fromRGB(245,195,195),
+        Accent = Color3.fromRGB(255,50,50),
+        Stroke = Color3.fromRGB(105,40,40),
+        StrokeLight = Color3.fromRGB(145,55,55),
+        CloseBg = Color3.fromRGB(95,20,20),
+        CloseText = Color3.fromRGB(255,80,80),
+    },
+    ["Blue Straggler"] = {
+        MainBg = Color3.fromRGB(8,15,30),
+        HeaderBg = Color3.fromRGB(14,25,48),
+        TabListBg = Color3.fromRGB(11,20,39),
+        ElementBg = Color3.fromRGB(20,36,68),
+        ElementBg2 = Color3.fromRGB(30,52,95),
+        Text = Color3.fromRGB(215,235,255),
+        SubText = Color3.fromRGB(130,175,235),
+        SectionText = Color3.fromRGB(70,150,255),
+        ParagraphText = Color3.fromRGB(190,218,250),
+        Accent = Color3.fromRGB(30,140,255),
+        Stroke = Color3.fromRGB(38,68,120),
+        StrokeLight = Color3.fromRGB(56,98,168),
+        CloseBg = Color3.fromRGB(75,30,45),
+        CloseText = Color3.fromRGB(255,110,130),
+    },
+    ["Galaxy Swirl"] = {
+        MainBg = Color3.fromRGB(16,12,24),
+        HeaderBg = Color3.fromRGB(28,20,40),
+        TabListBg = Color3.fromRGB(22,16,32),
+        ElementBg = Color3.fromRGB(38,28,55),
+        ElementBg2 = Color3.fromRGB(54,40,76),
+        Text = Color3.fromRGB(240,232,252),
+        SubText = Color3.fromRGB(175,150,210),
+        SectionText = Color3.fromRGB(215,110,210),
+        ParagraphText = Color3.fromRGB(220,208,240),
+        Accent = Color3.fromRGB(225,90,190),
+        Stroke = Color3.fromRGB(62,46,88),
+        StrokeLight = Color3.fromRGB(90,68,125),
+        CloseBg = Color3.fromRGB(84,28,48),
+        CloseText = Color3.fromRGB(255,110,140),
+    },
+    ["Wormhole"] = {
+        MainBg = Color3.fromRGB(14,10,20),
+        HeaderBg = Color3.fromRGB(24,16,34),
+        TabListBg = Color3.fromRGB(19,13,27),
+        ElementBg = Color3.fromRGB(34,24,48),
+        ElementBg2 = Color3.fromRGB(48,34,68),
+        Text = Color3.fromRGB(242,230,255),
+        SubText = Color3.fromRGB(170,145,205),
+        SectionText = Color3.fromRGB(190,90,240),
+        ParagraphText = Color3.fromRGB(222,205,242),
+        Accent = Color3.fromRGB(170,60,245),
+        Stroke = Color3.fromRGB(58,42,82),
+        StrokeLight = Color3.fromRGB(84,60,118),
+        CloseBg = Color3.fromRGB(82,28,46),
+        CloseText = Color3.fromRGB(255,105,135),
+    },
+    ["Event Horizon"] = {
+        MainBg = Color3.fromRGB(8,8,12),
+        HeaderBg = Color3.fromRGB(15,14,22),
+        TabListBg = Color3.fromRGB(11,11,17),
+        ElementBg = Color3.fromRGB(22,21,32),
+        ElementBg2 = Color3.fromRGB(32,31,46),
+        Text = Color3.fromRGB(235,235,245),
+        SubText = Color3.fromRGB(150,150,170),
+        SectionText = Color3.fromRGB(170,120,220),
+        ParagraphText = Color3.fromRGB(208,208,224),
+        Accent = Color3.fromRGB(130,90,230),
+        Stroke = Color3.fromRGB(42,40,62),
+        StrokeLight = Color3.fromRGB(65,62,92),
+        CloseBg = Color3.fromRGB(78,26,38),
+        CloseText = Color3.fromRGB(255,98,120),
+    },
+    ["Moonlight Silver"] = {
+        MainBg = Color3.fromRGB(18,20,24),
+        HeaderBg = Color3.fromRGB(28,32,38),
+        TabListBg = Color3.fromRGB(23,26,31),
+        ElementBg = Color3.fromRGB(38,44,52),
+        ElementBg2 = Color3.fromRGB(52,60,72),
+        Text = Color3.fromRGB(240,245,252),
+        SubText = Color3.fromRGB(165,178,195),
+        SectionText = Color3.fromRGB(140,160,190),
+        ParagraphText = Color3.fromRGB(218,228,242),
+        Accent = Color3.fromRGB(170,200,235),
+        Stroke = Color3.fromRGB(56,66,80),
+        StrokeLight = Color3.fromRGB(80,95,115),
+        CloseBg = Color3.fromRGB(82,35,42),
+        CloseText = Color3.fromRGB(255,115,125),
+    },
+    ["Lunar Dust"] = {
+        MainBg = Color3.fromRGB(20,21,23),
+        HeaderBg = Color3.fromRGB(32,33,37),
+        TabListBg = Color3.fromRGB(26,27,30),
+        ElementBg = Color3.fromRGB(42,44,49),
+        ElementBg2 = Color3.fromRGB(56,59,66),
+        Text = Color3.fromRGB(242,243,245),
+        SubText = Color3.fromRGB(170,173,180),
+        SectionText = Color3.fromRGB(145,148,155),
+        ParagraphText = Color3.fromRGB(220,222,228),
+        Accent = Color3.fromRGB(200,210,225),
+        Stroke = Color3.fromRGB(62,65,74),
+        StrokeLight = Color3.fromRGB(88,92,104),
+        CloseBg = Color3.fromRGB(85,38,44),
+        CloseText = Color3.fromRGB(255,120,130),
+    },
+    ["Solar Eclipse"] = {
+        MainBg = Color3.fromRGB(12,11,10),
+        HeaderBg = Color3.fromRGB(22,19,18),
+        TabListBg = Color3.fromRGB(17,15,14),
+        ElementBg = Color3.fromRGB(32,28,26),
+        ElementBg2 = Color3.fromRGB(46,40,38),
+        Text = Color3.fromRGB(250,242,235),
+        SubText = Color3.fromRGB(180,160,150),
+        SectionText = Color3.fromRGB(255,160,60),
+        ParagraphText = Color3.fromRGB(228,215,205),
+        Accent = Color3.fromRGB(255,170,40),
+        Stroke = Color3.fromRGB(60,52,48),
+        StrokeLight = Color3.fromRGB(90,78,72),
+        CloseBg = Color3.fromRGB(85,32,28),
+        CloseText = Color3.fromRGB(255,110,90),
+    },
+    ["Celestial Aqua"] = {
+        MainBg = Color3.fromRGB(8,18,22),
+        HeaderBg = Color3.fromRGB(14,30,36),
+        TabListBg = Color3.fromRGB(11,24,29),
+        ElementBg = Color3.fromRGB(20,42,50),
+        ElementBg2 = Color3.fromRGB(28,58,70),
+        Text = Color3.fromRGB(210,250,255),
+        SubText = Color3.fromRGB(120,200,215),
+        SectionText = Color3.fromRGB(60,220,210),
+        ParagraphText = Color3.fromRGB(185,235,242),
+        Accent = Color3.fromRGB(20,230,200),
+        Stroke = Color3.fromRGB(36,75,90),
+        StrokeLight = Color3.fromRGB(52,108,128),
+        CloseBg = Color3.fromRGB(75,32,40),
+        CloseText = Color3.fromRGB(255,115,130),
+    },
+    ["Interstellar"] = {
+        MainBg = Color3.fromRGB(10,13,22),
+        HeaderBg = Color3.fromRGB(18,23,38),
+        TabListBg = Color3.fromRGB(14,18,30),
+        ElementBg = Color3.fromRGB(25,32,52),
+        ElementBg2 = Color3.fromRGB(36,46,72),
+        Text = Color3.fromRGB(225,236,252),
+        SubText = Color3.fromRGB(140,160,195),
+        SectionText = Color3.fromRGB(110,140,215),
+        ParagraphText = Color3.fromRGB(200,215,240),
+        Accent = Color3.fromRGB(70,130,245),
+        Stroke = Color3.fromRGB(44,58,90),
+        StrokeLight = Color3.fromRGB(64,84,128),
+        CloseBg = Color3.fromRGB(78,30,42),
+        CloseText = Color3.fromRGB(255,110,128),
+    },
+    ["Mossy Stone"] = {
+        MainBg = Color3.fromRGB(16,20,16),
+        HeaderBg = Color3.fromRGB(26,32,26),
+        TabListBg = Color3.fromRGB(21,26,21),
+        ElementBg = Color3.fromRGB(34,42,34),
+        ElementBg2 = Color3.fromRGB(48,58,48),
+        Text = Color3.fromRGB(230,245,230),
+        SubText = Color3.fromRGB(150,185,150),
+        SectionText = Color3.fromRGB(120,175,120),
+        ParagraphText = Color3.fromRGB(205,230,205),
+        Accent = Color3.fromRGB(90,190,90),
+        Stroke = Color3.fromRGB(50,68,50),
+        StrokeLight = Color3.fromRGB(75,98,75),
+        CloseBg = Color3.fromRGB(80,40,35),
+        CloseText = Color3.fromRGB(255,120,100),
+    },
+    ["Redwood Forest"] = {
+        MainBg = Color3.fromRGB(24,16,14),
+        HeaderBg = Color3.fromRGB(40,26,22),
+        TabListBg = Color3.fromRGB(32,21,18),
+        ElementBg = Color3.fromRGB(52,36,30),
+        ElementBg2 = Color3.fromRGB(70,48,40),
+        Text = Color3.fromRGB(252,235,230),
+        SubText = Color3.fromRGB(205,160,150),
+        SectionText = Color3.fromRGB(190,110,90),
+        ParagraphText = Color3.fromRGB(235,210,200),
+        Accent = Color3.fromRGB(215,95,70),
+        Stroke = Color3.fromRGB(80,52,44),
+        StrokeLight = Color3.fromRGB(115,76,65),
+        CloseBg = Color3.fromRGB(90,32,30),
+        CloseText = Color3.fromRGB(255,105,95),
+    },
+    ["Bamboo Grove"] = {
+        MainBg = Color3.fromRGB(14,22,16),
+        HeaderBg = Color3.fromRGB(24,36,26),
+        TabListBg = Color3.fromRGB(19,29,21),
+        ElementBg = Color3.fromRGB(32,48,34),
+        ElementBg2 = Color3.fromRGB(44,66,48),
+        Text = Color3.fromRGB(225,250,230),
+        SubText = Color3.fromRGB(140,195,150),
+        SectionText = Color3.fromRGB(105,185,120),
+        ParagraphText = Color3.fromRGB(200,235,210),
+        Accent = Color3.fromRGB(75,210,105),
+        Stroke = Color3.fromRGB(44,75,50),
+        StrokeLight = Color3.fromRGB(65,108,74),
+        CloseBg = Color3.fromRGB(78,42,36),
+        CloseText = Color3.fromRGB(255,125,100),
+    },
+    ["Alpine Mist"] = {
+        MainBg = Color3.fromRGB(18,24,28),
+        HeaderBg = Color3.fromRGB(28,38,44),
+        TabListBg = Color3.fromRGB(23,31,36),
+        ElementBg = Color3.fromRGB(38,50,58),
+        ElementBg2 = Color3.fromRGB(52,68,78),
+        Text = Color3.fromRGB(225,240,248),
+        SubText = Color3.fromRGB(145,175,195),
+        SectionText = Color3.fromRGB(110,155,180),
+        ParagraphText = Color3.fromRGB(200,222,235),
+        Accent = Color3.fromRGB(80,170,210),
+        Stroke = Color3.fromRGB(54,75,88),
+        StrokeLight = Color3.fromRGB(78,105,124),
+        CloseBg = Color3.fromRGB(80,38,42),
+        CloseText = Color3.fromRGB(255,115,125),
+    },
+    ["Jungle Fern"] = {
+        MainBg = Color3.fromRGB(10,20,12),
+        HeaderBg = Color3.fromRGB(18,34,20),
+        TabListBg = Color3.fromRGB(14,27,16),
+        ElementBg = Color3.fromRGB(24,46,28),
+        ElementBg2 = Color3.fromRGB(34,62,38),
+        Text = Color3.fromRGB(220,255,225),
+        SubText = Color3.fromRGB(130,200,140),
+        SectionText = Color3.fromRGB(90,190,110),
+        ParagraphText = Color3.fromRGB(195,238,205),
+        Accent = Color3.fromRGB(50,220,85),
+        Stroke = Color3.fromRGB(38,78,45),
+        StrokeLight = Color3.fromRGB(56,112,65),
+        CloseBg = Color3.fromRGB(75,40,34),
+        CloseText = Color3.fromRGB(255,120,90),
+    },
+    ["Deep Canopy"] = {
+        MainBg = Color3.fromRGB(12,18,14),
+        HeaderBg = Color3.fromRGB(20,30,24),
+        TabListBg = Color3.fromRGB(16,24,19),
+        ElementBg = Color3.fromRGB(28,42,34),
+        ElementBg2 = Color3.fromRGB(40,58,46),
+        Text = Color3.fromRGB(225,248,230),
+        SubText = Color3.fromRGB(140,185,150),
+        SectionText = Color3.fromRGB(100,165,115),
+        ParagraphText = Color3.fromRGB(200,230,210),
+        Accent = Color3.fromRGB(65,195,100),
+        Stroke = Color3.fromRGB(42,68,52),
+        StrokeLight = Color3.fromRGB(62,98,75),
+        CloseBg = Color3.fromRGB(78,38,36),
+        CloseText = Color3.fromRGB(255,118,100),
+    },
+    ["Aurora Borealis"] = {
+        MainBg = Color3.fromRGB(8,18,24),
+        HeaderBg = Color3.fromRGB(14,30,40),
+        TabListBg = Color3.fromRGB(11,24,32),
+        ElementBg = Color3.fromRGB(20,44,56),
+        ElementBg2 = Color3.fromRGB(30,62,78),
+        Text = Color3.fromRGB(215,255,245),
+        SubText = Color3.fromRGB(125,210,190),
+        SectionText = Color3.fromRGB(70,240,180),
+        ParagraphText = Color3.fromRGB(190,242,230),
+        Accent = Color3.fromRGB(40,255,170),
+        Stroke = Color3.fromRGB(38,80,95),
+        StrokeLight = Color3.fromRGB(58,115,135),
+        CloseBg = Color3.fromRGB(75,30,45),
+        CloseText = Color3.fromRGB(255,105,130),
+    },
+    ["Bioluminescence"] = {
+        MainBg = Color3.fromRGB(6,14,24),
+        HeaderBg = Color3.fromRGB(10,24,40),
+        TabListBg = Color3.fromRGB(8,19,32),
+        ElementBg = Color3.fromRGB(16,36,58),
+        ElementBg2 = Color3.fromRGB(24,52,80),
+        Text = Color3.fromRGB(210,248,255),
+        SubText = Color3.fromRGB(115,190,225),
+        SectionText = Color3.fromRGB(50,225,240),
+        ParagraphText = Color3.fromRGB(185,230,245),
+        Accent = Color3.fromRGB(0,240,220),
+        Stroke = Color3.fromRGB(32,70,100),
+        StrokeLight = Color3.fromRGB(48,102,145),
+        CloseBg = Color3.fromRGB(75,28,42),
+        CloseText = Color3.fromRGB(255,100,125),
+    },
+    ["Coral Reef"] = {
+        MainBg = Color3.fromRGB(22,12,16),
+        HeaderBg = Color3.fromRGB(38,20,26),
+        TabListBg = Color3.fromRGB(30,16,21),
+        ElementBg = Color3.fromRGB(50,28,36),
+        ElementBg2 = Color3.fromRGB(68,40,50),
+        Text = Color3.fromRGB(255,235,240),
+        SubText = Color3.fromRGB(220,150,170),
+        SectionText = Color3.fromRGB(255,105,140),
+        ParagraphText = Color3.fromRGB(245,210,220),
+        Accent = Color3.fromRGB(255,90,125),
+        Stroke = Color3.fromRGB(82,45,58),
+        StrokeLight = Color3.fromRGB(118,65,82),
+        CloseBg = Color3.fromRGB(90,30,38),
+        CloseText = Color3.fromRGB(255,95,110),
+    },
+    ["Seafoam Mist"] = {
+        MainBg = Color3.fromRGB(16,26,26),
+        HeaderBg = Color3.fromRGB(26,42,42),
+        TabListBg = Color3.fromRGB(21,34,34),
+        ElementBg = Color3.fromRGB(34,54,54),
+        ElementBg2 = Color3.fromRGB(46,72,72),
+        Text = Color3.fromRGB(225,252,250),
+        SubText = Color3.fromRGB(145,205,200),
+        SectionText = Color3.fromRGB(115,195,185),
+        ParagraphText = Color3.fromRGB(205,238,235),
+        Accent = Color3.fromRGB(95,230,210),
+        Stroke = Color3.fromRGB(52,88,88),
+        StrokeLight = Color3.fromRGB(76,122,122),
+        CloseBg = Color3.fromRGB(85,42,45),
+        CloseText = Color3.fromRGB(255,125,120),
+    },
+    ["Glacier Frost"] = {
+        MainBg = Color3.fromRGB(14,24,32),
+        HeaderBg = Color3.fromRGB(22,38,50),
+        TabListBg = Color3.fromRGB(18,31,41),
+        ElementBg = Color3.fromRGB(30,50,65),
+        ElementBg2 = Color3.fromRGB(42,68,86),
+        Text = Color3.fromRGB(220,245,255),
+        SubText = Color3.fromRGB(140,190,220),
+        SectionText = Color3.fromRGB(110,175,210),
+        ParagraphText = Color3.fromRGB(200,230,245),
+        Accent = Color3.fromRGB(90,195,245),
+        Stroke = Color3.fromRGB(48,78,102),
+        StrokeLight = Color3.fromRGB(70,110,142),
+        CloseBg = Color3.fromRGB(82,36,45),
+        CloseText = Color3.fromRGB(255,115,125),
+    },
+    ["Rainy Night"] = {
+        MainBg = Color3.fromRGB(14,18,24),
+        HeaderBg = Color3.fromRGB(22,28,38),
+        TabListBg = Color3.fromRGB(18,23,31),
+        ElementBg = Color3.fromRGB(30,38,50),
+        ElementBg2 = Color3.fromRGB(42,52,68),
+        Text = Color3.fromRGB(225,235,248),
+        SubText = Color3.fromRGB(140,160,190),
+        SectionText = Color3.fromRGB(110,140,180),
+        ParagraphText = Color3.fromRGB(200,215,235),
+        Accent = Color3.fromRGB(80,150,230),
+        Stroke = Color3.fromRGB(45,60,80),
+        StrokeLight = Color3.fromRGB(68,88,116),
+        CloseBg = Color3.fromRGB(78,32,42),
+        CloseText = Color3.fromRGB(255,110,125),
+    },
+    ["Thunderstorm"] = {
+        MainBg = Color3.fromRGB(16,16,24),
+        HeaderBg = Color3.fromRGB(26,26,38),
+        TabListBg = Color3.fromRGB(21,21,31),
+        ElementBg = Color3.fromRGB(36,36,50),
+        ElementBg2 = Color3.fromRGB(50,50,68),
+        Text = Color3.fromRGB(235,238,250),
+        SubText = Color3.fromRGB(155,160,185),
+        SectionText = Color3.fromRGB(195,165,80),
+        ParagraphText = Color3.fromRGB(215,220,238),
+        Accent = Color3.fromRGB(255,210,60),
+        Stroke = Color3.fromRGB(56,56,80),
+        StrokeLight = Color3.fromRGB(80,80,115),
+        CloseBg = Color3.fromRGB(85,32,44),
+        CloseText = Color3.fromRGB(255,115,130),
+    },
+    ["Wild Orchid"] = {
+        MainBg = Color3.fromRGB(22,14,24),
+        HeaderBg = Color3.fromRGB(36,22,40),
+        TabListBg = Color3.fromRGB(29,18,32),
+        ElementBg = Color3.fromRGB(48,32,54),
+        ElementBg2 = Color3.fromRGB(66,44,74),
+        Text = Color3.fromRGB(250,232,252),
+        SubText = Color3.fromRGB(200,155,215),
+        SectionText = Color3.fromRGB(220,95,230),
+        ParagraphText = Color3.fromRGB(235,210,240),
+        Accent = Color3.fromRGB(215,75,235),
+        Stroke = Color3.fromRGB(78,48,88),
+        StrokeLight = Color3.fromRGB(112,70,125),
+        CloseBg = Color3.fromRGB(88,30,48),
+        CloseText = Color3.fromRGB(255,105,135),
+    },
+    ["Bamboo Mist"] = {
+        MainBg = Color3.fromRGB(16,24,20),
+        HeaderBg = Color3.fromRGB(26,38,32),
+        TabListBg = Color3.fromRGB(21,31,26),
+        ElementBg = Color3.fromRGB(34,50,42),
+        ElementBg2 = Color3.fromRGB(46,68,56),
+        Text = Color3.fromRGB(225,248,238),
+        SubText = Color3.fromRGB(145,195,175),
+        SectionText = Color3.fromRGB(115,180,150),
+        ParagraphText = Color3.fromRGB(205,235,222),
+        Accent = Color3.fromRGB(90,215,165),
+        Stroke = Color3.fromRGB(50,82,68),
+        StrokeLight = Color3.fromRGB(72,115,96),
+        CloseBg = Color3.fromRGB(82,42,40),
+        CloseText = Color3.fromRGB(255,125,110),
+    },
+    ["Midnight Woods"] = {
+        MainBg = Color3.fromRGB(8,14,12),
+        HeaderBg = Color3.fromRGB(14,24,20),
+        TabListBg = Color3.fromRGB(11,19,16),
+        ElementBg = Color3.fromRGB(20,34,28),
+        ElementBg2 = Color3.fromRGB(28,48,38),
+        Text = Color3.fromRGB(218,245,228),
+        SubText = Color3.fromRGB(125,180,148),
+        SectionText = Color3.fromRGB(85,160,115),
+        ParagraphText = Color3.fromRGB(190,228,205),
+        Accent = Color3.fromRGB(55,195,110),
+        Stroke = Color3.fromRGB(32,62,48),
+        StrokeLight = Color3.fromRGB(48,90,70),
+        CloseBg = Color3.fromRGB(75,35,35),
+        CloseText = Color3.fromRGB(255,115,100),
+    },
+    ["Petrichor"] = {
+        MainBg = Color3.fromRGB(20,22,24),
+        HeaderBg = Color3.fromRGB(32,35,38),
+        TabListBg = Color3.fromRGB(26,28,31),
+        ElementBg = Color3.fromRGB(42,46,50),
+        ElementBg2 = Color3.fromRGB(56,62,68),
+        Text = Color3.fromRGB(235,240,245),
+        SubText = Color3.fromRGB(160,170,180),
+        SectionText = Color3.fromRGB(130,145,160),
+        ParagraphText = Color3.fromRGB(212,220,228),
+        Accent = Color3.fromRGB(110,170,195),
+        Stroke = Color3.fromRGB(60,68,76),
+        StrokeLight = Color3.fromRGB(85,95,108),
+        CloseBg = Color3.fromRGB(85,38,42),
+        CloseText = Color3.fromRGB(255,120,125),
+    },
+    ["Desert Cactus"] = {
+        MainBg = Color3.fromRGB(18,22,16),
+        HeaderBg = Color3.fromRGB(30,36,26),
+        TabListBg = Color3.fromRGB(24,29,21),
+        ElementBg = Color3.fromRGB(40,48,36),
+        ElementBg2 = Color3.fromRGB(54,66,50),
+        Text = Color3.fromRGB(240,245,230),
+        SubText = Color3.fromRGB(175,195,150),
+        SectionText = Color3.fromRGB(195,160,90),
+        ParagraphText = Color3.fromRGB(225,235,210),
+        Accent = Color3.fromRGB(140,190,95),
+        Stroke = Color3.fromRGB(62,78,56),
+        StrokeLight = Color3.fromRGB(88,108,80),
+        CloseBg = Color3.fromRGB(86,45,38),
+        CloseText = Color3.fromRGB(255,130,100),
+    },
+    ["Eucalyptus"] = {
+        MainBg = Color3.fromRGB(16,24,22),
+        HeaderBg = Color3.fromRGB(26,38,35),
+        TabListBg = Color3.fromRGB(21,31,28),
+        ElementBg = Color3.fromRGB(34,50,46),
+        ElementBg2 = Color3.fromRGB(48,68,62),
+        Text = Color3.fromRGB(225,246,240),
+        SubText = Color3.fromRGB(145,190,180),
+        SectionText = Color3.fromRGB(115,175,160),
+        ParagraphText = Color3.fromRGB(205,232,225),
+        Accent = Color3.fromRGB(95,205,175),
+        Stroke = Color3.fromRGB(50,78,72),
+        StrokeLight = Color3.fromRGB(74,110,102),
+        CloseBg = Color3.fromRGB(82,40,40),
+        CloseText = Color3.fromRGB(255,125,115),
+    },
+    ["Tundra Frost"] = {
+        MainBg = Color3.fromRGB(18,22,28),
+        HeaderBg = Color3.fromRGB(28,35,44),
+        TabListBg = Color3.fromRGB(23,28,36),
+        ElementBg = Color3.fromRGB(38,48,58),
+        ElementBg2 = Color3.fromRGB(52,65,80),
+        Text = Color3.fromRGB(230,240,250),
+        SubText = Color3.fromRGB(150,172,195),
+        SectionText = Color3.fromRGB(120,155,185),
+        ParagraphText = Color3.fromRGB(210,225,240),
+        Accent = Color3.fromRGB(110,185,235),
+        Stroke = Color3.fromRGB(55,70,88),
+        StrokeLight = Color3.fromRGB(78,100,125),
+        CloseBg = Color3.fromRGB(82,36,44),
+        CloseText = Color3.fromRGB(255,115,125),
+    },
+    ["Caramel Drizzle"] = {
+        MainBg = Color3.fromRGB(26,18,12),
+        HeaderBg = Color3.fromRGB(42,28,18),
+        TabListBg = Color3.fromRGB(34,23,15),
+        ElementBg = Color3.fromRGB(56,38,24),
+        ElementBg2 = Color3.fromRGB(76,52,34),
+        Text = Color3.fromRGB(255,240,220),
+        SubText = Color3.fromRGB(220,180,135),
+        SectionText = Color3.fromRGB(240,160,80),
+        ParagraphText = Color3.fromRGB(242,220,195),
+        Accent = Color3.fromRGB(235,145,60),
+        Stroke = Color3.fromRGB(88,58,38),
+        StrokeLight = Color3.fromRGB(125,85,54),
+        CloseBg = Color3.fromRGB(90,40,30),
+        CloseText = Color3.fromRGB(255,120,85),
+    },
+    ["Warm Chai"] = {
+        MainBg = Color3.fromRGB(28,20,16),
+        HeaderBg = Color3.fromRGB(45,32,26),
+        TabListBg = Color3.fromRGB(36,26,21),
+        ElementBg = Color3.fromRGB(60,44,36),
+        ElementBg2 = Color3.fromRGB(80,58,48),
+        Text = Color3.fromRGB(255,242,230),
+        SubText = Color3.fromRGB(220,190,160),
+        SectionText = Color3.fromRGB(230,150,110),
+        ParagraphText = Color3.fromRGB(242,225,208),
+        Accent = Color3.fromRGB(225,130,85),
+        Stroke = Color3.fromRGB(92,68,54),
+        StrokeLight = Color3.fromRGB(128,95,78),
+        CloseBg = Color3.fromRGB(92,42,36),
+        CloseText = Color3.fromRGB(255,125,95),
+    },
+    ["Sedona Rock"] = {
+        MainBg = Color3.fromRGB(28,15,14),
+        HeaderBg = Color3.fromRGB(46,24,22),
+        TabListBg = Color3.fromRGB(37,19,18),
+        ElementBg = Color3.fromRGB(62,34,30),
+        ElementBg2 = Color3.fromRGB(84,46,42),
+        Text = Color3.fromRGB(255,232,225),
+        SubText = Color3.fromRGB(220,160,145),
+        SectionText = Color3.fromRGB(225,100,80),
+        ParagraphText = Color3.fromRGB(242,210,200),
+        Accent = Color3.fromRGB(220,85,65),
+        Stroke = Color3.fromRGB(95,52,46),
+        StrokeLight = Color3.fromRGB(132,75,65),
+        CloseBg = Color3.fromRGB(92,35,30),
+        CloseText = Color3.fromRGB(255,105,90),
+    },
+    ["Terracotta"] = {
+        MainBg = Color3.fromRGB(30,18,16),
+        HeaderBg = Color3.fromRGB(50,30,26),
+        TabListBg = Color3.fromRGB(40,24,21),
+        ElementBg = Color3.fromRGB(66,42,36),
+        ElementBg2 = Color3.fromRGB(88,56,48),
+        Text = Color3.fromRGB(255,236,230),
+        SubText = Color3.fromRGB(225,175,155),
+        SectionText = Color3.fromRGB(235,120,95),
+        ParagraphText = Color3.fromRGB(245,215,205),
+        Accent = Color3.fromRGB(225,105,75),
+        Stroke = Color3.fromRGB(100,62,54),
+        StrokeLight = Color3.fromRGB(140,90,78),
+        CloseBg = Color3.fromRGB(95,38,34),
+        CloseText = Color3.fromRGB(255,115,95),
+    },
+    ["Burnt Sienna"] = {
+        MainBg = Color3.fromRGB(25,14,12),
+        HeaderBg = Color3.fromRGB(42,24,20),
+        TabListBg = Color3.fromRGB(33,19,16),
+        ElementBg = Color3.fromRGB(58,34,28),
+        ElementBg2 = Color3.fromRGB(78,46,38),
+        Text = Color3.fromRGB(255,230,220),
+        SubText = Color3.fromRGB(215,155,135),
+        SectionText = Color3.fromRGB(225,95,65),
+        ParagraphText = Color3.fromRGB(240,205,190),
+        Accent = Color3.fromRGB(215,80,50),
+        Stroke = Color3.fromRGB(90,50,42),
+        StrokeLight = Color3.fromRGB(125,72,60),
+        CloseBg = Color3.fromRGB(92,32,28),
+        CloseText = Color3.fromRGB(255,100,80),
+    },
+    ["Cinnamon Bark"] = {
+        MainBg = Color3.fromRGB(24,16,14),
+        HeaderBg = Color3.fromRGB(40,26,22),
+        TabListBg = Color3.fromRGB(32,21,18),
+        ElementBg = Color3.fromRGB(54,36,30),
+        ElementBg2 = Color3.fromRGB(74,50,42),
+        Text = Color3.fromRGB(255,235,225),
+        SubText = Color3.fromRGB(215,170,150),
+        SectionText = Color3.fromRGB(210,120,90),
+        ParagraphText = Color3.fromRGB(240,215,200),
+        Accent = Color3.fromRGB(200,105,70),
+        Stroke = Color3.fromRGB(86,56,46),
+        StrokeLight = Color3.fromRGB(120,80,66),
+        CloseBg = Color3.fromRGB(90,36,32),
+        CloseText = Color3.fromRGB(255,110,90),
+    },
+    ["Honeycomb"] = {
+        MainBg = Color3.fromRGB(28,22,10),
+        HeaderBg = Color3.fromRGB(48,38,18),
+        TabListBg = Color3.fromRGB(38,30,14),
+        ElementBg = Color3.fromRGB(64,50,24),
+        ElementBg2 = Color3.fromRGB(86,68,34),
+        Text = Color3.fromRGB(255,246,215),
+        SubText = Color3.fromRGB(225,195,120),
+        SectionText = Color3.fromRGB(250,190,60),
+        ParagraphText = Color3.fromRGB(245,230,190),
+        Accent = Color3.fromRGB(255,195,45),
+        Stroke = Color3.fromRGB(98,76,36),
+        StrokeLight = Color3.fromRGB(138,108,52),
+        CloseBg = Color3.fromRGB(92,42,28),
+        CloseText = Color3.fromRGB(255,125,85),
+    },
+    ["Roasted Hazelnut"] = {
+        MainBg = Color3.fromRGB(22,17,15),
+        HeaderBg = Color3.fromRGB(37,28,24),
+        TabListBg = Color3.fromRGB(29,22,19),
+        ElementBg = Color3.fromRGB(49,38,32),
+        ElementBg2 = Color3.fromRGB(67,52,44),
+        Text = Color3.fromRGB(255,236,225),
+        SubText = Color3.fromRGB(205,172,150),
+        SectionText = Color3.fromRGB(195,135,105),
+        ParagraphText = Color3.fromRGB(238,218,202),
+        Accent = Color3.fromRGB(185,125,90),
+        Stroke = Color3.fromRGB(78,60,50),
+        StrokeLight = Color3.fromRGB(110,85,72),
+        CloseBg = Color3.fromRGB(86,38,32),
+        CloseText = Color3.fromRGB(255,120,95),
+    },
+    ["Warm Chestnut"] = {
+        MainBg = Color3.fromRGB(24,16,15),
+        HeaderBg = Color3.fromRGB(40,28,24),
+        TabListBg = Color3.fromRGB(32,22,19),
+        ElementBg = Color3.fromRGB(53,38,33),
+        ElementBg2 = Color3.fromRGB(72,52,45),
+        Text = Color3.fromRGB(255,235,225),
+        SubText = Color3.fromRGB(210,170,150),
+        SectionText = Color3.fromRGB(205,125,95),
+        ParagraphText = Color3.fromRGB(240,215,200),
+        Accent = Color3.fromRGB(195,115,80),
+        Stroke = Color3.fromRGB(84,58,50),
+        StrokeLight = Color3.fromRGB(118,84,72),
+        CloseBg = Color3.fromRGB(88,36,32),
+        CloseText = Color3.fromRGB(255,115,95),
+    },
+    ["Rustic Cabin"] = {
+        MainBg = Color3.fromRGB(26,20,16),
+        HeaderBg = Color3.fromRGB(42,32,26),
+        TabListBg = Color3.fromRGB(34,26,21),
+        ElementBg = Color3.fromRGB(56,44,36),
+        ElementBg2 = Color3.fromRGB(76,60,48),
+        Text = Color3.fromRGB(255,240,228),
+        SubText = Color3.fromRGB(210,185,155),
+        SectionText = Color3.fromRGB(190,145,105),
+        ParagraphText = Color3.fromRGB(238,220,200),
+        Accent = Color3.fromRGB(185,135,90),
+        Stroke = Color3.fromRGB(86,66,54),
+        StrokeLight = Color3.fromRGB(122,94,78),
+        CloseBg = Color3.fromRGB(88,42,36),
+        CloseText = Color3.fromRGB(255,125,100),
+    },
+    ["Dune Horizon"] = {
+        MainBg = Color3.fromRGB(30,25,20),
+        HeaderBg = Color3.fromRGB(48,40,32),
+        TabListBg = Color3.fromRGB(39,32,26),
+        ElementBg = Color3.fromRGB(62,52,42),
+        ElementBg2 = Color3.fromRGB(82,68,56),
+        Text = Color3.fromRGB(255,242,228),
+        SubText = Color3.fromRGB(215,190,160),
+        SectionText = Color3.fromRGB(225,170,120),
+        ParagraphText = Color3.fromRGB(240,225,205),
+        Accent = Color3.fromRGB(220,160,100),
+        Stroke = Color3.fromRGB(92,78,62),
+        StrokeLight = Color3.fromRGB(128,108,88),
+        CloseBg = Color3.fromRGB(92,46,38),
+        CloseText = Color3.fromRGB(255,130,105),
+    },
+    ["Paprika Spice"] = {
+        MainBg = Color3.fromRGB(26,12,12),
+        HeaderBg = Color3.fromRGB(44,20,20),
+        TabListBg = Color3.fromRGB(35,16,16),
+        ElementBg = Color3.fromRGB(60,28,28),
+        ElementBg2 = Color3.fromRGB(82,38,38),
+        Text = Color3.fromRGB(255,228,228),
+        SubText = Color3.fromRGB(220,145,145),
+        SectionText = Color3.fromRGB(240,75,75),
+        ParagraphText = Color3.fromRGB(242,200,200),
+        Accent = Color3.fromRGB(230,60,60),
+        Stroke = Color3.fromRGB(96,44,44),
+        StrokeLight = Color3.fromRGB(135,62,62),
+        CloseBg = Color3.fromRGB(95,26,26),
+        CloseText = Color3.fromRGB(255,90,90),
+    },
+    ["Maple Syrup"] = {
+        MainBg = Color3.fromRGB(28,18,12),
+        HeaderBg = Color3.fromRGB(46,30,20),
+        TabListBg = Color3.fromRGB(37,24,16),
+        ElementBg = Color3.fromRGB(62,40,26),
+        ElementBg2 = Color3.fromRGB(84,56,38),
+        Text = Color3.fromRGB(255,238,218),
+        SubText = Color3.fromRGB(220,175,130),
+        SectionText = Color3.fromRGB(245,150,70),
+        ParagraphText = Color3.fromRGB(242,218,190),
+        Accent = Color3.fromRGB(235,135,50),
+        Stroke = Color3.fromRGB(98,64,42),
+        StrokeLight = Color3.fromRGB(138,90,60),
+        CloseBg = Color3.fromRGB(92,38,28),
+        CloseText = Color3.fromRGB(255,115,80),
+    },
+    ["Saffron Gold"] = {
+        MainBg = Color3.fromRGB(30,22,10),
+        HeaderBg = Color3.fromRGB(50,36,16),
+        TabListBg = Color3.fromRGB(40,29,13),
+        ElementBg = Color3.fromRGB(68,48,22),
+        ElementBg2 = Color3.fromRGB(90,66,32),
+        Text = Color3.fromRGB(255,245,210),
+        SubText = Color3.fromRGB(225,190,115),
+        SectionText = Color3.fromRGB(255,180,50),
+        ParagraphText = Color3.fromRGB(245,228,180),
+        Accent = Color3.fromRGB(255,175,30),
+        Stroke = Color3.fromRGB(105,76,34),
+        StrokeLight = Color3.fromRGB(148,108,50),
+        CloseBg = Color3.fromRGB(95,40,25),
+        CloseText = Color3.fromRGB(255,120,80),
+    },
+    ["Clay Pottery"] = {
+        MainBg = Color3.fromRGB(26,19,18),
+        HeaderBg = Color3.fromRGB(42,31,29),
+        TabListBg = Color3.fromRGB(34,25,23),
+        ElementBg = Color3.fromRGB(56,42,39),
+        ElementBg2 = Color3.fromRGB(76,57,53),
+        Text = Color3.fromRGB(252,238,232),
+        SubText = Color3.fromRGB(210,180,170),
+        SectionText = Color3.fromRGB(205,135,120),
+        ParagraphText = Color3.fromRGB(238,218,210),
+        Accent = Color3.fromRGB(195,120,100),
+        Stroke = Color3.fromRGB(88,66,62),
+        StrokeLight = Color3.fromRGB(124,94,88),
+        CloseBg = Color3.fromRGB(90,40,36),
+        CloseText = Color3.fromRGB(255,120,105),
+    },
+    ["Amber Glow"] = {
+        MainBg = Color3.fromRGB(24,16,8),
+        HeaderBg = Color3.fromRGB(42,28,14),
+        TabListBg = Color3.fromRGB(33,22,11),
+        ElementBg = Color3.fromRGB(58,38,20),
+        ElementBg2 = Color3.fromRGB(78,52,28),
+        Text = Color3.fromRGB(255,240,210),
+        SubText = Color3.fromRGB(225,175,110),
+        SectionText = Color3.fromRGB(255,160,50),
+        ParagraphText = Color3.fromRGB(245,218,175),
+        Accent = Color3.fromRGB(255,150,30),
+        Stroke = Color3.fromRGB(92,60,30),
+        StrokeLight = Color3.fromRGB(130,88,45),
+        CloseBg = Color3.fromRGB(92,35,24),
+        CloseText = Color3.fromRGB(255,110,75),
+    },
+    ["Sweet Molasses"] = {
+        MainBg = Color3.fromRGB(20,14,14),
+        HeaderBg = Color3.fromRGB(34,24,24),
+        TabListBg = Color3.fromRGB(27,19,19),
+        ElementBg = Color3.fromRGB(46,33,33),
+        ElementBg2 = Color3.fromRGB(64,46,46),
+        Text = Color3.fromRGB(250,235,232),
+        SubText = Color3.fromRGB(205,165,160),
+        SectionText = Color3.fromRGB(190,115,110),
+        ParagraphText = Color3.fromRGB(235,212,208),
+        Accent = Color3.fromRGB(175,100,95),
+        Stroke = Color3.fromRGB(74,52,52),
+        StrokeLight = Color3.fromRGB(105,75,75),
+        CloseBg = Color3.fromRGB(86,34,32),
+        CloseText = Color3.fromRGB(255,110,100),
+    },
+    ["Smoked Oak"] = {
+        MainBg = Color3.fromRGB(22,19,18),
+        HeaderBg = Color3.fromRGB(36,31,29),
+        TabListBg = Color3.fromRGB(29,25,23),
+        ElementBg = Color3.fromRGB(48,42,39),
+        ElementBg2 = Color3.fromRGB(66,58,54),
+        Text = Color3.fromRGB(245,240,236),
+        SubText = Color3.fromRGB(180,170,165),
+        SectionText = Color3.fromRGB(175,140,125),
+        ParagraphText = Color3.fromRGB(228,220,214),
+        Accent = Color3.fromRGB(165,130,115),
+        Stroke = Color3.fromRGB(76,66,62),
+        StrokeLight = Color3.fromRGB(108,94,88),
+        CloseBg = Color3.fromRGB(86,40,38),
+        CloseText = Color3.fromRGB(255,125,115),
+    },
+    ["Nutmeg Spice"] = {
+        MainBg = Color3.fromRGB(25,17,14),
+        HeaderBg = Color3.fromRGB(41,28,23),
+        TabListBg = Color3.fromRGB(33,22,18),
+        ElementBg = Color3.fromRGB(55,38,31),
+        ElementBg2 = Color3.fromRGB(75,52,43),
+        Text = Color3.fromRGB(252,238,228),
+        SubText = Color3.fromRGB(215,175,155),
+        SectionText = Color3.fromRGB(215,130,100),
+        ParagraphText = Color3.fromRGB(240,218,205),
+        Accent = Color3.fromRGB(205,120,85),
+        Stroke = Color3.fromRGB(86,60,48),
+        StrokeLight = Color3.fromRGB(122,85,70),
+        CloseBg = Color3.fromRGB(90,38,32),
+        CloseText = Color3.fromRGB(255,115,95),
+    },
+    ["Warm Cocoa"] = {
+        MainBg = Color3.fromRGB(22,16,17),
+        HeaderBg = Color3.fromRGB(36,26,28),
+        TabListBg = Color3.fromRGB(29,21,22),
+        ElementBg = Color3.fromRGB(48,36,38),
+        ElementBg2 = Color3.fromRGB(66,50,52),
+        Text = Color3.fromRGB(250,236,238),
+        SubText = Color3.fromRGB(205,170,175),
+        SectionText = Color3.fromRGB(195,120,135),
+        ParagraphText = Color3.fromRGB(235,215,218),
+        Accent = Color3.fromRGB(185,110,125),
+        Stroke = Color3.fromRGB(76,56,60),
+        StrokeLight = Color3.fromRGB(108,80,85),
+        CloseBg = Color3.fromRGB(88,35,38),
+        CloseText = Color3.fromRGB(255,115,120),
+    },
+    ["Pastel Mint"] = {
+        MainBg = Color3.fromRGB(24,32,28),
+        HeaderBg = Color3.fromRGB(36,48,42),
+        TabListBg = Color3.fromRGB(30,40,35),
+        ElementBg = Color3.fromRGB(48,64,56),
+        ElementBg2 = Color3.fromRGB(64,84,74),
+        Text = Color3.fromRGB(235,255,245),
+        SubText = Color3.fromRGB(165,215,190),
+        SectionText = Color3.fromRGB(130,210,175),
+        ParagraphText = Color3.fromRGB(215,245,230),
+        Accent = Color3.fromRGB(110,215,170),
+        Stroke = Color3.fromRGB(68,92,80),
+        StrokeLight = Color3.fromRGB(96,128,112),
+        CloseBg = Color3.fromRGB(85,42,48),
+        CloseText = Color3.fromRGB(255,130,135),
+    },
+    ["Pastel Peach"] = {
+        MainBg = Color3.fromRGB(34,26,24),
+        HeaderBg = Color3.fromRGB(52,40,36),
+        TabListBg = Color3.fromRGB(43,33,30),
+        ElementBg = Color3.fromRGB(68,52,48),
+        ElementBg2 = Color3.fromRGB(88,68,62),
+        Text = Color3.fromRGB(255,242,236),
+        SubText = Color3.fromRGB(220,185,175),
+        SectionText = Color3.fromRGB(245,165,145),
+        ParagraphText = Color3.fromRGB(245,225,218),
+        Accent = Color3.fromRGB(240,155,135),
+        Stroke = Color3.fromRGB(96,75,68),
+        StrokeLight = Color3.fromRGB(132,104,95),
+        CloseBg = Color3.fromRGB(92,45,42),
+        CloseText = Color3.fromRGB(255,135,120),
+    },
+    ["Soft Lilac"] = {
+        MainBg = Color3.fromRGB(28,24,34),
+        HeaderBg = Color3.fromRGB(44,38,54),
+        TabListBg = Color3.fromRGB(36,31,44),
+        ElementBg = Color3.fromRGB(58,50,70),
+        ElementBg2 = Color3.fromRGB(78,68,94),
+        Text = Color3.fromRGB(248,240,255),
+        SubText = Color3.fromRGB(195,180,220),
+        SectionText = Color3.fromRGB(190,155,230),
+        ParagraphText = Color3.fromRGB(230,220,245),
+        Accent = Color3.fromRGB(175,140,225),
+        Stroke = Color3.fromRGB(82,70,98),
+        StrokeLight = Color3.fromRGB(116,100,138),
+        CloseBg = Color3.fromRGB(88,40,52),
+        CloseText = Color3.fromRGB(255,125,145),
+    },
+    ["Baby Blue"] = {
+        MainBg = Color3.fromRGB(20,26,34),
+        HeaderBg = Color3.fromRGB(32,42,54),
+        TabListBg = Color3.fromRGB(26,34,44),
+        ElementBg = Color3.fromRGB(44,56,72),
+        ElementBg2 = Color3.fromRGB(60,76,96),
+        Text = Color3.fromRGB(235,246,255),
+        SubText = Color3.fromRGB(165,195,225),
+        SectionText = Color3.fromRGB(135,185,235),
+        ParagraphText = Color3.fromRGB(215,232,248),
+        Accent = Color3.fromRGB(120,180,245),
+        Stroke = Color3.fromRGB(64,82,104),
+        StrokeLight = Color3.fromRGB(90,115,145),
+        CloseBg = Color3.fromRGB(82,38,48),
+        CloseText = Color3.fromRGB(255,120,135),
+    },
+    ["Milk Tea"] = {
+        MainBg = Color3.fromRGB(30,26,22),
+        HeaderBg = Color3.fromRGB(48,42,35),
+        TabListBg = Color3.fromRGB(39,34,28),
+        ElementBg = Color3.fromRGB(64,56,46),
+        ElementBg2 = Color3.fromRGB(84,74,62),
+        Text = Color3.fromRGB(255,246,235),
+        SubText = Color3.fromRGB(215,195,175),
+        SectionText = Color3.fromRGB(205,170,135),
+        ParagraphText = Color3.fromRGB(242,230,215),
+        Accent = Color3.fromRGB(195,155,120),
+        Stroke = Color3.fromRGB(92,80,68),
+        StrokeLight = Color3.fromRGB(128,112,95),
+        CloseBg = Color3.fromRGB(90,44,40),
+        CloseText = Color3.fromRGB(255,130,115),
+    },
+    ["Cherry Blossom"] = {
+        MainBg = Color3.fromRGB(32,22,26),
+        HeaderBg = Color3.fromRGB(50,34,40),
+        TabListBg = Color3.fromRGB(41,28,33),
+        ElementBg = Color3.fromRGB(66,46,54),
+        ElementBg2 = Color3.fromRGB(86,60,70),
+        Text = Color3.fromRGB(255,238,245),
+        SubText = Color3.fromRGB(225,180,195),
+        SectionText = Color3.fromRGB(250,150,180),
+        ParagraphText = Color3.fromRGB(245,220,232),
+        Accent = Color3.fromRGB(245,135,170),
+        Stroke = Color3.fromRGB(94,66,78),
+        StrokeLight = Color3.fromRGB(130,92,108),
+        CloseBg = Color3.fromRGB(92,40,48),
+        CloseText = Color3.fromRGB(255,125,135),
+    },
+    ["Cotton Candy"] = {
+        MainBg = Color3.fromRGB(24,24,36),
+        HeaderBg = Color3.fromRGB(38,38,56),
+        TabListBg = Color3.fromRGB(31,31,46),
+        ElementBg = Color3.fromRGB(52,52,74),
+        ElementBg2 = Color3.fromRGB(70,70,98),
+        Text = Color3.fromRGB(245,242,255),
+        SubText = Color3.fromRGB(190,185,225),
+        SectionText = Color3.fromRGB(245,140,200),
+        ParagraphText = Color3.fromRGB(230,225,245),
+        Accent = Color3.fromRGB(130,190,255),
+        Stroke = Color3.fromRGB(76,76,105),
+        StrokeLight = Color3.fromRGB(108,108,148),
+        CloseBg = Color3.fromRGB(88,38,55),
+        CloseText = Color3.fromRGB(255,120,145),
+    },
+    ["Marshmallow"] = {
+        MainBg = Color3.fromRGB(28,28,32),
+        HeaderBg = Color3.fromRGB(44,44,50),
+        TabListBg = Color3.fromRGB(36,36,41),
+        ElementBg = Color3.fromRGB(58,58,66),
+        ElementBg2 = Color3.fromRGB(76,76,86),
+        Text = Color3.fromRGB(252,252,255),
+        SubText = Color3.fromRGB(195,195,205),
+        SectionText = Color3.fromRGB(180,180,210),
+        ParagraphText = Color3.fromRGB(235,235,245),
+        Accent = Color3.fromRGB(165,175,235),
+        Stroke = Color3.fromRGB(82,82,94),
+        StrokeLight = Color3.fromRGB(115,115,130),
+        CloseBg = Color3.fromRGB(86,42,48),
+        CloseText = Color3.fromRGB(255,125,130),
+    },
+    ["Creamy Vanilla"] = {
+        MainBg = Color3.fromRGB(32,30,24),
+        HeaderBg = Color3.fromRGB(50,46,38),
+        TabListBg = Color3.fromRGB(41,38,31),
+        ElementBg = Color3.fromRGB(66,62,50),
+        ElementBg2 = Color3.fromRGB(86,80,66),
+        Text = Color3.fromRGB(255,250,238),
+        SubText = Color3.fromRGB(220,210,185),
+        SectionText = Color3.fromRGB(235,205,145),
+        ParagraphText = Color3.fromRGB(245,238,220),
+        Accent = Color3.fromRGB(225,190,125),
+        Stroke = Color3.fromRGB(94,88,72),
+        StrokeLight = Color3.fromRGB(130,122,102),
+        CloseBg = Color3.fromRGB(90,46,40),
+        CloseText = Color3.fromRGB(255,135,115),
+    },
+    ["Buttercup"] = {
+        MainBg = Color3.fromRGB(32,28,16),
+        HeaderBg = Color3.fromRGB(52,46,26),
+        TabListBg = Color3.fromRGB(42,37,21),
+        ElementBg = Color3.fromRGB(68,60,34),
+        ElementBg2 = Color3.fromRGB(90,80,46),
+        Text = Color3.fromRGB(255,248,225),
+        SubText = Color3.fromRGB(225,205,140),
+        SectionText = Color3.fromRGB(250,215,95),
+        ParagraphText = Color3.fromRGB(245,235,200),
+        Accent = Color3.fromRGB(245,205,75),
+        Stroke = Color3.fromRGB(98,88,52),
+        StrokeLight = Color3.fromRGB(138,124,74),
+        CloseBg = Color3.fromRGB(92,45,32),
+        CloseText = Color3.fromRGB(255,130,95),
+    },
+    ["Matcha Latte"] = {
+        MainBg = Color3.fromRGB(22,28,20),
+        HeaderBg = Color3.fromRGB(34,44,32),
+        TabListBg = Color3.fromRGB(28,36,26),
+        ElementBg = Color3.fromRGB(46,58,44),
+        ElementBg2 = Color3.fromRGB(62,78,60),
+        Text = Color3.fromRGB(235,250,232),
+        SubText = Color3.fromRGB(165,205,160),
+        SectionText = Color3.fromRGB(145,200,130),
+        ParagraphText = Color3.fromRGB(215,238,212),
+        Accent = Color3.fromRGB(125,195,110),
+        Stroke = Color3.fromRGB(68,85,65),
+        StrokeLight = Color3.fromRGB(95,118,90),
+        CloseBg = Color3.fromRGB(82,42,38),
+        CloseText = Color3.fromRGB(255,125,110),
+    },
+    ["Sky Mist"] = {
+        MainBg = Color3.fromRGB(20,28,34),
+        HeaderBg = Color3.fromRGB(32,44,54),
+        TabListBg = Color3.fromRGB(26,36,44),
+        ElementBg = Color3.fromRGB(44,60,72),
+        ElementBg2 = Color3.fromRGB(60,80,98),
+        Text = Color3.fromRGB(230,248,255),
+        SubText = Color3.fromRGB(155,200,225),
+        SectionText = Color3.fromRGB(115,190,235),
+        ParagraphText = Color3.fromRGB(210,235,248),
+        Accent = Color3.fromRGB(95,190,245),
+        Stroke = Color3.fromRGB(64,86,105),
+        StrokeLight = Color3.fromRGB(90,120,148),
+        CloseBg = Color3.fromRGB(80,38,48),
+        CloseText = Color3.fromRGB(255,115,135),
+    },
+    ["Blush Pink"] = {
+        MainBg = Color3.fromRGB(34,24,26),
+        HeaderBg = Color3.fromRGB(52,38,42),
+        TabListBg = Color3.fromRGB(43,31,34),
+        ElementBg = Color3.fromRGB(68,50,54),
+        ElementBg2 = Color3.fromRGB(88,66,72),
+        Text = Color3.fromRGB(255,240,242),
+        SubText = Color3.fromRGB(225,185,192),
+        SectionText = Color3.fromRGB(245,155,170),
+        ParagraphText = Color3.fromRGB(245,222,226),
+        Accent = Color3.fromRGB(240,140,160),
+        Stroke = Color3.fromRGB(96,72,78),
+        StrokeLight = Color3.fromRGB(132,100,108),
+        CloseBg = Color3.fromRGB(92,42,45),
+        CloseText = Color3.fromRGB(255,130,125),
+    },
+    ["Muted Sage"] = {
+        MainBg = Color3.fromRGB(24,28,24),
+        HeaderBg = Color3.fromRGB(38,44,38),
+        TabListBg = Color3.fromRGB(31,36,31),
+        ElementBg = Color3.fromRGB(50,58,50),
+        ElementBg2 = Color3.fromRGB(66,78,66),
+        Text = Color3.fromRGB(238,246,238),
+        SubText = Color3.fromRGB(170,195,170),
+        SectionText = Color3.fromRGB(140,185,140),
+        ParagraphText = Color3.fromRGB(220,235,220),
+        Accent = Color3.fromRGB(120,180,120),
+        Stroke = Color3.fromRGB(72,85,72),
+        StrokeLight = Color3.fromRGB(102,118,102),
+        CloseBg = Color3.fromRGB(85,42,40),
+        CloseText = Color3.fromRGB(255,125,115),
+    },
+    ["Soft Coral"] = {
+        MainBg = Color3.fromRGB(34,22,22),
+        HeaderBg = Color3.fromRGB(54,36,36),
+        TabListBg = Color3.fromRGB(44,29,29),
+        ElementBg = Color3.fromRGB(70,48,48),
+        ElementBg2 = Color3.fromRGB(92,64,64),
+        Text = Color3.fromRGB(255,238,236),
+        SubText = Color3.fromRGB(225,175,170),
+        SectionText = Color3.fromRGB(250,145,135),
+        ParagraphText = Color3.fromRGB(245,218,214),
+        Accent = Color3.fromRGB(245,130,120),
+        Stroke = Color3.fromRGB(98,70,70),
+        StrokeLight = Color3.fromRGB(136,98,98),
+        CloseBg = Color3.fromRGB(94,40,38),
+        CloseText = Color3.fromRGB(255,125,110),
+    },
+    ["Periwinkle Glow"] = {
+        MainBg = Color3.fromRGB(22,22,34),
+        HeaderBg = Color3.fromRGB(36,36,54),
+        TabListBg = Color3.fromRGB(29,29,44),
+        ElementBg = Color3.fromRGB(48,48,72),
+        ElementBg2 = Color3.fromRGB(66,66,96),
+        Text = Color3.fromRGB(240,240,255),
+        SubText = Color3.fromRGB(175,175,225),
+        SectionText = Color3.fromRGB(160,160,240),
+        ParagraphText = Color3.fromRGB(220,220,246),
+        Accent = Color3.fromRGB(145,145,250),
+        Stroke = Color3.fromRGB(72,72,105),
+        StrokeLight = Color3.fromRGB(102,102,146),
+        CloseBg = Color3.fromRGB(84,36,50),
+        CloseText = Color3.fromRGB(255,115,140),
+    },
+    ["Honeydew Green"] = {
+        MainBg = Color3.fromRGB(22,30,22),
+        HeaderBg = Color3.fromRGB(35,48,35),
+        TabListBg = Color3.fromRGB(28,39,28),
+        ElementBg = Color3.fromRGB(46,62,46),
+        ElementBg2 = Color3.fromRGB(62,84,62),
+        Text = Color3.fromRGB(235,252,235),
+        SubText = Color3.fromRGB(165,215,165),
+        SectionText = Color3.fromRGB(135,215,135),
+        ParagraphText = Color3.fromRGB(215,244,215),
+        Accent = Color3.fromRGB(115,220,115),
+        Stroke = Color3.fromRGB(68,90,68),
+        StrokeLight = Color3.fromRGB(95,126,95),
+        CloseBg = Color3.fromRGB(82,42,38),
+        CloseText = Color3.fromRGB(255,125,110),
+    },
+    ["Dusty Rose"] = {
+        MainBg = Color3.fromRGB(32,24,26),
+        HeaderBg = Color3.fromRGB(50,38,42),
+        TabListBg = Color3.fromRGB(41,31,34),
+        ElementBg = Color3.fromRGB(66,50,56),
+        ElementBg2 = Color3.fromRGB(86,66,74),
+        Text = Color3.fromRGB(255,240,242),
+        SubText = Color3.fromRGB(220,185,192),
+        SectionText = Color3.fromRGB(230,150,165),
+        ParagraphText = Color3.fromRGB(242,220,225),
+        Accent = Color3.fromRGB(220,135,150),
+        Stroke = Color3.fromRGB(94,72,80),
+        StrokeLight = Color3.fromRGB(130,100,112),
+        CloseBg = Color3.fromRGB(90,42,46),
+        CloseText = Color3.fromRGB(255,125,125),
+    },
+    ["Lavender Cloud"] = {
+        MainBg = Color3.fromRGB(26,22,32),
+        HeaderBg = Color3.fromRGB(42,36,52),
+        TabListBg = Color3.fromRGB(34,29,42),
+        ElementBg = Color3.fromRGB(54,46,68),
+        ElementBg2 = Color3.fromRGB(74,64,90),
+        Text = Color3.fromRGB(248,238,255),
+        SubText = Color3.fromRGB(190,172,218),
+        SectionText = Color3.fromRGB(185,145,230),
+        ParagraphText = Color3.fromRGB(230,218,245),
+        Accent = Color3.fromRGB(170,130,235),
+        Stroke = Color3.fromRGB(78,66,95),
+        StrokeLight = Color3.fromRGB(110,94,134),
+        CloseBg = Color3.fromRGB(86,38,50),
+        CloseText = Color3.fromRGB(255,120,140),
+    },
+    ["Pistachio Mist"] = {
+        MainBg = Color3.fromRGB(20,28,22),
+        HeaderBg = Color3.fromRGB(32,45,35),
+        TabListBg = Color3.fromRGB(26,36,28),
+        ElementBg = Color3.fromRGB(42,60,46),
+        ElementBg2 = Color3.fromRGB(58,80,62),
+        Text = Color3.fromRGB(232,250,235),
+        SubText = Color3.fromRGB(160,208,175),
+        SectionText = Color3.fromRGB(130,200,150),
+        ParagraphText = Color3.fromRGB(210,240,220),
+        Accent = Color3.fromRGB(110,205,135),
+        Stroke = Color3.fromRGB(62,86,70),
+        StrokeLight = Color3.fromRGB(88,120,98),
+        CloseBg = Color3.fromRGB(80,40,38),
+        CloseText = Color3.fromRGB(255,120,110),
+    },
+    ["Laser Grid"] = {
+        MainBg = Color3.fromRGB(8,8,16),
+        HeaderBg = Color3.fromRGB(14,14,28),
+        TabListBg = Color3.fromRGB(11,11,22),
+        ElementBg = Color3.fromRGB(22,22,42),
+        ElementBg2 = Color3.fromRGB(32,32,60),
+        Text = Color3.fromRGB(240,240,255),
+        SubText = Color3.fromRGB(150,150,220),
+        SectionText = Color3.fromRGB(255,0,180),
+        ParagraphText = Color3.fromRGB(210,210,245),
+        Accent = Color3.fromRGB(0,255,220),
+        Stroke = Color3.fromRGB(45,45,80),
+        StrokeLight = Color3.fromRGB(68,68,115),
+        CloseBg = Color3.fromRGB(75,20,45),
+        CloseText = Color3.fromRGB(255,80,140),
+    },
+    ["Cyber Matrix"] = {
+        MainBg = Color3.fromRGB(6,14,8),
+        HeaderBg = Color3.fromRGB(10,24,14),
+        TabListBg = Color3.fromRGB(8,19,11),
+        ElementBg = Color3.fromRGB(15,34,20),
+        ElementBg2 = Color3.fromRGB(22,48,28),
+        Text = Color3.fromRGB(200,255,210),
+        SubText = Color3.fromRGB(100,235,125),
+        SectionText = Color3.fromRGB(50,255,90),
+        ParagraphText = Color3.fromRGB(170,248,185),
+        Accent = Color3.fromRGB(0,255,80),
+        Stroke = Color3.fromRGB(30,75,40),
+        StrokeLight = Color3.fromRGB(45,110,60),
+        CloseBg = Color3.fromRGB(60,25,20),
+        CloseText = Color3.fromRGB(255,100,70),
+    },
+    ["Synth Pulse"] = {
+        MainBg = Color3.fromRGB(14,8,20),
+        HeaderBg = Color3.fromRGB(24,14,34),
+        TabListBg = Color3.fromRGB(19,11,27),
+        ElementBg = Color3.fromRGB(35,22,50),
+        ElementBg2 = Color3.fromRGB(50,32,70),
+        Text = Color3.fromRGB(250,230,255),
+        SubText = Color3.fromRGB(200,140,225),
+        SectionText = Color3.fromRGB(255,60,180),
+        ParagraphText = Color3.fromRGB(230,205,245),
+        Accent = Color3.fromRGB(255,40,160),
+        Stroke = Color3.fromRGB(68,42,95),
+        StrokeLight = Color3.fromRGB(98,62,135),
+        CloseBg = Color3.fromRGB(82,22,48),
+        CloseText = Color3.fromRGB(255,90,140),
+    },
+    ["Retro Wave"] = {
+        MainBg = Color3.fromRGB(16,10,24),
+        HeaderBg = Color3.fromRGB(28,18,40),
+        TabListBg = Color3.fromRGB(22,14,32),
+        ElementBg = Color3.fromRGB(40,26,56),
+        ElementBg2 = Color3.fromRGB(58,38,80),
+        Text = Color3.fromRGB(255,235,250),
+        SubText = Color3.fromRGB(210,150,215),
+        SectionText = Color3.fromRGB(255,100,50),
+        ParagraphText = Color3.fromRGB(238,210,240),
+        Accent = Color3.fromRGB(255,120,40),
+        Stroke = Color3.fromRGB(75,50,100),
+        StrokeLight = Color3.fromRGB(108,72,140),
+        CloseBg = Color3.fromRGB(85,28,42),
+        CloseText = Color3.fromRGB(255,100,125),
+    },
+    ["Vapor Neon"] = {
+        MainBg = Color3.fromRGB(12,12,25),
+        HeaderBg = Color3.fromRGB(20,20,42),
+        TabListBg = Color3.fromRGB(16,16,33),
+        ElementBg = Color3.fromRGB(30,30,58),
+        ElementBg2 = Color3.fromRGB(44,44,82),
+        Text = Color3.fromRGB(235,245,255),
+        SubText = Color3.fromRGB(160,190,240),
+        SectionText = Color3.fromRGB(255,80,180),
+        ParagraphText = Color3.fromRGB(210,230,250),
+        Accent = Color3.fromRGB(0,230,255),
+        Stroke = Color3.fromRGB(55,55,105),
+        StrokeLight = Color3.fromRGB(80,80,150),
+        CloseBg = Color3.fromRGB(80,28,48),
+        CloseText = Color3.fromRGB(255,100,140),
+    },
+    ["Acid Rain"] = {
+        MainBg = Color3.fromRGB(12,16,6),
+        HeaderBg = Color3.fromRGB(20,28,10),
+        TabListBg = Color3.fromRGB(16,22,8),
+        ElementBg = Color3.fromRGB(30,42,16),
+        ElementBg2 = Color3.fromRGB(42,58,24),
+        Text = Color3.fromRGB(230,255,180),
+        SubText = Color3.fromRGB(170,235,90),
+        SectionText = Color3.fromRGB(220,255,40),
+        ParagraphText = Color3.fromRGB(205,245,150),
+        Accent = Color3.fromRGB(195,255,20),
+        Stroke = Color3.fromRGB(60,85,30),
+        StrokeLight = Color3.fromRGB(88,122,45),
+        CloseBg = Color3.fromRGB(70,32,20),
+        CloseText = Color3.fromRGB(255,130,70),
+    },
+    ["Glowstick Blue"] = {
+        MainBg = Color3.fromRGB(6,12,24),
+        HeaderBg = Color3.fromRGB(10,20,40),
+        TabListBg = Color3.fromRGB(8,16,32),
+        ElementBg = Color3.fromRGB(16,30,58),
+        ElementBg2 = Color3.fromRGB(24,44,82),
+        Text = Color3.fromRGB(210,240,255),
+        SubText = Color3.fromRGB(120,185,245),
+        SectionText = Color3.fromRGB(0,190,255),
+        ParagraphText = Color3.fromRGB(185,225,250),
+        Accent = Color3.fromRGB(0,175,255),
+        Stroke = Color3.fromRGB(32,60,110),
+        StrokeLight = Color3.fromRGB(48,90,155),
+        CloseBg = Color3.fromRGB(72,25,40),
+        CloseText = Color3.fromRGB(255,95,120),
+    },
+    ["Ultraviolet"] = {
+        MainBg = Color3.fromRGB(14,6,24),
+        HeaderBg = Color3.fromRGB(24,10,40),
+        TabListBg = Color3.fromRGB(19,8,32),
+        ElementBg = Color3.fromRGB(36,16,58),
+        ElementBg2 = Color3.fromRGB(52,24,82),
+        Text = Color3.fromRGB(245,225,255),
+        SubText = Color3.fromRGB(195,130,245),
+        SectionText = Color3.fromRGB(180,40,255),
+        ParagraphText = Color3.fromRGB(225,195,250),
+        Accent = Color3.fromRGB(165,20,255),
+        Stroke = Color3.fromRGB(68,30,110),
+        StrokeLight = Color3.fromRGB(98,44,155),
+        CloseBg = Color3.fromRGB(82,20,48),
+        CloseText = Color3.fromRGB(255,85,140),
+    },
+    ["Cyber Gold"] = {
+        MainBg = Color3.fromRGB(18,15,6),
+        HeaderBg = Color3.fromRGB(30,25,10),
+        TabListBg = Color3.fromRGB(24,20,8),
+        ElementBg = Color3.fromRGB(44,38,16),
+        ElementBg2 = Color3.fromRGB(62,54,24),
+        Text = Color3.fromRGB(255,245,180),
+        SubText = Color3.fromRGB(230,200,80),
+        SectionText = Color3.fromRGB(255,210,0),
+        ParagraphText = Color3.fromRGB(240,225,150),
+        Accent = Color3.fromRGB(255,200,0),
+        Stroke = Color3.fromRGB(86,74,30),
+        StrokeLight = Color3.fromRGB(122,105,44),
+        CloseBg = Color3.fromRGB(85,35,20),
+        CloseText = Color3.fromRGB(255,120,70),
+    },
+    ["Quantum Cyan"] = {
+        MainBg = Color3.fromRGB(6,15,20),
+        HeaderBg = Color3.fromRGB(10,25,34),
+        TabListBg = Color3.fromRGB(8,20,27),
+        ElementBg = Color3.fromRGB(16,38,50),
+        ElementBg2 = Color3.fromRGB(24,52,68),
+        Text = Color3.fromRGB(215,250,255),
+        SubText = Color3.fromRGB(130,215,235),
+        SectionText = Color3.fromRGB(0,240,240),
+        ParagraphText = Color3.fromRGB(190,238,248),
+        Accent = Color3.fromRGB(0,230,220),
+        Stroke = Color3.fromRGB(32,75,98),
+        StrokeLight = Color3.fromRGB(48,110,140),
+        CloseBg = Color3.fromRGB(72,30,42),
+        CloseText = Color3.fromRGB(255,105,125),
+    },
+    ["Voltage Magenta"] = {
+        MainBg = Color3.fromRGB(20,6,18),
+        HeaderBg = Color3.fromRGB(34,10,30),
+        TabListBg = Color3.fromRGB(27,8,24),
+        ElementBg = Color3.fromRGB(48,16,44),
+        ElementBg2 = Color3.fromRGB(68,24,62),
+        Text = Color3.fromRGB(255,225,250),
+        SubText = Color3.fromRGB(240,120,215),
+        SectionText = Color3.fromRGB(255,0,200),
+        ParagraphText = Color3.fromRGB(245,190,235),
+        Accent = Color3.fromRGB(255,0,175),
+        Stroke = Color3.fromRGB(92,32,84),
+        StrokeLight = Color3.fromRGB(130,46,118),
+        CloseBg = Color3.fromRGB(88,20,40),
+        CloseText = Color3.fromRGB(255,80,130),
+    },
+    ["Circuit Green"] = {
+        MainBg = Color3.fromRGB(6,18,12),
+        HeaderBg = Color3.fromRGB(10,30,20),
+        TabListBg = Color3.fromRGB(8,24,16),
+        ElementBg = Color3.fromRGB(16,44,30),
+        ElementBg2 = Color3.fromRGB(24,62,42),
+        Text = Color3.fromRGB(210,255,230),
+        SubText = Color3.fromRGB(115,225,165),
+        SectionText = Color3.fromRGB(0,255,140),
+        ParagraphText = Color3.fromRGB(180,245,210),
+        Accent = Color3.fromRGB(0,240,120),
+        Stroke = Color3.fromRGB(32,85,58),
+        StrokeLight = Color3.fromRGB(48,122,84),
+        CloseBg = Color3.fromRGB(70,32,32),
+        CloseText = Color3.fromRGB(255,110,95),
+    },
+    ["Neon Crimson"] = {
+        MainBg = Color3.fromRGB(20,6,8),
+        HeaderBg = Color3.fromRGB(34,10,14),
+        TabListBg = Color3.fromRGB(27,8,11),
+        ElementBg = Color3.fromRGB(48,16,22),
+        ElementBg2 = Color3.fromRGB(68,24,32),
+        Text = Color3.fromRGB(255,225,230),
+        SubText = Color3.fromRGB(240,115,135),
+        SectionText = Color3.fromRGB(255,30,60),
+        ParagraphText = Color3.fromRGB(245,185,195),
+        Accent = Color3.fromRGB(255,20,50),
+        Stroke = Color3.fromRGB(92,32,44),
+        StrokeLight = Color3.fromRGB(130,46,62),
+        CloseBg = Color3.fromRGB(90,18,22),
+        CloseText = Color3.fromRGB(255,75,85),
+    },
+    ["High Voltage"] = {
+        MainBg = Color3.fromRGB(18,16,4),
+        HeaderBg = Color3.fromRGB(32,28,8),
+        TabListBg = Color3.fromRGB(25,22,6),
+        ElementBg = Color3.fromRGB(48,42,12),
+        ElementBg2 = Color3.fromRGB(68,60,18),
+        Text = Color3.fromRGB(255,255,180),
+        SubText = Color3.fromRGB(235,230,80),
+        SectionText = Color3.fromRGB(255,245,0),
+        ParagraphText = Color3.fromRGB(245,240,150),
+        Accent = Color3.fromRGB(255,235,0),
+        Stroke = Color3.fromRGB(92,80,22),
+        StrokeLight = Color3.fromRGB(130,115,32),
+        CloseBg = Color3.fromRGB(88,38,18),
+        CloseText = Color3.fromRGB(255,120,60),
+    },
+    ["Plasma Purple"] = {
+        MainBg = Color3.fromRGB(16,8,24),
+        HeaderBg = Color3.fromRGB(28,14,40),
+        TabListBg = Color3.fromRGB(22,11,32),
+        ElementBg = Color3.fromRGB(42,22,58),
+        ElementBg2 = Color3.fromRGB(60,32,82),
+        Text = Color3.fromRGB(248,230,255),
+        SubText = Color3.fromRGB(205,145,245),
+        SectionText = Color3.fromRGB(210,60,255),
+        ParagraphText = Color3.fromRGB(232,205,250),
+        Accent = Color3.fromRGB(195,40,255),
+        Stroke = Color3.fromRGB(78,42,110),
+        StrokeLight = Color3.fromRGB(110,60,155),
+        CloseBg = Color3.fromRGB(84,24,48),
+        CloseText = Color3.fromRGB(255,95,140),
+    },
+    ["Hyper Drive"] = {
+        MainBg = Color3.fromRGB(6,12,20),
+        HeaderBg = Color3.fromRGB(10,20,34),
+        TabListBg = Color3.fromRGB(8,16,27),
+        ElementBg = Color3.fromRGB(16,32,52),
+        ElementBg2 = Color3.fromRGB(24,46,74),
+        Text = Color3.fromRGB(220,242,255),
+        SubText = Color3.fromRGB(135,185,235),
+        SectionText = Color3.fromRGB(60,190,255),
+        ParagraphText = Color3.fromRGB(195,225,248),
+        Accent = Color3.fromRGB(30,180,255),
+        Stroke = Color3.fromRGB(36,65,102),
+        StrokeLight = Color3.fromRGB(54,95,148),
+        CloseBg = Color3.fromRGB(75,28,40),
+        CloseText = Color3.fromRGB(255,105,125),
+    },
+    ["Laser Emerald"] = {
+        MainBg = Color3.fromRGB(8,18,14),
+        HeaderBg = Color3.fromRGB(14,30,24),
+        TabListBg = Color3.fromRGB(11,24,19),
+        ElementBg = Color3.fromRGB(22,44,34),
+        ElementBg2 = Color3.fromRGB(32,62,48),
+        Text = Color3.fromRGB(220,255,240),
+        SubText = Color3.fromRGB(130,225,180),
+        SectionText = Color3.fromRGB(40,255,160),
+        ParagraphText = Color3.fromRGB(190,245,225),
+        Accent = Color3.fromRGB(20,240,140),
+        Stroke = Color3.fromRGB(42,85,66),
+        StrokeLight = Color3.fromRGB(62,120,94),
+        CloseBg = Color3.fromRGB(72,34,34),
+        CloseText = Color3.fromRGB(255,115,100),
+    },
+    ["Bio Hazard"] = {
+        MainBg = Color3.fromRGB(16,18,6),
+        HeaderBg = Color3.fromRGB(28,30,10),
+        TabListBg = Color3.fromRGB(22,24,8),
+        ElementBg = Color3.fromRGB(42,46,16),
+        ElementBg2 = Color3.fromRGB(58,64,24),
+        Text = Color3.fromRGB(240,255,190),
+        SubText = Color3.fromRGB(185,230,90),
+        SectionText = Color3.fromRGB(200,255,20),
+        ParagraphText = Color3.fromRGB(220,245,160),
+        Accent = Color3.fromRGB(180,245,0),
+        Stroke = Color3.fromRGB(78,86,30),
+        StrokeLight = Color3.fromRGB(112,124,44),
+        CloseBg = Color3.fromRGB(82,38,22),
+        CloseText = Color3.fromRGB(255,125,75),
+    },
+    ["Neon Ruby"] = {
+        MainBg = Color3.fromRGB(22,6,12),
+        HeaderBg = Color3.fromRGB(36,10,20),
+        TabListBg = Color3.fromRGB(29,8,16),
+        ElementBg = Color3.fromRGB(52,16,30),
+        ElementBg2 = Color3.fromRGB(72,24,42),
+        Text = Color3.fromRGB(255,228,238),
+        SubText = Color3.fromRGB(240,120,165),
+        SectionText = Color3.fromRGB(255,20,100),
+        ParagraphText = Color3.fromRGB(245,190,215),
+        Accent = Color3.fromRGB(255,10,80),
+        Stroke = Color3.fromRGB(98,32,58),
+        StrokeLight = Color3.fromRGB(138,46,82),
+        CloseBg = Color3.fromRGB(92,20,32),
+        CloseText = Color3.fromRGB(255,80,105),
+    },
+    ["Cyber Amber"] = {
+        MainBg = Color3.fromRGB(22,14,6),
+        HeaderBg = Color3.fromRGB(36,24,10),
+        TabListBg = Color3.fromRGB(29,19,8),
+        ElementBg = Color3.fromRGB(52,36,16),
+        ElementBg2 = Color3.fromRGB(72,50,24),
+        Text = Color3.fromRGB(255,240,200),
+        SubText = Color3.fromRGB(235,185,90),
+        SectionText = Color3.fromRGB(255,160,20),
+        ParagraphText = Color3.fromRGB(245,215,165),
+        Accent = Color3.fromRGB(255,140,0),
+        Stroke = Color3.fromRGB(96,68,30),
+        StrokeLight = Color3.fromRGB(136,96,44),
+        CloseBg = Color3.fromRGB(90,32,20),
+        CloseText = Color3.fromRGB(255,110,70),
+    },
+    ["Laser Violet"] = {
+        MainBg = Color3.fromRGB(15,8,22),
+        HeaderBg = Color3.fromRGB(26,14,38),
+        TabListBg = Color3.fromRGB(21,11,30),
+        ElementBg = Color3.fromRGB(38,22,54),
+        ElementBg2 = Color3.fromRGB(56,32,78),
+        Text = Color3.fromRGB(248,232,255),
+        SubText = Color3.fromRGB(200,150,240),
+        SectionText = Color3.fromRGB(215,70,255),
+        ParagraphText = Color3.fromRGB(230,210,248),
+        Accent = Color3.fromRGB(200,50,255),
+        Stroke = Color3.fromRGB(74,44,105),
+        StrokeLight = Color3.fromRGB(105,62,148),
+        CloseBg = Color3.fromRGB(84,25,48),
+        CloseText = Color3.fromRGB(255,95,140),
+    },
+    ["Neon Mint"] = {
+        MainBg = Color3.fromRGB(8,18,16),
+        HeaderBg = Color3.fromRGB(14,30,26),
+        TabListBg = Color3.fromRGB(11,24,21),
+        ElementBg = Color3.fromRGB(22,44,38),
+        ElementBg2 = Color3.fromRGB(32,62,54),
+        Text = Color3.fromRGB(220,255,248),
+        SubText = Color3.fromRGB(130,230,205),
+        SectionText = Color3.fromRGB(0,255,190),
+        ParagraphText = Color3.fromRGB(190,245,235),
+        Accent = Color3.fromRGB(0,245,180),
+        Stroke = Color3.fromRGB(42,85,74),
+        StrokeLight = Color3.fromRGB(62,120,105),
+        CloseBg = Color3.fromRGB(75,34,40),
+        CloseText = Color3.fromRGB(255,115,125),
+    },
+    ["Electro Shock"] = {
+        MainBg = Color3.fromRGB(10,14,24),
+        HeaderBg = Color3.fromRGB(18,24,40),
+        TabListBg = Color3.fromRGB(14,19,32),
+        ElementBg = Color3.fromRGB(26,36,58),
+        ElementBg2 = Color3.fromRGB(38,52,82),
+        Text = Color3.fromRGB(225,242,255),
+        SubText = Color3.fromRGB(145,185,240),
+        SectionText = Color3.fromRGB(50,180,255),
+        ParagraphText = Color3.fromRGB(200,225,250),
+        Accent = Color3.fromRGB(20,160,255),
+        Stroke = Color3.fromRGB(50,70,110),
+        StrokeLight = Color3.fromRGB(72,100,155),
+        CloseBg = Color3.fromRGB(78,28,42),
+        CloseText = Color3.fromRGB(255,105,130),
+    },
+    ["Neon Tangerine"] = {
+        MainBg = Color3.fromRGB(20,12,6),
+        HeaderBg = Color3.fromRGB(34,20,10),
+        TabListBg = Color3.fromRGB(27,16,8),
+        ElementBg = Color3.fromRGB(50,30,16),
+        ElementBg2 = Color3.fromRGB(70,42,24),
+        Text = Color3.fromRGB(255,238,210),
+        SubText = Color3.fromRGB(235,175,100),
+        SectionText = Color3.fromRGB(255,130,30),
+        ParagraphText = Color3.fromRGB(245,212,175),
+        Accent = Color3.fromRGB(255,110,10),
+        Stroke = Color3.fromRGB(92,56,30),
+        StrokeLight = Color3.fromRGB(130,80,44),
+        CloseBg = Color3.fromRGB(90,30,20),
+        CloseText = Color3.fromRGB(255,105,70),
+    },
+    ["Prismatic"] = {
+        MainBg = Color3.fromRGB(12,12,20),
+        HeaderBg = Color3.fromRGB(22,22,34),
+        TabListBg = Color3.fromRGB(17,17,27),
+        ElementBg = Color3.fromRGB(32,32,48),
+        ElementBg2 = Color3.fromRGB(46,46,68),
+        Text = Color3.fromRGB(240,242,255),
+        SubText = Color3.fromRGB(165,175,225),
+        SectionText = Color3.fromRGB(160,100,255),
+        ParagraphText = Color3.fromRGB(215,222,245),
+        Accent = Color3.fromRGB(0,220,255),
+        Stroke = Color3.fromRGB(60,60,90),
+        StrokeLight = Color3.fromRGB(86,86,128),
+        CloseBg = Color3.fromRGB(80,30,45),
+        CloseText = Color3.fromRGB(255,110,135),
+    },
 }
 
+GGH.Themes = Themes
+
+-- =====================================================================
+--  WINDOW CREATION
+-- =====================================================================
 function GGH:CreateWindow(Config)
     Config = Config or {}
     if Config.KeySystem or Config.KeySystemEnabled then
@@ -5220,234 +7454,364 @@ function GGH:CreateWindow(Config)
             return InputAPI
         end
 
-local function CreateDropdown(Cfg)
-    local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
-    Cfg.Options = Cfg.Options or {}
-    local Selected = Cfg.Default or Cfg.Options[1]
-    if isMulti then
-        if type(Selected) ~= "table" then Selected = {Selected} end
-        local valid = {}
-        for _, v in ipairs(Selected) do for _, o in ipairs(Cfg.Options) do if v==o then table.insert(valid,v) break end end end
-        Selected = valid
-    end
 
-    local MAX_VISIBLE = 7
-    local OPT_H = 30
-
-    local Frame = Instance.new("Frame", TabPage)
-    Frame.Size = UDim2.new(1,-4,0,38)
-    Frame.BackgroundColor3 = CurrentTheme.ElementBg
-    Frame.ClipsDescendants = true
-    Corner(Frame, 10)
-    RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
-    RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
-    AddSearch(Frame, Cfg.Title, "Dropdown", Name)
-
-    local function GetDisplayText()
-        if isMulti then
-            if #Selected == 0 then return Cfg.Title.." : (None)"
-            elseif #Selected == 1 then return Cfg.Title.." : "..Selected[1]
-            else return Cfg.Title.." : "..#Selected.." selected ("..table.concat(Selected, ", "):sub(1,20)..")"
+        -- =============================================================
+        --  SUPERCHARGED MULTI-DROPDOWN WITH ADVANCED LOGIC RULES
+        -- =============================================================
+        local function CreateDropdown(Cfg)
+            local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
+            Cfg.Options = Cfg.Options or {}
+            local Selected = Cfg.Default or (isMulti and {} or Cfg.Options[1])
+            if isMulti and type(Selected) ~= "table" then
+                Selected = Selected and {Selected} or {}
             end
-        else
-            return Cfg.Title.." : "..tostring(Selected)
-        end
-    end
 
-    local Btn = Instance.new("TextButton", Frame)
-    Btn.Size = UDim2.new(1,0,0,38)
-    Btn.BackgroundTransparency = 1
-    Btn.Text = GetDisplayText()
-    Btn.Font = Enum.Font.GothamMedium
-    Btn.TextSize = 12
-    Btn.TextColor3 = CurrentTheme.Text
-    Btn.AutoLocalize = true
-    Btn.TextTruncate = Enum.TextTruncate.AtEnd
-    RegisterThemable(Btn, "TextColor3", "Text")
-    AddTextStroke(Btn)
-
-    local List = Instance.new("ScrollingFrame", Frame)
-    List.Name = "DropdownList"
-    List.Position = UDim2.new(0,0,0,38)
-    List.Size = UDim2.new(1,0,0,0)
-    List.BackgroundTransparency = 1
-    List.BorderSizePixel = 0
-    List.CanvasSize = UDim2.new(0,0,0,0)
-    List.ScrollBarThickness = 4
-    List.ScrollBarImageColor3 = CurrentTheme.Accent
-    List.ScrollingDirection = Enum.ScrollingDirection.Y
-    List.ClipsDescendants = true
-    RegisterThemable(List, "ScrollBar", "Accent")
-
-    local ll = Instance.new("UIListLayout", List)
-    ll.Padding = UDim.new(0,2)
-    ll.SortOrder = Enum.SortOrder.LayoutOrder
-
-    local Open = false
-
-    local function GetListHeight()
-        local count = #Cfg.Options
-        local visible = math.min(count, MAX_VISIBLE)
-        return visible * (OPT_H + 2)
-    end
-
-    local function UpdateListSize()
-        local count = #Cfg.Options
-        List.CanvasSize = UDim2.new(0,0,0, count * (OPT_H + 2))
-        if Open then
-            local h = GetListHeight()
-            List.Size = UDim2.new(1,0,0,h)
-            Tween(Frame, {Size = UDim2.new(1,-4,0, 38 + h + 6)}, 0.2)
-        end
-    end
-
-    Btn.MouseButton1Click:Connect(function()
-        if IsScrolling then return end
-        Open = not Open
-        if Open then
-            local h = GetListHeight()
-            List.Size = UDim2.new(1,0,0,h)
-            Tween(Frame, {Size = UDim2.new(1,-4,0, 38 + h + 6)}, 0.2)
-        else
-            Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
-        end
-    end)
-
-    local function IsSelected(opt)
-        if not isMulti then return opt == Selected end
-        for _, v in ipairs(Selected) do if v == opt then return true end end
-        return false
-    end
-
-    local function RefreshOptions()
-        for _, child in ipairs(List:GetChildren()) do
-            if child:IsA("TextButton") then
-                local name = child:GetAttribute("OptName") or child.Text
-                local sel = IsSelected(name)
-                child.BackgroundColor3 = sel and CurrentTheme.Accent or CurrentTheme.ElementBg2
-                child.Text = name
-                local ck = child:FindFirstChild("Check")
-                if ck then ck.Visible = sel end
+            -- Advanced developer configuration & constraints:
+            -- MaxSelect / Max: Max allowed items (nil or 0 or math.huge = Infinite)
+            local maxSelect = Cfg.Max or Cfg.MaxSelect or Cfg.MaxItems or (Cfg.Infinite and math.huge) or (Cfg.Unlimited and math.huge) or math.huge
+            local minSelect = Cfg.Min or Cfg.MinSelect or Cfg.MinItems or 0
+            
+            -- Incompatible pairs or conflict tables:
+            -- Conflicts = { ["OptA"] = {"OptB", "OptC"} }
+            local conflictMap = Cfg.Conflicts or Cfg.Incompatible or Cfg.Exclusions or {}
+            
+            -- Mutually exclusive groups:
+            -- MutuallyExclusive = { {"Option1", "Option2"}, {"Option3", "Option4"} }
+            if Cfg.MutuallyExclusive and type(Cfg.MutuallyExclusive) == "table" then
+                for _, group in ipairs(Cfg.MutuallyExclusive) do
+                    if type(group) == "table" then
+                        for _, itemA in ipairs(group) do
+                            conflictMap[itemA] = conflictMap[itemA] or {}
+                            for _, itemB in ipairs(group) do
+                                if itemA ~= itemB then
+                                    table.insert(conflictMap[itemA], itemB)
+                                end
+                            end
+                        end
+                    end
+                end
             end
-        end
-        Btn.Text = GetDisplayText()
-    end
 
-    table.insert(ThemeListeners, function(th)
-        if not Frame.Parent then return end
-        List.ScrollBarImageColor3 = th.Accent
-        for _, child in ipairs(List:GetChildren()) do
-            if child:IsA("TextButton") then
-                local nm = child:GetAttribute("OptName") or child.Text
-                child.BackgroundColor3 = IsSelected(nm) and th.Accent or th.ElementBg2
-                child.TextColor3 = th.Text
+            -- Custom condition callback: Condition = function(targetOption, currentSelectedList) -> bool, reason
+            local customCondition = Cfg.Condition or Cfg.Rule or Cfg.Validator or nil
+            local autoResolve = Cfg.AutoResolve or Cfg.AutoUnselect or false
+
+            local MAX_VISIBLE = 7
+            local OPT_H = 30
+
+            local Frame = Instance.new("Frame", TabPage)
+            Frame.Size = UDim2.new(1,-4,0,38)
+            Frame.BackgroundColor3 = CurrentTheme.ElementBg
+            Frame.ClipsDescendants = true
+            Corner(Frame, 10)
+            RegisterThemable(Frame, "BackgroundColor3", "ElementBg")
+            RegisterThemable(SoftStroke(Frame, CurrentTheme.Stroke), "Stroke", "Stroke")
+            AddSearch(Frame, Cfg.Title, "Dropdown", Name)
+
+            local function IsSelected(opt)
+                if not isMulti then return opt == Selected end
+                for _, v in ipairs(Selected) do if v == opt then return true end end
+                return false
             end
-        end
-    end)
 
-    local function CreateOptionButton(opt)
-        local O = Instance.new("TextButton", List)
-        O.Size = UDim2.new(1,-4,0,28)
-        O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
-        O.Text = opt
-        O.Font = Enum.Font.Gotham
-        O.TextSize = 11
-        O.TextColor3 = CurrentTheme.Text
-        O.AutoLocalize = true
-        Corner(O, 6)
-        AddBlackBorder(O, 0.8, 0.8)
-        AddTextStroke(O)
-        O:SetAttribute("OptName", opt)
-        do
-            local ck = MakeIcon(O, "check", 14, Color3.new(1, 1, 1))
-            ck.Name = "Check"
-            ck.AnchorPoint = Vector2.new(1, 0.5)
-            ck.Position = UDim2.new(1, -8, 0.5, 0)
-            ck.Visible = IsSelected(opt)
-        end
-        O.MouseButton1Click:Connect(function()
-            if isMulti then
-                if IsSelected(opt) then
-                    for i,v in ipairs(Selected) do if v==opt then table.remove(Selected,i) break end end
+            -- Checks whether an option has a conflict with the currently selected options
+            local function CheckOptionConflict(opt)
+                if not isMulti then return false, nil end
+                -- 1. Check direct conflict map
+                if conflictMap[opt] and type(conflictMap[opt]) == "table" then
+                    for _, bad in ipairs(conflictMap[opt]) do
+                        if IsSelected(bad) then
+                            return true, "Conflicts with selected: " .. tostring(bad)
+                        end
+                    end
+                end
+                -- Also check reverse: if another selected item has opt in its conflict list
+                for _, sel in ipairs(Selected) do
+                    if conflictMap[sel] and type(conflictMap[sel]) == "table" then
+                        for _, bad in ipairs(conflictMap[sel]) do
+                            if bad == opt then
+                                return true, "Blocked by selected: " .. tostring(sel)
+                            end
+                        end
+                    end
+                end
+                -- 2. Custom Condition validator
+                if customCondition and type(customCondition) == "function" then
+                    local ok, can, reason = pcall(customCondition, opt, Selected)
+                    if ok and can == false then
+                        return true, reason or "Condition not met"
+                    end
+                end
+                return false, nil
+            end
+
+            local function GetDisplayText()
+                if isMulti then
+                    local count = #Selected
+                    local limitText = (maxSelect < math.huge) and (" / " .. maxSelect) or ""
+                    if count == 0 then
+                        return Cfg.Title .. " : (None selected" .. (maxSelect < math.huge and (", max " .. maxSelect) or "") .. ")"
+                    elseif count == 1 then
+                        return Cfg.Title .. " : " .. tostring(Selected[1]) .. " (1" .. limitText .. ")"
+                    else
+                        return Cfg.Title .. " : " .. count .. limitText .. " selected (" .. table.concat(Selected, ", "):sub(1, 24) .. "..)"
+                    end
                 else
+                    return Cfg.Title .. " : " .. tostring(Selected or "(None)")
+                end
+            end
+
+            local Btn = Instance.new("TextButton", Frame)
+            Btn.Size = UDim2.new(1,0,0,38)
+            Btn.BackgroundTransparency = 1
+            Btn.Text = GetDisplayText()
+            Btn.Font = Enum.Font.GothamMedium
+            Btn.TextSize = 12
+            Btn.TextColor3 = CurrentTheme.Text
+            Btn.AutoLocalize = true
+            Btn.TextTruncate = Enum.TextTruncate.AtEnd
+            RegisterThemable(Btn, "TextColor3", "Text")
+            AddTextStroke(Btn)
+
+            local List = Instance.new("ScrollingFrame", Frame)
+            List.Name = "DropdownList"
+            List.Position = UDim2.new(0,0,0,38)
+            List.Size = UDim2.new(1,0,0,0)
+            List.BackgroundTransparency = 1
+            List.BorderSizePixel = 0
+            List.CanvasSize = UDim2.new(0,0,0,0)
+            List.ScrollBarThickness = 4
+            List.ScrollBarImageColor3 = CurrentTheme.Accent
+            List.ScrollingDirection = Enum.ScrollingDirection.Y
+            List.ClipsDescendants = true
+            RegisterThemable(List, "ScrollBar", "Accent")
+
+            local ll = Instance.new("UIListLayout", List)
+            ll.Padding = UDim.new(0,2)
+            ll.SortOrder = Enum.SortOrder.LayoutOrder
+
+            local Open = false
+
+            local function GetListHeight()
+                local count = #Cfg.Options
+                local visible = math.min(count, MAX_VISIBLE)
+                return visible * (OPT_H + 2)
+            end
+
+            local function RefreshOptions()
+                for _, child in ipairs(List:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        local optName = child:GetAttribute("OptName") or child.Text
+                        local sel = IsSelected(optName)
+                        local isConflict, _ = CheckOptionConflict(optName)
+
+                        if sel then
+                            child.BackgroundColor3 = CurrentTheme.Accent
+                            child.TextColor3 = ContrastColor(CurrentTheme.Accent)
+                        elseif isConflict then
+                            child.BackgroundColor3 = Color3.fromRGB(48, 25, 28)
+                            child.TextColor3 = Color3.fromRGB(255, 140, 140)
+                        else
+                            child.BackgroundColor3 = CurrentTheme.ElementBg2
+                            child.TextColor3 = CurrentTheme.Text
+                        end
+
+                        child.Text = optName .. (isConflict and not sel and " [Locked]" or "")
+
+                        local ck = child:FindFirstChild("Check")
+                        if ck then ck.Visible = sel end
+
+                        local lk = child:FindFirstChild("LockIcon")
+                        if lk then lk.Visible = (isConflict and not sel) end
+                    end
+                end
+                Btn.Text = GetDisplayText()
+            end
+
+            local function ToggleOpen()
+                Open = not Open
+                if Open then
+                    RefreshOptions()
+                    local h = GetListHeight()
+                    List.Size = UDim2.new(1,0,0,h)
+                    Tween(Frame, {Size = UDim2.new(1,-4,0, 38 + h + 6)}, 0.2)
+                else
+                    Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
+                end
+            end
+
+            Btn.MouseButton1Click:Connect(function()
+                if IsScrolling then return end
+                ToggleOpen()
+            end)
+
+            local function TryToggleOption(opt)
+                if not isMulti then
+                    Selected = opt
+                    RefreshOptions()
+                    Open = false
+                    Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
+                    pcall(Cfg.Callback or function() end, Selected)
+                    return
+                end
+
+                if IsSelected(opt) then
+                    -- Check min selection constraint
+                    if #Selected <= minSelect then
+                        GGH.Notify({
+                            Title = "Minimum Required",
+                            Text = "At least " .. tostring(minSelect) .. " item(s) must remain selected.",
+                            Type = "warning",
+                            Duration = 3
+                        })
+                        return
+                    end
+                    for i, v in ipairs(Selected) do
+                        if v == opt then table.remove(Selected, i) break end
+                    end
+                    RefreshOptions()
+                    pcall(Cfg.Callback or function() end, Selected)
+                else
+                    -- Check max selection constraint
+                    if #Selected >= maxSelect then
+                        GGH.Notify({
+                            Title = "Limit Reached",
+                            Text = "Maximum allowed selections: " .. tostring(maxSelect),
+                            Type = "warning",
+                            Duration = 3
+                        })
+                        return
+                    end
+
+                    -- Check conflict
+                    local isConflict, reason = CheckOptionConflict(opt)
+                    if isConflict then
+                        if autoResolve then
+                            -- Auto unselect conflicting items
+                            local newSel = {}
+                            for _, s in ipairs(Selected) do
+                                local isBad = false
+                                if conflictMap[opt] then
+                                    for _, b in ipairs(conflictMap[opt]) do if b == s then isBad = true break end end
+                                end
+                                if not isBad then table.insert(newSel, s) end
+                            end
+                            table.insert(newSel, opt)
+                            Selected = newSel
+                            RefreshOptions()
+                            pcall(Cfg.Callback or function() end, Selected)
+                            return
+                        else
+                            GGH.Notify({
+                                Title = "Selection Conflict",
+                                Text = reason or ("'" .. opt .. "' cannot be selected with current choices."),
+                                Type = "error",
+                                Duration = 3.5
+                            })
+                            return
+                        end
+                    end
+
                     table.insert(Selected, opt)
+                    RefreshOptions()
+                    pcall(Cfg.Callback or function() end, Selected)
+                end
+            end
+
+            local function CreateOptionButton(opt)
+                local O = Instance.new("TextButton", List)
+                O.Size = UDim2.new(1,-4,0,28)
+                O.BackgroundColor3 = IsSelected(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg2
+                O.Text = opt
+                O.Font = Enum.Font.Gotham
+                O.TextSize = 11
+                O.TextColor3 = CurrentTheme.Text
+                O.AutoLocalize = false
+                Corner(O, 6)
+                AddBlackBorder(O, 0.8, 0.8)
+                AddTextStroke(O)
+                O:SetAttribute("OptName", opt)
+
+                local ck = MakeIcon(O, "check", 14, Color3.new(1, 1, 1))
+                ck.Name = "Check"
+                ck.AnchorPoint = Vector2.new(1, 0.5)
+                ck.Position = UDim2.new(1, -8, 0.5, 0)
+                ck.Visible = IsSelected(opt)
+
+                local lk = MakeIcon(O, "lock", 13, Color3.fromRGB(255, 120, 120))
+                lk.Name = "LockIcon"
+                lk.AnchorPoint = Vector2.new(1, 0.5)
+                lk.Position = UDim2.new(1, -8, 0.5, 0)
+                lk.Visible = false
+
+                O.MouseButton1Click:Connect(function()
+                    if IsScrolling then return end
+                    TryToggleOption(opt)
+                end)
+                return O
+            end
+
+            for _, opt in ipairs(Cfg.Options) do CreateOptionButton(opt) end
+            List.CanvasSize = UDim2.new(0,0,0, #Cfg.Options * (OPT_H + 2))
+
+            local DropdownAPI = {}
+            function DropdownAPI:Refresh(newOptions)
+                if newOptions and type(newOptions) == "table" then
+                    Cfg.Options = newOptions
+                end
+                for _, child in ipairs(List:GetChildren()) do
+                    if child:IsA("TextButton") then child:Destroy() end
+                end
+                for _, opt in ipairs(Cfg.Options) do CreateOptionButton(opt) end
+                List.CanvasSize = UDim2.new(0,0,0, #Cfg.Options * (OPT_H + 2))
+                RefreshOptions()
+                return DropdownAPI
+            end
+            function DropdownAPI:SetOptions(newOptions) return self:Refresh(newOptions) end
+            function DropdownAPI:Set(option)
+                if isMulti then
+                    Selected = (type(option) == "table") and option or {option}
+                else
+                    Selected = option
                 end
                 RefreshOptions()
                 pcall(Cfg.Callback or function() end, Selected)
-            else
-                Selected = opt
-                RefreshOptions()
-                Open = false
-                Tween(Frame, {Size = UDim2.new(1,-4,0,38)}, 0.2)
-                pcall(Cfg.Callback or function() end, Selected)
+                return DropdownAPI
             end
-        end)
-        return O
-    end
+            function DropdownAPI:Get() return Selected end
+            function DropdownAPI:SetMax(maxCount)
+                maxSelect = tonumber(maxCount) or math.huge
+                RefreshOptions()
+                return DropdownAPI
+            end
+            function DropdownAPI:SetMin(minCount)
+                minSelect = tonumber(minCount) or 0
+                return DropdownAPI
+            end
+            function DropdownAPI:SetConflicts(conflictsTable)
+                conflictMap = conflictsTable or {}
+                RefreshOptions()
+                return DropdownAPI
+            end
+            function DropdownAPI:AddConflict(optA, optB)
+                conflictMap[optA] = conflictMap[optA] or {}
+                table.insert(conflictMap[optA], optB)
+                conflictMap[optB] = conflictMap[optB] or {}
+                table.insert(conflictMap[optB], optA)
+                RefreshOptions()
+                return DropdownAPI
+            end
+            function DropdownAPI:SetCondition(fn)
+                customCondition = fn
+                RefreshOptions()
+                return DropdownAPI
+            end
+            function DropdownAPI:CanSelect(opt)
+                return not CheckOptionConflict(opt)
+            end
 
-    for _, opt in ipairs(Cfg.Options) do
-        CreateOptionButton(opt)
-    end
-    List.CanvasSize = UDim2.new(0,0,0, #Cfg.Options * (OPT_H + 2))
-
-    local DropdownAPI = {}
-    function DropdownAPI:Refresh(newOptions)
-        if newOptions and type(newOptions) == "table" then
-            Cfg.Options = newOptions
+            return DropdownAPI
         end
-        for _, child in ipairs(List:GetChildren()) do
-            if child:IsA("TextButton") then child:Destroy() end
-        end
-        if not isMulti then
-            local stillExists = false
-            for _, o in ipairs(Cfg.Options) do if o == Selected then stillExists = true break end end
-            if not stillExists then Selected = Cfg.Options[1] end
-        else
-            local newSel = {}
-            for _, s in ipairs(Selected) do for _, o in ipairs(Cfg.Options) do if s==o then table.insert(newSel,s) break end end end
-            Selected = newSel
-        end
-        for _, opt in ipairs(Cfg.Options) do CreateOptionButton(opt) end
-        List.CanvasSize = UDim2.new(0,0,0, #Cfg.Options * (OPT_H + 2))
-        RefreshOptions()
-        if Open then
-            local h = GetListHeight()
-            List.Size = UDim2.new(1,0,0,h)
-            Tween(Frame, {Size = UDim2.new(1,-4,0, 38 + h + 6)}, 0.2)
-        end
-        return DropdownAPI
-    end
-    function DropdownAPI:SetOptions(newOptions) return self:Refresh(newOptions) end
-    function DropdownAPI:Set(option)
-        if isMulti then
-            if type(option) == "table" then Selected = option else Selected = {option} end
-        else
-            Selected = option
-        end
-        RefreshOptions()
-        pcall(Cfg.Callback or function() end, Selected)
-        return DropdownAPI
-    end
-    function DropdownAPI:Get() return Selected end
-    function DropdownAPI:Clear()
-        if isMulti then Selected = {} else Selected = nil end
-        RefreshOptions()
-        return DropdownAPI
-    end
-    function DropdownAPI:AddOption(opt)
-        table.insert(Cfg.Options, opt)
-        self:Refresh()
-        return DropdownAPI
-    end
-    function DropdownAPI:RemoveOption(opt)
-        for i,o in ipairs(Cfg.Options) do if o==opt then table.remove(Cfg.Options,i) break end end
-        self:Refresh()
-        return DropdownAPI
-    end
-
-    return DropdownAPI
-end
-
 local function CreateColorpicker(Cfg)
 
     local function CenterPicker(pickerFrame, screenGui)
@@ -5990,14 +8354,10 @@ local function CreateColorpicker(Cfg)
             return str:match("^https?://") ~= nil
         end
 
-        local function ResolveImageAsset(inputStr)
-            if not inputStr or inputStr == "" then return "" end
-            local s = tostring(inputStr)
-            if GGH_ICONS[s] then return GGH_ICONS[s] end
-            if GGH_ICONS[s:lower()] then return GGH_ICONS[s:lower()] end
-            if IsUrlImage(s) then
-                return s
-            end
+        local function ResolveImageAsset(inputStr, callback)
+    if not inputStr or inputStr == "" then return "" end
+    return UniversalResolveImage(inputStr, callback)
+end
             if s:match("rbxassetid://%d+") then
                 return s
             end
@@ -6042,7 +8402,7 @@ local function CreateColorpicker(Cfg)
             Corner(ImageLabel, 8)
 
             local rawImg = Cfg.Image or Cfg.Url or Cfg.Id or Cfg.Default or ""
-            ImageLabel.Image = ResolveImageAsset(rawImg)
+            ImageLabel.Image = ResolveImageAsset(rawImg, function(asset) ImageLabel.Image = asset end)
 
             if useInput then
                 local InputBox = Instance.new("TextBox", Frame)
@@ -6062,7 +8422,7 @@ local function CreateColorpicker(Cfg)
                 local function showImageFromInput()
                     local txt = InputBox.Text
                     if txt and txt ~= "" then
-                        ImageLabel.Image = ResolveImageAsset(txt)
+                        ImageLabel.Image = ResolveImageAsset(txt, function(asset) ImageLabel.Image = asset end)
                     end
                 end
 
@@ -6100,7 +8460,7 @@ local function CreateColorpicker(Cfg)
 
             local ImageAPI = {}
             function ImageAPI:SetImage(newImg)
-                ImageLabel.Image = ResolveImageAsset(newImg)
+                ImageLabel.Image = ResolveImageAsset(newImg, function(asset) ImageLabel.Image = asset end)
                 return ImageAPI
             end
             function ImageAPI:Refresh(newCfg)
