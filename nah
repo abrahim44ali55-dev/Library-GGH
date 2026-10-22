@@ -1,8 +1,12 @@
--- GGH UI Library - Single File Complete v1.0.0 - FIXED
+-- GGH UI Library - Single File Complete v1.0.1 - FIXED
 -- Developer: AM_BRCR7
--- Complete Rebuild from Rayfield 0.4.1 - All in One File - WORKING 100%
--- No external dependencies
--- https://raw.githubusercontent.com/abrahim44ali55-dev/Library-GGH/refs/heads/main/nah
+-- Based on Rayfield 0.4.1 - All in one file, no external dependencies
+--
+-- Usage:
+--   local GGH = loadstring(game:HttpGet("YOUR_RAW_URL"))()   -- or paste this file directly
+--   local Window = GGH:CreateWindow({Name = "My Hub"})
+--   local Tab = Window:CreateTab("Main")
+--   Tab:CreateButton({Name = "Hello", Callback = function() print("hi") end})
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -56,7 +60,7 @@ GGH_Icons.LegacyMap = {
     ["search"] = "search_filter"
 }
 
-function GGH_Icons:Get(iconName: string): string?
+function GGH_Icons:Get(iconName)
     if not iconName then return nil end
     local normalized = string.lower(iconName)
     -- Check direct
@@ -70,7 +74,7 @@ function GGH_Icons:Get(iconName: string): string?
     return nil
 end
 
-function GGH_Icons:GetRobloxAsset(iconName: string): string
+function GGH_Icons:GetRobloxAsset(iconName)
     if not iconName then return "rbxassetid://0" end
     local normalized = string.lower(iconName)
     if self.RobloxAssetMap[normalized] then
@@ -83,11 +87,11 @@ function GGH_Icons:GetRobloxAsset(iconName: string): string
     return "rbxassetid://6031090997"
 end
 
-function GGH_Icons:Exists(iconName: string): boolean
+function GGH_Icons:Exists(iconName)
     return self:Get(iconName) ~= nil
 end
 
-function GGH_Icons:GetAllNames(): {string}
+function GGH_Icons:GetAllNames()
     local names = {}
     for name, _ in pairs(self.Assets) do
         table.insert(names, name)
@@ -95,116 +99,189 @@ function GGH_Icons:GetAllNames(): {string}
     return names
 end
 
--- Create a Roblox UI representation of an icon
--- This creates a Frame with proper styling that visually represents the icon
-function GGH_Icons:CreateIcon(iconName: string, parent: Instance?, size: UDim2?, color: Color3?): Frame
+-- Tint helper: recolors every element of an icon that is flagged "IconTint"
+function GGH_Icons:SetColor(iconFrame, color)
+    if not iconFrame or not color then return end
+    for _, d in ipairs(iconFrame:GetDescendants()) do
+        if d:GetAttribute("IconTint") then
+            if d:IsA("ImageLabel") then
+                d.ImageColor3 = color
+            elseif d:IsA("TextLabel") then
+                d.TextColor3 = color
+            elseif d:IsA("UIStroke") then
+                d.Color = color
+            elseif d:IsA("Frame") then
+                d.BackgroundColor3 = color
+            end
+        end
+    end
+end
+
+local function makeBar(parent, color, size, position, rotation)
+    local bar = Instance.new("Frame")
+    bar.Name = "Bar"
+    bar.AnchorPoint = Vector2.new(0.5, 0.5)
+    bar.Position = position or UDim2.fromScale(0.5, 0.5)
+    bar.Size = size
+    bar.Rotation = rotation or 0
+    bar.BorderSizePixel = 0
+    bar.BackgroundColor3 = color
+    bar.Parent = parent
+    bar:SetAttribute("IconTint", true)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 1)
+    c.Parent = bar
+    return bar
+end
+
+local function makeBox(parent, color)
+    local box = Instance.new("Frame")
+    box.Name = "Box"
+    box.AnchorPoint = Vector2.new(0.5, 0.5)
+    box.Position = UDim2.fromScale(0.5, 0.5)
+    box.Size = UDim2.fromScale(0.9, 0.9)
+    box.BackgroundTransparency = 1
+    box.BorderSizePixel = 0
+    box.Parent = parent
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 3)
+    c.Parent = box
+    local s = Instance.new("UIStroke")
+    s.Thickness = 1.5
+    s.Color = color
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Parent = box
+    s:SetAttribute("IconTint", true)
+    return box
+end
+
+-- Creates an icon built only from Roblox UI objects (no external assets needed).
+-- iconName: "ggh_logo", "close", "minimize", "layout_sidebar", "header_only",
+--           an rbxassetid / number for a custom image, or any other name
+--           (shown as a letter badge).
+function GGH_Icons:CreateIcon(iconName, parent, size, color)
+    iconName = iconName or "settings"
+    color = color or Color3.fromRGB(255, 255, 255)
+    local name = string.lower(tostring(iconName))
+
     local iconFrame = Instance.new("Frame")
-    iconFrame.Name = "GGH_Icon_" .. (iconName or "unknown")
+    iconFrame.Name = "GGH_Icon_" .. name
     iconFrame.BackgroundTransparency = 1
-    iconFrame.Size = size or UDim2.fromOffset(20, 20)
     iconFrame.BorderSizePixel = 0
-    
+    iconFrame.Size = size or UDim2.fromOffset(20, 20)
     if parent then
         iconFrame.Parent = parent
     end
-    
-    -- For ggh_logo, create custom GGH logo using Roblox UI
-    if iconName == "ggh_logo" then
+    iconFrame:SetAttribute("IconName", name)
+
+    if name == "ggh_logo" then
         iconFrame.Size = size or UDim2.fromOffset(32, 32)
-        -- Background glow
         local glow = Instance.new("Frame")
         glow.Name = "Glow"
         glow.BackgroundColor3 = Color3.fromRGB(56, 189, 248)
         glow.BackgroundTransparency = 0.85
-        glow.Size = UDim2.fromScale(1.2, 1.2)
+        glow.BorderSizePixel = 0
+        glow.Size = UDim2.fromScale(1, 1)
         glow.Position = UDim2.fromScale(0.5, 0.5)
         glow.AnchorPoint = Vector2.new(0.5, 0.5)
         glow.Parent = iconFrame
         local glowCorner = Instance.new("UICorner")
         glowCorner.CornerRadius = UDim.new(0, 8)
         glowCorner.Parent = glow
-        
-        -- GGH Text representation
-        local textContainer = Instance.new("Frame")
-        textContainer.Name = "LogoContainer"
-        textContainer.BackgroundTransparency = 1
-        textContainer.Size = UDim2.fromScale(1, 1)
-        textContainer.Parent = iconFrame
-        
+
         local gghLabel = Instance.new("TextLabel")
         gghLabel.Name = "GGH"
         gghLabel.BackgroundTransparency = 1
-        gghLabel.Size = UDim2.fromScale(1, 1)
+        gghLabel.Size = UDim2.fromScale(0.8, 0.8)
+        gghLabel.Position = UDim2.fromScale(0.5, 0.5)
+        gghLabel.AnchorPoint = Vector2.new(0.5, 0.5)
         gghLabel.Text = "GGH"
-        gghLabel.TextColor3 = color or Color3.fromRGB(255, 255, 255)
+        gghLabel.TextColor3 = color
         gghLabel.TextScaled = true
         gghLabel.Font = Enum.Font.GothamBold
-        gghLabel.Parent = textContainer
-        
-        -- Accent dots
-        local topAccent = Instance.new("Frame")
-        topAccent.Name = "TopAccent"
-        topAccent.BackgroundColor3 = Color3.fromRGB(56, 189, 248)
-        topAccent.Size = UDim2.fromOffset(4, 4)
-        topAccent.Position = UDim2.new(0.5, 0, 0, 2)
-        topAccent.AnchorPoint = Vector2.new(0.5, 0)
-        topAccent.Parent = textContainer
-        local topCorner = Instance.new("UICorner")
-        topCorner.CornerRadius = UDim.new(1, 0)
-        topCorner.Parent = topAccent
-        
-        local bottomAccent = topAccent:Clone()
-        bottomAccent.Name = "BottomAccent"
-        bottomAccent.Position = UDim2.new(0.5, 0, 1, -6)
-        bottomAccent.Parent = textContainer
-        
+        gghLabel.Parent = iconFrame
+
+        local accent = Instance.new("Frame")
+        accent.Name = "Accent"
+        accent.BackgroundColor3 = Color3.fromRGB(56, 189, 248)
+        accent.BorderSizePixel = 0
+        accent.Size = UDim2.fromOffset(4, 4)
+        accent.Position = UDim2.new(0.5, 0, 0, 1)
+        accent.AnchorPoint = Vector2.new(0.5, 0)
+        accent.Parent = iconFrame
+        local accentCorner = Instance.new("UICorner")
+        accentCorner.CornerRadius = UDim.new(1, 0)
+        accentCorner.Parent = accent
+
+    elseif name == "close" then
+        makeBar(iconFrame, color, UDim2.new(1, 0, 0, 2), nil, 45)
+        makeBar(iconFrame, color, UDim2.new(1, 0, 0, 2), nil, -45)
+
+    elseif name == "minimize" then
+        makeBar(iconFrame, color, UDim2.new(0.8, 0, 0, 2))
+
+    elseif name == "layout_sidebar" then
+        makeBox(iconFrame, color)
+        makeBar(iconFrame, color, UDim2.new(0, 2, 0.9, 0), UDim2.fromScale(0.38, 0.5))
+
+    elseif name == "header_only" then
+        makeBox(iconFrame, color)
+        makeBar(iconFrame, color, UDim2.new(0.9, 0, 0, 2), UDim2.fromScale(0.5, 0.36))
+
+    elseif tonumber(name) or string.find(name, "rbxassetid", 1, true) or string.find(name, "rbxasset://", 1, true) then
+        local img = Instance.new("ImageLabel")
+        img.Name = "IconImage"
+        img.BackgroundTransparency = 1
+        img.Size = UDim2.fromScale(1, 1)
+        img.Image = tonumber(name) and ("rbxassetid://" .. name) or tostring(iconName)
+        img.ImageColor3 = color
+        img.ScaleType = Enum.ScaleType.Fit
+        img.Parent = iconFrame
+        img:SetAttribute("IconTint", true)
+
     else
-        -- For other icons, use TextLabel with Unicode or ImageLabel fallback
-        local iconLabel = Instance.new("ImageLabel")
-        iconLabel.Name = "IconImage"
-        iconLabel.BackgroundTransparency = 1
-        iconLabel.Size = UDim2.fromScale(1, 1)
-        iconLabel.Image = self:GetRobloxAsset(iconName)
-        iconLabel.ImageColor3 = color or Color3.fromRGB(255, 255, 255)
-        iconLabel.ScaleType = Enum.ScaleType.Fit
-        iconLabel.Parent = iconFrame
-        
-        -- Store SVG reference as attribute for debugging / future rendering
-        iconFrame:SetAttribute("SVG_Source", self:Get(iconName) or "")
-        iconFrame:SetAttribute("IconName", iconName)
+        -- Letter badge fallback (always renders correctly)
+        local box = makeBox(iconFrame, color)
+        local letter = Instance.new("TextLabel")
+        letter.Name = "Letter"
+        letter.BackgroundTransparency = 1
+        letter.Size = UDim2.fromScale(1, 1)
+        letter.Text = string.upper(string.sub(tostring(iconName), 1, 1))
+        letter.TextColor3 = color
+        letter.Font = Enum.Font.GothamBold
+        letter.TextScaled = true
+        letter.Parent = box
+        local limit = Instance.new("UITextSizeConstraint")
+        limit.MaxTextSize = 12
+        limit.MinTextSize = 6
+        limit.Parent = letter
+        letter:SetAttribute("IconTint", true)
     end
-    
+
     return iconFrame
 end
 
 -- Apply icon to existing ImageLabel (for compatibility)
-function GGH_Icons:ApplyToImageLabel(imageLabel: ImageLabel, iconName: string, color: Color3?)
+function GGH_Icons:ApplyToImageLabel(imageLabel, iconName, color)
     if not imageLabel or not imageLabel:IsA("ImageLabel") then return end
-    local asset = self:GetRobloxAsset(iconName)
-    imageLabel.Image = asset
+    local n = tostring(iconName or "")
+    if tonumber(n) then
+        imageLabel.Image = "rbxassetid://" .. n
+    elseif string.find(n, "rbxasset", 1, true) then
+        imageLabel.Image = n
+    end
     if color then
         imageLabel.ImageColor3 = color
     end
-    imageLabel:SetAttribute("GGH_Icon", iconName)
-    imageLabel:SetAttribute("SVG_Asset", self:Get(iconName) or "")
 end
 
--- Replace external links cleanup
-function GGH_Icons:CleanupExternalReferences(gui: Instance)
-    -- This function would scan for any old external asset references
-    -- and replace them with local GGH assets
-    -- Implementation is defensive - no external calls
+function GGH_Icons:CleanupExternalReferences(gui)
     if not gui then return end
-    for _, descendant in ipairs(gui:GetDescendants()) do
-        if descendant:IsA("ImageLabel") or descendant:IsA("ImageButton") then
-            local img = descendant.Image
-            if img and (string.find(img, "http://") or string.find(img, "https://")) then
-                -- Replace external HTTP links with local fallback
-                if string.find(string.lower(descendant.Name), "logo") then
-                    descendant.Image = self:GetRobloxAsset("ggh_logo")
-                else
-                    descendant.Image = self:GetRobloxAsset("settings")
-                end
+    for _, d in ipairs(gui:GetDescendants()) do
+        if d:IsA("ImageLabel") or d:IsA("ImageButton") then
+            local img = d.Image
+            if img and (string.find(img, "http://", 1, true) or string.find(img, "https://", 1, true)) then
+                d.Image = ""
             end
         end
     end
@@ -392,12 +469,12 @@ for themeName, theme in pairs(GGH_Theme.Themes) do
     end
 end
 
-function GGH_Theme:GetTheme(name: string)
+function GGH_Theme:GetTheme(name)
     if not name then return self.Default end
     return self.Themes[name] or self.Default
 end
 
-function GGH_Theme:GetAllThemes(): {string}
+function GGH_Theme:GetAllThemes()
     local list = {}
     for name, _ in pairs(self.Themes) do
         table.insert(list, name)
@@ -405,7 +482,7 @@ function GGH_Theme:GetAllThemes(): {string}
     return list
 end
 
-function GGH_Theme:ApplyToFrame(frame: Frame, theme, style: string?)
+function GGH_Theme:ApplyToFrame(frame, theme, style)
     if not frame or not theme then return end
     style = style or "default"
     
@@ -424,14 +501,14 @@ function GGH_Theme:ApplyToFrame(frame: Frame, theme, style: string?)
     end
 end
 
-function GGH_Theme:CreateCorner(parent: Instance, radius: number?): UICorner
+function GGH_Theme:CreateCorner(parent, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius or self.Default.Radius.Medium)
     corner.Parent = parent
     return corner
 end
 
-function GGH_Theme:CreateStroke(parent: Instance, color: Color3?, thickness: number?, transparency: number?): UIStroke
+function GGH_Theme:CreateStroke(parent, color, thickness, transparency)
     local stroke = Instance.new("UIStroke")
     stroke.Color = color or self.Default.Border
     stroke.Thickness = thickness or 1
@@ -441,7 +518,7 @@ function GGH_Theme:CreateStroke(parent: Instance, color: Color3?, thickness: num
     return stroke
 end
 
-function GGH_Theme:CreatePadding(parent: Instance, padding: number | {number}): UIPadding
+function GGH_Theme:CreatePadding(parent, padding)
     local pad = Instance.new("UIPadding")
     if typeof(padding) == "number" then
         pad.PaddingTop = UDim.new(0, padding)
@@ -459,7 +536,7 @@ function GGH_Theme:CreatePadding(parent: Instance, padding: number | {number}): 
     return pad
 end
 
-function GGH_Theme:Tween(object: Instance, properties: {}, duration: number?, easingStyle: Enum.EasingStyle?, easingDirection: Enum.EasingDirection?): Tween
+function GGH_Theme:Tween(object, properties, duration, easingStyle, easingDirection)
     local tweenService = game:GetService("TweenService")
     local info = TweenInfo.new(
         duration or self.Default.Animation.Normal,
@@ -471,7 +548,7 @@ function GGH_Theme:Tween(object: Instance, properties: {}, duration: number?, ea
     return tween
 end
 
-function GGH_Theme:ApplyThemeToHierarchy(root: Instance, theme)
+function GGH_Theme:ApplyThemeToHierarchy(root, theme)
     if not root or not theme then return end
     -- Recursive theme application with attribute checking
     for _, descendant in ipairs(root:GetDescendants()) do
@@ -513,269 +590,235 @@ end
 return GGH_Theme
 
 end)()
-
 -- ================= GGH_Components =================
 local GGH_Components = (function()
 
 -- GGH UI Library - GGH_Components
 -- Developer: AM_BRCR7
--- Unified Premium Control System - Complete Redesign
 
 local GGH_Components = {}
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- Helper to create consistent styling
-local function applyCardStyle(frame, theme, themeModule)
-    frame.BackgroundColor3 = theme.BackgroundTertiary or theme.ElementBackground or Color3.fromRGB(28,28,36)
-    frame.BackgroundTransparency = theme.ElementTransparency or 0.1
-    frame.BorderSizePixel = 0
-    themeModule:CreateCorner(frame, theme.Radius and theme.Radius.Medium or 8)
-    local stroke = themeModule:CreateStroke(frame, theme.Border, 1, 0.2)
-    return stroke
+local uid = 0
+local function nextId()
+    uid = uid + 1
+    return uid
 end
 
--- BUTTON - Professional with hover/pressed/disabled
+local function getCallback(props)
+    return props.Callback or props.callback
+end
+
+local function fireCallback(window, name, callback, ...)
+    if not callback then return end
+    local args = table.pack(...)
+    window:_runGuarded({Name = name}, function()
+        callback(table.unpack(args, 1, args.n))
+    end)
+end
+
+-- Base card used by most controls
+local function createCard(tab, name, height)
+    local theme = tab.theme
+    local themeModule = tab.themeModule
+    local main = Instance.new("Frame")
+    main.Name = name
+    main.Size = UDim2.new(1, -16, 0, height)
+    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28, 28, 36)
+    main.BackgroundTransparency = 0.1
+    main.BorderSizePixel = 0
+    main.LayoutOrder = #tab.components + 1
+    main.Parent = tab.content
+    themeModule:CreateCorner(main, theme.Radius.Medium)
+    local stroke = themeModule:CreateStroke(main, theme.Border, 1, 0.3)
+    return main, stroke
+end
+
+local function makeLabel(parent, text, color, font, textSize, size, position)
+    local l = Instance.new("TextLabel")
+    l.BackgroundTransparency = 1
+    l.BorderSizePixel = 0
+    l.Text = text
+    l.TextColor3 = color
+    l.Font = font
+    l.TextSize = textSize
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.TextYAlignment = Enum.TextYAlignment.Center
+    l.Size = size
+    l.Position = position or UDim2.new(0, 0, 0, 0)
+    l.Parent = parent
+    return l
+end
+
+local function makeClickArea(parent)
+    local b = Instance.new("TextButton")
+    b.Name = "ClickArea"
+    b.Size = UDim2.fromScale(1, 1)
+    b.BackgroundTransparency = 1
+    b.BorderSizePixel = 0
+    b.Text = ""
+    b.AutoButtonColor = false
+    b.Parent = parent
+    return b
+end
+
+-- ============================ BUTTON ============================
 function GGH_Components.CreateButton(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
     local window = tab.window
-    
-    local main = Instance.new("Frame")
-    main.Name = props.Name or props.name or "Button"
-    main.Size = UDim2.new(1, -16, 0, 44)
-    main.BackgroundColor3 = theme.ElementBackground or Color3.fromRGB(32,32,44)
+    local name = props.Name or props.name or "Button"
+    local desc = props.Description or props.description
+
+    local main, stroke = createCard(tab, name, 44)
+    main.BackgroundColor3 = theme.ElementBackground or Color3.fromRGB(32, 32, 44)
     main.BackgroundTransparency = 0.15
-    main.BorderSizePixel = 0
-    main.Parent = tab.content
-    main.LayoutOrder = #tab.components + 1
-    
-    themeModule:CreateCorner(main, theme.Radius.Medium)
-    local stroke = themeModule:CreateStroke(main, theme.Border, 1, 0.3)
-    
-    -- Hover overlay
+
     local hoverOverlay = Instance.new("Frame")
     hoverOverlay.Name = "HoverOverlay"
-    hoverOverlay.Size = UDim2.fromScale(1,1)
-    hoverOverlay.BackgroundColor3 = theme.BackgroundHover or Color3.fromRGB(36,36,48)
+    hoverOverlay.Size = UDim2.fromScale(1, 1)
+    hoverOverlay.BackgroundColor3 = theme.BackgroundHover or Color3.fromRGB(36, 36, 48)
     hoverOverlay.BackgroundTransparency = 1
     hoverOverlay.BorderSizePixel = 0
     hoverOverlay.Parent = main
     themeModule:CreateCorner(hoverOverlay, theme.Radius.Medium)
-    
-    -- Content
+
     local content = Instance.new("Frame")
     content.Name = "Content"
     content.Size = UDim2.new(1, -24, 1, 0)
     content.Position = UDim2.new(0, 12, 0, 0)
     content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
     content.Parent = main
-    
-    -- Icon if provided
-    local hasIcon = props.Icon or props.icon
+
     local textOffset = 0
-    if hasIcon and tab.iconsModule then
-        local icon = tab.iconsModule:CreateIcon(props.Icon or props.icon, content, UDim2.fromOffset(18,18), theme.TextPrimary)
+    local iconName = props.Icon or props.icon
+    if iconName and tab.iconsModule then
+        local icon = tab.iconsModule:CreateIcon(iconName, content, UDim2.fromOffset(18, 18), theme.TextPrimary)
         icon.Position = UDim2.new(0, 0, 0.5, 0)
         icon.AnchorPoint = Vector2.new(0, 0.5)
         textOffset = 28
     end
-    
-    local titleLabel = Instance.new("TextLabel")
+
+    local titleLabel = makeLabel(content, name, theme.TextPrimary, Enum.Font.GothamMedium, 13,
+        UDim2.new(1, -textOffset, 0, 18), UDim2.new(0, textOffset, 0, desc and 6 or 13))
     titleLabel.Name = "Title"
-    titleLabel.Size = UDim2.new(1, -textOffset - 20, 0, 18)
-    titleLabel.Position = UDim2.new(0, textOffset, 0, 6)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = props.Name or props.name or "Button"
-    titleLabel.TextColor3 = theme.TextPrimary
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Font = Enum.Font.GothamMedium
-    titleLabel.TextSize = 13
-    titleLabel.Parent = content
-    titleLabel:SetAttribute("ThemeRole", "TextPrimary")
-    
-    local descLabel
-    if props.Description or props.description then
-        descLabel = Instance.new("TextLabel")
+
+    if desc then
+        local descLabel = makeLabel(content, desc, theme.TextSecondary, Enum.Font.Gotham, 11,
+            UDim2.new(1, -textOffset, 0, 12), UDim2.new(0, textOffset, 0, 25))
         descLabel.Name = "Description"
-        descLabel.Size = UDim2.new(1, -textOffset - 20, 0, 12)
-        descLabel.Position = UDim2.new(0, textOffset, 0, 24)
-        descLabel.BackgroundTransparency = 1
-        descLabel.Text = props.Description or props.description or ""
-        descLabel.TextColor3 = theme.TextSecondary
-        descLabel.TextXAlignment = Enum.TextXAlignment.Left
-        descLabel.Font = Enum.Font.Gotham
-        descLabel.TextSize = 11
-        descLabel.Parent = content
     end
-    
-    -- Clickable button
-    local button = Instance.new("TextButton")
+
+    local button = makeClickArea(main)
     button.Name = "Button"
-    button.Size = UDim2.fromScale(1,1)
-    button.BackgroundTransparency = 1
-    button.Text = ""
-    button.Parent = main
-    
+
     local debounce = false
-    local disabled = props.Disabled or false
-    
+    local disabled = props.Disabled == true
+
     local function setDisabled(state)
-        disabled = state
-        main.BackgroundTransparency = state and 0.6 or 0.15
-        titleLabel.TextTransparency = state and 0.5 or 0
-        button.Active = not state
+        disabled = state == true
+        main.BackgroundTransparency = disabled and 0.6 or 0.15
+        titleLabel.TextTransparency = disabled and 0.5 or 0
     end
-    
     setDisabled(disabled)
-    
+
     window:Connect(button.MouseEnter, function()
         if disabled or not window:_isInteractive() then return end
         themeModule:Tween(hoverOverlay, {BackgroundTransparency = 0.6}, 0.15)
         themeModule:Tween(stroke, {Transparency = 0}, 0.15)
     end)
-    
     window:Connect(button.MouseLeave, function()
         themeModule:Tween(hoverOverlay, {BackgroundTransparency = 1}, 0.15)
         themeModule:Tween(stroke, {Transparency = 0.3}, 0.15)
     end)
-    
     window:Connect(button.MouseButton1Down, function()
         if disabled then return end
-        themeModule:Tween(main, {Size = UDim2.new(1, -18, 0, 42)}, 0.08)
+        themeModule:Tween(main, {Size = UDim2.new(1, -20, 0, 42)}, 0.08)
     end)
-    
     window:Connect(button.MouseButton1Up, function()
         themeModule:Tween(main, {Size = UDim2.new(1, -16, 0, 44)}, 0.08)
     end)
-    
+
     window:Connect(button.MouseButton1Click, function()
         if disabled or debounce then return end
         debounce = true
-        -- Press animation
         themeModule:Tween(main, {BackgroundColor3 = theme.Accent}, 0.08)
-        task.wait(0.08)
-        themeModule:Tween(main, {BackgroundColor3 = theme.ElementBackground}, 0.15)
-        
-        if props.Callback or props.callback then
-            local cb = props.Callback or props.callback
-            window:_runGuarded({Name = main.Name}, cb)
-        end
-        
-        task.wait(0.2)
-        debounce = false
+        task.delay(0.1, function()
+            if main.Parent then
+                themeModule:Tween(main, {BackgroundColor3 = theme.ElementBackground or Color3.fromRGB(32, 32, 44)}, 0.15)
+            end
+        end)
+        fireCallback(window, name, getCallback(props))
+        task.delay(0.2, function() debounce = false end)
     end)
-    
+
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
-    api.Name = main.Name
-    function api:SetText(text)
-        titleLabel.Text = text
-    end
-    function api:SetDisabled(state)
-        setDisabled(state)
-    end
-    function api:Destroy()
-        if main.Parent then main:Destroy() end
-    end
-    function api:SetCallback(cb)
-        props.Callback = cb
-    end
-    
+    api.Name = name
+    function api:SetText(text) titleLabel.Text = text end
+    api.Set = api.SetText
+    function api:SetDisabled(state) setDisabled(state) end
+    function api:SetCallback(cb) props.Callback = cb; props.callback = nil end
+    function api:Destroy() if main.Parent then main:Destroy() end end
     return api
 end
 
--- TOGGLE - Modern switch with smooth animation
+-- ============================ TOGGLE ============================
 function GGH_Components.CreateToggle(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
     local window = tab.window
-    
-    local currentValue = props.CurrentValue or props.currentValue or props.Default or false
-    if props.Flag then window.flags[props.Flag] = currentValue end
-    
-    local main = Instance.new("Frame")
-    main.Name = props.Name or props.name or "Toggle"
-    main.Size = UDim2.new(1, -16, 0, 46)
-    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28,28,36)
-    main.BackgroundTransparency = 0.1
-    main.BorderSizePixel = 0
-    main.Parent = tab.content
-    main.LayoutOrder = #tab.components + 1
-    
-    themeModule:CreateCorner(main, theme.Radius.Medium)
-    local stroke = themeModule:CreateStroke(main, theme.Border, 1, 0.3)
-    
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Size = UDim2.new(1, -70, 0, 18)
-    titleLabel.Position = UDim2.new(0, 12, 0, 8)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = props.Name or props.name or "Toggle"
-    titleLabel.TextColor3 = theme.TextPrimary
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Font = Enum.Font.GothamMedium
-    titleLabel.TextSize = 13
-    titleLabel.Parent = main
-    
-    local descLabel
-    if props.Description then
-        descLabel = Instance.new("TextLabel")
-        descLabel.Size = UDim2.new(1, -70, 0, 12)
-        descLabel.Position = UDim2.new(0, 12, 0, 26)
-        descLabel.BackgroundTransparency = 1
-        descLabel.Text = props.Description
-        descLabel.TextColor3 = theme.TextSecondary
-        descLabel.TextXAlignment = Enum.TextXAlignment.Left
-        descLabel.Font = Enum.Font.Gotham
-        descLabel.TextSize = 11
-        descLabel.Parent = main
+    local name = props.Name or props.name or "Toggle"
+    local desc = props.Description or props.description
+
+    local currentValue = props.CurrentValue
+    if currentValue == nil then currentValue = props.currentValue end
+    if currentValue == nil then currentValue = props.Default end
+    currentValue = currentValue == true
+
+    local main, stroke = createCard(tab, name, 46)
+
+    makeLabel(main, name, theme.TextPrimary, Enum.Font.GothamMedium, 13,
+        UDim2.new(1, -70, 0, 18), UDim2.new(0, 12, 0, desc and 8 or 14)).Name = "Title"
+    if desc then
+        makeLabel(main, desc, theme.TextSecondary, Enum.Font.Gotham, 11,
+            UDim2.new(1, -70, 0, 12), UDim2.new(0, 12, 0, 26)).Name = "Description"
     end
-    
-    -- Toggle Track
+
+    local onColor = theme.ToggleOn or theme.Accent
+    local offColor = theme.ToggleOff or Color3.fromRGB(50, 50, 65)
+
     local track = Instance.new("Frame")
     track.Name = "Track"
     track.Size = UDim2.fromOffset(44, 24)
     track.Position = UDim2.new(1, -56, 0.5, 0)
     track.AnchorPoint = Vector2.new(0, 0.5)
-    track.BackgroundColor3 = currentValue and (theme.ToggleOn or theme.Accent) or (theme.ToggleOff or Color3.fromRGB(50,50,65))
+    track.BackgroundColor3 = currentValue and onColor or offColor
     track.BorderSizePixel = 0
     track.Parent = main
     themeModule:CreateCorner(track, 12)
-    
-    -- Thumb
+
     local thumb = Instance.new("Frame")
     thumb.Name = "Thumb"
     thumb.Size = UDim2.fromOffset(18, 18)
     thumb.Position = currentValue and UDim2.new(1, -21, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
     thumb.AnchorPoint = Vector2.new(0, 0.5)
-    thumb.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     thumb.BorderSizePixel = 0
     thumb.Parent = track
     themeModule:CreateCorner(thumb, 9)
-    
-    -- Shadow
-    local thumbStroke = Instance.new("UIStroke")
-    thumbStroke.Color = Color3.fromRGB(0,0,0)
-    thumbStroke.Transparency = 0.8
-    thumbStroke.Thickness = 1
-    thumbStroke.Parent = thumb
-    
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromScale(1,1)
-    button.BackgroundTransparency = 1
-    button.Text = ""
-    button.Parent = main
-    
+
+    local button = makeClickArea(main)
+
     local function updateVisual(value, animate)
         currentValue = value
-        local targetColor = value and (theme.ToggleOn or theme.Accent) or (theme.ToggleOff or Color3.fromRGB(50,50,65))
+        local targetColor = value and onColor or offColor
         local targetPos = value and UDim2.new(1, -21, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
-        
         if animate then
             themeModule:Tween(track, {BackgroundColor3 = targetColor}, 0.25)
             themeModule:Tween(thumb, {Position = targetPos}, 0.25)
@@ -783,162 +826,157 @@ function GGH_Components.CreateToggle(tab, props)
             track.BackgroundColor3 = targetColor
             thumb.Position = targetPos
         end
-        
-        if props.Flag then window.flags[props.Flag] = value end
     end
-    
-    local function setValue(value, callCallback)
-        if callCallback == nil then callCallback = true end
-        updateVisual(value, true)
-        if callCallback and (props.Callback or props.callback) then
-            local cb = props.Callback or props.callback
-            window:_runGuarded({Name = main.Name, Value = value}, function()
-                cb(value)
-            end)
-        end
-        -- Register active feature for cleanup
-        if value then
-            window:RegisterFeature(main.Name, {
+
+    local featureKey = "toggle_" .. nextId()
+    local function registerFeature(on)
+        if on then
+            window:RegisterFeature(featureKey, {
                 Stop = function()
-                    updateVisual(false, true)
+                    updateVisual(false, false)
+                    local cb = getCallback(props)
+                    if cb then cb(false) end
                 end
             })
-            window:RegisterOriginalState(main.Name .. "_toggle", false, function()
-                updateVisual(false, false)
-            end)
         else
-            window:UnregisterFeature(main.Name)
+            window:UnregisterFeature(featureKey)
         end
     end
-    
+
+    local function setValue(value, callCallback)
+        value = value == true
+        updateVisual(value, true)
+        registerFeature(value)
+        window:_setFlag(props.Flag, value)
+        if callCallback then
+            fireCallback(window, name, getCallback(props), value)
+        end
+    end
+
     window:Connect(button.MouseButton1Click, function()
         setValue(not currentValue, true)
     end)
-    
     window:Connect(button.MouseEnter, function()
         themeModule:Tween(stroke, {Transparency = 0, Color = theme.BorderHover or theme.Border}, 0.15)
     end)
     window:Connect(button.MouseLeave, function()
-        themeModule:Tween(stroke, {Transparency = 0.3}, 0.15)
+        themeModule:Tween(stroke, {Transparency = 0.3, Color = theme.Border}, 0.15)
     end)
-    
-    -- Initial sync
-    updateVisual(currentValue, false)
-    if currentValue then
-        window:RegisterFeature(main.Name, {Stop = function() updateVisual(false, true) end})
-    end
-    
+
+    window:_setFlag(props.Flag, currentValue, true)
+    if currentValue then registerFeature(true) end
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
-    api.Value = currentValue
-    api.Name = main.Name
-    function api:Set(value)
-        setValue(value, false)
-    end
-    function api:SetValue(value) -- Compatibility
-        setValue(value, true)
-    end
-    function api:Get()
-        return currentValue
-    end
+    api.Name = name
+    function api:Set(value) setValue(value, false) end
+    function api:SetValue(value) setValue(value, true) end
+    function api:Get() return currentValue end
     function api:Destroy()
+        window:UnregisterFeature(featureKey)
         if main.Parent then main:Destroy() end
-        window:UnregisterFeature(main.Name)
     end
-    
+    if props.Flag then
+        window.flagSetters[props.Flag] = function(v) setValue(v, true) end
+    end
     return api
 end
 
--- SLIDER - Modern with thumb and value display
+-- ============================ SLIDER ============================
 function GGH_Components.CreateSlider(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
     local window = tab.window
-    
-    local min = props.Min or props.min or props.Range and props.Range[1] or 0
-    local max = props.Max or props.max or props.Range and props.Range[2] or 100
+    local name = props.Name or props.name or "Slider"
+    local suffix = props.Suffix or props.suffix
+    local range = props.Range or props.range
+
+    local min = props.Min or props.min or (range and range[1]) or 0
+    local max = props.Max or props.max or (range and range[2]) or 100
+    if max == min then max = min + 1 end
     local increment = props.Increment or props.increment or 1
-    local current = props.CurrentValue or props.currentValue or props.Default or min
+    local current = props.CurrentValue
+    if current == nil then current = props.currentValue end
+    if current == nil then current = props.Default end
+    if current == nil then current = min end
     current = math.clamp(current, min, max)
-    
-    local main = Instance.new("Frame")
-    main.Name = props.Name or "Slider"
-    main.Size = UDim2.new(1, -16, 0, 58)
-    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28,28,36)
-    main.BackgroundTransparency = 0.1
-    main.BorderSizePixel = 0
-    main.Parent = tab.content
-    main.LayoutOrder = #tab.components + 1
-    themeModule:CreateCorner(main, theme.Radius.Medium)
-    themeModule:CreateStroke(main, theme.Border, 1, 0.3)
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -80, 0, 16)
-    title.Position = UDim2.new(0, 12, 0, 8)
-    title.BackgroundTransparency = 1
-    title.Text = props.Name or "Slider"
-    title.TextColor3 = theme.TextPrimary
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Font = Enum.Font.GothamMedium
-    title.TextSize = 13
-    title.Parent = main
-    
+
+    local main = createCard(tab, name, 58)
+
+    makeLabel(main, name, theme.TextPrimary, Enum.Font.GothamMedium, 13,
+        UDim2.new(1, -100, 0, 16), UDim2.new(0, 12, 0, 8)).Name = "Title"
+
+    local function formatValue(v)
+        local text = tostring(math.floor(v * 100 + 0.5) / 100)
+        if suffix then text = text .. " " .. tostring(suffix) end
+        return text
+    end
+
     local valueLabel = Instance.new("TextLabel")
     valueLabel.Name = "Value"
-    valueLabel.Size = UDim2.fromOffset(60, 18)
-    valueLabel.Position = UDim2.new(1, -68, 0, 7)
-    valueLabel.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22,22,28)
-    valueLabel.Text = tostring(current)
+    valueLabel.Size = UDim2.fromOffset(80, 18)
+    valueLabel.Position = UDim2.new(1, -88, 0, 7)
+    valueLabel.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22, 22, 28)
+    valueLabel.BorderSizePixel = 0
+    valueLabel.Text = formatValue(current)
     valueLabel.TextColor3 = theme.TextPrimary
     valueLabel.Font = Enum.Font.GothamMedium
     valueLabel.TextSize = 12
     valueLabel.Parent = main
     themeModule:CreateCorner(valueLabel, theme.Radius.Small)
-    
-    -- Track
+
     local track = Instance.new("Frame")
     track.Name = "Track"
     track.Size = UDim2.new(1, -24, 0, 4)
-    track.Position = UDim2.new(0, 12, 0, 36)
-    track.BackgroundColor3 = theme.SliderTrack or Color3.fromRGB(40,40,55)
+    track.Position = UDim2.new(0, 12, 0, 38)
+    track.BackgroundColor3 = theme.SliderTrack or Color3.fromRGB(40, 40, 55)
     track.BorderSizePixel = 0
     track.Parent = main
     themeModule:CreateCorner(track, 2)
-    
+
+    local ratio0 = (current - min) / (max - min)
     local fill = Instance.new("Frame")
     fill.Name = "Fill"
-    fill.Size = UDim2.new((current - min) / (max - min), 0, 1, 0)
+    fill.Size = UDim2.new(ratio0, 0, 1, 0)
     fill.BackgroundColor3 = theme.SliderFill or theme.Accent
     fill.BorderSizePixel = 0
     fill.Parent = track
     themeModule:CreateCorner(fill, 2)
-    
+
     local thumb = Instance.new("Frame")
     thumb.Name = "Thumb"
     thumb.Size = UDim2.fromOffset(16, 16)
-    thumb.Position = UDim2.new((current - min) / (max - min), 0, 0.5, 0)
+    thumb.Position = UDim2.new(ratio0, 0, 0.5, 0)
     thumb.AnchorPoint = Vector2.new(0.5, 0.5)
-    thumb.BackgroundColor3 = theme.SliderThumb or Color3.fromRGB(255,255,255)
+    thumb.BackgroundColor3 = theme.SliderThumb or Color3.fromRGB(255, 255, 255)
     thumb.BorderSizePixel = 0
     thumb.Parent = track
     themeModule:CreateCorner(thumb, 8)
-    local thumbStroke = themeModule:CreateStroke(thumb, theme.Border, 1, 0.5)
-    
+
+    -- Large invisible hit area so the slider is easy to grab
+    local hit = Instance.new("TextButton")
+    hit.Name = "HitArea"
+    hit.Size = UDim2.new(1, -8, 0, 26)
+    hit.Position = UDim2.new(0, 4, 0, 28)
+    hit.BackgroundTransparency = 1
+    hit.BorderSizePixel = 0
+    hit.Text = ""
+    hit.AutoButtonColor = false
+    hit.Parent = main
+
     local dragging = false
-    
-    local function updateValue(newValue, callCallback)
-        if callCallback == nil then callCallback = true end
+    local lastFired = nil
+
+    local function setValue(newValue, callCallback)
         newValue = math.clamp(newValue, min, max)
-        -- Snap to increment
         if increment ~= 0 then
             newValue = math.floor((newValue - min) / increment + 0.5) * increment + min
         end
         newValue = math.clamp(newValue, min, max)
         current = newValue
-        valueLabel.Text = tostring(math.floor(newValue * 100) / 100)
+        valueLabel.Text = formatValue(newValue)
         local ratio = (newValue - min) / (max - min)
         if dragging then
             fill.Size = UDim2.new(ratio, 0, 1, 0)
@@ -947,406 +985,344 @@ function GGH_Components.CreateSlider(tab, props)
             themeModule:Tween(fill, {Size = UDim2.new(ratio, 0, 1, 0)}, 0.15)
             themeModule:Tween(thumb, {Position = UDim2.new(ratio, 0, 0.5, 0)}, 0.15)
         end
-        if props.Flag then window.flags[props.Flag] = newValue end
-        if callCallback and (props.Callback or props.callback) then
-            local cb = props.Callback or props.callback
-            -- Throttle: only call if not dragging too frequently
-            window:_runGuarded({Name = main.Name, Value = newValue}, function()
-                cb(newValue)
-            end)
+        window:_setFlag(props.Flag, newValue)
+        if callCallback and lastFired ~= newValue then
+            lastFired = newValue
+            fireCallback(window, name, getCallback(props), newValue)
         end
     end
-    
-    local function getValueFromPosition(xPos)
-        local trackAbsPos = track.AbsolutePosition
-        local trackAbsSize = track.AbsoluteSize
-        local relative = math.clamp((xPos - trackAbsPos.X) / trackAbsSize.X, 0, 1)
-        return min + relative * (max - min)
+
+    local function valueFromX(x)
+        local pos = track.AbsolutePosition.X
+        local width = math.max(track.AbsoluteSize.X, 1)
+        local r = math.clamp((x - pos) / width, 0, 1)
+        return min + r * (max - min)
     end
-    
-    window:Connect(track.InputBegan, function(input)
+
+    window:Connect(hit.InputBegan, function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
-            local val = getValueFromPosition(input.Position.X)
-            updateValue(val, true)
-            themeModule:Tween(thumb, {Size = UDim2.fromOffset(20,20)}, 0.1)
+            themeModule:Tween(thumb, {Size = UDim2.fromOffset(20, 20)}, 0.1)
+            setValue(valueFromX(input.Position.X), true)
         end
     end)
-    
     window:Connect(UserInputService.InputChanged, function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local val = getValueFromPosition(input.Position.X)
-            updateValue(val, true)
+            setValue(valueFromX(input.Position.X), true)
         end
     end)
-    
     window:Connect(UserInputService.InputEnded, function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
             dragging = false
-            themeModule:Tween(thumb, {Size = UDim2.fromOffset(16,16)}, 0.1)
+            themeModule:Tween(thumb, {Size = UDim2.fromOffset(16, 16)}, 0.1)
         end
     end)
-    
-    -- Also make thumb draggable
-    window:Connect(thumb.InputBegan, function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-        end
-    end)
-    
+
+    window:_setFlag(props.Flag, current, true)
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
-    api.Value = current
-    function api:Set(value)
-        updateValue(value, false)
+    api.Name = name
+    function api:Set(value) lastFired = nil; setValue(value, false) end
+    function api:SetValue(value) setValue(value, true) end
+    function api:Get() return current end
+    function api:Destroy() if main.Parent then main:Destroy() end end
+    if props.Flag then
+        window.flagSetters[props.Flag] = function(v) setValue(tonumber(v) or current, true) end
     end
-    function api:SetValue(v)
-        updateValue(v, true)
-    end
-    function api:Get()
-        return current
-    end
-    function api:Destroy()
-        if main.Parent then main:Destroy() end
-    end
-    
     return api
 end
 
--- DROPDOWN - Ordered list with selection
+-- =========================== DROPDOWN ===========================
 function GGH_Components.CreateDropdown(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
     local window = tab.window
-    
+    local name = props.Name or props.name or "Dropdown"
+
     local options = props.Options or props.options or {}
-    local current = props.CurrentOption or props.currentOption or props.Default or (options[1] or "")
-    if type(current) == "table" then current = current[1] or "" end
-    
-    local main = Instance.new("Frame")
-    main.Name = props.Name or "Dropdown"
-    main.Size = UDim2.new(1, -16, 0, 46)
-    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28,28,36)
-    main.BackgroundTransparency = 0.1
-    main.BorderSizePixel = 0
-    main.Parent = tab.content
-    main.LayoutOrder = #tab.components + 1
-    themeModule:CreateCorner(main, theme.Radius.Medium)
-    local mainStroke = themeModule:CreateStroke(main, theme.Border, 1, 0.3)
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -12, 0, 14)
-    title.Position = UDim2.new(0, 12, 0, 6)
-    title.BackgroundTransparency = 1
-    title.Text = props.Name or "Dropdown"
-    title.TextColor3 = theme.TextPrimary
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Font = Enum.Font.GothamMedium
-    title.TextSize = 12
-    title.Parent = main
-    
+    local current = props.CurrentOption or props.currentOption or props.Default
+    if type(current) == "table" then current = current[1] end
+    if current == nil then current = options[1] end
+    if current == nil then current = "" end
+    current = tostring(current)
+
+    local main, mainStroke = createCard(tab, name, 46)
+    main.ClipsDescendants = false
+
+    makeLabel(main, name, theme.TextPrimary, Enum.Font.GothamMedium, 12,
+        UDim2.new(1, -24, 0, 14), UDim2.new(0, 12, 0, 6)).Name = "Title"
+
     local selectedFrame = Instance.new("Frame")
     selectedFrame.Name = "Selected"
     selectedFrame.Size = UDim2.new(1, -24, 0, 24)
     selectedFrame.Position = UDim2.new(0, 12, 0, 22)
-    selectedFrame.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22,22,28)
+    selectedFrame.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22, 22, 28)
     selectedFrame.BorderSizePixel = 0
     selectedFrame.Parent = main
     themeModule:CreateCorner(selectedFrame, theme.Radius.Small)
     themeModule:CreateStroke(selectedFrame, theme.Border, 1, 0.2)
-    
-    local selectedLabel = Instance.new("TextLabel")
+
+    local selectedLabel = makeLabel(selectedFrame, current, theme.TextPrimary, Enum.Font.Gotham, 12,
+        UDim2.new(1, -30, 1, 0), UDim2.new(0, 8, 0, 0))
     selectedLabel.Name = "SelectedLabel"
-    selectedLabel.Size = UDim2.new(1, -30, 1, 0)
-    selectedLabel.Position = UDim2.new(0, 8, 0, 0)
-    selectedLabel.BackgroundTransparency = 1
-    selectedLabel.Text = tostring(current)
-    selectedLabel.TextColor3 = theme.TextPrimary
-    selectedLabel.TextXAlignment = Enum.TextXAlignment.Left
-    selectedLabel.Font = Enum.Font.Gotham
-    selectedLabel.TextSize = 12
     selectedLabel.TextTruncate = Enum.TextTruncate.AtEnd
-    selectedLabel.Parent = selectedFrame
-    
+
     local arrow = Instance.new("TextLabel")
+    arrow.Name = "Arrow"
     arrow.Size = UDim2.fromOffset(16, 16)
     arrow.Position = UDim2.new(1, -20, 0.5, 0)
     arrow.AnchorPoint = Vector2.new(0, 0.5)
     arrow.BackgroundTransparency = 1
-    arrow.Text = "▼"
+    arrow.Text = "v"
     arrow.TextColor3 = theme.TextSecondary
-    arrow.Font = Enum.Font.Gotham
-    arrow.TextSize = 10
+    arrow.Font = Enum.Font.GothamBold
+    arrow.TextSize = 11
     arrow.Parent = selectedFrame
-    
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromScale(1,1)
-    button.BackgroundTransparency = 1
-    button.Text = ""
-    button.Parent = selectedFrame
-    
-    -- Dropdown list
+
+    local button = makeClickArea(selectedFrame)
+
     local listFrame = Instance.new("ScrollingFrame")
     listFrame.Name = "DropdownList"
-    listFrame.Size = UDim2.new(1, 0, 0, 0)
-    listFrame.Position = UDim2.new(0, 0, 1, 4)
-    listFrame.BackgroundColor3 = theme.BackgroundSecondary
+    listFrame.Size = UDim2.new(1, -24, 0, 0)
+    listFrame.Position = UDim2.new(0, 12, 0, 52)
+    listFrame.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22, 22, 28)
     listFrame.BorderSizePixel = 0
-    listFrame.CanvasSize = UDim2.new(0,0,0,0)
+    listFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
     listFrame.ScrollBarThickness = 2
+    listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+    listFrame.ClipsDescendants = true
     listFrame.Visible = false
-    listFrame.ZIndex = 5
     listFrame.Parent = main
-    themeModule:CreateCorner(listFrame, theme.Radius.Medium)
+    themeModule:CreateCorner(listFrame, theme.Radius.Small)
     themeModule:CreateStroke(listFrame, theme.Border, 1)
-    
+    themeModule:CreatePadding(listFrame, 4)
+
     local listLayout = Instance.new("UIListLayout")
     listLayout.Padding = UDim.new(0, 2)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = listFrame
-    
-    themeModule:CreatePadding(listFrame, 4)
-    
+
     local isOpen = false
-    
-    local function updateList()
-        -- Clear
+    local api = {}
+
+    local function setCurrent(option, callCallback)
+        current = tostring(option)
+        selectedLabel.Text = current
+        window:_setFlag(props.Flag, current)
+        if callCallback then
+            local cb = getCallback(props)
+            if cb then
+                window:_runGuarded({Name = name}, function()
+                    cb(current, {current})
+                end)
+            end
+        end
+    end
+
+    local function closeList()
+        if not isOpen then return end
+        isOpen = false
+        themeModule:Tween(listFrame, {Size = UDim2.new(1, -24, 0, 0)}, 0.15)
+        themeModule:Tween(main, {Size = UDim2.new(1, -16, 0, 46)}, 0.15)
+        task.delay(0.16, function()
+            if not isOpen and listFrame.Parent then
+                listFrame.Visible = false
+            end
+        end)
+    end
+
+    local function buildList()
         for _, child in ipairs(listFrame:GetChildren()) do
             if child:IsA("TextButton") then child:Destroy() end
         end
-        local totalHeight = 0
         for i, option in ipairs(options) do
-            local optText = type(option) == "table" and option[1] or tostring(option)
+            local optText = tostring(option)
+            local selected = optText == current
             local optButton = Instance.new("TextButton")
-            optButton.Name = "Option_" .. optText
-            optButton.Size = UDim2.new(1, -8, 0, 28)
-            optButton.BackgroundColor3 = (optText == tostring(current)) and (theme.SidebarItemActive or Color3.fromRGB(36,36,50)) or Color3.fromRGB(0,0,0)
-            optButton.BackgroundTransparency = (optText == tostring(current)) and 0.3 or 1
+            optButton.Name = "Option_" .. i
+            optButton.LayoutOrder = i
+            optButton.Size = UDim2.new(1, 0, 0, 28)
+            optButton.BackgroundColor3 = theme.SidebarItemActive or Color3.fromRGB(36, 36, 50)
+            optButton.BackgroundTransparency = selected and 0.3 or 1
+            optButton.BorderSizePixel = 0
             optButton.Text = optText
-            optButton.TextColor3 = (optText == tostring(current)) and theme.TextPrimary or theme.TextSecondary
+            optButton.TextColor3 = selected and theme.TextPrimary or theme.TextSecondary
             optButton.Font = Enum.Font.Gotham
             optButton.TextSize = 12
+            optButton.AutoButtonColor = false
             optButton.Parent = listFrame
             themeModule:CreateCorner(optButton, theme.Radius.Small)
-            
-            window:Connect(optButton.MouseButton1Click, function()
-                current = optText
-                selectedLabel.Text = optText
-                if props.Flag then window.flags[props.Flag] = optText end
-                -- Close
-                isOpen = false
-                themeModule:Tween(listFrame, {Size = UDim2.new(1,0,0,0)}, 0.15)
-                task.wait(0.16)
-                listFrame.Visible = false
-                themeModule:Tween(arrow, {Rotation = 0}, 0.15)
-                
-                if props.Callback or props.callback then
-                    local cb = props.Callback or props.callback
-                    window:_runGuarded({Name = main.Name, Option = optText}, function()
-                        cb(optText)
-                    end)
+
+            window:Connect(optButton.MouseEnter, function()
+                if optText ~= current then
+                    themeModule:Tween(optButton, {BackgroundTransparency = 0.6}, 0.1)
                 end
             end)
-            
-            totalHeight = totalHeight + 30
+            window:Connect(optButton.MouseLeave, function()
+                if optText ~= current then
+                    themeModule:Tween(optButton, {BackgroundTransparency = 1}, 0.1)
+                end
+            end)
+            window:Connect(optButton.MouseButton1Click, function()
+                setCurrent(optText, true)
+                closeList()
+            end)
         end
-        listFrame.CanvasSize = UDim2.new(0,0,0,totalHeight)
-        return math.min(totalHeight + 8, 160)
+        local count = #options
+        listFrame.CanvasSize = UDim2.new(0, 0, 0, count * 30 + 4)
+        return math.min(count * 30 + 8, 168)
     end
-    
-    local function toggleDropdown()
-        if isOpen then
-            isOpen = false
-            themeModule:Tween(listFrame, {Size = UDim2.new(1,0,0,0)}, 0.15)
-            themeModule:Tween(arrow, {Rotation = 0}, 0.15)
-            task.wait(0.16)
-            listFrame.Visible = false
-        else
-            local height = updateList()
-            isOpen = true
-            listFrame.Visible = true
-            listFrame.Size = UDim2.new(1,0,0,0)
-            themeModule:Tween(listFrame, {Size = UDim2.new(1,0,0,height)}, 0.2)
-            themeModule:Tween(arrow, {Rotation = 180}, 0.15)
-            main.Size = UDim2.new(1, -16, 0, 46 + height + 4)
-        end
+
+    local function openList()
+        local height = buildList()
+        isOpen = true
+        listFrame.Visible = true
+        listFrame.Size = UDim2.new(1, -24, 0, 0)
+        themeModule:Tween(listFrame, {Size = UDim2.new(1, -24, 0, height)}, 0.2)
+        themeModule:Tween(main, {Size = UDim2.new(1, -16, 0, 52 + height + 8)}, 0.2)
     end
-    
-    window:Connect(button.MouseButton1Click, toggleDropdown)
-    
-    -- Close when clicking outside
+
+    window:Connect(button.MouseButton1Click, function()
+        if isOpen then closeList() else openList() end
+    end)
+
+    -- Close when clicking outside the control
     window:Connect(UserInputService.InputBegan, function(input)
-        if isOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mousePos = UserInputService:GetMouseLocation()
+        if not isOpen then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            local pos = input.Position
             local absPos = main.AbsolutePosition
             local absSize = main.AbsoluteSize
-            if mousePos.X < absPos.X or mousePos.X > absPos.X + absSize.X or mousePos.Y < absPos.Y or mousePos.Y > absPos.Y + absSize.Y + listFrame.AbsoluteSize.Y then
-                toggleDropdown()
+            if pos.X < absPos.X or pos.X > absPos.X + absSize.X or pos.Y < absPos.Y or pos.Y > absPos.Y + absSize.Y then
+                closeList()
             end
         end
     end)
-    
-    if props.Flag then window.flags[props.Flag] = current end
+
+    window:_setFlag(props.Flag, current, true)
     table.insert(tab.components, main)
-    
-    local api = {}
+
     api.Frame = main
-    function api:Set(option)
-        current = option
-        selectedLabel.Text = tostring(option)
-        if props.Flag then window.flags[props.Flag] = option end
+    api.Name = name
+    function api:Set(option) setCurrent(option, false) end
+    function api:SetValue(option) setCurrent(option, true) end
+    function api:Refresh(newOptions)
+        options = newOptions or {}
+        if isOpen then closeList() end
     end
-    function api:SetOptions(newOptions)
-        options = newOptions
-        updateList()
+    api.SetOptions = api.Refresh
+    function api:Get() return current end
+    function api:Destroy() if main.Parent then main:Destroy() end end
+    if props.Flag then
+        window.flagSetters[props.Flag] = function(v) setCurrent(v, true) end
     end
-    function api:Get()
-        return current
-    end
-    function api:Destroy()
-        if main.Parent then main:Destroy() end
-    end
-    
     return api
 end
 
--- INPUT / TEXTBOX - Modern with placeholder and focus states
+-- ============================= INPUT =============================
 function GGH_Components.CreateInput(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
     local window = tab.window
-    
-    local main = Instance.new("Frame")
-    main.Name = props.Name or "Input"
-    main.Size = UDim2.new(1, -16, 0, 48)
-    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28,28,36)
-    main.BackgroundTransparency = 0.1
-    main.BorderSizePixel = 0
-    main.Parent = tab.content
-    main.LayoutOrder = #tab.components + 1
-    themeModule:CreateCorner(main, theme.Radius.Medium)
-    local stroke = themeModule:CreateStroke(main, theme.Border, 1, 0.3)
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -12, 0, 14)
-    title.Position = UDim2.new(0, 12, 0, 6)
-    title.BackgroundTransparency = 1
-    title.Text = props.Name or "Input"
-    title.TextColor3 = theme.TextPrimary
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Font = Enum.Font.GothamMedium
-    title.TextSize = 12
-    title.Parent = main
-    
+    local name = props.Name or props.name or "Input"
+
+    local main, stroke = createCard(tab, name, 50)
+
+    makeLabel(main, name, theme.TextPrimary, Enum.Font.GothamMedium, 12,
+        UDim2.new(1, -24, 0, 14), UDim2.new(0, 12, 0, 6)).Name = "Title"
+
     local inputFrame = Instance.new("Frame")
+    inputFrame.Name = "InputFrame"
     inputFrame.Size = UDim2.new(1, -24, 0, 24)
     inputFrame.Position = UDim2.new(0, 12, 0, 22)
-    inputFrame.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22,22,28)
+    inputFrame.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22, 22, 28)
     inputFrame.BorderSizePixel = 0
     inputFrame.Parent = main
     themeModule:CreateCorner(inputFrame, theme.Radius.Small)
     local inputStroke = themeModule:CreateStroke(inputFrame, theme.Border, 1, 0.2)
-    
+
     local textBox = Instance.new("TextBox")
     textBox.Name = "InputBox"
     textBox.Size = UDim2.new(1, -16, 1, 0)
     textBox.Position = UDim2.new(0, 8, 0, 0)
     textBox.BackgroundTransparency = 1
-    textBox.Text = props.CurrentValue or props.Default or ""
+    textBox.BorderSizePixel = 0
+    textBox.Text = tostring(props.CurrentValue or props.Default or "")
     textBox.PlaceholderText = props.PlaceholderText or props.placeholder or "Enter text..."
-    textBox.PlaceholderColor3 = theme.TextTertiary or Color3.fromRGB(110,115,130)
+    textBox.PlaceholderColor3 = theme.TextTertiary or Color3.fromRGB(110, 115, 130)
     textBox.TextColor3 = theme.TextPrimary
     textBox.Font = Enum.Font.Gotham
     textBox.TextSize = 12
     textBox.TextXAlignment = Enum.TextXAlignment.Left
     textBox.ClearTextOnFocus = false
     textBox.Parent = inputFrame
-    
-    local function setError(hasError)
-        if hasError then
-            themeModule:Tween(inputStroke, {Color = theme.Error or Color3.fromRGB(239,68,68), Transparency = 0}, 0.15)
-        else
-            themeModule:Tween(inputStroke, {Color = theme.Border, Transparency = 0.2}, 0.15)
-        end
-    end
-    
+
     window:Connect(textBox.Focused, function()
         themeModule:Tween(inputStroke, {Color = theme.Accent, Transparency = 0}, 0.15)
         themeModule:Tween(stroke, {Color = theme.Accent, Transparency = 0}, 0.15)
     end)
-    
+
     window:Connect(textBox.FocusLost, function(enterPressed)
         themeModule:Tween(inputStroke, {Color = theme.Border, Transparency = 0.2}, 0.15)
         themeModule:Tween(stroke, {Color = theme.Border, Transparency = 0.3}, 0.15)
-        
         local text = textBox.Text
-        if props.Flag then window.flags[props.Flag] = text end
-        
-        if props.Callback or props.callback then
-            local cb = props.Callback or props.callback
-            window:_runGuarded({Name = main.Name, Text = text}, function()
-                cb(text, enterPressed)
-            end)
+        window:_setFlag(props.Flag, text)
+        fireCallback(window, name, getCallback(props), text, enterPressed)
+        if props.RemoveTextAfterFocusLost then
+            textBox.Text = ""
         end
     end)
-    
+
+    window:_setFlag(props.Flag, textBox.Text, true)
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
+    api.Name = name
     api.TextBox = textBox
-    function api:Set(text)
-        textBox.Text = text
+    function api:Set(text) textBox.Text = tostring(text) end
+    function api:SetValue(text)
+        textBox.Text = tostring(text)
+        window:_setFlag(props.Flag, textBox.Text)
+        fireCallback(window, name, getCallback(props), textBox.Text, false)
     end
-    function api:Get()
-        return textBox.Text
-    end
+    function api:Get() return textBox.Text end
     function api:SetError(state)
-        setError(state)
+        if state then
+            themeModule:Tween(inputStroke, {Color = theme.Error or Color3.fromRGB(239, 68, 68), Transparency = 0}, 0.15)
+        else
+            themeModule:Tween(inputStroke, {Color = theme.Border, Transparency = 0.2}, 0.15)
+        end
     end
-    function api:Destroy()
-        if main.Parent then main:Destroy() end
+    function api:Destroy() if main.Parent then main:Destroy() end end
+    if props.Flag then
+        window.flagSetters[props.Flag] = function(v) api:SetValue(v) end
     end
-    
     return api
 end
 
--- COLORPICKER - With preview and organized UI
+-- =========================== COLORPICKER ===========================
 function GGH_Components.CreateColorPicker(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
     local window = tab.window
-    
-    local currentColor = props.Color or props.Default or Color3.fromRGB(255,255,255)
-    if typeof(currentColor) ~= "Color3" then currentColor = Color3.fromRGB(255,255,255) end
-    
-    local main = Instance.new("Frame")
-    main.Name = props.Name or "ColorPicker"
-    main.Size = UDim2.new(1, -16, 0, 46)
-    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28,28,36)
-    main.BackgroundTransparency = 0.1
-    main.BorderSizePixel = 0
-    main.Parent = tab.content
-    main.LayoutOrder = #tab.components + 1
-    themeModule:CreateCorner(main, theme.Radius.Medium)
-    themeModule:CreateStroke(main, theme.Border, 1, 0.3)
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -50, 0, 16)
-    title.Position = UDim2.new(0, 12, 0.5, 0)
+    local name = props.Name or props.name or "ColorPicker"
+
+    local currentColor = props.Color or props.Default or Color3.fromRGB(255, 255, 255)
+    if typeof(currentColor) ~= "Color3" then currentColor = Color3.fromRGB(255, 255, 255) end
+
+    local main = createCard(tab, name, 46)
+
+    local title = makeLabel(main, name, theme.TextPrimary, Enum.Font.GothamMedium, 13,
+        UDim2.new(1, -60, 0, 16), UDim2.new(0, 12, 0.5, 0))
     title.AnchorPoint = Vector2.new(0, 0.5)
-    title.BackgroundTransparency = 1
-    title.Text = props.Name or "ColorPicker"
-    title.TextColor3 = theme.TextPrimary
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Font = Enum.Font.GothamMedium
-    title.TextSize = 13
-    title.Parent = main
-    
+    title.Name = "Title"
+
     local preview = Instance.new("Frame")
     preview.Name = "Preview"
     preview.Size = UDim2.fromOffset(32, 24)
@@ -1357,317 +1333,392 @@ function GGH_Components.CreateColorPicker(tab, props)
     preview.Parent = main
     themeModule:CreateCorner(preview, theme.Radius.Small)
     themeModule:CreateStroke(preview, theme.Border, 1, 0)
-    
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromScale(1,1)
-    button.BackgroundTransparency = 1
-    button.Text = ""
-    button.Parent = main
-    
-    -- Simple color picker popup
+
+    local button = makeClickArea(main)
+
+    local popup
+    local popupConns = {}
+
+    local function closePopup()
+        for _, c in ipairs(popupConns) do
+            pcall(function() c:Disconnect() end)
+        end
+        popupConns = {}
+        if popup then
+            popup:Destroy()
+            popup = nil
+        end
+    end
+    window:RegisterCleanup(closePopup)
+
+    local function applyColor(color, callCallback)
+        currentColor = color
+        preview.BackgroundColor3 = color
+        window:_setFlag(props.Flag, color)
+        if callCallback then
+            fireCallback(window, name, getCallback(props), color)
+        end
+    end
+
     local function openPicker()
-        -- Create simple RGB picker
-        local pickerOverlay = Instance.new("Frame")
-        pickerOverlay.Name = "ColorPickerPopup"
-        pickerOverlay.Size = UDim2.fromOffset(200, 160)
-        pickerOverlay.Position = UDim2.fromScale(0.5, 0.5)
-        pickerOverlay.AnchorPoint = Vector2.new(0.5, 0.5)
-        pickerOverlay.BackgroundColor3 = theme.BackgroundSecondary
-        pickerOverlay.BorderSizePixel = 0
-        pickerOverlay.ZIndex = 10
-        pickerOverlay.Parent = window.screenGui
-        themeModule:CreateCorner(pickerOverlay, theme.Radius.Large)
-        themeModule:CreateStroke(pickerOverlay, theme.Border, 1)
-        themeModule:CreatePadding(pickerOverlay, 12)
-        
-        local r, g, b = math.floor(currentColor.R * 255), math.floor(currentColor.G * 255), math.floor(currentColor.B * 255)
-        
-        local function createRGBSlider(name, value, yPos)
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0, 20, 0, 20)
-            label.Position = UDim2.new(0, 0, 0, yPos)
-            label.BackgroundTransparency = 1
-            label.Text = name
-            label.TextColor3 = theme.TextPrimary
-            label.Font = Enum.Font.GothamBold
-            label.TextSize = 12
-            label.Parent = pickerOverlay
-            
+        if popup then
+            closePopup()
+            return
+        end
+
+        popup = Instance.new("Frame")
+        popup.Name = "ColorPickerPopup"
+        popup.Size = UDim2.fromOffset(220, 170)
+        popup.Position = UDim2.fromScale(0.5, 0.5)
+        popup.AnchorPoint = Vector2.new(0.5, 0.5)
+        popup.BackgroundColor3 = theme.BackgroundSecondary
+        popup.BorderSizePixel = 0
+        popup.Active = true
+        popup.ZIndex = 10
+        popup.Parent = window.screenGui
+        themeModule:CreateCorner(popup, theme.Radius.Large)
+        themeModule:CreateStroke(popup, theme.Border, 1)
+        themeModule:CreatePadding(popup, 12)
+
+        local rgb = {
+            math.floor(currentColor.R * 255 + 0.5),
+            math.floor(currentColor.G * 255 + 0.5),
+            math.floor(currentColor.B * 255 + 0.5)
+        }
+
+        local swatch = Instance.new("Frame")
+        swatch.Name = "Swatch"
+        swatch.Size = UDim2.new(1, 0, 0, 20)
+        swatch.BackgroundColor3 = currentColor
+        swatch.BorderSizePixel = 0
+        swatch.Parent = popup
+        themeModule:CreateCorner(swatch, 4)
+
+        local tracks, fills, boxes = {}, {}, {}
+        local channelNames = {"R", "G", "B"}
+        local channelColors = {Color3.fromRGB(239, 68, 68), Color3.fromRGB(34, 197, 94), Color3.fromRGB(56, 189, 248)}
+
+        local function refresh()
+            swatch.BackgroundColor3 = Color3.fromRGB(rgb[1], rgb[2], rgb[3])
+        end
+
+        local function setChannel(i, value)
+            rgb[i] = math.clamp(math.floor(value + 0.5), 0, 255)
+            fills[i].Size = UDim2.new(rgb[i] / 255, 0, 1, 0)
+            boxes[i].Text = tostring(rgb[i])
+            refresh()
+        end
+
+        local dragIndex = nil
+
+        for i = 1, 3 do
+            local y = 30 * i
+            local label = makeLabel(popup, channelNames[i], theme.TextPrimary, Enum.Font.GothamBold, 12,
+                UDim2.new(0, 20, 0, 20), UDim2.new(0, 0, 0, y))
+            label.Name = "Label" .. channelNames[i]
+
             local sliderTrack = Instance.new("Frame")
-            sliderTrack.Size = UDim2.new(1, -60, 0, 4)
-            sliderTrack.Position = UDim2.new(0, 30, 0, yPos + 8)
-            sliderTrack.BackgroundColor3 = Color3.fromRGB(60,60,75)
-            sliderTrack.Parent = pickerOverlay
+            sliderTrack.Name = "Track" .. channelNames[i]
+            sliderTrack.Size = UDim2.new(1, -72, 0, 4)
+            sliderTrack.Position = UDim2.new(0, 24, 0, y + 8)
+            sliderTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
+            sliderTrack.BorderSizePixel = 0
+            sliderTrack.Parent = popup
             themeModule:CreateCorner(sliderTrack, 2)
-            
+
             local fill = Instance.new("Frame")
-            fill.Size = UDim2.new(value / 255, 0, 1, 0)
-            fill.BackgroundColor3 = (name == "R" and Color3.fromRGB(239,68,68)) or (name == "G" and Color3.fromRGB(34,197,94)) or Color3.fromRGB(56,189,248)
+            fill.Name = "Fill"
+            fill.Size = UDim2.new(rgb[i] / 255, 0, 1, 0)
+            fill.BackgroundColor3 = channelColors[i]
+            fill.BorderSizePixel = 0
             fill.Parent = sliderTrack
             themeModule:CreateCorner(fill, 2)
-            
+
+            local hit = Instance.new("TextButton")
+            hit.Name = "Hit" .. channelNames[i]
+            hit.Size = UDim2.new(1, -72, 0, 20)
+            hit.Position = UDim2.new(0, 24, 0, y)
+            hit.BackgroundTransparency = 1
+            hit.BorderSizePixel = 0
+            hit.Text = ""
+            hit.AutoButtonColor = false
+            hit.Parent = popup
+
             local box = Instance.new("TextBox")
-            box.Size = UDim2.fromOffset(36, 20)
-            box.Position = UDim2.new(1, -36, 0, yPos)
+            box.Name = "Box" .. channelNames[i]
+            box.Size = UDim2.fromOffset(40, 20)
+            box.Position = UDim2.new(1, -40, 0, y)
             box.BackgroundColor3 = theme.BackgroundTertiary
-            box.Text = tostring(value)
+            box.BorderSizePixel = 0
+            box.Text = tostring(rgb[i])
             box.TextColor3 = theme.TextPrimary
             box.Font = Enum.Font.Gotham
             box.TextSize = 11
-            box.Parent = pickerOverlay
+            box.ClearTextOnFocus = false
+            box.Parent = popup
             themeModule:CreateCorner(box, 4)
-            
-            return {track = sliderTrack, fill = fill, box = box, label = label}
+
+            tracks[i], fills[i], boxes[i] = sliderTrack, fill, box
+
+            table.insert(popupConns, hit.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragIndex = i
+                    local r = math.clamp((input.Position.X - sliderTrack.AbsolutePosition.X) / math.max(sliderTrack.AbsoluteSize.X, 1), 0, 1)
+                    setChannel(i, r * 255)
+                end
+            end))
+            table.insert(popupConns, box.FocusLost:Connect(function()
+                setChannel(i, tonumber(box.Text) or rgb[i])
+            end))
         end
-        
-        local rSlider = createRGBSlider("R", r, 0)
-        local gSlider = createRGBSlider("G", g, 30)
-        local bSlider = createRGBSlider("B", b, 60)
-        
+
+        table.insert(popupConns, UserInputService.InputChanged:Connect(function(input)
+            if dragIndex and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local t = tracks[dragIndex]
+                local r = math.clamp((input.Position.X - t.AbsolutePosition.X) / math.max(t.AbsoluteSize.X, 1), 0, 1)
+                setChannel(dragIndex, r * 255)
+            end
+        end))
+        table.insert(popupConns, UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragIndex = nil
+            end
+        end))
+
         local applyBtn = Instance.new("TextButton")
-        applyBtn.Size = UDim2.new(1, 0, 0, 32)
-        applyBtn.Position = UDim2.new(0, 0, 1, -32)
+        applyBtn.Name = "Apply"
+        applyBtn.Size = UDim2.new(1, 0, 0, 28)
+        applyBtn.Position = UDim2.new(0, 0, 1, -28)
         applyBtn.BackgroundColor3 = theme.Accent
+        applyBtn.BorderSizePixel = 0
         applyBtn.Text = "Apply"
-        applyBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        applyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         applyBtn.Font = Enum.Font.GothamBold
         applyBtn.TextSize = 13
-        applyBtn.Parent = pickerOverlay
+        applyBtn.AutoButtonColor = true
+        applyBtn.Parent = popup
         themeModule:CreateCorner(applyBtn, theme.Radius.Medium)
-        
-        window:Connect(applyBtn.MouseButton1Click, function()
-            local nr = tonumber(rSlider.box.Text) or r
-            local ng = tonumber(gSlider.box.Text) or g
-            local nb = tonumber(bSlider.box.Text) or b
-            nr = math.clamp(nr, 0, 255)
-            ng = math.clamp(ng, 0, 255)
-            nb = math.clamp(nb, 0, 255)
-            currentColor = Color3.fromRGB(nr, ng, nb)
-            preview.BackgroundColor3 = currentColor
-            if props.Flag then window.flags[props.Flag] = currentColor end
-            if props.Callback or props.callback then
-                local cb = props.Callback or props.callback
-                window:_runGuarded({Name = main.Name, Color = currentColor}, function()
-                    cb(currentColor)
-                end)
-            end
-            pickerOverlay:Destroy()
-        end)
+
+        table.insert(popupConns, applyBtn.MouseButton1Click:Connect(function()
+            applyColor(Color3.fromRGB(rgb[1], rgb[2], rgb[3]), true)
+            closePopup()
+        end))
     end
-    
+
     window:Connect(button.MouseButton1Click, openPicker)
-    
+
+    window:_setFlag(props.Flag, currentColor, true)
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
+    api.Name = name
     function api:Set(color)
-        currentColor = color
-        preview.BackgroundColor3 = color
+        if typeof(color) == "Color3" then applyColor(color, false) end
     end
-    function api:Get()
-        return currentColor
+    function api:SetValue(color)
+        if typeof(color) == "Color3" then applyColor(color, true) end
     end
+    function api:Get() return currentColor end
     function api:Destroy()
+        closePopup()
         if main.Parent then main:Destroy() end
     end
-    
+    if props.Flag then
+        window.flagSetters[props.Flag] = function(v)
+            if type(v) == "table" and v.__color then
+                api:SetValue(Color3.fromRGB(v.r, v.g, v.b))
+            end
+        end
+    end
     return api
 end
 
--- KEYBIND - Clear display with listening mode
+-- ============================ KEYBIND ============================
 function GGH_Components.CreateKeybind(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
     local window = tab.window
-    
+    local name = props.Name or props.name or "Keybind"
+
     local currentKey = props.CurrentKeybind or props.currentKeybind or props.Default or "K"
     if typeof(currentKey) == "EnumItem" then currentKey = currentKey.Name end
-    
-    local main = Instance.new("Frame")
-    main.Name = props.Name or "Keybind"
-    main.Size = UDim2.new(1, -16, 0, 46)
-    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28,28,36)
-    main.BackgroundTransparency = 0.1
-    main.BorderSizePixel = 0
-    main.Parent = tab.content
-    main.LayoutOrder = #tab.components + 1
-    themeModule:CreateCorner(main, theme.Radius.Medium)
-    themeModule:CreateStroke(main, theme.Border, 1, 0.3)
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -90, 0, 16)
-    title.Position = UDim2.new(0, 12, 0.5, 0)
+    currentKey = tostring(currentKey)
+
+    local main = createCard(tab, name, 46)
+
+    local title = makeLabel(main, name, theme.TextPrimary, Enum.Font.GothamMedium, 13,
+        UDim2.new(1, -100, 0, 16), UDim2.new(0, 12, 0.5, 0))
     title.AnchorPoint = Vector2.new(0, 0.5)
-    title.BackgroundTransparency = 1
-    title.Text = props.Name or "Keybind"
-    title.TextColor3 = theme.TextPrimary
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Font = Enum.Font.GothamMedium
-    title.TextSize = 13
-    title.Parent = main
-    
+    title.Name = "Title"
+
     local keyFrame = Instance.new("Frame")
-    keyFrame.Size = UDim2.fromOffset(70, 26)
-    keyFrame.Position = UDim2.new(1, -80, 0.5, 0)
+    keyFrame.Name = "KeyFrame"
+    keyFrame.Size = UDim2.fromOffset(76, 26)
+    keyFrame.Position = UDim2.new(1, -86, 0.5, 0)
     keyFrame.AnchorPoint = Vector2.new(0, 0.5)
-    keyFrame.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22,22,28)
+    keyFrame.BackgroundColor3 = theme.BackgroundSecondary or Color3.fromRGB(22, 22, 28)
     keyFrame.BorderSizePixel = 0
     keyFrame.Parent = main
     themeModule:CreateCorner(keyFrame, theme.Radius.Small)
     themeModule:CreateStroke(keyFrame, theme.Border, 1, 0.2)
-    
+
     local keyLabel = Instance.new("TextLabel")
-    keyLabel.Size = UDim2.fromScale(1,1)
+    keyLabel.Name = "KeyLabel"
+    keyLabel.Size = UDim2.fromScale(1, 1)
     keyLabel.BackgroundTransparency = 1
-    keyLabel.Text = tostring(currentKey)
+    keyLabel.Text = currentKey
     keyLabel.TextColor3 = theme.TextPrimary
     keyLabel.Font = Enum.Font.GothamMedium
     keyLabel.TextSize = 11
+    keyLabel.TextTruncate = Enum.TextTruncate.AtEnd
     keyLabel.Parent = keyFrame
-    
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromScale(1,1)
-    button.BackgroundTransparency = 1
-    button.Text = ""
-    button.Parent = main
-    
+
+    local button = makeClickArea(main)
     local listening = false
-    local connection
-    
-    local function setKey(newKey)
-        currentKey = newKey
-        keyLabel.Text = tostring(newKey)
-        if props.Flag then window.flags[props.Flag] = newKey end
-        if props.Callback or props.callback then
-            local cb = props.Callback or props.callback
-            window:_runGuarded({Name = main.Name, Key = newKey}, function()
-                cb(newKey)
-            end)
+
+    local function resetVisual()
+        keyLabel.Text = currentKey
+        themeModule:Tween(keyFrame, {BackgroundColor3 = theme.BackgroundSecondary}, 0.15)
+        themeModule:Tween(keyLabel, {TextColor3 = theme.TextPrimary}, 0.15)
+    end
+
+    local function setKey(newKey, notify)
+        if typeof(newKey) == "EnumItem" then newKey = newKey.Name end
+        currentKey = tostring(newKey)
+        keyLabel.Text = currentKey
+        window:_setFlag(props.Flag, currentKey)
+        if notify then
+            fireCallback(window, name, props.OnChanged or props.onChanged, currentKey)
         end
     end
-    
+
     window:Connect(button.MouseButton1Click, function()
         if listening then return end
         listening = true
         keyLabel.Text = "..."
         themeModule:Tween(keyFrame, {BackgroundColor3 = theme.Accent}, 0.15)
-        themeModule:Tween(keyLabel, {TextColor3 = Color3.fromRGB(255,255,255)}, 0.15)
-        
-        if connection then connection:Disconnect() end
-        connection = UserInputService.InputBegan:Connect(function(input, gp)
-            if not listening then return end
-            if gp then return end
-            if input.UserInputType == Enum.UserInputType.Keyboard then
-                if input.KeyCode == Enum.KeyCode.Escape then
-                    -- Cancel
-                    listening = false
-                    keyLabel.Text = tostring(currentKey)
-                    themeModule:Tween(keyFrame, {BackgroundColor3 = theme.BackgroundSecondary}, 0.15)
-                    themeModule:Tween(keyLabel, {TextColor3 = theme.TextPrimary}, 0.15)
-                    if connection then connection:Disconnect() end
-                else
-                    listening = false
-                    setKey(input.KeyCode.Name)
-                    themeModule:Tween(keyFrame, {BackgroundColor3 = theme.BackgroundSecondary}, 0.15)
-                    themeModule:Tween(keyLabel, {TextColor3 = theme.TextPrimary}, 0.15)
-                    if connection then connection:Disconnect() end
-                end
-            end
-        end)
-        
-        window:RegisterCleanup(function()
-            if connection then connection:Disconnect() end
-        end)
+        themeModule:Tween(keyLabel, {TextColor3 = Color3.fromRGB(255, 255, 255)}, 0.15)
     end)
-    
+
+    -- One shared handler: rebinding while listening, firing the callback otherwise
+    window:Connect(UserInputService.InputBegan, function(input, gameProcessed)
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+        if listening then
+            listening = false
+            if input.KeyCode ~= Enum.KeyCode.Escape then
+                setKey(input.KeyCode.Name, true)
+            end
+            resetVisual()
+            return
+        end
+        if gameProcessed then return end
+        if input.KeyCode.Name == currentKey then
+            fireCallback(window, name, getCallback(props), currentKey)
+        end
+    end)
+
+    window:_setFlag(props.Flag, currentKey, true)
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
-    function api:Set(key)
-        setKey(key)
+    api.Name = name
+    function api:Set(key) setKey(key, false) end
+    function api:SetValue(key) setKey(key, true) end
+    function api:Get() return currentKey end
+    function api:Destroy() if main.Parent then main:Destroy() end end
+    if props.Flag then
+        window.flagSetters[props.Flag] = function(v) setKey(v, true) end
     end
-    function api:Get()
-        return currentKey
-    end
-    function api:Destroy()
-        if connection then connection:Disconnect() end
-        if main.Parent then main:Destroy() end
-    end
-    
     return api
 end
 
--- LABEL / TEXT
+-- ============================== LABEL ==============================
 function GGH_Components.CreateLabel(tab, props)
     props = props or {}
     local theme = tab.theme
-    local themeModule = tab.themeModule
-    
+
     local main = Instance.new("Frame")
     main.Name = "Label"
-    main.Size = UDim2.new(1, -16, 0, 32)
+    main.Size = UDim2.new(1, -16, 0, 24)
+    main.AutomaticSize = Enum.AutomaticSize.Y
     main.BackgroundTransparency = 1
-    main.Parent = tab.content
+    main.BorderSizePixel = 0
     main.LayoutOrder = #tab.components + 1
-    
+    main.Parent = tab.content
+
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.fromScale(1,1)
+    label.Size = UDim2.new(1, 0, 0, 24)
+    label.AutomaticSize = Enum.AutomaticSize.Y
     label.BackgroundTransparency = 1
-    label.Text = props.Text or props.text or "Label"
-    label.TextColor3 = theme.TextPrimary
+    label.BorderSizePixel = 0
+    label.Text = tostring(props.Text or props.text or "Label")
+    label.TextColor3 = props.Color or props.color or theme.TextPrimary
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Center
     label.Font = Enum.Font.Gotham
     label.TextSize = 13
     label.TextWrapped = true
     label.Parent = main
-    
+
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
-    function api:SetText(text)
-        label.Text = text
-    end
-    function api:Destroy()
-        if main.Parent then main:Destroy() end
-    end
+    function api:SetText(text) label.Text = tostring(text) end
+    api.Set = api.SetText
+    function api:Destroy() if main.Parent then main:Destroy() end end
     return api
 end
 
--- PARAGRAPH
+-- ============================ PARAGRAPH ============================
 function GGH_Components.CreateParagraph(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
-    
+
     local main = Instance.new("Frame")
     main.Name = "Paragraph"
-    main.Size = UDim2.new(1, -16, 0, 60)
-    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28,28,36)
+    main.Size = UDim2.new(1, -16, 0, 40)
+    main.AutomaticSize = Enum.AutomaticSize.Y
+    main.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28, 28, 36)
     main.BackgroundTransparency = 0.2
-    main.Parent = tab.content
+    main.BorderSizePixel = 0
     main.LayoutOrder = #tab.components + 1
+    main.Parent = tab.content
     themeModule:CreateCorner(main, theme.Radius.Medium)
     themeModule:CreatePadding(main, 10)
-    
+
+    local layout = Instance.new("UIListLayout")
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 4)
+    layout.Parent = main
+
     local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.LayoutOrder = 1
     title.Size = UDim2.new(1, 0, 0, 16)
+    title.AutomaticSize = Enum.AutomaticSize.Y
     title.BackgroundTransparency = 1
-    title.Text = props.Title or props.title or "Title"
+    title.BorderSizePixel = 0
+    title.Text = tostring(props.Title or props.title or "Title")
     title.TextColor3 = theme.TextPrimary
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Font = Enum.Font.GothamBold
     title.TextSize = 13
+    title.TextWrapped = true
     title.Parent = main
-    
+
     local content = Instance.new("TextLabel")
-    content.Size = UDim2.new(1, 0, 0, 32)
-    content.Position = UDim2.new(0, 0, 0, 18)
+    content.Name = "Content"
+    content.LayoutOrder = 2
+    content.Size = UDim2.new(1, 0, 0, 14)
+    content.AutomaticSize = Enum.AutomaticSize.Y
     content.BackgroundTransparency = 1
-    content.Text = props.Content or props.content or ""
+    content.BorderSizePixel = 0
+    content.Text = tostring(props.Content or props.content or "")
     content.TextColor3 = theme.TextSecondary
     content.TextXAlignment = Enum.TextXAlignment.Left
     content.TextYAlignment = Enum.TextYAlignment.Top
@@ -1675,115 +1726,113 @@ function GGH_Components.CreateParagraph(tab, props)
     content.TextSize = 11
     content.TextWrapped = true
     content.Parent = main
-    
+
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
-    function api:SetTitle(t) title.Text = t end
-    function api:SetContent(c) content.Text = c end
+    function api:SetTitle(t) title.Text = tostring(t) end
+    function api:SetContent(c) content.Text = tostring(c) end
+    function api:Set(settings)
+        if type(settings) == "table" then
+            if settings.Title then title.Text = tostring(settings.Title) end
+            if settings.Content then content.Text = tostring(settings.Content) end
+        end
+    end
     function api:Destroy() if main.Parent then main:Destroy() end end
     return api
 end
 
--- DIVIDER
+-- ============================= DIVIDER =============================
 function GGH_Components.CreateDivider(tab, props)
     props = props or {}
     local theme = tab.theme
-    
+
     local main = Instance.new("Frame")
     main.Name = "Divider"
     main.Size = UDim2.new(1, -16, 0, 1)
     main.BackgroundColor3 = theme.Divider or theme.Border
     main.BorderSizePixel = 0
-    main.Parent = tab.content
     main.LayoutOrder = #tab.components + 1
-    
+    main.Parent = tab.content
+
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
     function api:Destroy() if main.Parent then main:Destroy() end end
     return api
 end
 
--- STAT
+-- ============================== STAT ==============================
 function GGH_Components.CreateStat(tab, props)
     props = props or {}
     local theme = tab.theme
-    local themeModule = tab.themeModule
-    
-    local main = Instance.new("Frame")
-    main.Name = props.Name or "Stat"
-    main.Size = UDim2.new(1, -16, 0, 50)
-    main.BackgroundColor3 = theme.BackgroundTertiary
-    main.BackgroundTransparency = 0.1
-    main.Parent = tab.content
-    main.LayoutOrder = #tab.components + 1
-    themeModule:CreateCorner(main, theme.Radius.Medium)
-    themeModule:CreatePadding(main, 12)
-    
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(0.5, 0, 1, 0)
-    title.BackgroundTransparency = 1
-    title.Text = props.Name or "Stat"
-    title.TextColor3 = theme.TextSecondary
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Font = Enum.Font.Gotham
-    title.TextSize = 12
-    title.Parent = main
-    
-    local value = Instance.new("TextLabel")
-    value.Size = UDim2.new(0.5, 0, 1, 0)
-    value.Position = UDim2.new(0.5, 0, 0, 0)
-    value.BackgroundTransparency = 1
-    value.Text = props.Value or "0"
-    value.TextColor3 = theme.TextPrimary
+    local name = props.Name or props.name or "Stat"
+
+    local main = createCard(tab, name, 44)
+
+    makeLabel(main, name, theme.TextSecondary, Enum.Font.Gotham, 12,
+        UDim2.new(0.5, -12, 1, 0), UDim2.new(0, 12, 0, 0)).Name = "Title"
+
+    local value = makeLabel(main, tostring(props.Value or "0"), theme.TextPrimary, Enum.Font.GothamBold, 14,
+        UDim2.new(0.5, -12, 1, 0), UDim2.new(0.5, 0, 0, 0))
+    value.Name = "Value"
     value.TextXAlignment = Enum.TextXAlignment.Right
-    value.Font = Enum.Font.GothamBold
-    value.TextSize = 14
-    value.Parent = main
-    
+
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
     function api:SetValue(v) value.Text = tostring(v) end
+    api.Set = api.SetValue
     function api:Destroy() if main.Parent then main:Destroy() end end
     return api
 end
 
--- PROGRESS
+-- ============================= PROGRESS =============================
 function GGH_Components.CreateProgress(tab, props)
     props = props or {}
     local theme = tab.theme
     local themeModule = tab.themeModule
-    
+    local name = props.Name or props.name or "Progress"
+
     local main = Instance.new("Frame")
-    main.Name = props.Name or "Progress"
+    main.Name = name
     main.Size = UDim2.new(1, -16, 0, 40)
     main.BackgroundTransparency = 1
-    main.Parent = tab.content
+    main.BorderSizePixel = 0
     main.LayoutOrder = #tab.components + 1
-    
+    main.Parent = tab.content
+
+    makeLabel(main, name, theme.TextPrimary, Enum.Font.GothamMedium, 12,
+        UDim2.new(1, 0, 0, 16), UDim2.new(0, 0, 0, 2)).Name = "Title"
+
     local bg = Instance.new("Frame")
+    bg.Name = "Track"
     bg.Size = UDim2.new(1, 0, 0, 6)
-    bg.Position = UDim2.new(0, 0, 1, -8)
-    bg.BackgroundColor3 = theme.SliderTrack or Color3.fromRGB(40,40,55)
+    bg.Position = UDim2.new(0, 0, 1, -10)
+    bg.BackgroundColor3 = theme.SliderTrack or Color3.fromRGB(40, 40, 55)
+    bg.BorderSizePixel = 0
     bg.Parent = main
     themeModule:CreateCorner(bg, 3)
-    
+
     local fill = Instance.new("Frame")
-    fill.Size = UDim2.new((props.Progress or 0.5), 0, 1, 0)
+    fill.Name = "Fill"
+    fill.Size = UDim2.new(math.clamp(props.Progress or 0, 0, 1), 0, 1, 0)
     fill.BackgroundColor3 = theme.Accent
+    fill.BorderSizePixel = 0
     fill.Parent = bg
     themeModule:CreateCorner(fill, 3)
-    
+
     table.insert(tab.components, main)
-    
+
     local api = {}
     api.Frame = main
-    function api:SetProgress(p) themeModule:Tween(fill, {Size = UDim2.new(p,0,1,0)}, 0.25) end
+    function api:SetProgress(p)
+        themeModule:Tween(fill, {Size = UDim2.new(math.clamp(p, 0, 1), 0, 1, 0)}, 0.25)
+    end
+    api.Set = api.SetProgress
     function api:Destroy() if main.Parent then main:Destroy() end end
     return api
 end
@@ -1800,7 +1849,8 @@ function GGH_Tab.new(window, name, icon, theme, themeModule, iconsModule)
     local self = setmetatable({}, GGH_Tab)
     self.window = window
     self.name = name or "Tab"
-    self.iconName = icon or "settings"
+    self.Name = self.name
+    self.iconName = icon or string.sub(self.name, 1, 1)
     self.theme = theme or window.theme
     self.themeModule = themeModule or window.themeModule
     self.iconsModule = iconsModule
@@ -1809,6 +1859,9 @@ function GGH_Tab.new(window, name, icon, theme, themeModule, iconsModule)
     self._componentsModule = GGH_Components
     self:_buildTabButton()
     self:_buildContentArea()
+    -- Aliases used by the window (SelectTab reads Button / Content)
+    self.Button = self.button
+    self.Content = self.content
     return self
 end
 
@@ -1823,9 +1876,10 @@ function GGH_Tab:_buildTabButton()
     self.button.BorderSizePixel = 0
     self.button.Text = ""
     self.button.AutoButtonColor = false
-    self.button.Parent = window.sidebarScroll
     self.button.LayoutOrder = #window.tabs + 1
+    self.button.Parent = window.sidebarScroll
     self.themeModule:CreateCorner(self.button, theme.Radius and theme.Radius.Medium or 8)
+
     self.activeIndicator = Instance.new("Frame")
     self.activeIndicator.Name = "ActiveIndicator"
     self.activeIndicator.Size = UDim2.new(0, 3, 0, 24)
@@ -1836,15 +1890,18 @@ function GGH_Tab:_buildTabButton()
     self.activeIndicator.Visible = false
     self.activeIndicator.Parent = self.button
     self.themeModule:CreateCorner(self.activeIndicator, 2)
-    self.iconFrame = self.iconsModule:CreateIcon(self.iconName, self.button, UDim2.fromOffset(20,20), theme.TextSecondary)
+
+    self.iconFrame = self.iconsModule:CreateIcon(self.iconName, self.button, UDim2.fromOffset(20, 20), theme.TextSecondary)
     self.iconFrame.Name = "TabIcon"
     self.iconFrame.Position = UDim2.new(0, 12, 0.5, 0)
     self.iconFrame.AnchorPoint = Vector2.new(0, 0.5)
+
     self.label = Instance.new("TextLabel")
     self.label.Name = "TabLabel"
     self.label.Size = UDim2.new(1, -50, 1, 0)
     self.label.Position = UDim2.new(0, 42, 0, 0)
     self.label.BackgroundTransparency = 1
+    self.label.BorderSizePixel = 0
     self.label.Text = self.name
     self.label.TextColor3 = theme.TextSecondary
     self.label.TextXAlignment = Enum.TextXAlignment.Left
@@ -1853,9 +1910,10 @@ function GGH_Tab:_buildTabButton()
     self.label.TextSize = 13
     self.label.TextTruncate = Enum.TextTruncate.AtEnd
     self.label.Parent = self.button
+
     window:Connect(self.button.MouseEnter, function()
         if window.selectedTab == self then return end
-        window.themeModule:Tween(self.button, {BackgroundTransparency = 0.4, BackgroundColor3 = theme.SidebarItemHover or Color3.fromRGB(28,28,38)}, 0.15)
+        window.themeModule:Tween(self.button, {BackgroundTransparency = 0.4, BackgroundColor3 = theme.SidebarItemHover or Color3.fromRGB(28, 28, 38)}, 0.15)
         window.themeModule:Tween(self.label, {TextColor3 = theme.TextPrimary}, 0.15)
     end)
     window:Connect(self.button.MouseLeave, function()
@@ -1865,12 +1923,6 @@ function GGH_Tab:_buildTabButton()
     end)
     window:Connect(self.button.MouseButton1Click, function()
         window:SelectTab(self)
-    end)
-    window:Connect(self.button.MouseButton1Down, function()
-        window.themeModule:Tween(self.button, {Size = UDim2.new(1, -10, 0, 42)}, 0.08)
-    end)
-    window:Connect(self.button.MouseButton1Up, function()
-        window.themeModule:Tween(self.button, {Size = UDim2.new(1, -8, 0, 44)}, 0.08)
     end)
 end
 
@@ -1888,12 +1940,15 @@ function GGH_Tab:_buildContentArea()
     self.content.ScrollingDirection = Enum.ScrollingDirection.Y
     self.content.Visible = false
     self.content.Parent = window.contentArea
+
     self.layout = Instance.new("UIListLayout")
     self.layout.FillDirection = Enum.FillDirection.Vertical
     self.layout.SortOrder = Enum.SortOrder.LayoutOrder
     self.layout.Padding = UDim.new(0, 10)
     self.layout.Parent = self.content
+
     self.padding = self.themeModule:CreatePadding(self.content, 16)
+
     window:Connect(self.layout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
         self.content.CanvasSize = UDim2.new(0, 0, 0, self.layout.AbsoluteContentSize.Y + 32)
     end)
@@ -1901,18 +1956,20 @@ end
 
 function GGH_Tab:OnSelected()
     self.activeIndicator.Visible = true
-    self.themeModule:Tween(self.activeIndicator, {Size = UDim2.new(0, 3, 0, 24)}, 0.2)
 end
 
 function GGH_Tab:OnDeselected()
     self.activeIndicator.Visible = false
 end
 
+function GGH_Tab:Select()
+    self.window:SelectTab(self)
+end
+
 function GGH_Tab:SetCompact(compact)
     self.compact = compact
     if compact then
         self.label.Visible = false
-        self.button.Size = UDim2.new(1, -8, 0, 44)
         self.iconFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
         self.iconFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     else
@@ -1923,42 +1980,57 @@ function GGH_Tab:SetCompact(compact)
 end
 
 function GGH_Tab:CreateSection(name)
+    name = tostring(name or "Section")
     local theme = self.theme
     local sectionFrame = Instance.new("Frame")
     sectionFrame.Name = name .. "_Section"
-    sectionFrame.Size = UDim2.new(1, 0, 0, 30)
+    sectionFrame.Size = UDim2.new(1, -16, 0, 30)
     sectionFrame.BackgroundTransparency = 1
-    sectionFrame.Parent = self.content
+    sectionFrame.BorderSizePixel = 0
     sectionFrame.LayoutOrder = #self.components + 1
+    sectionFrame.Parent = self.content
+
     local sectionLabel = Instance.new("TextLabel")
-    sectionLabel.Size = UDim2.new(1, 0, 1, 0)
+    sectionLabel.Size = UDim2.new(1, 0, 1, -2)
     sectionLabel.BackgroundTransparency = 1
+    sectionLabel.BorderSizePixel = 0
     sectionLabel.Text = string.upper(name)
     sectionLabel.TextColor3 = theme.TextTertiary or theme.TextSecondary
     sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
     sectionLabel.Font = Enum.Font.GothamBold
     sectionLabel.TextSize = 11
     sectionLabel.Parent = sectionFrame
+
     local divider = Instance.new("Frame")
     divider.Size = UDim2.new(1, 0, 0, 1)
     divider.Position = UDim2.new(0, 0, 1, -1)
     divider.BackgroundColor3 = theme.Divider or theme.Border
     divider.BorderSizePixel = 0
     divider.Parent = sectionFrame
+
     table.insert(self.components, sectionFrame)
     return {
         Name = name,
         Frame = sectionFrame,
-        SetText = function(_, text) sectionLabel.Text = string.upper(text) end,
+        SetText = function(_, text) sectionLabel.Text = string.upper(tostring(text)) end,
+        Set = function(_, text) sectionLabel.Text = string.upper(tostring(text)) end,
         Destroy = function() if sectionFrame.Parent then sectionFrame:Destroy() end end
     }
 end
 
 function GGH_Tab:_createComponent(typeName, props)
-    if self._componentsModule and self._componentsModule[typeName] then
-        return self._componentsModule[typeName](self, props)
+    local creator = self._componentsModule and self._componentsModule[typeName]
+    if not creator then
+        warn("[GGH] Unknown component: " .. tostring(typeName))
+        return {}
     end
-    return {}
+    if type(props) ~= "table" then props = {} end
+    local ok, result = pcall(creator, self, props)
+    if not ok then
+        warn("[GGH] Failed to create " .. tostring(typeName) .. ": " .. tostring(result))
+        return {}
+    end
+    return result
 end
 
 function GGH_Tab:CreateButton(props) return self:_createComponent("CreateButton", props) end
@@ -1969,7 +2041,11 @@ function GGH_Tab:CreateInput(props) return self:_createComponent("CreateInput", 
 function GGH_Tab:CreateColorPicker(props) return self:_createComponent("CreateColorPicker", props) end
 function GGH_Tab:CreateKeybind(props) return self:_createComponent("CreateKeybind", props) end
 function GGH_Tab:CreateLabel(text, props)
-    props = props or {}
+    if type(text) == "table" then
+        props = text
+        text = props.Text or props.text
+    end
+    if type(props) ~= "table" then props = {} end
     props.Text = text or props.Text or "Label"
     return self:_createComponent("CreateLabel", props)
 end
@@ -1982,21 +2058,17 @@ function GGH_Tab:CreateProgress(props) return self:_createComponent("CreateProgr
 local GGH_Window = (function()
 -- GGH UI Library - GGH_Window
 -- Developer: AM_BRCR7
--- Professional Window System with State Machine & Cleanup Lifecycle
 
 local GGH_Window = {}
 GGH_Window.__index = GGH_Window
 
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 
--- Dependencies (will be required dynamically)
 local GGH_Theme
 local GGH_Icons
 local GGH_Tab
 
--- Window State Machine
 GGH_Window.States = {
     Normal = "Normal",
     Minimized = "Minimized",
@@ -2006,7 +2078,7 @@ GGH_Window.States = {
 
 GGH_Window.Transitions = {
     [GGH_Window.States.Normal] = {GGH_Window.States.Minimized, GGH_Window.States.HeaderOnly, GGH_Window.States.Closed},
-    [GGH_Window.States.Minimized] = {GGH_Window.States.Normal, GGH_Window.States.Closed},
+    [GGH_Window.States.Minimized] = {GGH_Window.States.Normal, GGH_Window.States.HeaderOnly, GGH_Window.States.Closed},
     [GGH_Window.States.HeaderOnly] = {GGH_Window.States.Normal, GGH_Window.States.Minimized, GGH_Window.States.Closed},
     [GGH_Window.States.Closed] = {}
 }
@@ -2020,140 +2092,114 @@ function GGH_Window:CanTransition(from, to)
     return false
 end
 
--- Utility: Get GUI parent (executor compatible)
-local function getGuiParent()
-    local success, result = pcall(function()
-        if gethui then return gethui() end
-        if get_hidden_gui then return get_hidden_gui() end
-        return game:GetService("CoreGui")
-    end)
-    if success and result then return result end
-    
-    local player = game:GetService("Players").LocalPlayer
-    if player then
-        return player:WaitForChild("PlayerGui")
-    end
-    return game:GetService("CoreGui")
-end
-
 function GGH_Window.new(config, dependencies)
     local self = setmetatable({}, GGH_Window)
-    
-    -- Load dependencies
-    if dependencies then
-        GGH_Theme = dependencies.Theme
-        GGH_Icons = dependencies.Icons
-        GGH_Tab = dependencies.Tab
-    else
-        -- Fallback requires
-        local function safeRequire(path)
-            local ok, mod = pcall(require, path)
-            return ok and mod or nil
-        end
-        GGH_Theme = safeRequire(script.Parent:WaitForChild("GGH_Theme")) or safeRequire(script.Parent.Parent:WaitForChild("GGH_Theme"))
-        GGH_Icons = safeRequire(script.Parent:WaitForChild("GGH_Icons")) or safeRequire(script.Parent.Parent:WaitForChild("GGH_Icons"))
-        -- Tab will be lazy loaded
-    end
-    
-    if not GGH_Theme then
-        -- Minimal fallback theme if module missing
-        GGH_Theme = {Default = {
-            Background = Color3.fromRGB(14,14,18),
-            BackgroundSecondary = Color3.fromRGB(22,22,28),
-            BackgroundTertiary = Color3.fromRGB(28,28,36),
-            TextPrimary = Color3.fromRGB(245,245,255),
-            TextSecondary = Color3.fromRGB(160,165,180),
-            Border = Color3.fromRGB(45,45,60),
-            Accent = Color3.fromRGB(56,189,248),
-            AccentHover = Color3.fromRGB(86,209,255),
-            Radius = {Small=6, Medium=8, Large=12, XLarge=16, Full=9999},
-            Spacing = {XS=4, S=8, M=12, L=16, XL=20, XXL=24},
-            Font = {Regular=Font.fromEnum(Enum.Font.Gotham), Bold=Font.fromEnum(Enum.Font.GothamBold)},
-            FontSize = {S=12, M=13, L=14, XL=16, Title=18},
-            Animation = {Fast=0.15, Normal=0.25, Slow=0.35, Easing=Enum.EasingStyle.Quint, Direction=Enum.EasingDirection.Out}
-        }}
-        GGH_Theme.Default = GGH_Theme.Default or GGH_Theme
-        function GGH_Theme:GetTheme() return self.Default end
-        function GGH_Theme:CreateCorner(parent, r) local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,r or 8) c.Parent=parent return c end
-        function GGH_Theme:CreateStroke(parent, col, thick) local s=Instance.new("UIStroke") s.Color=col or Color3.fromRGB(45,45,60) s.Thickness=thick or 1 s.Parent=parent return s end
-        function GGH_Theme:CreatePadding(parent, pad) local p=Instance.new("UIPadding") p.PaddingTop=UDim.new(0,pad or 8) p.PaddingBottom=UDim.new(0,pad or 8) p.PaddingLeft=UDim.new(0,pad or 8) p.PaddingRight=UDim.new(0,pad or 8) p.Parent=parent return p end
-        function GGH_Theme:Tween(obj, props, dur) local tw=TweenService:Create(obj, TweenInfo.new(dur or 0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props) tw:Play() return tw end
-    end
-    
-    if not GGH_Icons then
-        GGH_Icons = {Assets={}, RobloxAssetMap={}, Get=function() return "" end, GetRobloxAsset=function() return "rbxassetid://0" end, CreateIcon=function(_,_,parent) local f=Instance.new("Frame") f.Size=UDim2.fromOffset(20,20) f.BackgroundTransparency=1 f.Parent=parent return f end, ApplyToImageLabel=function() end}
-    end
-    
-    -- Config with defaults
+
+    GGH_Theme = dependencies.Theme
+    GGH_Icons = dependencies.Icons
+    GGH_Tab = dependencies.Tab
+
     config = config or {}
+
+    local toggleKey = config.ToggleUIKeybind or Enum.KeyCode.K
+    if typeof(toggleKey) == "string" then
+        local ok, key = pcall(function() return Enum.KeyCode[toggleKey] end)
+        toggleKey = (ok and key) or Enum.KeyCode.K
+    end
+
+    local saving = config.ConfigurationSaving
+    if type(saving) ~= "table" then
+        saving = {Enabled = false, FolderName = "GGH", FileName = "Config"}
+    end
+
     self.config = {
         Name = config.Name or "GGH UI Library",
         Subtitle = config.Subtitle or "Developed by AM_BRCR7",
-        LoadingTitle = config.LoadingTitle or "GGH UI Library",
-        LoadingSubtitle = config.LoadingSubtitle or "by AM_BRCR7",
         Theme = config.Theme or "GGH Dark",
-        ToggleUIKeybind = config.ToggleUIKeybind or Enum.KeyCode.K,
-        ConfigurationSaving = config.ConfigurationSaving or {Enabled = false, FolderName = "GGH", FileName = "Config"},
+        ToggleUIKeybind = toggleKey,
+        ConfigurationSaving = saving,
         Size = config.Size or UDim2.fromOffset(650, 480),
-        Position = config.Position or UDim2.fromScale(0.5, 0.5),
-        MinSize = Vector2.new(500, 380),
-        MaxSize = Vector2.new(900, 700)
+        Position = config.Position or UDim2.fromScale(0.5, 0.5)
     }
-    
-    -- State
+
     self.state = GGH_Window.States.Normal
-    self.previousState = nil
-    self.previousSize = self.config.Size
-    self.previousPosition = self.config.Position
     self.unloaded = false
     self.destroyed = false
-    
-    -- Collections for cleanup lifecycle
-    self.connections = {} -- RBXScriptConnections
-    self.threads = {} -- Active threads
-    self.cleanupCallbacks = {} -- Functions to call on close
-    self.originalStates = {} -- Original values to restore
-    self.activeFeatures = {} -- Track active toggles/systems
-    self.flags = {} -- For config saving
+
+    self.connections = {}
+    self.threads = {}
+    self.cleanupCallbacks = {}
+    self.originalStates = {}
+    self.activeFeatures = {}
+    self.flags = {}
+    self.flagSetters = {}
     self.tabs = {}
     self.selectedTab = nil
     self.notifications = {}
-    
-    -- Theme
-    local themeModule = GGH_Theme
-    if themeModule.GetTheme then
-        self.theme = themeModule:GetTheme(self.config.Theme)
-    else
-        self.theme = themeModule.Default
-    end
-    self.themeModule = themeModule
-    
-    -- Build UI
+    self._loadingConfig = false
+    self._saveQueued = false
+
+    self.themeModule = GGH_Theme
+    self.theme = GGH_Theme:GetTheme(self.config.Theme)
+
     self:_buildUI()
     self:_setupDragging()
     self:_setupKeybind()
     self:_setupStateMachine()
-    
-    -- Animation in
     self:_animateIn()
-    
+
     return self
 end
 
 function GGH_Window:_buildUI()
     local theme = self.theme
-    
-    -- ScreenGui
-    local guiParent = getGuiParent()
+    local T = self.themeModule
+
     self.screenGui = Instance.new("ScreenGui")
     self.screenGui.Name = "GGH_UI_Library"
     self.screenGui.ResetOnSpawn = false
     self.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     self.screenGui.DisplayOrder = 100
     self.screenGui.IgnoreGuiInset = true
-    self.screenGui.Parent = guiParent
-    
-    -- Main Window Frame
+
+    pcall(function()
+        if syn and syn.protect_gui then syn.protect_gui(self.screenGui) end
+    end)
+
+    -- Find a parent we are actually allowed to use (executor hidden UI, CoreGui, PlayerGui)
+    local parents = {}
+    pcall(function()
+        if typeof(gethui) == "function" then
+            table.insert(parents, (gethui()))
+        end
+    end)
+    pcall(function()
+        table.insert(parents, (game:GetService("CoreGui")))
+    end)
+    pcall(function()
+        local lp = game:GetService("Players").LocalPlayer
+        if lp then
+            table.insert(parents, lp:WaitForChild("PlayerGui", 5))
+        end
+    end)
+
+    for _, candidate in ipairs(parents) do
+        if candidate then
+            -- remove an older copy so re-executing the script never duplicates the UI
+            pcall(function()
+                local old = candidate:FindFirstChild("GGH_UI_Library")
+                if old then old:Destroy() end
+            end)
+            local ok = pcall(function()
+                self.screenGui.Parent = candidate
+            end)
+            if ok and self.screenGui.Parent == candidate then
+                break
+            end
+        end
+    end
+
+    -- Main window
     self.mainFrame = Instance.new("Frame")
     self.mainFrame.Name = "GGH_Window"
     self.mainFrame.Size = self.config.Size
@@ -2161,14 +2207,13 @@ function GGH_Window:_buildUI()
     self.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     self.mainFrame.BackgroundColor3 = theme.Background
     self.mainFrame.BorderSizePixel = 0
-    self.mainFrame.ClipsDescendants = false
     self.mainFrame.Parent = self.screenGui
     self.mainFrame:SetAttribute("ThemeRole", "Background")
-    
-    self.themeModule:CreateCorner(self.mainFrame, theme.Radius and theme.Radius.Large or 12)
-    local stroke = self.themeModule:CreateStroke(self.mainFrame, theme.Border, 1, 0)
+
+    T:CreateCorner(self.mainFrame, theme.Radius.Large)
+    local stroke = T:CreateStroke(self.mainFrame, theme.Border, 1, 0)
     stroke.Name = "WindowStroke"
-    
+
     -- Header
     self.header = Instance.new("Frame")
     self.header.Name = "Header"
@@ -2177,76 +2222,83 @@ function GGH_Window:_buildUI()
     self.header.BorderSizePixel = 0
     self.header.Parent = self.mainFrame
     self.header:SetAttribute("ThemeRole", "BackgroundSecondary")
-    
-    local headerCorner = self.themeModule:CreateCorner(self.header, theme.Radius and theme.Radius.Large or 12)
-    -- Fix bottom corners to be square when content below
-    local headerFix = Instance.new("Frame")
-    headerFix.Name = "HeaderFix"
-    headerFix.Size = UDim2.new(1, 0, 0, 12)
-    headerFix.Position = UDim2.new(0, 0, 1, -12)
-    headerFix.BackgroundColor3 = theme.BackgroundSecondary or theme.Background
-    headerFix.BorderSizePixel = 0
-    headerFix.Parent = self.header
-    
-    -- Header Content
-    local headerPadding = self.themeModule:CreatePadding(self.header, 0)
+    T:CreateCorner(self.header, theme.Radius.Large)
+
+    -- Square off the bottom corners of the header
+    self.headerFix = Instance.new("Frame")
+    self.headerFix.Name = "HeaderFix"
+    self.headerFix.Size = UDim2.new(1, 0, 0, 12)
+    self.headerFix.Position = UDim2.new(0, 0, 1, -12)
+    self.headerFix.BackgroundColor3 = theme.BackgroundSecondary or theme.Background
+    self.headerFix.BorderSizePixel = 0
+    self.headerFix.Parent = self.header
+    self.headerFix:SetAttribute("ThemeRole", "BackgroundSecondary")
+
+    local headerInner = Instance.new("Frame")
+    headerInner.Name = "HeaderInner"
+    headerInner.Size = UDim2.fromScale(1, 1)
+    headerInner.BackgroundTransparency = 1
+    headerInner.BorderSizePixel = 0
+    headerInner.Parent = self.header
+    local headerPadding = T:CreatePadding(headerInner, 0)
     headerPadding.PaddingLeft = UDim.new(0, 16)
     headerPadding.PaddingRight = UDim.new(0, 12)
     headerPadding.PaddingTop = UDim.new(0, 10)
     headerPadding.PaddingBottom = UDim.new(0, 10)
-    
-    -- Logo + Title Container
+
     local titleContainer = Instance.new("Frame")
     titleContainer.Name = "TitleContainer"
-    titleContainer.Size = UDim2.new(1, -140, 1, 0)
+    titleContainer.Size = UDim2.new(1, -120, 1, 0)
     titleContainer.BackgroundTransparency = 1
-    titleContainer.Parent = self.header
-    
-    -- GGH Logo
-    local logoSize = UDim2.fromOffset(36, 36)
-    self.logo = GGH_Icons:CreateIcon("ggh_logo", titleContainer, logoSize, theme.TextPrimary)
+    titleContainer.BorderSizePixel = 0
+    titleContainer.Parent = headerInner
+
+    self.logo = GGH_Icons:CreateIcon("ggh_logo", titleContainer, UDim2.fromOffset(36, 36), theme.TextPrimary)
     self.logo.Name = "GGH_Logo"
     self.logo.Position = UDim2.new(0, 0, 0.5, 0)
     self.logo.AnchorPoint = Vector2.new(0, 0.5)
-    
-    -- Title
+
     self.titleLabel = Instance.new("TextLabel")
     self.titleLabel.Name = "Title"
-    self.titleLabel.Size = UDim2.new(1, -44, 0, 20)
+    self.titleLabel.Size = UDim2.new(1, -44, 0, 18)
     self.titleLabel.Position = UDim2.new(0, 44, 0, 0)
     self.titleLabel.BackgroundTransparency = 1
+    self.titleLabel.BorderSizePixel = 0
     self.titleLabel.Text = self.config.Name
     self.titleLabel.TextColor3 = theme.TextPrimary
     self.titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     self.titleLabel.TextYAlignment = Enum.TextYAlignment.Center
     self.titleLabel.Font = Enum.Font.GothamBold
     self.titleLabel.TextSize = 15
+    self.titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
     self.titleLabel.Parent = titleContainer
     self.titleLabel:SetAttribute("ThemeRole", "TextPrimary")
-    
-    -- Subtitle (Developer)
+
     self.subtitleLabel = Instance.new("TextLabel")
     self.subtitleLabel.Name = "Subtitle"
     self.subtitleLabel.Size = UDim2.new(1, -44, 0, 14)
     self.subtitleLabel.Position = UDim2.new(0, 44, 0, 20)
     self.subtitleLabel.BackgroundTransparency = 1
+    self.subtitleLabel.BorderSizePixel = 0
     self.subtitleLabel.Text = self.config.Subtitle
     self.subtitleLabel.TextColor3 = theme.TextSecondary
     self.subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     self.subtitleLabel.Font = Enum.Font.Gotham
     self.subtitleLabel.TextSize = 11
+    self.subtitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
     self.subtitleLabel.Parent = titleContainer
     self.subtitleLabel:SetAttribute("ThemeRole", "TextSecondary")
-    
-    -- Window Controls Container (3 independent buttons)
+
+    -- Window controls
     self.controlsContainer = Instance.new("Frame")
     self.controlsContainer.Name = "WindowControls"
-    self.controlsContainer.Size = UDim2.fromOffset(120, 32)
-    self.controlsContainer.Position = UDim2.new(1, -8, 0.5, 0)
+    self.controlsContainer.Size = UDim2.fromOffset(112, 32)
+    self.controlsContainer.Position = UDim2.new(1, 0, 0.5, 0)
     self.controlsContainer.AnchorPoint = Vector2.new(1, 0.5)
     self.controlsContainer.BackgroundTransparency = 1
-    self.controlsContainer.Parent = self.header
-    
+    self.controlsContainer.BorderSizePixel = 0
+    self.controlsContainer.Parent = headerInner
+
     local controlsLayout = Instance.new("UIListLayout")
     controlsLayout.FillDirection = Enum.FillDirection.Horizontal
     controlsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
@@ -2254,123 +2306,127 @@ function GGH_Window:_buildUI()
     controlsLayout.Padding = UDim.new(0, 6)
     controlsLayout.SortOrder = Enum.SortOrder.LayoutOrder
     controlsLayout.Parent = self.controlsContainer
-    
-    -- Button 1: Minimize (Full minimize)
+
     self.minimizeButton = self:_createControlButton("Minimize", "minimize", 1, theme)
-    -- Button 2: Header-only
-    self.headerOnlyButton = self:_createControlButton("HeaderOnly", "layout_sidebar", 2, theme)
-    -- Button 3: Close
+    self.headerOnlyButton = self:_createControlButton("HeaderOnly", "header_only", 2, theme)
     self.closeButton = self:_createControlButton("Close", "close", 3, theme, true)
-    
-    -- Main Content Container (holds sidebar + content)
+
+    -- Content container (sidebar + content)
     self.contentContainer = Instance.new("Frame")
     self.contentContainer.Name = "ContentContainer"
     self.contentContainer.Size = UDim2.new(1, 0, 1, -56)
     self.contentContainer.Position = UDim2.new(0, 0, 0, 56)
     self.contentContainer.BackgroundTransparency = 1
+    self.contentContainer.BorderSizePixel = 0
     self.contentContainer.ClipsDescendants = true
     self.contentContainer.Parent = self.mainFrame
-    
-    -- Sidebar (Vertical Left)
+
+    -- Sidebar
+    local sidebarColor = theme.SidebarBackground or Color3.fromRGB(18, 18, 24)
     self.sidebar = Instance.new("Frame")
     self.sidebar.Name = "Sidebar"
     self.sidebar.Size = UDim2.new(0, 200, 1, 0)
-    self.sidebar.Position = UDim2.new(0, 0, 0, 0)
-    self.sidebar.BackgroundColor3 = theme.SidebarBackground or Color3.fromRGB(18,18,24)
+    self.sidebar.BackgroundColor3 = sidebarColor
     self.sidebar.BorderSizePixel = 0
     self.sidebar.Parent = self.contentContainer
-    self.sidebar:SetAttribute("ThemeRole", "Sidebar")
-    
-    self.themeModule:CreateCorner(self.sidebar, 0)
-    -- Fix top-right corner to be square
-    local sidebarCornerFix = Instance.new("Frame")
-    sidebarCornerFix.Name = "CornerFix"
-    sidebarCornerFix.Size = UDim2.new(0, 12, 0, 12)
-    sidebarCornerFix.Position = UDim2.new(1, -12, 0, 0)
-    sidebarCornerFix.BackgroundColor3 = theme.SidebarBackground or Color3.fromRGB(18,18,24)
-    sidebarCornerFix.BorderSizePixel = 0
-    sidebarCornerFix.Parent = self.sidebar
-    
-    local sidebarInnerFix = Instance.new("Frame")
-    sidebarInnerFix.Size = UDim2.fromScale(1,1)
-    sidebarInnerFix.BackgroundColor3 = theme.SidebarBackground or Color3.fromRGB(18,18,24)
-    sidebarInnerFix.BorderSizePixel = 0
-    sidebarInnerFix.Parent = sidebarCornerFix
-    self.themeModule:CreateCorner(sidebarInnerFix, 8)
-    
-    -- Sidebar Padding
-    self.sidebarPadding = self.themeModule:CreatePadding(self.sidebar, 8)
-    self.sidebarPadding.PaddingTop = UDim.new(0, 12)
-    
-    -- Sidebar Scrolling
+    T:CreateCorner(self.sidebar, theme.Radius.Large)
+
+    local patchTop = Instance.new("Frame")
+    patchTop.Name = "PatchTop"
+    patchTop.Size = UDim2.new(1, 0, 0, 14)
+    patchTop.BackgroundColor3 = sidebarColor
+    patchTop.BorderSizePixel = 0
+    patchTop.Parent = self.sidebar
+
+    local patchRight = Instance.new("Frame")
+    patchRight.Name = "PatchRight"
+    patchRight.Size = UDim2.new(0, 14, 1, 0)
+    patchRight.Position = UDim2.new(1, -14, 0, 0)
+    patchRight.BackgroundColor3 = sidebarColor
+    patchRight.BorderSizePixel = 0
+    patchRight.Parent = self.sidebar
+
+    local sidebarInner = Instance.new("Frame")
+    sidebarInner.Name = "SidebarInner"
+    sidebarInner.Size = UDim2.fromScale(1, 1)
+    sidebarInner.BackgroundTransparency = 1
+    sidebarInner.BorderSizePixel = 0
+    sidebarInner.Parent = self.sidebar
+    local sidebarPadding = T:CreatePadding(sidebarInner, 8)
+    sidebarPadding.PaddingTop = UDim.new(0, 12)
+
     self.sidebarScroll = Instance.new("ScrollingFrame")
     self.sidebarScroll.Name = "TabList"
     self.sidebarScroll.Size = UDim2.new(1, 0, 1, -50)
-    self.sidebarScroll.Position = UDim2.new(0, 0, 0, 0)
     self.sidebarScroll.BackgroundTransparency = 1
     self.sidebarScroll.BorderSizePixel = 0
     self.sidebarScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
     self.sidebarScroll.ScrollBarThickness = 2
     self.sidebarScroll.ScrollBarImageColor3 = theme.Border
     self.sidebarScroll.ScrollingDirection = Enum.ScrollingDirection.Y
-    self.sidebarScroll.Parent = self.sidebar
-    
+    self.sidebarScroll.Parent = sidebarInner
+
     self.sidebarListLayout = Instance.new("UIListLayout")
     self.sidebarListLayout.FillDirection = Enum.FillDirection.Vertical
     self.sidebarListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     self.sidebarListLayout.Padding = UDim.new(0, 4)
     self.sidebarListLayout.Parent = self.sidebarScroll
-    
-    -- Sidebar Bottom: Collapse Toggle + Settings
+
+    self:Connect(self.sidebarListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+        self.sidebarScroll.CanvasSize = UDim2.new(0, 0, 0, self.sidebarListLayout.AbsoluteContentSize.Y + 8)
+    end)
+
     self.sidebarBottom = Instance.new("Frame")
     self.sidebarBottom.Name = "SidebarBottom"
     self.sidebarBottom.Size = UDim2.new(1, 0, 0, 42)
     self.sidebarBottom.Position = UDim2.new(0, 0, 1, -42)
     self.sidebarBottom.BackgroundTransparency = 1
-    self.sidebarBottom.Parent = self.sidebar
-    
+    self.sidebarBottom.BorderSizePixel = 0
+    self.sidebarBottom.Parent = sidebarInner
+
     self.collapseButton = Instance.new("TextButton")
     self.collapseButton.Name = "CollapseToggle"
-    self.collapseButton.Size = UDim2.new(1, 0, 1, 0)
-    self.collapseButton.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28,28,36)
+    self.collapseButton.Size = UDim2.fromScale(1, 1)
+    self.collapseButton.BackgroundColor3 = theme.BackgroundTertiary or Color3.fromRGB(28, 28, 36)
     self.collapseButton.BackgroundTransparency = 0.5
+    self.collapseButton.BorderSizePixel = 0
     self.collapseButton.Text = ""
     self.collapseButton.AutoButtonColor = false
     self.collapseButton.Parent = self.sidebarBottom
-    self.themeModule:CreateCorner(self.collapseButton, theme.Radius and theme.Radius.Medium or 8)
-    
+    T:CreateCorner(self.collapseButton, theme.Radius.Medium)
+
     local collapseIcon = GGH_Icons:CreateIcon("layout_sidebar", self.collapseButton, UDim2.fromOffset(18, 18), theme.TextSecondary)
     collapseIcon.Position = UDim2.fromScale(0.5, 0.5)
     collapseIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    
-    -- Content Area (Right side)
+
+    -- Content area (transparent: the window background shows through)
     self.contentArea = Instance.new("Frame")
     self.contentArea.Name = "ContentArea"
     self.contentArea.Size = UDim2.new(1, -200, 1, 0)
     self.contentArea.Position = UDim2.new(0, 200, 0, 0)
-    self.contentArea.BackgroundColor3 = theme.Background
+    self.contentArea.BackgroundTransparency = 1
     self.contentArea.BorderSizePixel = 0
+    self.contentArea.ClipsDescendants = true
     self.contentArea.Parent = self.contentContainer
-    self.contentArea:SetAttribute("ThemeRole", "Background")
-    
-    -- Notification Container (overlay)
+
+    -- Notifications overlay
     self.notificationContainer = Instance.new("Frame")
     self.notificationContainer.Name = "Notifications"
     self.notificationContainer.Size = UDim2.fromScale(1, 1)
     self.notificationContainer.BackgroundTransparency = 1
+    self.notificationContainer.BorderSizePixel = 0
     self.notificationContainer.ZIndex = 10
     self.notificationContainer.Parent = self.screenGui
-    
+
     local notifList = Instance.new("UIListLayout")
     notifList.FillDirection = Enum.FillDirection.Vertical
     notifList.HorizontalAlignment = Enum.HorizontalAlignment.Right
     notifList.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    notifList.SortOrder = Enum.SortOrder.LayoutOrder
     notifList.Padding = UDim.new(0, 8)
     notifList.Parent = self.notificationContainer
-    
-    self.themeModule:CreatePadding(self.notificationContainer, 16)
-    
-    -- Internal tracking for compact mode
+    T:CreatePadding(self.notificationContainer, 16)
+
     self.sidebarCompact = false
     self.sidebarWidthExpanded = 200
     self.sidebarWidthCompact = 60
@@ -2381,101 +2437,71 @@ function GGH_Window:_createControlButton(name, iconName, order, theme, isClose)
     button.Name = name .. "Button"
     button.Size = UDim2.fromOffset(32, 28)
     button.LayoutOrder = order
-    button.BackgroundColor3 = isClose and Color3.fromRGB(239, 68, 68) or theme.BackgroundTertiary or Color3.fromRGB(32,32,44)
-    button.BackgroundTransparency = isClose and 0.9 or 0.6
+    button.BackgroundColor3 = isClose and Color3.fromRGB(239, 68, 68) or theme.BackgroundTertiary or Color3.fromRGB(32, 32, 44)
+    button.BackgroundTransparency = isClose and 0.85 or 0.6
+    button.BorderSizePixel = 0
     button.Text = ""
     button.AutoButtonColor = false
     button.Parent = self.controlsContainer
-    
-    self.themeModule:CreateCorner(button, theme.Radius and theme.Radius.Small or 6)
-    
-    local icon = GGH_Icons:CreateIcon(iconName, button, UDim2.fromOffset(16, 16), isClose and Color3.fromRGB(239,68,68) or theme.TextSecondary)
+
+    self.themeModule:CreateCorner(button, theme.Radius.Small)
+
+    local baseColor = isClose and Color3.fromRGB(239, 68, 68) or theme.TextSecondary
+    local icon = GGH_Icons:CreateIcon(iconName, button, UDim2.fromOffset(14, 14), baseColor)
     icon.Name = "Icon"
     icon.Position = UDim2.fromScale(0.5, 0.5)
     icon.AnchorPoint = Vector2.new(0.5, 0.5)
-    
-    -- Hover effects
+
     self:Connect(button.MouseEnter, function()
         if not self:_isInteractive() then return end
         if isClose then
-            self.themeModule:Tween(button, {BackgroundTransparency = 0.2, BackgroundColor3 = Color3.fromRGB(239,68,68)}, 0.15)
-            self.themeModule:Tween(icon, {Rotation = 90}, 0.15)
-            -- Change icon color to white
-            for _, desc in ipairs(icon:GetDescendants()) do
-                if desc:IsA("ImageLabel") then
-                    self.themeModule:Tween(desc, {ImageColor3 = Color3.fromRGB(255,255,255)}, 0.15)
-                end
-            end
+            self.themeModule:Tween(button, {BackgroundTransparency = 0.1}, 0.15)
+            GGH_Icons:SetColor(icon, Color3.fromRGB(255, 255, 255))
         else
-            self.themeModule:Tween(button, {BackgroundTransparency = 0.2, BackgroundColor3 = theme.BackgroundHover or Color3.fromRGB(40,40,56)}, 0.15)
+            self.themeModule:Tween(button, {BackgroundTransparency = 0.2, BackgroundColor3 = theme.BackgroundHover or Color3.fromRGB(40, 40, 56)}, 0.15)
+            GGH_Icons:SetColor(icon, theme.TextPrimary)
         end
     end)
-    
     self:Connect(button.MouseLeave, function()
         if isClose then
-            self.themeModule:Tween(button, {BackgroundTransparency = 0.9, BackgroundColor3 = Color3.fromRGB(239, 68, 68)}, 0.15)
-            self.themeModule:Tween(icon, {Rotation = 0}, 0.15)
-            for _, desc in ipairs(icon:GetDescendants()) do
-                if desc:IsA("ImageLabel") then
-                    self.themeModule:Tween(desc, {ImageColor3 = Color3.fromRGB(239,68,68)}, 0.15)
-                end
-            end
+            self.themeModule:Tween(button, {BackgroundTransparency = 0.85}, 0.15)
         else
             self.themeModule:Tween(button, {BackgroundTransparency = 0.6}, 0.15)
         end
+        GGH_Icons:SetColor(icon, baseColor)
     end)
-    
-    self:Connect(button.MouseButton1Down, function()
-        self.themeModule:Tween(button, {Size = UDim2.fromOffset(30, 26)}, 0.08)
-    end)
-    
-    self:Connect(button.MouseButton1Up, function()
-        self.themeModule:Tween(button, {Size = UDim2.fromOffset(32, 28)}, 0.08)
-    end)
-    
-    -- Click handlers (assigned later in _setupStateMachine)
+
     button:SetAttribute("ControlType", name)
-    
     return button
 end
 
 function GGH_Window:_setupDragging()
     local dragging = false
     local dragStart, startPos
-    
+
     self:Connect(self.header.InputBegan, function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if self.state ~= self.States.Normal and self.state ~= self.States.HeaderOnly then return end
+            if self.state == self.States.Closed then return end
             dragging = true
             dragStart = input.Position
             startPos = self.mainFrame.Position
-            
-            local conn
-            conn = UserInputService.InputChanged:Connect(function(inp)
-                if inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch then
-                    if dragging then
-                        local delta = inp.Position - dragStart
-                        local newPos = UDim2.new(
-                            startPos.X.Scale,
-                            startPos.X.Offset + delta.X,
-                            startPos.Y.Scale,
-                            startPos.Y.Offset + delta.Y
-                        )
-                        self.mainFrame.Position = newPos
-                    end
-                end
-            end)
-            
-            local function endDrag()
-                dragging = false
-                if conn then conn:Disconnect() end
-            end
-            
-            self:Connect(input.Changed, function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    endDrag()
-                end
-            end)
+        end
+    end)
+
+    self:Connect(UserInputService.InputChanged, function(input)
+        if not dragging then return end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            local delta = input.Position - dragStart
+            self.mainFrame.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    self:Connect(UserInputService.InputEnded, function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
         end
     end)
 end
@@ -2483,6 +2509,7 @@ end
 function GGH_Window:_setupKeybind()
     self:Connect(UserInputService.InputBegan, function(input, gameProcessed)
         if gameProcessed then return end
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
         if input.KeyCode == self.config.ToggleUIKeybind then
             if self.state == self.States.Minimized then
                 self:Restore()
@@ -2491,21 +2518,18 @@ function GGH_Window:_setupKeybind()
             end
         end
     end)
-    
-    -- Collapse toggle
+
     self:Connect(self.collapseButton.MouseButton1Click, function()
         self:ToggleSidebarCompact()
     end)
 end
 
 function GGH_Window:_setupStateMachine()
-    -- Close Button -> Confirmation
     self:Connect(self.closeButton.MouseButton1Click, function()
         if self.state == self.States.Closed then return end
         self:ShowCloseConfirmation()
     end)
-    
-    -- Minimize Full
+
     self:Connect(self.minimizeButton.MouseButton1Click, function()
         if self.state == self.States.Minimized then
             self:Restore()
@@ -2513,14 +2537,9 @@ function GGH_Window:_setupStateMachine()
             self:Minimize()
         end
     end)
-    
-    -- Header-only
+
     self:Connect(self.headerOnlyButton.MouseButton1Click, function()
-        if self.state == self.States.HeaderOnly then
-            self:Restore()
-        else
-            self:ToggleHeaderOnly()
-        end
+        self:ToggleHeaderOnly()
     end)
 end
 
@@ -2529,88 +2548,68 @@ function GGH_Window:_isInteractive()
 end
 
 function GGH_Window:_animateIn()
+    local T = self.themeModule
+    self.mainFrame.ClipsDescendants = true
     self.mainFrame.Size = UDim2.fromOffset(0, 0)
     self.mainFrame.BackgroundTransparency = 1
-    self.themeModule:Tween(self.mainFrame, {Size = self.config.Size, BackgroundTransparency = 0}, 0.35)
-    task.wait(0.05)
-    self.mainFrame.ClipsDescendants = false
+    T:Tween(self.mainFrame, {Size = self.config.Size, BackgroundTransparency = 0}, 0.35)
+    task.delay(0.4, function()
+        if self.mainFrame and self.mainFrame.Parent then
+            self.mainFrame.ClipsDescendants = false
+        end
+    end)
 end
 
--- State Transitions
+-- Applies a window state (Normal / Minimized / HeaderOnly)
+function GGH_Window:_applyState(state)
+    if self.state == self.States.Closed or self.destroyed then return end
+    local T = self.themeModule
+    local full = self.config.Size
+    self.state = state
+
+    if state == self.States.Normal then
+        T:Tween(self.mainFrame, {Size = full}, 0.3)
+        T:Tween(self.contentContainer, {Size = UDim2.new(1, 0, 1, -56)}, 0.3)
+        self.headerFix.Visible = true
+    elseif state == self.States.Minimized then
+        T:Tween(self.contentContainer, {Size = UDim2.new(1, 0, 0, 0)}, 0.25)
+        T:Tween(self.mainFrame, {Size = UDim2.fromOffset(300, 56)}, 0.3)
+        self.headerFix.Visible = false
+    elseif state == self.States.HeaderOnly then
+        T:Tween(self.contentContainer, {Size = UDim2.new(1, 0, 0, 0)}, 0.25)
+        T:Tween(self.mainFrame, {Size = UDim2.new(full.X.Scale, full.X.Offset, 0, 56)}, 0.3)
+        self.headerFix.Visible = false
+    end
+
+    self.minimizeButton:SetAttribute("Minimized", state == self.States.Minimized)
+    self.headerOnlyButton:SetAttribute("HeaderOnly", state == self.States.HeaderOnly)
+end
+
 function GGH_Window:Minimize()
-    if not self:CanTransition(self.state, self.States.Minimized) then return end
     if self.state == self.States.Minimized then return end
-    
-    self.previousState = self.state
-    self.previousSize = self.mainFrame.Size
-    self.previousPosition = self.mainFrame.Position
-    self.state = self.States.Minimized
-    
-    -- Animate to minimized bar
-    local minimizedSize = UDim2.fromOffset(240, 48)
-    self.themeModule:Tween(self.contentContainer, {Size = UDim2.new(1,0,0,0)}, 0.25)
-    self.themeModule:Tween(self.mainFrame, {Size = minimizedSize}, 0.3)
-    
-    -- Show minimized indicator
-    self.minimizeButton:SetAttribute("Minimized", true)
-    
-    -- Do NOT stop features - per requirement
+    self:_applyState(self.States.Minimized)
 end
 
 function GGH_Window:Restore()
     if self.state == self.States.Normal then return end
-    if self.state == self.States.Closed then return end
-    
-    local targetState = self.States.Normal
-    if not self:CanTransition(self.state, targetState) then
-        -- Try to go to Normal from any via intermediate if needed
-        if self.state == self.States.Minimized or self.state == self.States.HeaderOnly then
-            -- Allowed
-        else
-            return
-        end
-    end
-    
-    self.state = targetState
-    
-    -- Restore size
-    local restoreSize = self.previousSize or self.config.Size
-    self.themeModule:Tween(self.mainFrame, {Size = restoreSize}, 0.3)
-    task.wait(0.1)
-    self.themeModule:Tween(self.contentContainer, {Size = UDim2.new(1,0,1,-56)}, 0.25)
-    
-    self.minimizeButton:SetAttribute("Minimized", false)
-    self.headerOnlyButton:SetAttribute("HeaderOnly", false)
+    self:_applyState(self.States.Normal)
 end
 
 function GGH_Window:ToggleHeaderOnly()
     if self.state == self.States.HeaderOnly then
-        self:Restore()
-        return
+        self:_applyState(self.States.Normal)
+    else
+        self:_applyState(self.States.HeaderOnly)
     end
-    
-    if not self:CanTransition(self.state, self.States.HeaderOnly) then return end
-    
-    self.previousState = self.state
-    self.previousSize = self.mainFrame.Size
-    self.state = self.States.HeaderOnly
-    
-    -- Keep header, hide tabs and content only
-    self.themeModule:Tween(self.contentContainer, {Size = UDim2.new(1,0,0,0)}, 0.25)
-    task.wait(0.05)
-    self.themeModule:Tween(self.mainFrame, {Size = UDim2.new(self.mainFrame.Size.X, UDim.new(0, 56))}, 0.3)
-    
-    self.headerOnlyButton:SetAttribute("HeaderOnly", true)
 end
 
 function GGH_Window:ToggleSidebarCompact()
     self.sidebarCompact = not self.sidebarCompact
     local targetWidth = self.sidebarCompact and self.sidebarWidthCompact or self.sidebarWidthExpanded
-    
+
     self.themeModule:Tween(self.sidebar, {Size = UDim2.new(0, targetWidth, 1, 0)}, 0.25)
     self.themeModule:Tween(self.contentArea, {Size = UDim2.new(1, -targetWidth, 1, 0), Position = UDim2.new(0, targetWidth, 0, 0)}, 0.25)
-    
-    -- Update tab buttons for compact mode
+
     for _, tab in ipairs(self.tabs) do
         if tab.SetCompact then
             tab:SetCompact(self.sidebarCompact)
@@ -2618,27 +2617,31 @@ function GGH_Window:ToggleSidebarCompact()
     end
 end
 
+
 function GGH_Window:ShowCloseConfirmation()
     if self.confirmationFrame and self.confirmationFrame.Parent then
         return -- Already showing
     end
     
     local theme = self.theme
+    if not theme.Overlay then theme = self.themeModule.Default end
     
     -- Overlay
     local overlay = Instance.new("Frame")
     overlay.Name = "CloseConfirmationOverlay"
     overlay.Size = UDim2.fromScale(1,1)
     overlay.BackgroundColor3 = theme.Overlay
-    overlay.BackgroundTransparency = theme.OverlayTransparency or 0.6
+    overlay.BackgroundTransparency = 1
+    overlay.Active = true
     overlay.BorderSizePixel = 0
     overlay.ZIndex = 20
     overlay.Parent = self.screenGui
+    self.confirmationFrame = overlay
     
     -- Confirmation Dialog
     local dialog = Instance.new("Frame")
     dialog.Name = "ConfirmationDialog"
-    dialog.Size = UDim2.fromOffset(340, 180)
+    dialog.Size = UDim2.fromOffset(340, 200)
     dialog.Position = UDim2.fromScale(0.5, 0.5)
     dialog.AnchorPoint = Vector2.new(0.5, 0.5)
     dialog.BackgroundColor3 = theme.BackgroundSecondary
@@ -2729,13 +2732,13 @@ function GGH_Window:ShowCloseConfirmation()
     self.themeModule:CreateCorner(closeButton, theme.Radius and theme.Radius.Medium or 8)
     
     -- Animations
-    dialog.Size = UDim2.fromOffset(300, 160)
+    dialog.Size = UDim2.fromOffset(300, 180)
     dialog.BackgroundTransparency = 1
     title.TextTransparency = 1
     message.TextTransparency = 1
     
     self.themeModule:Tween(overlay, {BackgroundTransparency = theme.OverlayTransparency or 0.6}, 0.2)
-    self.themeModule:Tween(dialog, {Size = UDim2.fromOffset(340, 180), BackgroundTransparency = 0}, 0.25)
+    self.themeModule:Tween(dialog, {Size = UDim2.fromOffset(340, 200), BackgroundTransparency = 0}, 0.25)
     task.wait(0.1)
     self.themeModule:Tween(title, {TextTransparency = 0}, 0.15)
     self.themeModule:Tween(message, {TextTransparency = 0}, 0.15)
@@ -2744,7 +2747,7 @@ function GGH_Window:ShowCloseConfirmation()
     
     -- Cancel -> close confirmation only, return to GGH
     local function closeConfirmationOnly()
-        self.themeModule:Tween(dialog, {Size = UDim2.fromOffset(300, 160), BackgroundTransparency = 1}, 0.2)
+        self.themeModule:Tween(dialog, {Size = UDim2.fromOffset(300, 180), BackgroundTransparency = 1}, 0.2)
         self.themeModule:Tween(overlay, {BackgroundTransparency = 1}, 0.2)
         task.wait(0.2)
         if overlay.Parent then
@@ -2798,6 +2801,9 @@ end
 
 function GGH_Window:_executeFullCleanup()
     if self.state == self.States.Closed then return end
+    
+    -- Save settings before anything is stopped
+    pcall(function() self:SaveConfiguration() end)
     
     -- Prevent multiple closes
     self.state = self.States.Closed
@@ -2875,240 +2881,255 @@ function GGH_Window:_executeFullCleanup()
     self.flags = {}
 end
 
--- Public API Methods
+
+-- ---------------- Public API ----------------
 function GGH_Window:CreateTab(name, icon)
-    -- Lazy load Tab module
-    if not GGH_Tab then
-        local ok, mod = pcall(require, script.Parent:FindFirstChild("GGH_Tab"))
-        if not ok then
-            ok, mod = pcall(require, script.Parent.Parent:FindFirstChild("GGH_Tab"))
-        end
-        if ok then GGH_Tab = mod end
-    end
-    
-    if not GGH_Tab then
-        -- Fallback inline tab creation if module missing
-        return self:_createTabFallback(name, icon)
-    end
-    
+    name = tostring(name or "Tab")
     local tab = GGH_Tab.new(self, name, icon, self.theme, self.themeModule, GGH_Icons)
     table.insert(self.tabs, tab)
-    
-    -- Update canvas size
-    self:_updateSidebarCanvas()
-    
-    -- Auto-select first tab
+
+    if self.sidebarCompact then
+        tab:SetCompact(true)
+    end
+
     if #self.tabs == 1 then
         self:SelectTab(tab)
     end
-    
-    return tab
-end
 
-function GGH_Window:_createTabFallback(name, icon)
-    local theme = self.theme
-    local tabButton = Instance.new("TextButton")
-    tabButton.Name = name
-    tabButton.Size = UDim2.new(1, -8, 0, 42)
-    tabButton.BackgroundColor3 = theme.SidebarBackground
-    tabButton.BackgroundTransparency = 1
-    tabButton.Text = ""
-    tabButton.AutoButtonColor = false
-    tabButton.Parent = self.sidebarScroll
-    
-    self.themeModule:CreateCorner(tabButton, theme.Radius and theme.Radius.Medium or 8)
-    
-    local iconFrame = GGH_Icons:CreateIcon(icon or "settings", tabButton, UDim2.fromOffset(20,20), theme.TextSecondary)
-    iconFrame.Position = UDim2.new(0, 12, 0.5, 0)
-    iconFrame.AnchorPoint = Vector2.new(0, 0.5)
-    
-    local label = Instance.new("TextLabel")
-    label.Name = "TabLabel"
-    label.Size = UDim2.new(1, -48, 1, 0)
-    label.Position = UDim2.new(0, 40, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = name
-    label.TextColor3 = theme.TextSecondary
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Font = Enum.Font.GothamMedium
-    label.TextSize = 13
-    label.Parent = tabButton
-    
-    local contentFrame = Instance.new("ScrollingFrame")
-    contentFrame.Name = name .. "_Content"
-    contentFrame.Size = UDim2.fromScale(1,1)
-    contentFrame.BackgroundTransparency = 1
-    contentFrame.BorderSizePixel = 0
-    contentFrame.CanvasSize = UDim2.new(0,0,0,0)
-    contentFrame.ScrollBarThickness = 3
-    contentFrame.Visible = false
-    contentFrame.Parent = self.contentArea
-    
-    local list = Instance.new("UIListLayout")
-    list.Padding = UDim.new(0, 8)
-    list.SortOrder = Enum.SortOrder.LayoutOrder
-    list.Parent = contentFrame
-    
-    self.themeModule:CreatePadding(contentFrame, 16)
-    
-    local tabObj = {
-        Name = name,
-        Button = tabButton,
-        Content = contentFrame,
-        window = self
-    }
-    
-    function tabObj:Select()
-        self.window:SelectTab(self)
-    end
-    
-    self:Connect(tabButton.MouseButton1Click, function()
-        self:SelectTab(tabObj)
-    end)
-    
-    table.insert(self.tabs, tabObj)
-    if #self.tabs == 1 then
-        self:SelectTab(tabObj)
-    end
-    
-    return tabObj
+    return tab
 end
 
 function GGH_Window:SelectTab(tab)
     if not tab then return end
     if self.selectedTab == tab then return end
     if self.state == self.States.Closed then return end
-    
-    -- Deselect previous
-    if self.selectedTab then
-        if self.selectedTab.Button then
-            self.themeModule:Tween(self.selectedTab.Button, {BackgroundColor3 = self.theme.SidebarBackground, BackgroundTransparency = 1}, 0.15)
-            -- Update text color
-            for _, child in ipairs(self.selectedTab.Button:GetDescendants()) do
-                if child:IsA("TextLabel") and child.Name == "TabLabel" then
-                    self.themeModule:Tween(child, {TextColor3 = self.theme.TextSecondary}, 0.15)
-                end
-            end
+
+    local T = self.themeModule
+    local theme = self.theme
+
+    local prev = self.selectedTab
+    if prev then
+        if prev.Button then
+            T:Tween(prev.Button, {BackgroundTransparency = 1}, 0.15)
         end
-        if self.selectedTab.Content then
-            self.selectedTab.Content.Visible = false
+        if prev.label then
+            T:Tween(prev.label, {TextColor3 = theme.TextSecondary}, 0.15)
         end
-        if self.selectedTab.OnDeselected then
-            pcall(function() self.selectedTab:OnDeselected() end)
+        if prev.iconFrame and GGH_Icons.SetColor then
+            GGH_Icons:SetColor(prev.iconFrame, theme.TextSecondary)
+        end
+        if prev.Content then
+            prev.Content.Visible = false
+        end
+        if prev.OnDeselected then
+            pcall(function() prev:OnDeselected() end)
         end
     end
-    
-    -- Select new
+
     self.selectedTab = tab
+
     if tab.Button then
-        self.themeModule:Tween(tab.Button, {BackgroundColor3 = self.theme.SidebarItemActive or Color3.fromRGB(36,36,50), BackgroundTransparency = 0}, 0.15)
-        for _, child in ipairs(tab.Button:GetDescendants()) do
-            if child:IsA("TextLabel") and child.Name == "TabLabel" then
-                self.themeModule:Tween(child, {TextColor3 = self.theme.TextPrimary}, 0.15)
-            end
-            if child:IsA("ImageLabel") then
-                self.themeModule:Tween(child, {ImageColor3 = self.theme.Accent}, 0.15)
-            end
-        end
+        T:Tween(tab.Button, {BackgroundColor3 = theme.SidebarItemActive or Color3.fromRGB(36, 36, 50), BackgroundTransparency = 0}, 0.15)
+    end
+    if tab.label then
+        T:Tween(tab.label, {TextColor3 = theme.TextPrimary}, 0.15)
+    end
+    if tab.iconFrame and GGH_Icons.SetColor then
+        GGH_Icons:SetColor(tab.iconFrame, theme.Accent)
     end
     if tab.Content then
         tab.Content.Visible = true
-        -- Animate in
-        tab.Content.BackgroundTransparency = 1
-        self.themeModule:Tween(tab.Content, {BackgroundTransparency = 1}, 0.15)
     end
     if tab.OnSelected then
         pcall(function() tab:OnSelected() end)
     end
 end
 
-function GGH_Window:_updateSidebarCanvas()
-    task.wait()
-    if self.sidebarListLayout then
-        self.sidebarScroll.CanvasSize = UDim2.new(0, 0, 0, self.sidebarListLayout.AbsoluteContentSize.Y + 20)
-    end
-end
-
 function GGH_Window:Notify(props)
     props = props or {}
+    if self.destroyed or not self.notificationContainer then return end
     local theme = self.theme
-    local title = props.Title or props.title or "GGH Notification"
-    local content = props.Content or props.content or ""
+    local T = self.themeModule
+    local title = tostring(props.Title or props.title or "GGH Notification")
+    local content = tostring(props.Content or props.content or "")
     local duration = props.Duration or props.duration or 4
-    local image = props.Image or props.image
-    
+
+    -- The holder is positioned by the list layout; the inner frame slides in/out
+    local holder = Instance.new("Frame")
+    holder.Name = "NotificationHolder"
+    holder.Size = UDim2.fromOffset(300, 70)
+    holder.BackgroundTransparency = 1
+    holder.BorderSizePixel = 0
+    holder.Parent = self.notificationContainer
+
     local notifFrame = Instance.new("Frame")
     notifFrame.Name = "Notification"
-    notifFrame.Size = UDim2.fromOffset(300, 70)
+    notifFrame.Size = UDim2.fromScale(1, 1)
+    notifFrame.Position = UDim2.new(1, 320, 0, 0)
     notifFrame.BackgroundColor3 = theme.BackgroundSecondary
     notifFrame.BorderSizePixel = 0
-    notifFrame.Parent = self.notificationContainer
-    
-    self.themeModule:CreateCorner(notifFrame, theme.Radius and theme.Radius.Medium or 8)
-    self.themeModule:CreateStroke(notifFrame, theme.Border, 1)
-    self.themeModule:CreatePadding(notifFrame, 12)
-    
-    -- Accent bar
+    notifFrame.Parent = holder
+
+    T:CreateCorner(notifFrame, theme.Radius.Medium)
+    T:CreateStroke(notifFrame, theme.Border, 1)
+
     local accentBar = Instance.new("Frame")
-    accentBar.Size = UDim2.new(0, 3, 1, 0)
-    accentBar.Position = UDim2.new(0, 0, 0, 0)
+    accentBar.Name = "AccentBar"
+    accentBar.Size = UDim2.new(0, 3, 1, -16)
+    accentBar.Position = UDim2.new(0, 8, 0, 8)
     accentBar.BackgroundColor3 = theme.Accent
     accentBar.BorderSizePixel = 0
     accentBar.Parent = notifFrame
-    self.themeModule:CreateCorner(accentBar, 2)
-    
+    T:CreateCorner(accentBar, 2)
+
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -20, 0, 18)
-    titleLabel.Position = UDim2.new(0, 12, 0, 0)
+    titleLabel.Name = "Title"
+    titleLabel.Size = UDim2.new(1, -32, 0, 18)
+    titleLabel.Position = UDim2.new(0, 20, 0, 8)
     titleLabel.BackgroundTransparency = 1
+    titleLabel.BorderSizePixel = 0
     titleLabel.Text = title
     titleLabel.TextColor3 = theme.TextPrimary
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextSize = 13
+    titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
     titleLabel.Parent = notifFrame
-    
+
     local contentLabel = Instance.new("TextLabel")
-    contentLabel.Size = UDim2.new(1, -20, 0, 28)
-    contentLabel.Position = UDim2.new(0, 12, 0, 20)
+    contentLabel.Name = "Content"
+    contentLabel.Size = UDim2.new(1, -32, 0, 34)
+    contentLabel.Position = UDim2.new(0, 20, 0, 28)
     contentLabel.BackgroundTransparency = 1
+    contentLabel.BorderSizePixel = 0
     contentLabel.Text = content
     contentLabel.TextColor3 = theme.TextSecondary
     contentLabel.TextXAlignment = Enum.TextXAlignment.Left
+    contentLabel.TextYAlignment = Enum.TextYAlignment.Top
     contentLabel.Font = Enum.Font.Gotham
     contentLabel.TextSize = 11
     contentLabel.TextWrapped = true
     contentLabel.Parent = notifFrame
-    
-    table.insert(self.notifications, notifFrame)
-    
-    -- Animate in from right
-    notifFrame.Position = UDim2.new(1, 20, 0, 0)
-    self.themeModule:Tween(notifFrame, {Position = UDim2.new(0, 0, 0, 0)}, 0.3)
-    
-    -- Auto remove
+
+    table.insert(self.notifications, holder)
+
+    T:Tween(notifFrame, {Position = UDim2.new(0, 0, 0, 0)}, 0.3)
+
     task.delay(duration, function()
-        if notifFrame.Parent then
-            self.themeModule:Tween(notifFrame, {Position = UDim2.new(1, 20, 0, 0), BackgroundTransparency = 1}, 0.25)
-            task.wait(0.26)
-            if notifFrame.Parent then
-                notifFrame:Destroy()
-            end
+        if holder.Parent and notifFrame.Parent then
+            T:Tween(notifFrame, {Position = UDim2.new(1, 320, 0, 0)}, 0.25)
+            task.wait(0.27)
+            if holder.Parent then holder:Destroy() end
         end
     end)
-    
-    return notifFrame
+
+    return holder
 end
 
 function GGH_Window:ChangeTheme(themeName)
     local newTheme = self.themeModule:GetTheme(themeName)
     if not newTheme then return end
     self.theme = newTheme
-    self.themeModule:ApplyThemeToHierarchy(self.mainFrame, newTheme)
     self.themeModule:ApplyThemeToHierarchy(self.screenGui, newTheme)
 end
 
--- Cleanup registration system
+-- ---------------- Flags & configuration ----------------
+function GGH_Window:_setFlag(flag, value, silent)
+    if not flag then return end
+    self.flags[flag] = value
+    if silent or self._loadingConfig then return end
+    local cfg = self.config.ConfigurationSaving
+    if cfg and cfg.Enabled and not self._saveQueued then
+        self._saveQueued = true
+        task.delay(1, function()
+            self._saveQueued = false
+            if not self.destroyed then
+                self:SaveConfiguration()
+            end
+        end)
+    end
+end
+
+local function configPath(cfg)
+    local folder = tostring(cfg.FolderName or "GGH")
+    local file = tostring(cfg.FileName or "Config")
+    if string.sub(file, -5) ~= ".json" then
+        file = file .. ".json"
+    end
+    return folder, folder .. "/" .. file
+end
+
+function GGH_Window:SaveConfiguration()
+    local cfg = self.config.ConfigurationSaving
+    if not (cfg and cfg.Enabled) then return false end
+    if typeof(writefile) ~= "function" then return false end
+
+    local data = {}
+    for flag, value in pairs(self.flags) do
+        local t = typeof(value)
+        if t == "boolean" or t == "number" or t == "string" then
+            data[flag] = value
+        elseif t == "Color3" then
+            data[flag] = {
+                __color = true,
+                r = math.floor(value.R * 255 + 0.5),
+                g = math.floor(value.G * 255 + 0.5),
+                b = math.floor(value.B * 255 + 0.5)
+            }
+        end
+    end
+
+    local ok = pcall(function()
+        local folder, path = configPath(cfg)
+        if typeof(isfolder) == "function" and typeof(makefolder) == "function" and not isfolder(folder) then
+            makefolder(folder)
+        end
+        writefile(path, HttpService:JSONEncode(data))
+    end)
+    return ok
+end
+
+function GGH_Window:LoadConfiguration()
+    local cfg = self.config.ConfigurationSaving
+    if not (cfg and cfg.Enabled) then return false end
+    if typeof(readfile) ~= "function" or typeof(isfile) ~= "function" then return false end
+
+    local ok, data = pcall(function()
+        local _, path = configPath(cfg)
+        if not isfile(path) then return nil end
+        return HttpService:JSONDecode(readfile(path))
+    end)
+    if not ok or type(data) ~= "table" then return false end
+
+    self._loadingConfig = true
+    for flag, value in pairs(data) do
+        local setter = self.flagSetters[flag]
+        if setter then
+            pcall(setter, value)
+        end
+    end
+    self._loadingConfig = false
+    return true
+end
+
+-- Runs user callbacks safely so one bad callback never breaks the UI
+function GGH_Window:_runGuarded(context, callback)
+    local success, err = pcall(callback)
+    if not success then
+        local name = (context and context.Name) or "component"
+        warn("[GGH] Error in " .. tostring(name) .. ": " .. tostring(err))
+        if self._isInteractive and self:_isInteractive() then
+            self:Notify({
+                Title = "GGH Error",
+                Content = "Error in " .. tostring(name) .. ": " .. string.sub(tostring(err), 1, 100),
+                Duration = 5
+            })
+        end
+    end
+    return success
+end
+
+-- ---------------- Cleanup registration ----------------
 function GGH_Window:Connect(signal, callback)
     if not signal then return nil end
     local conn = signal:Connect(callback)
@@ -3125,10 +3146,7 @@ function GGH_Window:RegisterCleanup(callback)
 end
 
 function GGH_Window:RegisterOriginalState(key, value, restoreFn)
-    self.originalStates[key] = {
-        value = value,
-        restoreFn = restoreFn
-    }
+    self.originalStates[key] = {value = value, restoreFn = restoreFn}
 end
 
 function GGH_Window:RegisterFeature(name, featureObj)
@@ -3140,15 +3158,19 @@ function GGH_Window:UnregisterFeature(name)
 end
 
 function GGH_Window:Show()
-    if self.mainFrame then
-        self.mainFrame.Visible = true
-    end
+    if self.mainFrame then self.mainFrame.Visible = true end
 end
 
 function GGH_Window:Hide()
-    if self.mainFrame then
-        self.mainFrame.Visible = false
-    end
+    if self.mainFrame then self.mainFrame.Visible = false end
+end
+
+function GGH_Window:SetVisibility(visible)
+    if self.mainFrame then self.mainFrame.Visible = visible and true or false end
+end
+
+function GGH_Window:IsVisible()
+    return self.mainFrame ~= nil and self.mainFrame.Visible
 end
 
 function GGH_Window:Destroy()
@@ -3158,61 +3180,70 @@ end
 function GGH_Window:Unload()
     self:Destroy()
 end
+
 return GGH_Window
 end)()
 
 -- ================= MAIN LIBRARY =================
 local GGH = {}
-GGH.Version = "1.0.0"
+GGH.Version = "1.0.1"
 GGH.Name = "GGH UI Library"
 GGH.DisplayName = "GGH UI Library"
 GGH.Developer = "AM_BRCR7"
 GGH.Identity = "GGH"
 GGH.BasedOn = "Rayfield 0.4.1"
 GGH.BuildDate = "2026-10-22"
+GGH.Windows = {}
 
-function GGH:CreateWindow(config)
-    config = config or {}
+-- Works with both  GGH:CreateWindow({...})  and  GGH.CreateWindow({...})
+function GGH.CreateWindow(selfOrConfig, maybeConfig)
+    local config = selfOrConfig
+    if selfOrConfig == GGH then
+        config = maybeConfig
+    end
+    if type(config) ~= "table" then
+        config = {}
+    end
+
     config.Name = config.Name or "GGH UI Library"
     config.Subtitle = config.Subtitle or "Developed by AM_BRCR7"
     config.Theme = config.Theme or "GGH Dark"
-    config.Size = config.Size or UDim2.fromOffset(650, 480)
-    config.Position = config.Position or UDim2.fromScale(0.5, 0.5)
-    config.ToggleUIKeybind = config.ToggleUIKeybind or Enum.KeyCode.K
-    
+
     local window = GGH_Window.new(config, {
         Theme = GGH_Theme,
         Icons = GGH_Icons,
         Tab = GGH_Tab,
         Components = GGH_Components
     })
-    
-    function window:_runGuarded(context, callback)
-        local success, err = pcall(callback)
-        if not success then
-            warn("[GGH] Error in " .. (context.Name or "unknown") .. ": " .. tostring(err))
-            self:Notify({
-                Title = "GGH Error",
-                Content = "Error in " .. (context.Name or "component") .. ": " .. tostring(err):sub(1, 100),
-                Duration = 5
-            })
-        end
-        return success
-    end
-    
-    function window:_settled()
-        return self.state ~= self.States.Closed and not self.destroyed
-    end
-    
-    function window:_interactive()
-        return self:_settled() and self.state ~= self.States.Minimized
-    end
-    
+
+    table.insert(GGH.Windows, window)
     return window
 end
 
-function GGH.CreateWindow(_, config)
-    return GGH:CreateWindow(config)
+function GGH:LoadConfiguration()
+    for _, window in ipairs(self.Windows) do
+        if not window.destroyed then
+            window:LoadConfiguration()
+        end
+    end
+end
+
+function GGH:Notify(props)
+    for i = #self.Windows, 1, -1 do
+        local window = self.Windows[i]
+        if not window.destroyed then
+            return window:Notify(props)
+        end
+    end
+end
+
+function GGH:Destroy()
+    for _, window in ipairs(self.Windows) do
+        if not window.destroyed then
+            window:Destroy()
+        end
+    end
+    self.Windows = {}
 end
 
 function GGH:GetIdentity()
