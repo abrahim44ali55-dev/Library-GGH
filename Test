@@ -1985,6 +1985,300 @@ local function FadeOutGui(gui, dur, done)
     task.delay(dur + 0.05, function() if done then pcall(done) end end)
 end
 
+
+-- =====================================================================
+--  LOCALIZATION ENGINE  (translations: inline / one JSON url / url per language)
+--  Keys = the ORIGINAL text written in the script (Source language).
+-- =====================================================================
+local Loc = {
+    Enabled = false,
+    Source = "English",
+    Current = "English",
+    Pending = nil,
+    Dicts = {},       -- [language] = { [original] = translated }
+    Urls = {},        -- [language] = url (loaded when the language is picked)
+    Order = {},       -- ordered list of language names
+    Listeners = {},   -- function(kind)  kind = "list" | "set"
+    OnChange = nil,
+}
+GGH.Localization = Loc
+
+local BuiltIn = {
+    ["arabic"] = {
+        ["SETTINGS"] = "الإعدادات",
+        ["Save Settings"] = "حفظ الإعدادات",
+        ["Save Settings (not supported)"] = "حفظ الإعدادات (غير مدعوم)",
+        ["Size"] = "الحجم",
+        ["Theme"] = "الثيم",
+        ["Language"] = "اللغة",
+        ["Tiny"] = "صغير جداً", ["Small"] = "صغير", ["Medium"] = "متوسط", ["Large"] = "كبير", ["Huge"] = "ضخم",
+        ["Confirm Close"] = "تأكيد الإغلاق",
+        ["Are you sure you want to close GGH Library?"] = "هل أنت متأكد أنك تريد إغلاق المكتبة؟",
+        ["Yes, Close"] = "نعم، أغلق",
+        ["Cancel"] = "إلغاء",
+        ["Confirm"] = "تأكيد",
+        ["Confirmation"] = "تأكيد",
+        ["Are you sure?"] = "هل أنت متأكد؟",
+        ["Search toggles, buttons, tabs..."] = "ابحث عن مفاتيح، أزرار، تبويبات...",
+    },
+}
+BuiltIn["العربية"] = BuiltIn["arabic"]
+BuiltIn["ar"] = BuiltIn["arabic"]
+
+local function LocNotify(kind)
+    for _, f in ipairs(Loc.Listeners) do pcall(f, kind) end
+end
+
+function Loc.AddLanguage(name)
+    name = tostring(name or "")
+    if name == "" then return end
+    for _, n in ipairs(Loc.Order) do if n == name then return end end
+    table.insert(Loc.Order, name)
+end
+
+function Loc.Find(name)
+    name = tostring(name or "")
+    for _, n in ipairs(Loc.Order) do if n == name then return n end end
+    local low = name:lower()
+    for _, n in ipairs(Loc.Order) do if n:lower() == low then return n end end
+    return nil
+end
+
+function Loc.AddDict(lang, tbl)
+    lang = tostring(lang or "")
+    if lang == "" or type(tbl) ~= "table" then return end
+    Loc.AddLanguage(lang)
+    local d = Loc.Dicts[lang]
+    if not d then
+        d = {}
+        local base = BuiltIn[lang:lower()]
+        if base then for k, v in pairs(base) do d[k] = v end end
+        Loc.Dicts[lang] = d
+    end
+    for k, v in pairs(tbl) do
+        if type(k) == "string" and type(v) == "string" then d[k] = v end
+    end
+    LocNotify("list")
+end
+
+function Loc.AddUrl(lang, url)
+    lang = tostring(lang or "")
+    if lang == "" or type(url) ~= "string" or url == "" then return end
+    Loc.AddLanguage(lang)
+    Loc.Urls[lang] = url
+    LocNotify("list")
+end
+
+-- accepts { "Arabic": {...}, "French": {...} }  or  (forcedLang) { "Hello": "مرحبا", ... }
+function Loc.ApplyJson(data, forced)
+    if type(data) ~= "table" then return end
+    local hasString = false
+    for _, v in pairs(data) do if type(v) == "string" then hasString = true break end end
+    if forced and hasString then
+        Loc.AddDict(forced, data)
+    elseif forced and type(data[forced]) == "table" then
+        Loc.AddDict(forced, data[forced])
+    else
+        for lang, tbl in pairs(data) do
+            if type(tbl) == "table" then Loc.AddDict(lang, tbl) end
+        end
+    end
+end
+
+local function HttpGetSafe(url)
+    local ok, res = pcall(function() return game:HttpGet(url) end)
+    if ok and type(res) == "string" and #res > 0 then return res end
+    local req = (typeof(request) == "function" and request)
+        or (typeof(http_request) == "function" and http_request)
+        or (typeof(syn) == "table" and syn.request)
+    if req then
+        local ok2, r = pcall(req, {Url = url, Method = "GET"})
+        if ok2 and type(r) == "table" then return r.Body or r.body end
+    end
+    return nil
+end
+
+local function FetchJson(url)
+    local body = HttpGetSafe(url)
+    if not body then return nil end
+    local ok, data = pcall(function() return HttpService:JSONDecode(body) end)
+    if ok and type(data) == "table" then return data end
+    return nil
+end
+
+local Tr
+function Loc.ApplyPending()
+    local p = Loc.Pending
+    if not p then return end
+    local real = Loc.Find(p)
+    if real then
+        Loc.Pending = nil
+        GGH.SetLanguage(real)
+    end
+end
+
+function Loc.LoadAll(url)
+    task.spawn(function()
+        local data = FetchJson(url)
+        if data then
+            Loc.ApplyJson(data)
+        else
+            warn("[GGH Language] failed to load translations: " .. tostring(url))
+        end
+        Loc.ApplyPending()
+    end)
+end
+
+function Loc.LoadLang(lang, done)
+    local url = Loc.Urls[lang]
+    if not url then if done then done() end return end
+    task.spawn(function()
+        local data = FetchJson(url)
+        if data then
+            Loc.ApplyJson(data, lang)
+            Loc.Urls[lang] = nil
+        else
+            warn("[GGH Language] failed to load: " .. tostring(url))
+        end
+        if done then done() end
+    end)
+end
+
+function Loc.GetLanguages()
+    local t = {}
+    for _, n in ipairs(Loc.Order) do table.insert(t, n) end
+    return t
+end
+
+-- translate a single string (also handles "Title : value", "• Name" and "Name  (WxH)")
+Tr = function(s)
+    if type(s) ~= "string" or s == "" or Loc.Current == Loc.Source then return s end
+    local d = Loc.Dicts[Loc.Current]
+    if not d then return s end
+    local hit = d[s]
+    if hit then return hit end
+    local bullet, core = "", s
+    local b, rest = s:match("^(• )(.*)$")
+    if b then
+        bullet, core = b, rest
+        hit = d[core]
+        if hit then return bullet .. hit end
+    end
+    local l, sep, r = core:match("^(.-)( : )(.*)$")
+    if l then
+        local tl, tr2 = d[l], d[r]
+        if tl or tr2 then return bullet .. (tl or l) .. sep .. (tr2 or r) end
+    end
+    local nm, suf = core:match("^(.-)(%s+%(%d+x%d+%))$")
+    if nm and d[nm] then return bullet .. d[nm] .. suf end
+    return s
+end
+GGH.Translate = Tr
+
+local OrigText = setmetatable({}, {__mode = "k"})
+local LastText = setmetatable({}, {__mode = "k"})
+local OrigPH = setmetatable({}, {__mode = "k"})
+local LastPH = setmetatable({}, {__mode = "k"})
+
+local function TrackObject(o)
+    if not (o:IsA("TextLabel") or o:IsA("TextButton") or o:IsA("TextBox")) then return end
+    if o:GetAttribute("GGH_NoTranslate") then return end
+    if not o:IsA("TextBox") and OrigText[o] == nil then
+        OrigText[o] = o.Text
+        o:GetPropertyChangedSignal("Text"):Connect(function()
+            local cur = o.Text
+            if cur == LastText[o] then return end
+            OrigText[o] = cur
+            local t = Tr(cur)
+            if t ~= cur then LastText[o] = t; o.Text = t else LastText[o] = nil end
+        end)
+        local t0 = Tr(o.Text)
+        if t0 ~= o.Text then LastText[o] = t0; o.Text = t0 end
+    end
+    if o:IsA("TextBox") and OrigPH[o] == nil then
+        OrigPH[o] = o.PlaceholderText
+        o:GetPropertyChangedSignal("PlaceholderText"):Connect(function()
+            local cur = o.PlaceholderText
+            if cur == LastPH[o] then return end
+            OrigPH[o] = cur
+            local t = Tr(cur)
+            if t ~= cur then LastPH[o] = t; o.PlaceholderText = t else LastPH[o] = nil end
+        end)
+        local p0 = Tr(o.PlaceholderText)
+        if p0 ~= o.PlaceholderText then LastPH[o] = p0; o.PlaceholderText = p0 end
+    end
+end
+
+function Loc.Attach(gui)
+    if not gui then return end
+    for _, d in ipairs(gui:GetDescendants()) do TrackObject(d) end
+    gui.DescendantAdded:Connect(function(d) TrackObject(d) end)
+end
+
+function Loc.Retranslate()
+    for o, orig in pairs(OrigText) do
+        local t = Tr(orig)
+        if o.Text ~= t then LastText[o] = t; o.Text = t end
+    end
+    for o, orig in pairs(OrigPH) do
+        local t = Tr(orig)
+        if o.PlaceholderText ~= t then LastPH[o] = t; o.PlaceholderText = t end
+    end
+end
+
+function Loc.Apply(name)
+    Loc.Current = name
+    Loc.Retranslate()
+    LocNotify("set")
+    if Loc.OnChange then pcall(Loc.OnChange, name) end
+end
+
+function Loc.Configure(c, extra)
+    local oldSource = Loc.Source
+    Loc.Source = tostring(c.Source or c.SourceLanguage or Loc.Source)
+    if Loc.Current == oldSource then Loc.Current = Loc.Source end
+    Loc.AddLanguage(Loc.Source)
+    if type(c.Languages) == "table" then
+        for _, n in ipairs(c.Languages) do Loc.AddLanguage(n) end
+    end
+    for lang, tbl in pairs(c.Translations or {}) do Loc.AddDict(lang, tbl) end
+    for lang, tbl in pairs(extra or {}) do Loc.AddDict(lang, tbl) end
+    for lang, url in pairs(c.Urls or c.Links or {}) do Loc.AddUrl(lang, url) end
+    if c.Callback or c.OnChanged then Loc.OnChange = c.OnChanged or c.Callback end
+    if c.Default then Loc.Pending = c.Default end
+    Loc.Enabled = true
+    if c.Url or c.Link then Loc.LoadAll(c.Url or c.Link) end
+    Loc.ApplyPending()
+end
+
+function GGH.SetLanguage(a, b)
+    local name = (a == GGH) and b or a
+    local real = Loc.Find(name)
+    if not real then return false end
+    if real ~= Loc.Source and Loc.Urls[real] and not Loc.Dicts[real] then
+        Loc.LoadLang(real, function() Loc.Apply(real) end)
+    else
+        Loc.Apply(real)
+    end
+    return true
+end
+function GGH.GetLanguage() return Loc.Current end
+function GGH.GetLanguages() return Loc.GetLanguages() end
+function GGH.AddTranslations(a, b, c)
+    if a == GGH then a, b = b, c end
+    if type(a) == "table" then Loc.ApplyJson(a) else Loc.AddDict(a, b) end
+end
+function GGH.LoadTranslations(a, b, c)
+    if a == GGH then a, b = b, c end
+    local url, lang = a, b
+    task.spawn(function()
+        local data = FetchJson(url)
+        if data then Loc.ApplyJson(data, lang) end
+        Loc.ApplyPending()
+    end)
+end
+-- =====================================================================
+
 local Themes = {
     ["Dark"] = {
         MainBg = Color3.fromRGB(18,18,22),
@@ -2957,6 +3251,7 @@ function GGH:CreateWindow(Config)
         end)
     end
     ScreenGui.Parent = GetGuiParent()
+    Loc.Attach(ScreenGui)
     local SizePresets = {
         ["Tiny"]   = {W=360, H=260},
         ["Small"]  = {W=400, H=300},
@@ -4040,6 +4335,7 @@ function GGH:CreateWindow(Config)
         Head.AutoLocalize = false
         local HP = Instance.new("UIPadding", Head)
         HP.PaddingLeft = UDim.new(0, 10)
+        HP.PaddingRight = UDim.new(0, 30)
         AddTextStroke(Head)
 
         local Arrow = Instance.new("TextLabel", Holder)
@@ -4051,6 +4347,7 @@ function GGH:CreateWindow(Config)
         Arrow.TextSize = 10
         Arrow.TextColor3 = CurrentTheme.SubText
         Arrow.ZIndex = 102
+        Arrow:SetAttribute("GGH_NoTranslate", true)
 
         local List = Instance.new("ScrollingFrame", Holder)
         List.Position = UDim2.new(0, 4, 0, 38)
@@ -4071,6 +4368,7 @@ function GGH:CreateWindow(Config)
 
         local optionButtons = {}
         local isOpen = false
+        local listH = 0
 
         local function Refresh()
             Head.Text = label .. " : " .. tostring(getCurrent())
@@ -4084,7 +4382,6 @@ function GGH:CreateWindow(Config)
             end
         end
 
-        local listH = math.min(#options * 30 + 4, 124)
         local function SetOpen(state)
             isOpen = state
             Arrow.Text = state and "▲" or "▼"
@@ -4106,27 +4403,38 @@ function GGH:CreateWindow(Config)
             SetOpen(not isOpen)
         end)
 
-        for i, name in ipairs(options) do
-            local Btn = Instance.new("TextButton", List)
-            Btn.Size = UDim2.new(1, 0, 0, 26)
-            Btn.LayoutOrder = i
-            Btn.Font = Enum.Font.GothamMedium
-            Btn.TextSize = 11
-            Btn.ZIndex = 103
-            Btn.AutoLocalize = false
-            Corner(Btn, 6)
-            local st = Stroke(Btn, CurrentTheme.Accent, 1)
-            table.insert(optionButtons, {btn = Btn, stroke = st, name = name})
-            Btn.MouseButton1Click:Connect(function()
-                onPick(name)
-                Refresh()
-                SetOpen(false)
-            end)
+        local function SetOptions(newOptions)
+            for _, ob in ipairs(optionButtons) do ob.btn:Destroy() end
+            optionButtons = {}
+            options = newOptions
+            listH = math.min(#options * 30 + 4, 124)
+            for i, name in ipairs(options) do
+                local Btn = Instance.new("TextButton", List)
+                Btn.Size = UDim2.new(1, 0, 0, 26)
+                Btn.LayoutOrder = i
+                Btn.Font = Enum.Font.GothamMedium
+                Btn.TextSize = 11
+                Btn.ZIndex = 103
+                Btn.AutoLocalize = false
+                Corner(Btn, 6)
+                local st = Stroke(Btn, CurrentTheme.Accent, 1)
+                table.insert(optionButtons, {btn = Btn, stroke = st, name = name})
+                Btn.MouseButton1Click:Connect(function()
+                    onPick(name)
+                    Refresh()
+                    SetOpen(false)
+                end)
+            end
+            if isOpen then
+                List.Size = UDim2.new(1, -8, 0, listH)
+                Holder.Size = UDim2.new(1, 0, 0, 34 + 4 + listH + 4)
+            end
+            Refresh()
         end
 
         table.insert(ThemeListeners, function() Refresh() end)
-        Refresh()
-        return Refresh, function() SetOpen(false) end
+        SetOptions(options)
+        return Refresh, function() SetOpen(false) end, SetOptions
     end
 
     -- (2) Size dropdown: pick ONE size from the library presets
@@ -4172,6 +4480,42 @@ function GGH:CreateWindow(Config)
                 stroke.Color = th.Accent
                 stroke.Thickness = selected and 2 or 1
             end)
+    end
+
+    -- (4) Language dropdown (OPTIONAL: shown only if the developer passes Config.Language)
+    do
+        local LC = Config.Language
+        if LC ~= nil and LC ~= false then
+            if type(LC) ~= "table" then
+                LC = {Default = (type(LC) == "string") and LC or nil}
+            end
+            if LC.Enabled ~= false then
+                local LangRefresh, _, LangSetOptions
+                LangRefresh, _, LangSetOptions = MakeSettingsDropdown("Language", -60, {},
+                    function() return Loc.Current end,
+                    function(name)
+                        GGH.SetLanguage(name)
+                        SaveMgr.MarkDirty()
+                    end,
+                    function(btn, stroke, name, selected)
+                        btn.Text = (selected and "• " or "") .. name
+                        btn.BackgroundColor3 = selected and CurrentTheme.Accent or CurrentTheme.ElementBg
+                        btn.TextColor3 = selected and Color3.fromRGB(255,255,255) or CurrentTheme.Text
+                        btn:SetAttribute("GGH_NoTranslate", true)
+                        stroke.Color = CurrentTheme.Accent
+                    end)
+                table.insert(Loc.Listeners, function(kind)
+                    if kind == "list" then
+                        LangSetOptions(Loc.GetLanguages())
+                    else
+                        LangRefresh()
+                    end
+                end)
+                Loc.Configure(LC, Config.Translations)
+                LangSetOptions(Loc.GetLanguages())
+                LangRefresh()
+            end
+        end
     end
     do
         local function SafeName(s)
@@ -4240,7 +4584,7 @@ function GGH:CreateWindow(Config)
                 end
             end
             SaveMgr.Stored = merged
-            WriteFile({Version = 2, SaveEnabled = true, Theme = CurrentThemeName, Size = CurrentSizeName, Elements = merged})
+            WriteFile({Version = 2, SaveEnabled = true, Theme = CurrentThemeName, Size = CurrentSizeName, Language = (Loc.Enabled and Loc.Current or nil), Elements = merged})
         end
 
         local scheduled = false
@@ -4386,6 +4730,10 @@ function GGH:CreateWindow(Config)
 
         if SaveMgr.Enabled and Loaded and type(Loaded.Theme) == "string" and Themes[Loaded.Theme] and Loaded.Theme ~= CurrentThemeName then
             pcall(ApplyTheme, Loaded.Theme)
+        end
+        if SaveMgr.Enabled and Loaded and Loc.Enabled and type(Loaded.Language) == "string" then
+            Loc.Pending = Loaded.Language
+            Loc.ApplyPending()
         end
         if SaveMgr.Enabled and Loaded and type(Loaded.Size) == "string" and SizePresets[Loaded.Size] and Loaded.Size ~= CurrentSizeName then
             pcall(ApplySizePreset, Loaded.Size)
@@ -7481,6 +7829,11 @@ function Window:SetSizePreset(presetName)
     function Window:GetSaveEnabled() return SaveMgr.Enabled end
     function Window:SaveNow() SaveMgr.Flush() return Window end
     function Window:GetConfigPath() return SaveMgr.Path end
+    function Window:SetLanguage(name) return GGH.SetLanguage(name) end
+    function Window:GetLanguage() return Loc.Current end
+    function Window:GetLanguages() return Loc.GetLanguages() end
+    function Window:AddTranslations(a, b) return GGH.AddTranslations(a, b) end
+    function Window:LoadTranslations(url, lang) return GGH.LoadTranslations(url, lang) end
 
         return Window
 end
@@ -7549,21 +7902,28 @@ do
         local title = cfg.Title and tostring(cfg.Title) or nil
         local body = (cfg.Text or cfg.Content or cfg.Message) and tostring(cfg.Text or cfg.Content or cfg.Message) or nil
         local duration = tonumber(cfg.Duration) or 4
+        if title then title = GGH.Translate(title) end
+        if body then body = GGH.Translate(body) end
 
-        local pad = 12
-        local barW = 4
-        local iconSize = 20
-        local iconArea = 30
-        local maxTextW = 260
+        local pad = 14
+        local badge = 34
+        local gapX = 12
+        local maxTextW = 230
         local titleSize, bodySize = 14, 12
+        local progH = 3
+        local progGap = 10
+        local bottomPad = 12
 
         local tB = title and TextService:GetTextSize(title, titleSize, Enum.Font.GothamBold, Vector2.new(maxTextW, 10000)) or Vector2.new(0, 0)
         local bB = body and TextService:GetTextSize(body, bodySize, Enum.Font.Gotham, Vector2.new(maxTextW, 10000)) or Vector2.new(0, 0)
 
-        local textW = math.max(tB.X, bB.X, 90) + 2
-        local w = barW + pad + iconArea + textW + pad
+        local textW = math.clamp(math.max(tB.X, bB.X), 110, maxTextW) + 2
+        local textX = pad + badge + gapX
+        local w = textX + textW + pad
         local gap = (title and body) and 3 or 0
-        local h = math.max(pad + tB.Y + gap + bB.Y + pad + 4, 54)
+        local contentH = tB.Y + gap + bB.Y
+        local bodyH = math.max(contentH, badge)
+        local h = pad + bodyH + progGap + progH + bottomPad
 
         notifyOrder += 1
 
@@ -7575,42 +7935,48 @@ do
         wrapper.LayoutOrder = notifyOrder
         wrapper.Parent = NotifyHolder
 
-        local card = Instance.new("Frame")
+        local card = Instance.new("CanvasGroup")
         card.Name = "Card"
         card.Size = UDim2.new(0, w, 0, h)
         card.AnchorPoint = Vector2.new(1, 0)
         card.Position = UDim2.new(1, w + 40, 0, 0)
-        card.BackgroundColor3 = Color3.fromRGB(17, 18, 24)
-        card.BackgroundTransparency = 0.04
+        card.BackgroundColor3 = Color3.fromRGB(20, 21, 28)
+        card.BackgroundTransparency = 0.02
         card.BorderSizePixel = 0
+        card.GroupTransparency = 1
         card.Active = false
-        card.ClipsDescendants = true
         card.Parent = wrapper
 
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 10)
+        corner.CornerRadius = UDim.new(0, 16)
         corner.Parent = card
 
         local stroke = Instance.new("UIStroke")
         stroke.Color = accent
         stroke.Thickness = 1
-        stroke.Transparency = 0.55
+        stroke.Transparency = 0.7
         stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         stroke.Parent = card
 
-        local bar = Instance.new("Frame")
-        bar.Size = UDim2.new(0, barW, 1, 0)
-        bar.BackgroundColor3 = accent
-        bar.BorderSizePixel = 0
-        bar.Active = false
-        bar.Parent = card
+        -- rounded icon badge (soft tint of the accent color)
+        local badgeF = Instance.new("Frame")
+        badgeF.Name = "Badge"
+        badgeF.Size = UDim2.new(0, badge, 0, badge)
+        badgeF.Position = UDim2.new(0, pad, 0, pad)
+        badgeF.BackgroundColor3 = accent
+        badgeF.BackgroundTransparency = 0.82
+        badgeF.BorderSizePixel = 0
+        badgeF.Active = false
+        badgeF.Parent = card
+        local badgeCorner = Instance.new("UICorner")
+        badgeCorner.CornerRadius = UDim.new(0, 11)
+        badgeCorner.Parent = badgeF
 
-        local icon = MakeIcon(card, iconName, iconSize, accent)
-        icon.AnchorPoint = Vector2.new(0, 0.5)
-        icon.Position = UDim2.new(0, barW + pad, 0.5, -1)
+        local icon = MakeIcon(badgeF, iconName, 18, accent)
+        icon.AnchorPoint = Vector2.new(0.5, 0.5)
+        icon.Position = UDim2.new(0.5, 0, 0.5, 0)
 
-        local textX = barW + pad + iconArea
-        local y = pad
+        local y = pad + math.floor((bodyH - contentH) / 2)
 
         if title then
             local tl = Instance.new("TextLabel")
@@ -7625,6 +7991,7 @@ do
             tl.TextXAlignment = Enum.TextXAlignment.Left
             tl.TextYAlignment = Enum.TextYAlignment.Top
             tl.Active = false
+            tl:SetAttribute("GGH_NoTranslate", true)
             tl.Parent = card
             y = y + tB.Y + gap
         end
@@ -7637,23 +8004,50 @@ do
             bl.Font = Enum.Font.Gotham
             bl.TextSize = bodySize
             bl.Text = body
-            bl.TextColor3 = Color3.fromRGB(175, 178, 190)
+            bl.TextColor3 = Color3.fromRGB(170, 174, 188)
             bl.TextWrapped = true
             bl.TextXAlignment = Enum.TextXAlignment.Left
             bl.TextYAlignment = Enum.TextYAlignment.Top
             bl.Active = false
+            bl:SetAttribute("GGH_NoTranslate", true)
             bl.Parent = card
         end
 
+        -- rounded progress bar (inset, with a faint track)
+        local track = Instance.new("Frame")
+        track.Name = "Track"
+        track.Position = UDim2.new(0, pad, 1, -(bottomPad + progH))
+        track.Size = UDim2.new(1, -pad * 2, 0, progH)
+        track.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        track.BackgroundTransparency = 0.92
+        track.BorderSizePixel = 0
+        track.Active = false
+        track.Parent = card
+        local trackCorner = Instance.new("UICorner")
+        trackCorner.CornerRadius = UDim.new(1, 0)
+        trackCorner.Parent = track
+
         local prog = Instance.new("Frame")
-        prog.AnchorPoint = Vector2.new(0, 1)
-        prog.Position = UDim2.new(0, barW, 1, 0)
-        prog.Size = UDim2.new(1, -barW, 0, 2)
+        prog.Name = "Fill"
+        prog.Size = UDim2.new(1, 0, 1, 0)
         prog.BackgroundColor3 = accent
-        prog.BackgroundTransparency = 0.35
+        prog.BackgroundTransparency = 0.1
         prog.BorderSizePixel = 0
         prog.Active = false
-        prog.Parent = card
+        prog.Parent = track
+        local progCorner = Instance.new("UICorner")
+        progCorner.CornerRadius = UDim.new(1, 0)
+        progCorner.Parent = prog
+
+        -- tap the card to dismiss
+        local hit = Instance.new("TextButton")
+        hit.Name = "Dismiss"
+        hit.Size = UDim2.new(1, 0, 1, 0)
+        hit.BackgroundTransparency = 1
+        hit.Text = ""
+        hit.AutoButtonColor = false
+        hit.ZIndex = 10
+        hit.Parent = card
 
         local closed = false
         local api = {}
@@ -7661,7 +8055,10 @@ do
         function api:Close()
             if closed then return end
             closed = true
-            TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1, w + 40, 0, 0)}):Play()
+            TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                Position = UDim2.new(1, w + 40, 0, 0),
+                GroupTransparency = 1,
+            }):Play()
             task.delay(0.28, function()
                 local t = TweenService:Create(wrapper, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {Size = UDim2.new(1, 0, 0, 0)})
                 t:Play()
@@ -7670,8 +8067,13 @@ do
             end)
         end
 
-        TweenService:Create(card, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, 0, 0, 0)}):Play()
-        TweenService:Create(prog, TweenInfo.new(duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
+        hit.MouseButton1Click:Connect(function() api:Close() end)
+
+        TweenService:Create(card, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            Position = UDim2.new(1, 0, 0, 0),
+            GroupTransparency = 0,
+        }):Play()
+        TweenService:Create(prog, TweenInfo.new(duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
         task.delay(duration + 0.4, function() api:Close() end)
 
         return api
@@ -7695,10 +8097,10 @@ do
         local sub = (th and th.SubText) or Color3.fromRGB(175, 178, 190)
         local strokeCol = (th and th.Stroke) or accent
 
-        local title = tostring(cfg.Title or "Confirmation")
-        local body = tostring(cfg.Text or cfg.Content or cfg.Message or "Are you sure?")
-        local yesText = tostring(cfg.YesText or "Confirm")
-        local noText = tostring(cfg.NoText or "Cancel")
+        local title = GGH.Translate(tostring(cfg.Title or "Confirmation"))
+        local body = GGH.Translate(tostring(cfg.Text or cfg.Content or cfg.Message or "Are you sure?"))
+        local yesText = GGH.Translate(tostring(cfg.YesText or "Confirm"))
+        local noText = GGH.Translate(tostring(cfg.NoText or "Cancel"))
         local onYes = cfg.OnYes or cfg.Callback
         local onNo = cfg.OnNo
 
