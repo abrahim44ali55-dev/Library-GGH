@@ -2003,7 +2003,27 @@ local Loc = {
 }
 GGH.Localization = Loc
 
-local BuiltIn = {}
+local BuiltIn = {
+    ["arabic"] = {
+        ["SETTINGS"] = "الإعدادات",
+        ["Save Settings"] = "حفظ الإعدادات",
+        ["Save Settings (not supported)"] = "حفظ الإعدادات (غير مدعوم)",
+        ["Size"] = "الحجم",
+        ["Theme"] = "الثيم",
+        ["Language"] = "اللغة",
+        ["Tiny"] = "صغير جداً", ["Small"] = "صغير", ["Medium"] = "متوسط", ["Large"] = "كبير", ["Huge"] = "ضخم",
+        ["Confirm Close"] = "تأكيد الإغلاق",
+        ["Are you sure you want to close GGH Library?"] = "هل أنت متأكد أنك تريد إغلاق المكتبة؟",
+        ["Yes, Close"] = "نعم، أغلق",
+        ["Cancel"] = "إلغاء",
+        ["Confirm"] = "تأكيد",
+        ["Confirmation"] = "تأكيد",
+        ["Are you sure?"] = "هل أنت متأكد؟",
+        ["Search toggles, buttons, tabs..."] = "ابحث عن مفاتيح، أزرار، تبويبات...",
+    },
+}
+BuiltIn["العربية"] = BuiltIn["arabic"]
+BuiltIn["ar"] = BuiltIn["arabic"]
 
 local function LocNotify(kind)
     for _, f in ipairs(Loc.Listeners) do pcall(f, kind) end
@@ -2049,7 +2069,7 @@ function Loc.AddUrl(lang, url)
     LocNotify("list")
 end
 
--- Accepts a table of language dictionaries or a forced-language dictionary.
+-- accepts { "Arabic": {...}, "French": {...} }  or  (forcedLang) { "Hello": "مرحبا", ... }
 function Loc.ApplyJson(data, forced)
     if type(data) ~= "table" then return end
     local hasString = false
@@ -4272,61 +4292,17 @@ function GGH:CreateWindow(Config)
     local CurrentSizeName = autoName
     local SizeRefresh = nil
 
-    local PendingSizeConfirmation = false
-    local function ApplySizePreset(name, confirmedOverflow)
+    local function ApplySizePreset(name)
         local p = SizePresets[name]
-        if not p then return false end
-
-        local viewport = GetViewportSize()
-        local margin = 16
-        local tooLarge = p.W > (viewport.X - margin) or p.H > (viewport.Y - margin)
-
-        -- Only ask for confirmation when the selected preset itself is larger
-        -- than the available screen. Smaller presets are repositioned safely.
-        if tooLarge and not confirmedOverflow then
-            if PendingSizeConfirmation then return false end
-            PendingSizeConfirmation = true
-            local ok, confirmation = pcall(function()
-                return GGH.Confirm({
-                    Title = "Window May Exceed Screen",
-                    Text = "This size may extend the GGH window beyond your screen. Do you want to apply it anyway?",
-                    YesText = "Apply Size",
-                    NoText = "Cancel",
-                    Theme = CurrentTheme,
-                    OnYes = function()
-                        PendingSizeConfirmation = false
-                        ApplySizePreset(name, true)
-                        SaveMgr.MarkDirty()
-                    end,
-                    OnNo = function()
-                        PendingSizeConfirmation = false
-                    end,
-                })
-            end)
-            if not ok then
-                PendingSizeConfirmation = false
-                warn("GGH size confirmation failed: " .. tostring(confirmation))
-            end
-            return false
-        end
-
-        PendingSizeConfirmation = false
+        if not p then return end
         CurrentSizeName = name
-        local newSize = UDim2.fromOffset(p.W, p.H)
+        local newSize = UDim2.new(0, p.W, 0, p.H)
         originalSizeBeforeExtra = nil
         savedSize = newSize
         baseSize = newSize
-
-        -- Keep normal-sized windows on-screen without asking the user.
-        local pos = Main.Position
-        local maxX = math.max(margin, viewport.X - p.W - margin)
-        local maxY = math.max(margin, viewport.Y - p.H - margin)
-        local newX = math.clamp(pos.X.Offset, margin, maxX)
-        local newY = math.clamp(pos.Y.Offset, margin, maxY)
-        Tween(Main, {Position = UDim2.fromOffset(newX, newY), Size = newSize}, 0.42)
-        if not ConfirmFrame.Visible then ConfirmFrame.Size = newSize end
+        ConfirmFrame.Size = newSize
+        Tween(Main, {Size = newSize}, 0.3)
         if SizeRefresh then SizeRefresh() end
-        return true
     end
 
     local OpenDropdownClosers = {}
@@ -4513,35 +4489,7 @@ function GGH:CreateWindow(Config)
             end)
     end
 
-    -- (4) Desktop-only hotkey for hiding and restoring the window.
-    if UserInputService.KeyboardEnabled and UserInputService.MouseEnabled then
-        local ToggleKeyOptions = {"RightShift", "Insert", "Home", "End", "F4", "F6", "F7", "F8", "Off"}
-        local ToggleKeyName = "RightShift"
-        local ToggleKeyRefresh
-
-        ToggleKeyRefresh = MakeSettingsDropdown("Toggle Key", -60, ToggleKeyOptions,
-            function() return ToggleKeyName end,
-            function(name)
-                ToggleKeyName = name
-                if ToggleKeyRefresh then ToggleKeyRefresh() end
-            end,
-            function(btn, stroke, name, selected)
-                btn.Text = (selected and "• " or "") .. name
-                btn.BackgroundColor3 = selected and CurrentTheme.Accent or CurrentTheme.ElementBg
-                btn.TextColor3 = selected and Color3.fromRGB(255, 255, 255) or CurrentTheme.Text
-                stroke.Color = CurrentTheme.Accent
-            end)
-
-        UserInputService.InputBegan:Connect(function(input, gameProcessed)
-            if gameProcessed or UserInputService:GetFocusedTextBox() then return end
-            if ToggleKeyName == "Off" then return end
-            if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode.Name == ToggleKeyName then
-                Main.Visible = not Main.Visible
-            end
-        end)
-    end
-
-    -- (5) Language dropdown (OPTIONAL: shown only if the developer passes Config.Language)
+    -- (4) Language dropdown (OPTIONAL: shown only if the developer passes Config.Language)
     do
         local LC = Config.Language
         if LC ~= nil and LC ~= false then
@@ -4795,7 +4743,7 @@ function GGH:CreateWindow(Config)
             Loc.ApplyPending()
         end
         if SaveMgr.Enabled and Loaded and type(Loaded.Size) == "string" and SizePresets[Loaded.Size] and Loaded.Size ~= CurrentSizeName then
-            pcall(ApplySizePreset, Loaded.Size, true)
+            pcall(ApplySizePreset, Loaded.Size)
         end
         if SaveMgr.Enabled then
             task.delay(1.5, function() SaveMgr.Flush() end)
@@ -8215,14 +8163,12 @@ do
         local onNo = cfg.OnNo
 
         local pad = 16
-        local maxW = 320
+        local maxW = 300
         local tB = TextService:GetTextSize(title, 16, Enum.Font.GothamBold, Vector2.new(maxW, 10000))
         local bB = TextService:GetTextSize(body, 13, Enum.Font.Gotham, Vector2.new(maxW, 10000))
-        local innerW = math.clamp(math.max(tB.X, bB.X, 220), 220, maxW)
+        local innerW = math.max(tB.X, bB.X, 200) + 2
         local boxW = innerW + pad * 2
-        local titleH = math.max(tB.Y, 20)
-        local bodyH = math.max(bB.Y, 36)
-        local boxH = pad + titleH + 8 + bodyH + 16 + 36 + pad
+        local boxH = pad + tB.Y + 8 + bB.Y + 16 + 36 + pad
 
         local gui = Instance.new("ScreenGui")
         gui.Name = "GGH_Confirm"
@@ -8265,7 +8211,7 @@ do
         local tl = Instance.new("TextLabel")
         tl.BackgroundTransparency = 1
         tl.Position = UDim2.new(0, pad, 0, pad)
-        tl.Size = UDim2.new(0, innerW, 0, titleH)
+        tl.Size = UDim2.new(0, innerW, 0, tB.Y)
         tl.Font = Enum.Font.GothamBold
         tl.TextSize = 16
         tl.Text = title
@@ -8277,8 +8223,8 @@ do
 
         local bl = Instance.new("TextLabel")
         bl.BackgroundTransparency = 1
-        bl.Position = UDim2.new(0, pad, 0, pad + titleH + 8)
-        bl.Size = UDim2.new(0, innerW, 0, bodyH)
+        bl.Position = UDim2.new(0, pad, 0, pad + tB.Y + 8)
+        bl.Size = UDim2.new(0, innerW, 0, bB.Y)
         bl.Font = Enum.Font.Gotham
         bl.TextSize = 13
         bl.Text = body
@@ -8310,23 +8256,21 @@ do
         local noBtn = makeBtn(noText, 0.5, 4, bg2, txt)
 
         local done = false
-        box.Position = UDim2.new(0.5, 0, 0.5, 12)
         local function close(cb)
             if done then return end
             done = true
-            TweenService:Create(overlay, TweenInfo.new(0.26, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(scale, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.94}):Play()
-            TweenService:Create(box, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.5, 8)}):Play()
-            task.delay(0.28, function() gui:Destroy() end)
-            if cb then task.delay(0.08, function() task.spawn(cb) end) end
+            TweenService:Create(overlay, TweenInfo.new(0.18), {BackgroundTransparency = 1}):Play()
+            local t = TweenService:Create(scale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.85})
+            t:Play()
+            task.delay(0.2, function() gui:Destroy() end)
+            if cb then task.spawn(cb) end
         end
 
         yesBtn.MouseButton1Click:Connect(function() close(onYes) end)
         noBtn.MouseButton1Click:Connect(function() close(onNo) end)
 
-        TweenService:Create(overlay, TweenInfo.new(0.28, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {BackgroundTransparency = 0.55}):Play()
-        TweenService:Create(scale, TweenInfo.new(0.34, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Scale = 1}):Play()
-        TweenService:Create(box, TweenInfo.new(0.34, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+        TweenService:Create(overlay, TweenInfo.new(0.2), {BackgroundTransparency = 0.55}):Play()
+        TweenService:Create(scale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 
         return {Close = function() close(nil) end}
     end
