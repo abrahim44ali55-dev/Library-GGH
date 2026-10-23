@@ -1,4 +1,3 @@
-
 --[[
 ================================================================
    █████╗ ███╗   ███╗    ██████╗ ██████╗  ██████╗██████╗ ███████╗
@@ -4411,20 +4410,13 @@ function GGH:CreateWindow(Config)
             listH = math.min(#options * 30 + 4, 124)
             for i, name in ipairs(options) do
                 local Btn = Instance.new("TextButton", List)
-                Btn.Size = UDim2.new(1, 0, 0, 28)
+                Btn.Size = UDim2.new(1, 0, 0, 26)
                 Btn.LayoutOrder = i
-                Btn.Font = Enum.Font.Gotham
+                Btn.Font = Enum.Font.GothamMedium
                 Btn.TextSize = 11
-                Btn.TextXAlignment = Enum.TextXAlignment.Left
                 Btn.ZIndex = 103
                 Btn.AutoLocalize = false
-                Btn.BackgroundColor3 = CurrentTheme.ElementBg2
-                Btn.TextColor3 = CurrentTheme.Text
-                Btn.AutoButtonColor = false
                 Corner(Btn, 6)
-                local optionPadding = Instance.new("UIPadding", Btn)
-                optionPadding.PaddingLeft = UDim.new(0, 10)
-                optionPadding.PaddingRight = UDim.new(0, 8)
                 local st = Stroke(Btn, CurrentTheme.Accent, 1)
                 table.insert(optionButtons, {btn = Btn, stroke = st, name = name})
                 Btn.MouseButton1Click:Connect(function()
@@ -5231,29 +5223,6 @@ function GGH:CreateWindow(Config)
 local function CreateDropdown(Cfg)
     local isMulti = Cfg.Multi or Cfg.MultiSelect or Cfg.Multiple or false
     Cfg.Options = Cfg.Options or {}
-
-    -- Multi-select limit. nil, 0, math.huge, "Infinite", or "Unlimited" means unlimited.
-    -- Supported aliases keep this backward-compatible with existing scripts.
-    local rawLimit = Cfg.MaxSelected
-        or Cfg.MaxSelections
-        or Cfg.SelectionLimit
-        or Cfg.MaxSelection
-        or Cfg.MaxSelect
-    local SelectionLimit = nil
-    if rawLimit ~= nil then
-        if type(rawLimit) == "number" then
-            if rawLimit > 0 and rawLimit < math.huge then
-                SelectionLimit = math.max(1, math.floor(rawLimit))
-            end
-        elseif type(rawLimit) == "string" then
-            local normalized = rawLimit:lower():gsub("%s+", "")
-            if normalized ~= "infinite" and normalized ~= "unlimited" and normalized ~= "infinity" and normalized ~= "none" then
-                local parsed = tonumber(normalized)
-                if parsed and parsed > 0 then SelectionLimit = math.max(1, math.floor(parsed)) end
-            end
-        end
-    end
-
     local Selected = Cfg.Default or Cfg.Options[1]
     if isMulti then
         if type(Selected) ~= "table" then Selected = {Selected} end
@@ -5401,13 +5370,6 @@ local function CreateDropdown(Cfg)
                 if IsSelected(opt) then
                     for i,v in ipairs(Selected) do if v==opt then table.remove(Selected,i) break end end
                 else
-                    if SelectionLimit and #Selected >= SelectionLimit then
-                        -- Do not add beyond the configured cap; keep the current selection intact.
-                        if GGH.Notify then
-                            pcall(GGH.Notify, "Selection limit", "You can select up to " .. tostring(SelectionLimit) .. " item(s).", 3, "warning")
-                        end
-                        return
-                    end
                     table.insert(Selected, opt)
                 end
                 RefreshOptions()
@@ -5441,17 +5403,8 @@ local function CreateDropdown(Cfg)
             for _, o in ipairs(Cfg.Options) do if o == Selected then stillExists = true break end end
             if not stillExists then Selected = Cfg.Options[1] end
         else
-            local newSel, seen = {}, {}
-            for _, selectedValue in ipairs(Selected) do
-                local exists = false
-                for _, optionValue in ipairs(Cfg.Options) do
-                    if selectedValue == optionValue then exists = true break end
-                end
-                if exists and not seen[selectedValue] and (not SelectionLimit or #newSel < SelectionLimit) then
-                    seen[selectedValue] = true
-                    table.insert(newSel, selectedValue)
-                end
-            end
+            local newSel = {}
+            for _, s in ipairs(Selected) do for _, o in ipairs(Cfg.Options) do if s==o then table.insert(newSel,s) break end end end
             Selected = newSel
         end
         for _, opt in ipairs(Cfg.Options) do CreateOptionButton(opt) end
@@ -5467,19 +5420,7 @@ local function CreateDropdown(Cfg)
     function DropdownAPI:SetOptions(newOptions) return self:Refresh(newOptions) end
     function DropdownAPI:Set(option)
         if isMulti then
-            local requested = type(option) == "table" and option or (option ~= nil and {option} or {})
-            local valid, seen = {}, {}
-            for _, value in ipairs(requested) do
-                local exists = false
-                for _, candidate in ipairs(Cfg.Options) do
-                    if candidate == value then exists = true break end
-                end
-                if exists and not seen[value] and (not SelectionLimit or #valid < SelectionLimit) then
-                    seen[value] = true
-                    table.insert(valid, value)
-                end
-            end
-            Selected = valid
+            if type(option) == "table" then Selected = option else Selected = {option} end
         else
             Selected = option
         end
