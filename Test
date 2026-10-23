@@ -2003,27 +2003,7 @@ local Loc = {
 }
 GGH.Localization = Loc
 
-local BuiltIn = {
-    ["arabic"] = {
-        ["SETTINGS"] = "الإعدادات",
-        ["Save Settings"] = "حفظ الإعدادات",
-        ["Save Settings (not supported)"] = "حفظ الإعدادات (غير مدعوم)",
-        ["Size"] = "الحجم",
-        ["Theme"] = "الثيم",
-        ["Language"] = "اللغة",
-        ["Tiny"] = "صغير جداً", ["Small"] = "صغير", ["Medium"] = "متوسط", ["Large"] = "كبير", ["Huge"] = "ضخم",
-        ["Confirm Close"] = "تأكيد الإغلاق",
-        ["Are you sure you want to close GGH Library?"] = "هل أنت متأكد أنك تريد إغلاق المكتبة؟",
-        ["Yes, Close"] = "نعم، أغلق",
-        ["Cancel"] = "إلغاء",
-        ["Confirm"] = "تأكيد",
-        ["Confirmation"] = "تأكيد",
-        ["Are you sure?"] = "هل أنت متأكد؟",
-        ["Search toggles, buttons, tabs..."] = "ابحث عن مفاتيح، أزرار، تبويبات...",
-    },
-}
-BuiltIn["العربية"] = BuiltIn["arabic"]
-BuiltIn["ar"] = BuiltIn["arabic"]
+local BuiltIn = {}
 
 local function LocNotify(kind)
     for _, f in ipairs(Loc.Listeners) do pcall(f, kind) end
@@ -2069,7 +2049,7 @@ function Loc.AddUrl(lang, url)
     LocNotify("list")
 end
 
--- accepts { "Arabic": {...}, "French": {...} }  or  (forcedLang) { "Hello": "مرحبا", ... }
+-- Accepts a table of language dictionaries or a forced-language dictionary.
 function Loc.ApplyJson(data, forced)
     if type(data) ~= "table" then return end
     local hasString = false
@@ -4292,17 +4272,41 @@ function GGH:CreateWindow(Config)
     local CurrentSizeName = autoName
     local SizeRefresh = nil
 
-    local function ApplySizePreset(name)
+    local function ApplySizePreset(name, skipOverflowConfirm)
         local p = SizePresets[name]
         if not p then return end
+
+        if not skipOverflowConfirm then
+            local viewport = GetViewportSize()
+            local currentPos = Main.AbsolutePosition
+            local wouldOverflow = currentPos.X < 0 or currentPos.Y < 0
+                or currentPos.X + p.W > viewport.X
+                or currentPos.Y + p.H > viewport.Y
+            if wouldOverflow then
+                GGH.Confirm({
+                    Title = "Window May Exceed Screen",
+                    Text = "This size may extend the GGH window beyond the edge of your screen. Do you want to apply this size anyway?",
+                    YesText = "Apply Size",
+                    NoText = "Cancel",
+                    Theme = CurrentTheme,
+                    OnYes = function()
+                        ApplySizePreset(name, true)
+                        SaveMgr.MarkDirty()
+                    end,
+                })
+                return false
+            end
+        end
+
         CurrentSizeName = name
         local newSize = UDim2.new(0, p.W, 0, p.H)
         originalSizeBeforeExtra = nil
         savedSize = newSize
         baseSize = newSize
         ConfirmFrame.Size = newSize
-        Tween(Main, {Size = newSize}, 0.3)
+        Tween(Main, {Size = newSize}, 0.36)
         if SizeRefresh then SizeRefresh() end
+        return true
     end
 
     local OpenDropdownClosers = {}
@@ -4489,7 +4493,35 @@ function GGH:CreateWindow(Config)
             end)
     end
 
-    -- (4) Language dropdown (OPTIONAL: shown only if the developer passes Config.Language)
+    -- (4) Desktop-only hotkey for hiding and restoring the window.
+    if UserInputService.KeyboardEnabled and UserInputService.MouseEnabled then
+        local ToggleKeyOptions = {"RightShift", "Insert", "Home", "End", "F4", "F6", "F7", "F8", "Off"}
+        local ToggleKeyName = "RightShift"
+        local ToggleKeyRefresh
+
+        ToggleKeyRefresh = MakeSettingsDropdown("Toggle Key", -60, ToggleKeyOptions,
+            function() return ToggleKeyName end,
+            function(name)
+                ToggleKeyName = name
+                if ToggleKeyRefresh then ToggleKeyRefresh() end
+            end,
+            function(btn, stroke, name, selected)
+                btn.Text = (selected and "• " or "") .. name
+                btn.BackgroundColor3 = selected and CurrentTheme.Accent or CurrentTheme.ElementBg
+                btn.TextColor3 = selected and Color3.fromRGB(255, 255, 255) or CurrentTheme.Text
+                stroke.Color = CurrentTheme.Accent
+            end)
+
+        UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if gameProcessed or UserInputService:GetFocusedTextBox() then return end
+            if ToggleKeyName == "Off" then return end
+            if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode.Name == ToggleKeyName then
+                Main.Visible = not Main.Visible
+            end
+        end)
+    end
+
+    -- (5) Language dropdown (OPTIONAL: shown only if the developer passes Config.Language)
     do
         local LC = Config.Language
         if LC ~= nil and LC ~= false then
@@ -4743,7 +4775,7 @@ function GGH:CreateWindow(Config)
             Loc.ApplyPending()
         end
         if SaveMgr.Enabled and Loaded and type(Loaded.Size) == "string" and SizePresets[Loaded.Size] and Loaded.Size ~= CurrentSizeName then
-            pcall(ApplySizePreset, Loaded.Size)
+            pcall(ApplySizePreset, Loaded.Size, true)
         end
         if SaveMgr.Enabled then
             task.delay(1.5, function() SaveMgr.Flush() end)
@@ -8256,21 +8288,23 @@ do
         local noBtn = makeBtn(noText, 0.5, 4, bg2, txt)
 
         local done = false
+        box.Position = UDim2.new(0.5, 0, 0.5, 12)
         local function close(cb)
             if done then return end
             done = true
-            TweenService:Create(overlay, TweenInfo.new(0.18), {BackgroundTransparency = 1}):Play()
-            local t = TweenService:Create(scale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.85})
-            t:Play()
-            task.delay(0.2, function() gui:Destroy() end)
-            if cb then task.spawn(cb) end
+            TweenService:Create(overlay, TweenInfo.new(0.26, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(scale, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.94}):Play()
+            TweenService:Create(box, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.5, 8)}):Play()
+            task.delay(0.28, function() gui:Destroy() end)
+            if cb then task.delay(0.08, function() task.spawn(cb) end) end
         end
 
         yesBtn.MouseButton1Click:Connect(function() close(onYes) end)
         noBtn.MouseButton1Click:Connect(function() close(onNo) end)
 
-        TweenService:Create(overlay, TweenInfo.new(0.2), {BackgroundTransparency = 0.55}):Play()
-        TweenService:Create(scale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        TweenService:Create(overlay, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.55}):Play()
+        TweenService:Create(scale, TweenInfo.new(0.38, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        TweenService:Create(box, TweenInfo.new(0.38, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
 
         return {Close = function() close(nil) end}
     end
