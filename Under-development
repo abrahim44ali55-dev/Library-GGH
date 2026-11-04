@@ -1,0 +1,1038 @@
+--[[ 
+    GGH-LEVEL PREMIUM UI ENGINE | v1.0.0
+    Delta Executor + CoreGui + PlayerGui compatible
+    Author: Senior Luau Framework Engineer
+    Architecture: 15 Managers, State Machine, Mobile-First
+]]
+
+local GGH = {}
+GGH.__index = GGH
+GGH.Version = "1.0.0"
+GGH._Instances = {}
+
+--// SERVICES
+local function SafeService(name)
+    local ok, svc = pcall(function() return game:GetService(name) end)
+    return ok and svc or nil
+end
+
+local TweenService = SafeService("TweenService")
+local UserInputService = SafeService("UserInputService")
+local RunService = SafeService("RunService")
+local GuiService = SafeService("GuiService")
+local HttpService = SafeService("HttpService")
+local Players = SafeService("Players")
+local CoreGui = SafeService("CoreGui")
+local ContentProvider = SafeService("ContentProvider")
+
+local LocalPlayer = Players and Players.LocalPlayer
+
+--// UTILITY
+local Utility = {}
+function Utility:ClampUDim2(pos, size, viewport)
+    local absSize = size or UDim2.fromOffset(650,480)
+    local vp = viewport or Vector2.new(1920,1080)
+    if GuiService then
+        local ok, v = pcall(function() return GuiService:GetScreenResolution() end)
+        if ok then vp = v end
+    end
+    local x = math.clamp(pos.X.Offset, 0, vp.X - absSize.X.Offset)
+    local y = math.clamp(pos.Y.Offset, 0, vp.Y - absSize.Y.Offset)
+    return UDim2.fromOffset(x,y)
+end
+function Utility:Validate(t, schema)
+    for k,v in pairs(schema) do
+        if t[k]==nil and v.required then error(k.." required") end
+    end
+end
+function Utility:DeepCopy(o)
+    if type(o)~="table" then return o end
+    local c={}; for k,v in pairs(o) do c[k]=Utility:DeepCopy(v) end
+    return c
+end
+function Utility:Create(class, props, children)
+    local inst = Instance.new(class)
+    for k,v in pairs(props or {}) do
+        if k~="Parent" then pcall(function() inst[k]=v end) end
+    end
+    for _,child in ipairs(children or {}) do child.Parent = inst end
+    if props and props.Parent then inst.Parent = props.Parent end
+    return inst
+end
+function Utility:RoundCorners(inst, radius)
+    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0,radius or 10); c.Parent = inst; return c
+end
+function Utility:Stroke(inst, color, thickness)
+    local s = Instance.new("UIStroke"); s.Color=color; s.Thickness=thickness or 1; s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border; s.Parent=inst; return s
+end
+
+--// CLEANUP MANAGER
+local CleanupManager = {}
+CleanupManager.__index = CleanupManager
+function CleanupManager.new()
+    return setmetatable({cons={}, instances={}, tweens={}}, CleanupManager)
+end
+function CleanupManager:AddConnection(c) table.insert(self.cons, c) end
+function CleanupManager:AddInstance(i) table.insert(self.instances, i) end
+function CleanupManager:AddTween(t) table.insert(self.tweens, t) end
+function CleanupManager:Cleanup()
+    for _,c in ipairs(self.cons) do pcall(function() c:Disconnect() end) end
+    for _,t in ipairs(self.tweens) do pcall(function() t:Cancel() end) end
+    for _,i in ipairs(self.instances) do pcall(function() i:Destroy() end) end
+    self.cons={}; self.instances={}; self.tweens={}
+end
+
+--// THEME MANAGER
+local ThemeManager = {}
+ThemeManager.Themes = {
+    Dark = {
+        Background = Color3.fromRGB(16,16,20),
+        SecondaryBackground = Color3.fromRGB(22,22,28),
+        Header = Color3.fromRGB(26,26,34),
+        Navigation = Color3.fromRGB(20,20,27),
+        ActiveTab = Color3.fromRGB(120,100,255),
+        Text = Color3.fromRGB(240,240,245),
+        SecondaryText = Color3.fromRGB(140,140,155),
+        Accent = Color3.fromRGB(120,100,255),
+        Border = Color3.fromRGB(40,40,50),
+        ComponentBackground = Color3.fromRGB(32,32,42),
+        Hover = Color3.fromRGB(45,45,60),
+        Pressed = Color3.fromRGB(35,35,50),
+        Disabled = Color3.fromRGB(60,60,70),
+        Success = Color3.fromRGB(80,200,120),
+        Warning = Color3.fromRGB(255,180,80),
+        Error = Color3.fromRGB(255,90,90),
+        Information = Color3.fromRGB(80,160,255),
+    },
+    Light = {
+        Background = Color3.fromRGB(245,245,248),
+        SecondaryBackground = Color3.fromRGB(255,255,255),
+        Header = Color3.fromRGB(250,250,253),
+        Navigation = Color3.fromRGB(240,240,245),
+        ActiveTab = Color3.fromRGB(100,80,255),
+        Text = Color3.fromRGB(20,20,25),
+        SecondaryText = Color3.fromRGB(100,100,110),
+        Accent = Color3.fromRGB(100,80,255),
+        Border = Color3.fromRGB(220,220,228),
+        ComponentBackground = Color3.fromRGB(235,235,240),
+        Hover = Color3.fromRGB(230,230,238),
+        Pressed = Color3.fromRGB(220,220,230),
+        Disabled = Color3.fromRGB(200,200,210),
+        Success = Color3.fromRGB(60,180,100),
+        Warning = Color3.fromRGB(230,150,50),
+        Error = Color3.fromRGB(220,70,70),
+        Information = Color3.fromRGB(60,140,230),
+    },
+    AMOLED = {
+        Background = Color3.fromRGB(0,0,0),
+        SecondaryBackground = Color3.fromRGB(10,10,10),
+        Header = Color3.fromRGB(14,14,14),
+        Navigation = Color3.fromRGB(8,8,8),
+        ActiveTab = Color3.fromRGB(120,100,255),
+        Text = Color3.fromRGB(255,255,255),
+        SecondaryText = Color3.fromRGB(130,130,130),
+        Accent = Color3.fromRGB(120,100,255),
+        Border = Color3.fromRGB(30,30,30),
+        ComponentBackground = Color3.fromRGB(18,18,18),
+        Hover = Color3.fromRGB(28,28,28),
+        Pressed = Color3.fromRGB(22,22,22),
+        Disabled = Color3.fromRGB(50,50,50),
+        Success = Color3.fromRGB(80,200,120),
+        Warning = Color3.fromRGB(255,180,80),
+        Error = Color3.fromRGB(255,90,90),
+        Information = Color3.fromRGB(80,160,255),
+    },
+    Midnight = {
+        Background = Color3.fromRGB(12,18,32),
+        SecondaryBackground = Color3.fromRGB(18,26,44),
+        Header = Color3.fromRGB(22,32,52),
+        Navigation = Color3.fromRGB(16,22,38),
+        ActiveTab = Color3.fromRGB(90,140,255),
+        Text = Color3.fromRGB(220,230,250),
+        SecondaryText = Color3.fromRGB(120,135,165),
+        Accent = Color3.fromRGB(90,140,255),
+        Border = Color3.fromRGB(35,50,80),
+        ComponentBackground = Color3.fromRGB(26,38,62),
+        Hover = Color3.fromRGB(36,52,84),
+        Pressed = Color3.fromRGB(28,42,68),
+        Disabled = Color3.fromRGB(50,60,80),
+        Success = Color3.fromRGB(80,200,120),
+        Warning = Color3.fromRGB(255,180,80),
+        Error = Color3.fromRGB(255,90,90),
+        Information = Color3.fromRGB(80,160,255),
+    },
+    Dracula = {
+        Background = Color3.fromRGB(40,42,54),
+        SecondaryBackground = Color3.fromRGB(50,52,66),
+        Header = Color3.fromRGB(60,62,78),
+        Navigation = Color3.fromRGB(45,47,60),
+        ActiveTab = Color3.fromRGB(189,147,249),
+        Text = Color3.fromRGB(248,248,242),
+        SecondaryText = Color3.fromRGB(150,150,165),
+        Accent = Color3.fromRGB(189,147,249),
+        Border = Color3.fromRGB(70,72,88),
+        ComponentBackground = Color3.fromRGB(55,57,72),
+        Hover = Color3.fromRGB(68,71,90),
+        Pressed = Color3.fromRGB(58,60,78),
+        Disabled = Color3.fromRGB(90,92,105),
+        Success = Color3.fromRGB(80,250,123),
+        Warning = Color3.fromRGB(241,250,140),
+        Error = Color3.fromRGB(255,85,85),
+        Information = Color3.fromRGB(139,233,253),
+    },
+    Monokai = {
+        Background = Color3.fromRGB(39,40,34),
+        SecondaryBackground = Color3.fromRGB(50,51,45),
+        Header = Color3.fromRGB(60,61,55),
+        Navigation = Color3.fromRGB(45,46,40),
+        ActiveTab = Color3.fromRGB(166,226,46),
+        Text = Color3.fromRGB(248,248,242),
+        SecondaryText = Color3.fromRGB(140,140,130),
+        Accent = Color3.fromRGB(166,226,46),
+        Border = Color3.fromRGB(70,71,65),
+        ComponentBackground = Color3.fromRGB(55,56,50),
+        Hover = Color3.fromRGB(68,69,62),
+        Pressed = Color3.fromRGB(58,59,52),
+        Disabled = Color3.fromRGB(90,91,85),
+        Success = Color3.fromRGB(166,226,46),
+        Warning = Color3.fromRGB(253,151,31),
+        Error = Color3.fromRGB(249,38,114),
+        Information = Color3.fromRGB(102,217,239),
+    },
+    HighContrast = {
+        Background = Color3.fromRGB(0,0,0),
+        SecondaryBackground = Color3.fromRGB(20,20,20),
+        Header = Color3.fromRGB(255,255,255),
+        Navigation = Color3.fromRGB(10,10,10),
+        ActiveTab = Color3.fromRGB(255,255,0),
+        Text = Color3.fromRGB(255,255,255),
+        SecondaryText = Color3.fromRGB(200,200,200),
+        Accent = Color3.fromRGB(255,255,0),
+        Border = Color3.fromRGB(255,255,255),
+        ComponentBackground = Color3.fromRGB(30,30,30),
+        Hover = Color3.fromRGB(50,50,50),
+        Pressed = Color3.fromRGB(40,40,40),
+        Disabled = Color3.fromRGB(80,80,80),
+        Success = Color3.fromRGB(0,255,0),
+        Warning = Color3.fromRGB(255,255,0),
+        Error = Color3.fromRGB(255,0,0),
+        Information = Color3.fromRGB(0,255,255),
+    },
+}
+ThemeManager.Current = ThemeManager.Themes.Dark
+ThemeManager._subscribers = {}
+function ThemeManager:GetTheme() return Utility:DeepCopy(self.Current) end
+function ThemeManager:RegisterTheme(name, def) self.Themes[name]=def end
+function ThemeManager:RemoveCustomTheme(name) self.Themes[name]=nil end
+function ThemeManager:SetTheme(nameOrDef)
+    if type(nameOrDef)=="string" then
+        if not self.Themes[nameOrDef] then warn("[GGH] Invalid theme "..nameOrDef) return end
+        self.Current = self.Themes[nameOrDef]
+    else
+        self.Current = nameOrDef
+    end
+    for _,cb in ipairs(self._subscribers) do pcall(cb, self.Current) end
+end
+function ThemeManager:Subscribe(cb) table.insert(self._subscribers, cb) return function() end end
+
+--// ANIMATION MANAGER
+local AnimationManager = {}
+AnimationManager.Enabled = true
+AnimationManager.Speed = 1
+AnimationManager.Style = Enum.EasingStyle.Quint
+function AnimationManager:Tween(inst, props, duration, style, dir)
+    if not self.Enabled or not TweenService then
+        for k,v in pairs(props) do pcall(function() inst[k]=v end) end
+        return {Cancel=function() end, Completed={Wait=function() end}}
+    end
+    local info = TweenInfo.new((duration or 0.25)/self.Speed, style or self.Style, dir or Enum.EasingDirection.Out)
+    local ok, tw = pcall(function() return TweenService:Create(inst, info, props) end)
+    if ok and tw then tw:Play() return tw end
+    for k,v in pairs(props) do pcall(function() inst[k]=v end) end
+    return {Cancel=function() end}
+end
+function AnimationManager:SetEnabled(b) self.Enabled=b end
+function AnimationManager:SetSpeed(s) self.Speed=s end
+
+--// STATE MANAGER
+local StateManager = {}
+StateManager.__index = StateManager
+StateManager.Valid = {
+    NORMAL = {"MINIMIZED","HIDDEN","SETTINGS_OPEN","DESTROYED"},
+    MINIMIZED = {"NORMAL","HIDDEN","DESTROYED"},
+    HIDDEN = {"NORMAL","DESTROYED"},
+    SETTINGS_OPEN = {"NORMAL","HIDDEN","DESTROYED"},
+    DESTROYED = {}
+}
+function StateManager.new(initial)
+    return setmetatable({
+        current = initial or "NORMAL",
+        prev = nil,
+        locked = false,
+        listeners = {},
+        settingsReturnTab = nil,
+        normalSize = nil,
+        normalPos = nil,
+    }, StateManager)
+end
+function StateManager:Can(to) 
+    local allowed = self.Valid[self.current]
+    if not allowed then return false end
+    for _,v in ipairs(allowed) do if v==to then return true end end
+    return false
+end
+function StateManager:Transition(to, data)
+    if self.current=="DESTROYED" then return false end
+    if self.locked then return false end
+    if not self:Can(to) then warn("[GGH State] Invalid "..self.current.."->"..to) return false end
+    self.locked=true
+    local from = self.current
+    if to=="SETTINGS_OPEN" then self.settingsReturnTab = data and data.returnTab end
+    if from=="NORMAL" then self.prev = from end
+    self.current = to
+    for _,cb in ipairs(self.listeners) do pcall(cb, from, to, data) end
+    self.locked=false
+    return true
+end
+function StateManager:OnChange(cb) table.insert(self.listeners, cb) end
+function StateManager:Get() return self.current end
+
+--// ENVIRONMENT ADAPTER
+local EnvironmentAdapter = {}
+function EnvironmentAdapter:GetGuiParent(preferred)
+    if preferred and preferred.Parent~=nil then
+        local ok = pcall(function() preferred.Parent = preferred.Parent end)
+        if ok then return preferred end
+    end
+    -- try gethui (Delta)
+    local ok, hui = pcall(function() return gethui and gethui() end)
+    if ok and hui then return hui end
+    -- try CoreGui if accessible
+    if CoreGui then
+        local ok2 = pcall(function() Instance.new("ScreenGui").Parent = CoreGui end)
+        if ok2 then return CoreGui end
+    end
+    if LocalPlayer then
+        local pg = LocalPlayer:FindFirstChild("PlayerGui")
+        if pg then return pg end
+    end
+    return nil
+end
+function EnvironmentAdapter:CreateScreenGui(parent)
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "GGH_UI_"..tostring(math.random(10000,99999))
+    sg.ResetOnSpawn = false
+    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.IgnoreGuiInset = true
+    -- parenting handled by caller to avoid crash
+    return sg
+end
+
+--// NOTIFICATION MANAGER
+local NotificationManager = {}
+NotificationManager.__index = NotificationManager
+function NotificationManager.new(screenGui, cleanup)
+    local self = setmetatable({queue={}, max=4, container=nil, cleanup=cleanup}, NotificationManager)
+    local cont = Utility:Create("Frame", {
+        Name="Notifications",
+        AnchorPoint=Vector2.new(1,1),
+        Position=UDim2.new(1,-20,1,-20),
+        Size=UDim2.fromOffset(320,0),
+        AutomaticSize=Enum.AutomaticSize.Y,
+        BackgroundTransparency=1,
+        Parent=screenGui,
+        ZIndex=100,
+    }, {Utility:Create("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder, VerticalAlignment=Enum.VerticalAlignment.Bottom, Padding=UDim.new(0,8)})})
+    self.container=cont
+    return self
+end
+function NotificationManager:Notify(opts)
+    opts = opts or {}
+    local theme = ThemeManager.Current
+    local frame = Utility:Create("Frame", {
+        Size=UDim2.fromOffset(320,70),
+        BackgroundColor3=theme.SecondaryBackground,
+        Parent=self.container,
+        AutomaticSize=Enum.AutomaticSize.Y,
+    })
+    Utility:RoundCorners(frame,12)
+    Utility:Stroke(frame, theme.Border,1)
+    local icon = Utility:Create("TextLabel", {Text=opts.Icon or "!", Size=UDim2.fromOffset(36,36), Position=UDim2.fromOffset(10,10), BackgroundTransparency=1, TextScaled=true, Parent=frame})
+    local title = Utility:Create("TextLabel", {Text=opts.Title or "Notice", Position=UDim2.fromOffset(54,8), Size=UDim2.fromOffset(200,20), BackgroundTransparency=1, TextColor3=theme.Text, Font=Enum.Font.GothamBold, TextSize=14, TextXAlignment=Enum.TextXAlignment.Left, Parent=frame})
+    local desc = Utility:Create("TextLabel", {Text=opts.Description or "", Position=UDim2.fromOffset(54,28), Size=UDim2.fromOffset(250,30), BackgroundTransparency=1, TextColor3=theme.SecondaryText, Font=Enum.Font.Gotham, TextSize=12, TextXAlignment=Enum.TextXAlignment.Left, TextWrapped=true, AutomaticSize=Enum.AutomaticSize.Y, Parent=frame})
+    frame.Size = UDim2.fromOffset(320,0)
+    frame.AutomaticSize=Enum.AutomaticSize.Y
+    AnimationManager:Tween(frame, {BackgroundTransparency=0}, 0.2)
+    task.delay(opts.Duration or 3, function() 
+        local tw = AnimationManager:Tween(frame, {BackgroundTransparency=1}, 0.2)
+        task.wait(0.25)
+        pcall(function() frame:Destroy() end)
+    end)
+end
+
+--// COMPONENT FACTORY
+local ComponentFactory = {}
+ComponentFactory.__index = ComponentFactory
+
+function ComponentFactory:CreateButton(tabContent, opts, theme, cleanup)
+    opts=opts or {}
+    local btn = Utility:Create("TextButton", {
+        Name=opts.Name or "Button",
+        Size=UDim2.new(1,-20,0,38),
+        BackgroundColor3=theme.ComponentBackground,
+        Text="",
+        Parent=tabContent,
+        AutoButtonColor=false,
+    })
+    Utility:RoundCorners(btn,8)
+    Utility:Stroke(btn, theme.Border,1)
+    local lbl = Utility:Create("TextLabel", {Text=opts.Name or "Button", Size=UDim2.new(1,-20,1,0), Position=UDim2.fromOffset(10,0), BackgroundTransparency=1, TextColor3=theme.Text, Font=Enum.Font.GothamMedium, TextSize=13, TextXAlignment=Enum.TextXAlignment.Left, Parent=btn})
+    if opts.Description then
+        Utility:Create("TextLabel", {Text=opts.Description, Size=UDim2.new(1,-20,0,14), Position=UDim2.fromOffset(10,20), BackgroundTransparency=1, TextColor3=theme.SecondaryText, Font=Enum.Font.Gotham, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, Parent=btn})
+        btn.Size=UDim2.new(1,-20,0,48)
+    end
+    local conn = btn.MouseButton1Click:Connect(function()
+        if opts.Callback then task.spawn(opts.Callback) end
+        AnimationManager:Tween(btn, {BackgroundColor3=theme.Pressed},0.08)
+        task.wait(0.08)
+        AnimationManager:Tween(btn, {BackgroundColor3=theme.ComponentBackground},0.15)
+    end)
+    cleanup:AddConnection(conn)
+    local api={}
+    function api:SetText(t) lbl.Text=t end
+    function api:SetVisible(v) btn.Visible=v end
+    function api:SetEnabled(e) btn.Active=e; btn.AutoButtonColor=e end
+    function api:SetCallback(cb) opts.Callback=cb end
+    function api:Destroy() pcall(function() btn:Destroy() end) end
+    function api:GetValue() return nil end
+    return api
+end
+
+function ComponentFactory:CreateToggle(tabContent, opts, theme, cleanup)
+    opts=opts or {}
+    local val = opts.Default or false
+    local frame = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,42), BackgroundColor3=theme.ComponentBackground, Parent=tabContent})
+    Utility:RoundCorners(frame,8)
+    Utility:Stroke(frame, theme.Border,1)
+    local lbl = Utility:Create("TextLabel", {Text=opts.Name or "Toggle", Size=UDim2.new(0.7,0,1,0), Position=UDim2.fromOffset(10,0), BackgroundTransparency=1, TextColor3=theme.Text, Font=Enum.Font.GothamMedium, TextSize=13, TextXAlignment=Enum.TextXAlignment.Left, Parent=frame})
+    local toggleBg = Utility:Create("Frame", {Size=UDim2.fromOffset(44,24), Position=UDim2.new(1,-54,0.5,-12), BackgroundColor3=val and theme.Accent or theme.Border, Parent=frame})
+    Utility:RoundCorners(toggleBg,12)
+    local knob = Utility:Create("Frame", {Size=UDim2.fromOffset(18,18), Position=UDim2.fromOffset(val and 22 or 3,3), BackgroundColor3=Color3.new(1,1,1), Parent=toggleBg})
+    Utility:RoundCorners(knob,9)
+    local btn = Utility:Create("TextButton", {Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, Text="", Parent=frame})
+    local function update()
+        AnimationManager:Tween(toggleBg, {BackgroundColor3=val and theme.Accent or theme.Border},0.18)
+        AnimationManager:Tween(knob, {Position=UDim2.fromOffset(val and 22 or 3,3)},0.18)
+        if opts.Callback then task.spawn(opts.Callback, val) end
+    end
+    local conn = btn.MouseButton1Click:Connect(function() val=not val; update() end)
+    cleanup:AddConnection(conn)
+    local api={}
+    function api:SetValue(v) val=v; update() end
+    function api:GetValue() return val end
+    function api:SetVisible(v) frame.Visible=v end
+    function api:SetEnabled(e) btn.Active=e end
+    function api:SetCallback(cb) opts.Callback=cb end
+    function api:Destroy() pcall(function() frame:Destroy() end) end
+    return api
+end
+
+function ComponentFactory:CreateSlider(tabContent, opts, theme, cleanup)
+    opts=opts or {}
+    local minV = opts.Min or 0; local maxV = opts.Max or 100; local val = opts.Default or 50
+    local frame = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,56), BackgroundColor3=theme.ComponentBackground, Parent=tabContent})
+    Utility:RoundCorners(frame,8); Utility:Stroke(frame, theme.Border,1)
+    local lbl = Utility:Create("TextLabel", {Text=(opts.Name or "Slider").." : "..val, Size=UDim2.new(1,-20,0,20), Position=UDim2.fromOffset(10,4), BackgroundTransparency=1, TextColor3=theme.Text, Font=Enum.Font.GothamMedium, TextSize=13, TextXAlignment=Enum.TextXAlignment.Left, Parent=frame})
+    local track = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,6), Position=UDim2.fromOffset(10,36), BackgroundColor3=theme.Border, Parent=frame})
+    Utility:RoundCorners(track,3)
+    local fill = Utility:Create("Frame", {Size=UDim2.new((val-minV)/(maxV-minV),0,1,0), BackgroundColor3=theme.Accent, Parent=track})
+    Utility:RoundCorners(fill,3)
+    local dragging=false
+    local function setFromPos(x)
+        local rel = math.clamp((x-track.AbsolutePosition.X)/track.AbsoluteSize.X,0,1)
+        local raw = minV + rel*(maxV-minV)
+        if opts.Increment then raw = math.floor(raw/opts.Increment+0.5)*opts.Increment end
+        val = math.clamp(raw,minV,maxV)
+        fill.Size=UDim2.new((val-minV)/(maxV-minV),0,1,0)
+        lbl.Text=(opts.Name or "Slider").." : "..tostring(val)
+        if opts.Callback then task.spawn(opts.Callback,val) end
+    end
+    local btn = Utility:Create("TextButton", {Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, Text="", Parent=track})
+    local c1 = btn.InputBegan:Connect(function(inp) if inp.UserInputType==Enum.UserInputType.MouseButton1 or inp.UserInputType==Enum.UserInputType.Touch then dragging=true; setFromPos(inp.Position.X) end end)
+    local c2, c3
+    if UserInputService then
+        c2 = UserInputService.InputChanged:Connect(function(inp) if dragging and (inp.UserInputType==Enum.UserInputType.MouseMovement or inp.UserInputType==Enum.UserInputType.Touch) then setFromPos(inp.Position.X) end end)
+        c3 = UserInputService.InputEnded:Connect(function(inp) if inp.UserInputType==Enum.UserInputType.MouseButton1 or inp.UserInputType==Enum.UserInputType.Touch then dragging=false end end)
+    end
+    cleanup:AddConnection(c1); if c2 then cleanup:AddConnection(c2) end; if c3 then cleanup:AddConnection(c3) end
+    local api={}
+    function api:SetValue(v) val=v; fill.Size=UDim2.new((val-minV)/(maxV-minV),0,1,0); lbl.Text=(opts.Name or "Slider").." : "..val end
+    function api:GetValue() return val end
+    function api:SetVisible(v) frame.Visible=v end
+    function api:Destroy() pcall(function() frame:Destroy() end) end
+    function api:SetCallback(cb) opts.Callback=cb end
+    return api
+end
+
+function ComponentFactory:CreateDropdown(tabContent, opts, theme, cleanup)
+    opts=opts or {}
+    local selected = opts.Default or (opts.Options and opts.Options[1] or "")
+    local frame = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,38), BackgroundColor3=theme.ComponentBackground, ClipsDescendants=false, ZIndex=2, Parent=tabContent})
+    Utility:RoundCorners(frame,8); Utility:Stroke(frame, theme.Border,1)
+    local lbl = Utility:Create("TextLabel", {Text=opts.Name or "Dropdown", Size=UDim2.new(0.5,0,1,0), Position=UDim2.fromOffset(10,0), BackgroundTransparency=1, TextColor3=theme.Text, Font=Enum.Font.GothamMedium, TextSize=13, TextXAlignment=Enum.TextXAlignment.Left, Parent=frame})
+    local selBtn = Utility:Create("TextButton", {Text=selected.."  ▾", Size=UDim2.new(0.45,0,0,28), Position=UDim2.new(0.5,0,0.5,-14), BackgroundColor3=theme.SecondaryBackground, TextColor3=theme.Text, Font=Enum.Font.Gotham, TextSize=12, Parent=frame})
+    Utility:RoundCorners(selBtn,6)
+    local list = Utility:Create("Frame", {Size=UDim2.new(1,0,0,0), Position=UDim2.new(0,0,1,6), BackgroundColor3=theme.SecondaryBackground, Visible=false, ZIndex=10, Parent=frame, AutomaticSize=Enum.AutomaticSize.Y})
+    Utility:RoundCorners(list,8); Utility:Stroke(list, theme.Border,1)
+    Utility:Create("UIListLayout", {Padding=UDim.new(0,2), Parent=list})
+    local function buildOptions()
+        for _,child in ipairs(list:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+        for _,opt in ipairs(opts.Options or {}) do
+            local ob = Utility:Create("TextButton", {Text=opt, Size=UDim2.new(1,-6,0,26), BackgroundColor3=theme.ComponentBackground, TextColor3=theme.Text, Font=Enum.Font.Gotham, TextSize=12, Parent=list})
+            Utility:RoundCorners(ob,6)
+            ob.MouseButton1Click:Connect(function() selected=opt; selBtn.Text=opt.."  ▾"; list.Visible=false; if opts.Callback then task.spawn(opts.Callback, opt) end end)
+        end
+    end
+    buildOptions()
+    selBtn.MouseButton1Click:Connect(function() list.Visible=not list.Visible end)
+    local api={}
+    function api:SetValue(v) selected=v; selBtn.Text=v.."  ▾" end
+    function api:GetValue() return selected end
+    function api:SetVisible(v) frame.Visible=v end
+    function api:Destroy() pcall(function() frame:Destroy() end) end
+    function api:SetCallback(cb) opts.Callback=cb end
+    return api
+end
+
+function ComponentFactory:CreateInput(tabContent, opts, theme, cleanup)
+    local frame = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,38), BackgroundColor3=theme.ComponentBackground, Parent=tabContent})
+    Utility:RoundCorners(frame,8); Utility:Stroke(frame, theme.Border,1)
+    local box = Utility:Create("TextBox", {Text=opts.Default or "", PlaceholderText=opts.Placeholder or opts.Name or "Input", Size=UDim2.new(1,-20,1,0), Position=UDim2.fromOffset(10,0), BackgroundTransparency=1, TextColor3=theme.Text, PlaceholderColor3=theme.SecondaryText, Font=Enum.Font.Gotham, TextSize=13, TextXAlignment=Enum.TextXAlignment.Left, ClearTextOnFocus=false, Parent=frame})
+    local conn = box.FocusLost:Connect(function(enter) if opts.Callback then task.spawn(opts.Callback, box.Text, enter) end end)
+    cleanup:AddConnection(conn)
+    local api={}
+    function api:SetValue(v) box.Text=v end
+    function api:GetValue() return box.Text end
+    function api:SetVisible(v) frame.Visible=v end
+    function api:Destroy() pcall(function() frame:Destroy() end) end
+    function api:SetCallback(cb) opts.Callback=cb end
+    return api
+end
+
+function ComponentFactory:CreateLabel(tabContent, opts, theme)
+    local lbl = Utility:Create("TextLabel", {Text=opts.Text or opts.Name or "Label", Size=UDim2.new(1,-20,0,24), BackgroundTransparency=1, TextColor3=theme.Text, Font=Enum.Font.GothamMedium, TextSize=13, TextXAlignment=Enum.TextXAlignment.Left, Parent=tabContent})
+    local api={}
+    function api:SetText(t) lbl.Text=t end
+    function api:SetVisible(v) lbl.Visible=v end
+    function api:Destroy() pcall(function() lbl:Destroy() end) end
+    return api
+end
+
+function ComponentFactory:CreateParagraph(tabContent, opts, theme)
+    local lbl = Utility:Create("TextLabel", {Text=opts.Text or "", Size=UDim2.new(1,-20,0,0), AutomaticSize=Enum.AutomaticSize.Y, BackgroundTransparency=1, TextColor3=theme.SecondaryText, Font=Enum.Font.Gotham, TextSize=12, TextWrapped=true, TextXAlignment=Enum.TextXAlignment.Left, Parent=tabContent})
+    local api={}
+    function api:SetText(t) lbl.Text=t end
+    function api:SetVisible(v) lbl.Visible=v end
+    function api:Destroy() pcall(function() lbl:Destroy() end) end
+    return api
+end
+
+function ComponentFactory:CreateSection(tabContent, opts, theme)
+    local frame = Utility:Create("Frame", {Size=UDim2.new(1,-10,0,28), BackgroundTransparency=1, Parent=tabContent})
+    Utility:Create("TextLabel", {Text=(opts.Name or "Section"):upper(), Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, TextColor3=theme.SecondaryText, Font=Enum.Font.GothamBold, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, Parent=frame})
+    local api={}; function api:SetText(t) frame:FindFirstChildOfClass("TextLabel").Text=t:upper() end; function api:Destroy() pcall(function() frame:Destroy() end) end; function api:SetVisible(v) frame.Visible=v end; return api
+end
+
+function ComponentFactory:CreateDivider(tabContent, _, theme)
+    local d = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,1), BackgroundColor3=theme.Border, BackgroundTransparency=0.5, Parent=tabContent})
+    local api={}; function api:Destroy() pcall(function() d:Destroy() end) end; function api:SetVisible(v) d.Visible=v end; return api
+end
+
+function ComponentFactory:CreateColorPicker(tabContent, opts, theme, cleanup)
+    opts=opts or {}
+    local color = opts.Default or Color3.fromRGB(120,100,255)
+    local frame = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,42), BackgroundColor3=theme.ComponentBackground, Parent=tabContent})
+    Utility:RoundCorners(frame,8); Utility:Stroke(frame, theme.Border,1)
+    local lbl = Utility:Create("TextLabel", {Text=opts.Name or "Color", Size=UDim2.new(0.6,0,1,0), Position=UDim2.fromOffset(10,0), BackgroundTransparency=1, TextColor3=theme.Text, Font=Enum.Font.GothamMedium, TextSize=13, TextXAlignment=Enum.TextXAlignment.Left, Parent=frame})
+    local preview = Utility:Create("Frame", {Size=UDim2.fromOffset(28,28), Position=UDim2.new(1,-38,0.5,-14), BackgroundColor3=color, Parent=frame})
+    Utility:RoundCorners(preview,6); Utility:Stroke(preview, theme.Border,1)
+    -- popup
+    local popup = Utility:Create("Frame", {Size=UDim2.fromOffset(220,180), Position=UDim2.new(0,0,1,8), BackgroundColor3=theme.SecondaryBackground, Visible=false, ZIndex=20, Parent=frame})
+    Utility:RoundCorners(popup,10); Utility:Stroke(popup, theme.Border,1)
+    local h,s,v = Color3.toHSV(color)
+    -- simple HSV sliders
+    local hueTrack = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,16), Position=UDim2.fromOffset(10,10), BackgroundColor3=Color3.fromRGB(255,0,0), Parent=popup})
+    Utility:RoundCorners(hueTrack,4)
+    local hueFill = Utility:Create("UIGradient", {Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),ColorSequenceKeypoint.new(0.17,Color3.fromRGB(255,255,0)),ColorSequenceKeypoint.new(0.33,Color3.fromRGB(0,255,0)),ColorSequenceKeypoint.new(0.5,Color3.fromRGB(0,255,255)),ColorSequenceKeypoint.new(0.67,Color3.fromRGB(0,0,255)),ColorSequenceKeypoint.new(0.83,Color3.fromRGB(255,0,255)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,0))}, Parent=hueTrack})
+    local function updateAll()
+        preview.BackgroundColor3=color
+        if opts.Callback then task.spawn(opts.Callback, color) end
+    end
+    local function setHue(posX)
+        local rel = math.clamp((posX-hueTrack.AbsolutePosition.X)/hueTrack.AbsoluteSize.X,0,1)
+        h=rel; color=Color3.fromHSV(h,s,v); updateAll()
+    end
+    local btn = Utility:Create("TextButton", {Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, Text="", Parent=hueTrack})
+    btn.InputBegan:Connect(function(inp) if inp.UserInputType==Enum.UserInputType.MouseButton1 or inp.UserInputType==Enum.UserInputType.Touch then setHue(inp.Position.X) end end)
+    if UserInputService then
+        local drag=false
+        cleanup:AddConnection(btn.InputBegan:Connect(function(inp) if inp.UserInputType==Enum.UserInputType.MouseButton1 or inp.UserInputType==Enum.UserInputType.Touch then drag=true end end))
+        cleanup:AddConnection(UserInputService.InputChanged:Connect(function(inp) if drag and (inp.UserInputType==Enum.UserInputType.MouseMovement or inp.UserInputType==Enum.UserInputType.Touch) then setHue(inp.Position.X) end end))
+        cleanup:AddConnection(UserInputService.InputEnded:Connect(function() drag=false end))
+    end
+    local satBox = Utility:Create("TextBox", {Text=string.format("#%02X%02X%02X", math.floor(color.R*255), math.floor(color.G*255), math.floor(color.B*255)), Size=UDim2.new(1,-20,0,28), Position=UDim2.fromOffset(10,40), BackgroundColor3=theme.ComponentBackground, TextColor3=theme.Text, Font=Enum.Font.Code, TextSize=12, Parent=popup})
+    Utility:RoundCorners(satBox,6)
+    satBox.FocusLost:Connect(function()
+        local hex = satBox.Text:gsub("#","")
+        local r = tonumber(hex:sub(1,2),16); local g = tonumber(hex:sub(3,4),16); local b = tonumber(hex:sub(5,6),16)
+        if r and g and b then color=Color3.fromRGB(r,g,b); h,s,v = Color3.toHSV(color); updateAll() end
+    end)
+    local toggleBtn = Utility:Create("TextButton", {Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, Text="", Parent=frame})
+    toggleBtn.MouseButton1Click:Connect(function() popup.Visible=not popup.Visible end)
+    local api={}
+    function api:SetValue(c) color=c; h,s,v=Color3.toHSV(c); updateAll(); satBox.Text=string.format("#%02X%02X%02X", math.floor(c.R*255), math.floor(c.G*255), math.floor(c.B*255)) end
+    function api:GetValue() return color end
+    function api:SetVisible(v) frame.Visible=v end
+    function api:Destroy() pcall(function() frame:Destroy() end) end
+    function api:SetCallback(cb) opts.Callback=cb end
+    return api
+end
+
+-- Additional quick components mapping
+function ComponentFactory:CreateKeybind(tabContent, opts, theme, cleanup)
+    -- simplified keybind: captures next key
+    local frame = Utility:Create("Frame", {Size=UDim2.new(1,-20,0,38), BackgroundColor3=theme.ComponentBackground, Parent=tabContent})
+    Utility:RoundCorners(frame,8); Utility:Stroke(frame, theme.Border,1)
+    local lbl = Utility:Create("TextLabel", {Text=opts.Name or "Keybind", Size=UDim2.new(0.5,0,1,0), Position=UDim2.fromOffset(10,0), BackgroundTransparency=1, TextColor3=theme.Text, Font=Enum.Font.GothamMedium, TextSize=13, TextXAlignment=Enum.TextXAlignment.Left, Parent=frame})
+    local keyLbl = Utility:Create("TextButton", {Text=opts.Default and opts.Default.Name or "None", Size=UDim2.new(0.4,0,0,26), Position=UDim2.new(0.55,0,0.5,-13), BackgroundColor3=theme.SecondaryBackground, TextColor3=theme.Text, Font=Enum.Font.Gotham, TextSize=12, Parent=frame})
+    Utility:RoundCorners(keyLbl,6)
+    local current = opts.Default
+    local listening=false
+    keyLbl.MouseButton1Click:Connect(function()
+        listening=true; keyLbl.Text="..."; 
+        local conn
+        conn = UserInputService.InputBegan:Connect(function(inp, gpe)
+            if not listening then return end
+            if inp.UserInputType==Enum.UserInputType.Keyboard then
+                current=inp.KeyCode; keyLbl.Text=current.Name; listening=false
+                if opts.Callback then task.spawn(opts.Callback, current) end
+                conn:Disconnect()
+            end
+        end)
+    end)
+    local api={}
+    function api:GetValue() return current end
+    function api:SetValue(v) current=v; keyLbl.Text=v and v.Name or "None" end
+    function api:SetVisible(v) frame.Visible=v end
+    function api:Destroy() pcall(function() frame:Destroy() end) end
+    function api:SetCallback(cb) opts.Callback=cb end
+    return api
+end
+
+--// WINDOW CLASS
+local Window = {}
+Window.__index = Window
+
+function Window.new(lib, config)
+    config=config or {}
+    local cleanup = CleanupManager.new()
+    local state = StateManager.new("NORMAL")
+    local theme = ThemeManager.Current
+    local envParent = EnvironmentAdapter:GetGuiParent(config.GuiParent)
+    if not envParent then error("[GGH] No valid GuiParent found") end
+
+    local screenGui = EnvironmentAdapter:CreateScreenGui(envParent)
+    -- safe parent
+    local ok, err = pcall(function() screenGui.Parent = envParent end)
+    if not ok then
+        if LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui") then
+            screenGui.Parent = LocalPlayer.PlayerGui
+        else
+            error("[GGH] Failed to parent ScreenGui: "..tostring(err))
+        end
+    end
+    cleanup:AddInstance(screenGui)
+
+    local mainSize = config.Size or UDim2.fromOffset(650,480)
+    local minSize = config.MinSize or UDim2.fromOffset(350,300)
+    local startPos = config.Position or UDim2.fromOffset(100,100)
+
+    local mainFrame = Utility:Create("Frame", {
+        Name="MainWindow",
+        Size=mainSize,
+        Position=startPos,
+        BackgroundColor3=theme.Background,
+        Parent=screenGui,
+        ClipsDescendants=false,
+    })
+    Utility:RoundCorners(mainFrame,14)
+    Utility:Stroke(mainFrame, theme.Border,1)
+    cleanup:AddInstance(mainFrame)
+
+    -- Shadow (simple)
+    local shadow = Utility:Create("ImageLabel", {Image="rbxassetid://5554236805", Size=UDim2.new(1,40,1,40), Position=UDim2.fromOffset(-20,-20), BackgroundTransparency=1, ImageTransparency=0.5, ImageColor3=Color3.new(0,0,0), ZIndex=-1, Parent=mainFrame})
+
+    -- Header
+    local headerHeight = (config.Header and config.Header.Height) or 48
+    local header = Utility:Create("Frame", {
+        Name="Header",
+        Size=UDim2.new(1,0,0,headerHeight),
+        BackgroundColor3=theme.Header,
+        Parent=mainFrame,
+        ZIndex=2,
+    })
+    Utility:RoundCorners(header,14)
+    local headerFix = Utility:Create("Frame", {Size=UDim2.new(1,0,0,14), Position=UDim2.new(0,0,1,-14), BackgroundColor3=theme.Header, BorderSizePixel=0, ZIndex=1, Parent=header})
+
+    local titleLbl = Utility:Create("TextLabel", {
+        Text=config.Title or "GGH Premium",
+        Position=UDim2.fromOffset(16,0),
+        Size=UDim2.new(0.5,0,1,0),
+        BackgroundTransparency=1,
+        TextColor3=theme.Text,
+        Font=Enum.Font.GothamBold,
+        TextSize=15,
+        TextXAlignment=Enum.TextXAlignment.Left,
+        Parent=header,
+    })
+    if config.Subtitle then
+        Utility:Create("TextLabel", {Text=config.Subtitle, Position=UDim2.fromOffset(16,18), Size=UDim2.new(0.5,0,0,14), BackgroundTransparency=1, TextColor3=theme.SecondaryText, Font=Enum.Font.Gotham, TextSize=11, TextXAlignment=Enum.TextXAlignment.Left, Parent=header})
+        titleLbl.Position=UDim2.fromOffset(16,-6)
+    end
+
+    -- Header Buttons Container
+    local btnContainer = Utility:Create("Frame", {Size=UDim2.new(0,140,1,0), Position=UDim2.new(1,-150,0,0), BackgroundTransparency=1, Parent=header})
+    Utility:Create("UIListLayout", {FillDirection=Enum.FillDirection.Horizontal, HorizontalAlignment=Enum.HorizontalAlignment.Right, VerticalAlignment=Enum.VerticalAlignment.Center, Padding=UDim.new(0,6), Parent=btnContainer})
+
+    local function makeHeaderBtn(icon, tooltip)
+        local b = Utility:Create("TextButton", {Size=UDim2.fromOffset(28,28), BackgroundColor3=theme.ComponentBackground, Text=icon, TextColor3=theme.Text, Font=Enum.Font.GothamBold, TextSize=14, AutoButtonColor=false, Parent=btnContainer})
+        Utility:RoundCorners(b,8)
+        Utility:Stroke(b, theme.Border,1)
+        b.MouseEnter:Connect(function() AnimationManager:Tween(b,{BackgroundColor3=theme.Hover},0.15) end)
+        b.MouseLeave:Connect(function() AnimationManager:Tween(b,{BackgroundColor3=theme.ComponentBackground},0.15) end)
+        return b
+    end
+
+    local dragBtn = makeHeaderBtn("✥","Drag")
+    local hideBtn = makeHeaderBtn("—","Hide")
+    local minBtn = makeHeaderBtn("–","Minimize")
+    local settingsBtn = makeHeaderBtn("⚙","Settings")
+
+    -- Navigation + Content
+    local navWidth = 160
+    local navFrame = Utility:Create("Frame", {Name="Nav", Size=UDim2.new(0,navWidth,1,-headerHeight), Position=UDim2.new(0,0,0,headerHeight), BackgroundColor3=theme.Navigation, Parent=mainFrame})
+    local navLayout = Utility:Create("UIListLayout", {Padding=UDim.new(0,4), SortOrder=Enum.SortOrder.LayoutOrder, Parent=navFrame})
+    Utility:Create("UIPadding", {PaddingTop=UDim.new(0,10), PaddingLeft=UDim.new(0,8), PaddingRight=UDim.new(0,8), Parent=navFrame})
+
+    local contentFrame = Utility:Create("ScrollingFrame", {
+        Name="Content",
+        Size=UDim2.new(1,-navWidth,1,-headerHeight),
+        Position=UDim2.new(0,navWidth,0,headerHeight),
+        BackgroundColor3=theme.SecondaryBackground,
+        BorderSizePixel=0,
+        ScrollBarThickness=4,
+        ScrollBarImageColor3=theme.Border,
+        CanvasSize=UDim2.new(0,0,0,0),
+        AutomaticCanvasSize=Enum.AutomaticSize.Y,
+        Parent=mainFrame,
+    })
+    local contentLayout = Utility:Create("UIListLayout", {Padding=UDim.new(0,8), SortOrder=Enum.SortOrder.LayoutOrder, Parent=contentFrame})
+    Utility:Create("UIPadding", {PaddingAll=UDim.new(0,10), Parent=contentFrame})
+
+    -- Floating button
+    local floatingBtn = Utility:Create("TextButton", {
+        Name="Floating",
+        Size=UDim2.fromOffset(52,52),
+        Position=UDim2.fromOffset(20,200),
+        BackgroundColor3=theme.Accent,
+        Text="G",
+        TextColor3=Color3.new(1,1,1),
+        Font=Enum.Font.GothamBold,
+        TextSize=20,
+        Visible=false,
+        Parent=screenGui,
+        ZIndex=50,
+    })
+    Utility:RoundCorners(floatingBtn,26)
+    cleanup:AddInstance(floatingBtn)
+
+    -- State logic
+    local selfObj = setmetatable({
+        _lib=lib,
+        Config=config,
+        Cleanup=cleanup,
+        State=state,
+        ScreenGui=screenGui,
+        MainFrame=mainFrame,
+        Header=header,
+        NavFrame=navFrame,
+        ContentFrame=contentFrame,
+        FloatingButton=floatingBtn,
+        Tabs={},
+        SelectedTab=nil,
+        SettingsTab=nil,
+        PreviousTab=nil,
+        NormalSize=mainSize,
+        Minimized=false,
+        NotificationManager=NotificationManager.new(screenGui, cleanup),
+    }, Window)
+
+    -- Drag handling for main frame via dragBtn + floatingBtn
+    local function enableDrag(handle, target, isFloating)
+        local dragging=false; local dragStart, startPos
+        local function update(inp)
+            if not dragging then return end
+            local delta = inp.Position - dragStart
+            local newPos = UDim2.fromOffset(startPos.X.Offset+delta.X, startPos.Y.Offset+delta.Y)
+            newPos = Utility:ClampUDim2(newPos, target.Size)
+            target.Position=newPos
+            if isFloating then selfObj._floatingPos=newPos end
+        end
+        handle.InputBegan:Connect(function(inp)
+            if inp.UserInputType==Enum.UserInputType.MouseButton1 or inp.UserInputType==Enum.UserInputType.Touch then
+                dragging=true; dragStart=inp.Position; startPos=target.Position
+            end
+        end)
+        if UserInputService then
+            cleanup:AddConnection(UserInputService.InputChanged:Connect(function(inp)
+                if dragging and (inp.UserInputType==Enum.UserInputType.MouseMovement or inp.UserInputType==Enum.UserInputType.Touch) then update(inp) end
+            end))
+            cleanup:AddConnection(UserInputService.InputEnded:Connect(function(inp)
+                if inp.UserInputType==Enum.UserInputType.MouseButton1 or inp.UserInputType==Enum.UserInputType.Touch then dragging=false end
+            end))
+        end
+    end
+    enableDrag(dragBtn, mainFrame, false)
+    enableDrag(header, mainFrame, false)
+    enableDrag(floatingBtn, floatingBtn, true)
+
+    -- Hide / Show
+    local function doHide()
+        if not state:Can("HIDDEN") then return end
+        state:Transition("HIDDEN")
+        local tw = AnimationManager:Tween(mainFrame, {Size=UDim2.fromOffset(0,0), BackgroundTransparency=1}, 0.25)
+        task.wait(0.25)
+        mainFrame.Visible=false
+        floatingBtn.Visible=true
+        AnimationManager:Tween(floatingBtn, {Size=UDim2.fromOffset(52,52)},0.2)
+    end
+    local function doShow()
+        if state:Get()~="HIDDEN" then return end
+        floatingBtn.Visible=false
+        mainFrame.Visible=true
+        mainFrame.Size=UDim2.fromOffset(0,0)
+        state:Transition("NORMAL")
+        AnimationManager:Tween(mainFrame, {Size=selfObj.NormalSize, BackgroundTransparency=0},0.3)
+    end
+    hideBtn.MouseButton1Click:Connect(doHide)
+    floatingBtn.MouseButton1Click:Connect(doShow)
+
+    -- Minimize / Expand
+    local function doMinimize()
+        if not state:Can("MINIMIZED") then return end
+        state:Transition("MINIMIZED")
+        selfObj.NormalSize=mainFrame.Size
+        navFrame.Visible=false; contentFrame.Visible=false
+        AnimationManager:Tween(mainFrame, {Size=UDim2.new(mainFrame.Size.X.Scale, mainFrame.Size.X.Offset, 0, headerHeight)},0.25)
+        minBtn.Text="+"
+    end
+    local function doExpand()
+        if state:Get()~="MINIMIZED" then return end
+        navFrame.Visible=true; contentFrame.Visible=true
+        state:Transition("NORMAL")
+        AnimationManager:Tween(mainFrame, {Size=selfObj.NormalSize},0.25)
+        minBtn.Text="–"
+    end
+    minBtn.MouseButton1Click:Connect(function()
+        if state:Get()=="MINIMIZED" then doExpand() else doMinimize() end
+    end)
+
+    -- Settings
+    local settingsContent = nil
+    local function openSettings()
+        if state:Get()=="SETTINGS_OPEN" then
+            -- close
+            if settingsContent then settingsContent.Visible=false end
+            if selfObj.PreviousTab then selfObj:SelectTab(selfObj.PreviousTab.Name) end
+            state:Transition("NORMAL")
+            settingsContent=nil
+            return
+        end
+        if state:Get()=="MINIMIZED" then doExpand() task.wait(0.26) end
+        if not state:Can("SETTINGS_OPEN") then return end
+        selfObj.PreviousTab=selfObj.SelectedTab
+        state:Transition("SETTINGS_OPEN", {returnTab=selfObj.PreviousTab})
+        -- clear content visuals for settings
+        for _,c in ipairs(contentFrame:GetChildren()) do if c:IsA("GuiObject") and c.Name~="UIListLayout" and c.Name~="UIPadding" then c.Visible=false end end
+        settingsContent = Utility:Create("Frame", {Name="SettingsPage", Size=UDim2.new(1,0,0,0), AutomaticSize=Enum.AutomaticSize.Y, BackgroundTransparency=1, Parent=contentFrame})
+        Utility:Create("UIListLayout", {Padding=UDim.new(0,8), Parent=settingsContent})
+        -- Build settings UI
+        local factory = ComponentFactory
+        factory:CreateSection(settingsContent, {Name="Appearance"}, theme)
+        factory:CreateDropdown(settingsContent, {Name="Theme", Options={"Dark","Light","AMOLED","Midnight","Dracula","Monokai","HighContrast"}, Default="Dark", Callback=function(v) ThemeManager:SetTheme(v) end}, theme, cleanup)
+        factory:CreateToggle(settingsContent, {Name="Enable Animations", Default=true, Callback=function(v) AnimationManager:SetEnabled(v) end}, theme, cleanup)
+        factory:CreateSlider(settingsContent, {Name="Animation Speed", Min=0.5, Max=2, Default=1, Increment=0.1, Callback=function(v) AnimationManager:SetSpeed(v) end}, theme, cleanup)
+        factory:CreateButton(settingsContent, {Name="Reset Window Position", Callback=function() mainFrame.Position=UDim2.fromOffset(100,100) end}, theme, cleanup)
+    end
+    settingsBtn.MouseButton1Click:Connect(openSettings)
+
+    -- Theme subscription
+    ThemeManager:Subscribe(function(newTheme)
+        mainFrame.BackgroundColor3=newTheme.Background
+        header.BackgroundColor3=newTheme.Header
+        headerFix.BackgroundColor3=newTheme.Header
+        navFrame.BackgroundColor3=newTheme.Navigation
+        contentFrame.BackgroundColor3=newTheme.SecondaryBackground
+        titleLbl.TextColor3=newTheme.Text
+        -- update existing components (best effort)
+        for _,tab in pairs(selfObj.Tabs) do
+            for _,comp in ipairs(tab._components or {}) do
+                -- handled by token references if needed
+            end
+        end
+    end)
+
+    -- Window methods
+    function selfObj:CreateTab(opts)
+        opts=opts or {}
+        local tabName = opts.Name or "Tab "..(#selfObj.Tabs+1)
+        local tabBtn = Utility:Create("TextButton", {
+            Name=tabName,
+            Size=UDim2.new(1,0,0,34),
+            BackgroundColor3=theme.ComponentBackground,
+            Text="  "..(opts.Icon or "•").."  "..tabName,
+            TextColor3=theme.SecondaryText,
+            Font=Enum.Font.GothamMedium,
+            TextSize=13,
+            TextXAlignment=Enum.TextXAlignment.Left,
+            Parent=navFrame,
+        })
+        Utility:RoundCorners(tabBtn,8)
+        local tabContent = Utility:Create("Frame", {Name=tabName.."_Content", Size=UDim2.new(1,0,0,0), AutomaticSize=Enum.AutomaticSize.Y, BackgroundTransparency=1, Visible=false, Parent=contentFrame})
+        Utility:Create("UIListLayout", {Padding=UDim.new(0,8), Parent=tabContent})
+
+        local tabObj = {
+            Name=tabName,
+            Button=tabBtn,
+            Content=tabContent,
+            _components={},
+        }
+
+        function tabObj:CreateButton(o) local c=ComponentFactory:CreateButton(tabContent, o, ThemeManager.Current, cleanup); table.insert(self._components,c); return c end
+        function tabObj:CreateToggle(o) local c=ComponentFactory:CreateToggle(tabContent, o, ThemeManager.Current, cleanup); table.insert(self._components,c); return c end
+        function tabObj:CreateSlider(o) local c=ComponentFactory:CreateSlider(tabContent, o, ThemeManager.Current, cleanup); table.insert(self._components,c); return c end
+        function tabObj:CreateDropdown(o) local c=ComponentFactory:CreateDropdown(tabContent, o, ThemeManager.Current, cleanup); table.insert(self._components,c); return c end
+        function tabObj:CreateInput(o) local c=ComponentFactory:CreateInput(tabContent, o, ThemeManager.Current, cleanup); table.insert(self._components,c); return c end
+        function tabObj:CreateTextbox(o) return self:CreateInput(o) end
+        function tabObj:CreateLabel(o) local c=ComponentFactory:CreateLabel(tabContent, o, ThemeManager.Current); table.insert(self._components,c); return c end
+        function tabObj:CreateParagraph(o) local c=ComponentFactory:CreateParagraph(tabContent, o, ThemeManager.Current); table.insert(self._components,c); return c end
+        function tabObj:CreateSection(o) local c=ComponentFactory:CreateSection(tabContent, o, ThemeManager.Current); table.insert(self._components,c); return c end
+        function tabObj:CreateDivider(o) local c=ComponentFactory:CreateDivider(tabContent, o, ThemeManager.Current); table.insert(self._components,c); return c end
+        function tabObj:CreateColorPicker(o) local c=ComponentFactory:CreateColorPicker(tabContent, o, ThemeManager.Current, cleanup); table.insert(self._components,c); return c end
+        function tabObj:CreateKeybind(o) local c=ComponentFactory:CreateKeybind(tabContent, o, ThemeManager.Current, cleanup); table.insert(self._components,c); return c end
+        -- aliases for compatibility
+        function tabObj:CreateCheckbox(o) return self:CreateToggle(o) end
+        function tabObj:CreateColorPickerWithTransparency(o) return self:CreateColorPicker(o) end
+        function tabObj:CreateSearchBar(o) return self:CreateInput(o) end
+        function tabObj:CreateBadge(o) return self:CreateLabel(o) end
+        function tabObj:CreateProgressBar(o) return self:CreateSlider(o) end
+
+        tabBtn.MouseButton1Click:Connect(function() selfObj:SelectTab(tabName) end)
+
+        selfObj.Tabs[tabName]=tabObj
+        if not selfObj.SelectedTab then selfObj:SelectTab(tabName) end
+        return tabObj
+    end
+
+    function selfObj:SelectTab(name)
+        if selfObj.State:Get()=="SETTINGS_OPEN" then
+            -- close settings page
+            for _,c in ipairs(contentFrame:GetChildren()) do
+                if c.Name=="SettingsPage" then c:Destroy() end
+                if c:IsA("GuiObject") and c.Name~="UIListLayout" and c.Name~="UIPadding" and c.Name~="Nav" then c.Visible=true end
+            end
+            selfObj.State:Transition("NORMAL")
+        end
+        for tName,tObj in pairs(selfObj.Tabs) do
+            local active = tName==name
+            tObj.Content.Visible=active
+            tObj.Button.BackgroundColor3= active and ThemeManager.Current.ActiveTab or ThemeManager.Current.ComponentBackground
+            tObj.Button.TextColor3= active and Color3.new(1,1,1) or ThemeManager.Current.SecondaryText
+            if active then selfObj.SelectedTab=tObj end
+        end
+    end
+
+    function selfObj:RemoveTab(name)
+        local t=selfObj.Tabs[name]
+        if not t then return end
+        pcall(function() t.Button:Destroy() end)
+        pcall(function() t.Content:Destroy() end)
+        selfObj.Tabs[name]=nil
+        if selfObj.SelectedTab and selfObj.SelectedTab.Name==name then
+            local nextTab = next(selfObj.Tabs)
+            if nextTab then selfObj:SelectTab(nextTab) else selfObj.SelectedTab=nil end
+        end
+    end
+
+    function selfObj:GetSelectedTab() return selfObj.SelectedTab end
+    function selfObj:GetTabs() return selfObj.Tabs end
+    function selfObj:Minimize() doMinimize() end
+    function selfObj:Restore() if state:Get()=="MINIMIZED" then doExpand() elseif state:Get()=="HIDDEN" then doShow() end end
+    function selfObj:Hide() doHide() end
+    function selfObj:Show() doShow() end
+    function selfObj:Resize(size) selfObj.NormalSize=size; if state:Get()=="NORMAL" then AnimationManager:Tween(mainFrame,{Size=size},0.25) end end
+    function selfObj:Reposition(pos) mainFrame.Position=Utility:ClampUDim2(pos, mainFrame.Size) end
+    function selfObj:Destroy()
+        if state:Get()=="DESTROYED" then return end
+        state:Transition("DESTROYED")
+        cleanup:Cleanup()
+        pcall(function() screenGui:Destroy() end)
+    end
+    function selfObj:Notify(o) selfObj.NotificationManager:Notify(o) end
+
+    return selfObj
+end
+
+--// LIBRARY API
+local Library = {}
+Library.__index = Library
+
+function GGH:CreateWindow(config)
+    -- duplicate prevention
+    if GGH._Instances[config and config.Title or ""] then
+        -- allow multiple but warn
+    end
+    local win = Window.new(self, config or {})
+    GGH._Instances[config and config.Title or tostring(win)] = win
+    return win
+end
+
+function GGH:SetTheme(name) ThemeManager:SetTheme(name) end
+function GGH:RegisterTheme(name, def) ThemeManager:RegisterTheme(name, def) end
+function GGH:GetTheme() return ThemeManager:GetTheme() end
+function GGH:UpdateTheme(def) ThemeManager:SetTheme(def) end
+function GGH:RemoveCustomTheme(name) ThemeManager:RemoveCustomTheme(name) end
+function GGH:SetScale(scale)
+    -- UI scale via ScreenGui
+    -- placeholder: would apply UIScale
+end
+function GGH:Notify(opts)
+    -- global notify uses first window or creates temp
+    local first = next(GGH._Instances)
+    if first then
+        local w = GGH._Instances[first]
+        if w and w.Notify then w:Notify(opts) return end
+    end
+    warn("[GGH] No window for Notify")
+end
+function GGH:Destroy()
+    for _,w in pairs(GGH._Instances) do pcall(function() w:Destroy() end) end
+    GGH._Instances={}
+end
+
+--// INIT
+function GGH:Init()
+    return self
+end
+
+return GGH:Init()
